@@ -1,0 +1,17 @@
+HTTP/1.1 302 Found
+Host: 127.0.0.1:8080
+Date: Mon, 19 Oct 2026 06:32:59 GMT
+Connection: close
+X-Powered-By: PHP/8.2.12
+Expires: Thu, 19 Nov 1981 08:52:00 GMT
+Cache-Control: no-store, no-cache, must-revalidate
+Pragma: no-cache
+Set-Cookie: VOYAGEGO_SESSID=eesd18tgdcvejp35ek01j6u1cq; expires=Mon, 19 Oct 2026 08:32:59 GMT; Max-Age=7200; path=/; HttpOnly; SameSite=Lax
+X-Content-Type-Options: nosniff
+X-Frame-Options: SAMEORIGIN
+X-XSS-Protection: 1; mode=block
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self';
+Location: /office/dashboard
+Content-type: text/html; charset=UTF-8
+

@@ -1,0 +1,533 @@
+/* ============================================================
+ * UNIVERSAL LUXURY SIDEBAR DESIGN SYSTEM
+ * Dynamically synchronized with Central Theme Engine (30 Curated Identities)
+ * Supports both Light Luxury Ivory and Dark Nocturnal / Executive Shells
+ * ============================================================ */
+
+:root {
+  --lx-sb-bg: var(--theme-sidebar-bg, #FFFDFC);
+  --lx-sb-bg-dark: var(--theme-sidebar-bg, #241A20);
+  --lx-sb-bg-mid: var(--theme-sidebar-bg, #2B1F26);
+  --lx-sb-bg-base: var(--theme-sidebar-bg, #32232B);
+  --lx-sb-gold: var(--theme-accent, #C8A96B);
+  --lx-sb-gold-light: var(--theme-accent, #DCC58F);
+  --lx-sb-gold-border: var(--theme-sidebar-border, rgba(198, 161, 91, 0.22));
+  --lx-sb-gold-glow: rgba(200, 169, 107, 0.35);
+  --lx-sb-rose-primary: var(--theme-primary, #B9828F);
+  --lx-sb-rose-hover: var(--theme-primary-hover, #A96F7D);
+  --lx-sb-slate-muted: var(--theme-sidebar-text-muted, #817477);
+  --lx-sb-slate-icon: var(--theme-sidebar-icon, #817477);
+  --lx-sb-white: var(--theme-sidebar-text, #332D2F);
+  --lx-sb-text-main: var(--theme-sidebar-text, #332D2F);
+}
+
+/* ============================================================
+ * 1. SIDEBAR CONTAINER (.sidebar)
+ * ============================================================ */
+.sidebar,
+aside.sidebar,
+#sidebar {
+  background: var(--theme-sidebar-actual-bg, var(--theme-sidebar-bg, var(--lx-sb-bg))) !important;
+  backdrop-filter: var(--theme-sidebar-backdrop-filter, none);
+  -webkit-backdrop-filter: var(--theme-sidebar-backdrop-filter, none);
+  border-right: 1px solid var(--theme-sidebar-border, var(--theme-border, rgba(0,0,0,0.08))) !important;
+  box-shadow: var(--theme-shadow-sidebar, 4px 0 25px rgba(0, 0, 0, 0.06)) !important;
+  color: var(--theme-sidebar-text, var(--theme-text-primary, #332D2F)) !important;
+  position: fixed !important;
+  height: 100vh !important;
+  z-index: 1040 !important;
+  left: 0 !important;
+  top: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  max-width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: transparent transparent !important;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.25s ease, border-color 0.25s ease !important;
+}
+
+/* Prevent any child from causing horizontal overflow */
+.sidebar *,
+aside.sidebar *,
+#sidebar * {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Ambient Top Illumination (Adapts to Theme Accent / Primary) */
+.sidebar::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 220px !important;
+  background: radial-gradient(ellipse at 50% 0%, var(--theme-primary-subtle, rgba(185, 130, 143, 0.12)) 0%, transparent 75%) !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+}
+
+/* ============================================================
+ * 2. SIDEBAR HEADER & BRAND IDENTITY (.sidebar-header)
+ * ============================================================ */
+.sidebar-header {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+  background: var(--theme-sidebar-bg, #FFFDFC) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border-bottom: 1px solid var(--theme-sidebar-border, var(--theme-border, rgba(0,0,0,0.08))) !important;
+  padding: 16px 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  transition: background-color 0.25s ease, border-color 0.25s ease !important;
+}
+
+.sidebar-brand-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+/* Dynamic Brand Logo Card */
+.sidebar-logo-card {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  border-radius: var(--theme-radius-md, 12px) !important;
+  background: var(--theme-surface-secondary, rgba(0, 0, 0, 0.04)) !important;
+  border: 1px solid var(--theme-border-strong, var(--theme-border, rgba(0,0,0,0.12))) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 5px !important;
+  flex-shrink: 0 !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+[data-sidebar-theme="dark"] .sidebar-logo-card,
+[data-theme-mode="dark"] .sidebar-logo-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.03) 100%) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35) !important;
+}
+
+.sidebar-logo-card:hover {
+  transform: translateY(-1px) scale(1.03) !important;
+  border-color: var(--theme-primary, #B9828F) !important;
+  box-shadow: 0 6px 20px var(--theme-primary-subtle, rgba(185, 130, 143, 0.25)) !important;
+}
+
+.sidebar-logo-card i {
+  font-size: 1.35rem !important;
+  color: var(--theme-accent, #C8A96B) !important;
+  filter: drop-shadow(0 0 6px rgba(200, 169, 107, 0.4)) !important;
+}
+
+.sidebar-brand-text-container {
+  min-width: 0 !important;
+}
+
+.sidebar-company-name {
+  font-size: 1.02rem !important;
+  font-weight: 700 !important;
+  color: var(--theme-sidebar-text, var(--theme-text-primary, #332D2F)) !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.2px !important;
+  text-shadow: none !important;
+  transition: color 0.25s ease !important;
+}
+
+/* ============================================================
+ * 3. SIDEBAR MENU & CATEGORY SECTIONS
+ * ============================================================ */
+.sidebar-menu {
+  position: relative !important;
+  z-index: 2 !important;
+  padding: 14px 0 32px 0 !important;
+  overflow-y: auto !important;
+  flex: 1 !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: transparent transparent !important;
+}
+
+.category-section {
+  margin-bottom: 4px !important;
+}
+
+/* Thin divider between sections replaces the removed text labels */
+.category-section + .category-section {
+  border-top: 1px solid var(--theme-sidebar-border, var(--theme-border, rgba(0,0,0,0.06))) !important;
+  padding-top: 4px !important;
+  margin-top: 4px !important;
+}
+
+/* Section Group Titles */
+.category-title {
+  padding: 10px 22px 4px !important;
+  font-size: 0.68rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1.2px !important;
+  color: var(--theme-accent, #C8A96B) !important;
+  opacity: 0.85 !important;
+  transition: color 0.25s ease !important;
+}
+
+/* Top-level Nav Links (.nav-link) */
+.sidebar .nav-item {
+  margin-bottom: 2px !important;
+  position: relative !important;
+  padding: 0 10px !important;
+}
+
+.sidebar .nav-link {
+  color: var(--theme-sidebar-text-muted, var(--theme-text-muted, #817477)) !important;
+  padding: 10px 14px !important;
+  border-radius: var(--theme-radius-md, 10px) !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  text-decoration: none !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  border-left: 3px solid transparent !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.sidebar .nav-link i {
+  color: var(--theme-sidebar-icon, var(--theme-text-secondary, #817477)) !important;
+  font-size: 1.05rem !important;
+  width: 20px !important;
+  text-align: center !important;
+  transition: all 0.2s ease !important;
+}
+
+.sidebar .nav-link:hover {
+  color: var(--theme-primary, #B9828F) !important;
+  background: var(--theme-sidebar-hover-bg, rgba(0, 0, 0, 0.04)) !important;
+  padding-left: 17px !important;
+  border-left-color: var(--theme-primary, #B9828F) !important;
+}
+
+.sidebar .nav-link:hover i {
+  color: var(--theme-primary, #B9828F) !important;
+}
+
+/* Active Top-level Nav Link */
+.sidebar .nav-link.active {
+  color: var(--theme-sidebar-active-text, var(--theme-primary, #B9828F)) !important;
+  background: var(--theme-sidebar-active-bg, rgba(185, 130, 143, 0.12)) !important;
+  border-left: 3px solid var(--theme-primary, #B9828F) !important;
+  box-shadow: inset 0 0 0 1px var(--theme-sidebar-border, rgba(185, 130, 143, 0.2)) !important;
+  font-weight: 600 !important;
+  padding-left: 16px !important;
+}
+
+.sidebar .nav-link.active i {
+  color: var(--theme-primary, #B9828F) !important;
+  filter: drop-shadow(0 0 6px var(--theme-primary-subtle, rgba(185, 130, 143, 0.4))) !important;
+}
+
+/* Dark mode active refinement */
+[data-sidebar-theme="dark"] .sidebar .nav-link.active,
+[data-theme-mode="dark"] .sidebar .nav-link.active {
+  color: #ffffff !important;
+  border-left-color: var(--theme-accent, #C8A96B) !important;
+}
+[data-sidebar-theme="dark"] .sidebar .nav-link.active i,
+[data-theme-mode="dark"] .sidebar .nav-link.active i {
+  color: var(--theme-accent, #C8A96B) !important;
+}
+
+/* ============================================================
+ * 4. CATEGORY DROPDOWNS (.category-dropdown)
+ * ============================================================ */
+.category-dropdown {
+  position: relative !important;
+  margin: 0 10px 2px 10px !important;
+}
+
+.dropdown-header,
+button.dropdown-header {
+  padding: 10px 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  cursor: pointer !important;
+  border-radius: var(--theme-radius-md, 10px) !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  border-left: 3px solid transparent !important;
+  border-top: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  background: transparent !important;
+  width: 100% !important;
+  text-align: left !important;
+  font-family: inherit !important;
+  font-size: 0.885rem !important;
+  outline: none !important;
+}
+
+.sidebar .dropdown-header:focus-visible,
+.sidebar .nav-link:focus-visible,
+.sidebar .dropdown-item:focus-visible {
+  outline: 2px solid var(--theme-accent, #C8A96B) !important;
+  outline-offset: -1px !important;
+}
+
+.dropdown-title {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  color: var(--theme-sidebar-text-muted, var(--theme-text-muted, #817477)) !important;
+  font-weight: 500 !important;
+  font-size: 0.885rem !important;
+  transition: color 0.2s ease !important;
+}
+
+.dropdown-title span {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.dropdown-title i {
+  font-size: 1.05rem !important;
+  width: 20px !important;
+  text-align: center !important;
+  color: var(--theme-sidebar-icon, var(--theme-text-secondary, #817477)) !important;
+  transition: all 0.2s ease !important;
+}
+
+.dropdown-arrow {
+  flex-shrink: 0 !important;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s ease !important;
+  color: var(--theme-sidebar-icon, #817477) !important;
+}
+
+.dropdown-header:hover {
+  background: var(--theme-sidebar-hover-bg, rgba(0, 0, 0, 0.04)) !important;
+}
+
+.dropdown-header:hover .dropdown-title {
+  color: var(--theme-primary, #B9828F) !important;
+}
+
+.dropdown-header:hover .dropdown-title i {
+  color: var(--theme-primary, #B9828F) !important;
+}
+
+.dropdown-header:hover .dropdown-arrow {
+  color: var(--theme-primary, #B9828F) !important;
+}
+
+/* Active Dropdown Header */
+.dropdown-header.active {
+  background: var(--theme-sidebar-hover-bg, rgba(0, 0, 0, 0.04)) !important;
+  border-left: 3px solid var(--theme-accent, #C8A96B) !important;
+}
+
+.dropdown-header.active .dropdown-title {
+  color: var(--theme-sidebar-text, var(--theme-text-primary, #332D2F)) !important;
+  font-weight: 600 !important;
+}
+
+.dropdown-header.active .dropdown-title i {
+  color: var(--theme-accent, #C8A96B) !important;
+  filter: drop-shadow(0 0 5px rgba(200, 169, 107, 0.4)) !important;
+}
+
+.dropdown-header.active .dropdown-arrow {
+  transform: rotate(90deg) !important;
+  color: var(--theme-accent, #C8A96B) !important;
+}
+
+/* Submenu Drawer Content (.dropdown-content) */
+.dropdown-content {
+  display: none !important;
+  background: var(--theme-sidebar-drawer-bg, rgba(0, 0, 0, 0.025)) !important;
+  border-radius: var(--theme-radius-md, 10px) !important;
+  margin: 3px 0 6px 12px !important;
+  padding: 4px 0 !important;
+  border-left: 1px solid var(--theme-sidebar-border, var(--theme-border, rgba(0,0,0,0.08))) !important;
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+}
+
+.dropdown-content.show {
+  display: block !important;
+}
+
+[data-sidebar-theme="dark"] .dropdown-content.show,
+[data-theme-mode="dark"] .dropdown-content.show {
+  background: rgba(0, 0, 0, 0.28) !important;
+  border-left-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Submenu Items (.sidebar .dropdown-item) */
+.sidebar .dropdown-item {
+  padding: 8px 14px 8px 16px !important;
+  margin: 2px 6px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  color: var(--theme-sidebar-text-muted, var(--theme-text-muted, #817477)) !important;
+  text-decoration: none !important;
+  font-size: 0.835rem !important;
+  font-weight: 500 !important;
+  border-radius: var(--theme-radius-sm, 8px) !important;
+  position: relative !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  background: transparent !important;
+}
+
+/* Submenu Indicator Dot */
+.sidebar .dropdown-item::before {
+  content: "" !important;
+  width: 5px !important;
+  height: 5px !important;
+  border-radius: 50% !important;
+  background: var(--theme-sidebar-text-muted, rgba(129, 116, 119, 0.45)) !important;
+  flex-shrink: 0 !important;
+  transition: all 0.2s ease !important;
+}
+
+.sidebar .dropdown-item:hover {
+  color: var(--theme-primary, #B9828F) !important;
+  background: var(--theme-sidebar-hover-bg, rgba(0, 0, 0, 0.04)) !important;
+  padding-left: 19px !important;
+}
+
+.sidebar .dropdown-item:hover::before {
+  background: var(--theme-accent, #C8A96B) !important;
+  transform: scale(1.3) !important;
+  box-shadow: 0 0 6px rgba(200, 169, 107, 0.45) !important;
+}
+
+/* Active Submenu Item */
+.sidebar .dropdown-item.active {
+  color: var(--theme-sidebar-active-text, var(--theme-primary, #B9828F)) !important;
+  background: var(--theme-sidebar-active-bg, rgba(185, 130, 143, 0.12)) !important;
+  font-weight: 600 !important;
+  border-radius: var(--theme-radius-sm, 8px) !important;
+  box-shadow: inset 0 0 0 1px var(--theme-sidebar-border, rgba(185, 130, 143, 0.2)) !important;
+  padding-left: 18px !important;
+}
+
+[data-sidebar-theme="dark"] .sidebar .dropdown-item.active,
+[data-theme-mode="dark"] .sidebar .dropdown-item.active {
+  color: #ffffff !important;
+}
+
+.sidebar .dropdown-item.active::before {
+  background: var(--theme-accent, #C8A96B) !important;
+  transform: scale(1.4) !important;
+  box-shadow: 0 0 8px rgba(200, 169, 107, 0.5) !important;
+}
+
+/* ============================================================
+ * 5. COLLAPSED & MOBILE ICON RAIL BEHAVIORS
+ * ============================================================ */
+.sidebar.collapsed,
+body.sidebar-collapsed .sidebar {
+  width: 70px !important;
+}
+
+.sidebar.collapsed .sidebar-header,
+body.sidebar-collapsed .sidebar .sidebar-header {
+  padding: 16px 13px !important;
+  justify-content: center !important;
+}
+
+.sidebar.collapsed .sidebar-brand-text-container,
+body.sidebar-collapsed .sidebar .sidebar-brand-text-container,
+.sidebar.collapsed .category-title,
+body.sidebar-collapsed .sidebar .category-title,
+.sidebar.collapsed .nav-link span,
+body.sidebar-collapsed .sidebar .nav-link span,
+.sidebar.collapsed .dropdown-title span,
+body.sidebar-collapsed .sidebar .dropdown-title span,
+.sidebar.collapsed .dropdown-arrow,
+body.sidebar-collapsed .sidebar .dropdown-arrow {
+  display: none !important;
+}
+
+.sidebar.collapsed .nav-item,
+body.sidebar-collapsed .sidebar .nav-item,
+.sidebar.collapsed .category-dropdown,
+body.sidebar-collapsed .sidebar .category-dropdown {
+  padding: 0 6px !important;
+  margin: 0 4px 4px 4px !important;
+}
+
+.sidebar.collapsed .nav-link,
+body.sidebar-collapsed .sidebar .nav-link,
+.sidebar.collapsed .dropdown-header,
+body.sidebar-collapsed .sidebar .dropdown-header {
+  justify-content: center !important;
+  padding: 12px 0 !important;
+  margin: 0 !important;
+}
+
+.sidebar.collapsed .dropdown-title,
+body.sidebar-collapsed .sidebar .dropdown-title {
+  gap: 0 !important;
+  justify-content: center !important;
+}
+
+/* Mobile Slide-in Drawer */
+@media (max-width: 991.98px) {
+  .sidebar {
+    transform: translateX(-100%) !important;
+  }
+  .sidebar.mobile-show {
+    transform: translateX(0) !important;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.7) !important;
+  }
+}
+
+/* ============================================================
+ * 6. CUSTOM ULTRA-SLEEK SCROLLBAR
+ * ============================================================ */
+.sidebar::-webkit-scrollbar,
+.sidebar-menu::-webkit-scrollbar {
+  width: 2px !important;
+}
+
+.sidebar::-webkit-scrollbar-track,
+.sidebar-menu::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+.sidebar::-webkit-scrollbar-thumb,
+.sidebar-menu::-webkit-scrollbar-thumb {
+  background: var(--theme-sidebar-border, rgba(0,0,0,0.12)) !important;
+  border-radius: 999px !important;
+  transition: background 0.2s ease !important;
+}
+
+.sidebar:hover::-webkit-scrollbar-thumb,
+.sidebar-menu:hover::-webkit-scrollbar-thumb {
+  background: var(--theme-primary, #B9828F) !important;
+  opacity: 0.5 !important;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover,
+.sidebar-menu::-webkit-scrollbar-thumb:hover {
+  background: var(--theme-accent, #C8A96B) !important;
+  opacity: 1 !important;
+}

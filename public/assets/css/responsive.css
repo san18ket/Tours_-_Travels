@@ -1,0 +1,3080 @@
+/* ==========================================================================
+ * RESPONSIVE FOUNDATION & SHARED COMPONENT DESIGN SYSTEM
+ * School Management System — Central Master Responsive Stylesheet
+ * 
+ * Breakpoint Hierarchy:
+ *   - Very Small Phone : 320px – 374px
+ *   - Phone            : 375px – 575px
+ *   - Large Phone / SM : 576px – 767px
+ *   - Tablet / MD      : 768px – 991px
+ *   - Small Desktop/LG : 992px – 1199px
+ *   - Desktop / XL     : 1200px – 1599px
+ *   - Wide Desktop/XXL : 1600px – 1920px+
+ * ========================================================================== */
+
+/* ==========================================================================
+ * 1. GLOBAL RESPONSIVE VARIABLES, TOKENS & FOUNDATION
+ * ========================================================================== */
+:root {
+  /* Layout Paddings & Max Widths */
+  --layout-page-padding: clamp(0.75rem, 2vw, 1.75rem);
+  --layout-content-max-width: 1920px;
+  --layout-card-padding: var(--theme-card-padding, clamp(0.85rem, 1.8vw, 1.35rem));
+  --layout-section-gap: var(--theme-content-gap, clamp(1rem, 2vw, 1.5rem));
+  --layout-grid-gap: clamp(0.75rem, 1.5vw, 1.25rem);
+  --layout-table-padding-x: clamp(0.6rem, 1.2vw, 1.1rem);
+  --layout-table-padding-y: clamp(0.55rem, 1vw, 0.85rem);
+
+  /* Touch & Height Dimensions */
+  --touch-target-min: 44px;
+  --navbar-height-mobile: 60px;
+  --navbar-height-desktop: var(--theme-navbar-height, 66px);
+  --button-height-mobile: 42px;
+  --input-height-mobile: 42px;
+}
+
+/* Document-Wide Box Model & Text Adjustments */
+html {
+  box-sizing: border-box;
+  -webkit-text-size-adjust: 100%;
+}
+
+*, *::before, *::after {
+  box-sizing: inherit;
+}
+
+/* Ensure images and media never cause horizontal blowout */
+img, svg, video, canvas, audio, iframe, embed, object {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ==========================================================================
+ * 2. APPLICATION SHELL & SCROLLING STRATEGY
+ * ========================================================================== */
+
+/* Desktop Baseline (>= 992px) — Dual-Pane Fixed Layout */
+@media (min-width: 992px) {
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  #wrapper {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+    position: relative;
+  }
+
+  /* Desktop sidebar & content coexistence using canonical tokens */
+  #page-content-wrapper {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: var(--theme-sidebar-width, var(--sidebar-width, 280px));
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+  }
+
+  .sidebar,
+  aside.sidebar,
+  #sidebar {
+    width: var(--theme-sidebar-width, var(--sidebar-width, 280px));
+  }
+
+  body.sidebar-collapsed #page-content-wrapper {
+    left: var(--theme-sidebar-collapsed-width, 70px) !important;
+  }
+
+  body.sidebar-collapsed .sidebar,
+  body.sidebar-collapsed aside.sidebar,
+  body.sidebar-collapsed #sidebar {
+    width: var(--theme-sidebar-collapsed-width, 70px) !important;
+  }
+}
+
+/* Tablet & Mobile Shell (< 992px) — RELEASE FIXED VIEWPORT LOCKS */
+@media (max-width: 991.98px) {
+  html,
+  body {
+    height: auto !important;
+    min-height: 100% !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    position: relative;
+  }
+
+  /* When mobile drawer is open, lock outer body scrolling */
+  body.mobile-sidebar-open {
+    overflow: hidden !important;
+  }
+
+  #wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    min-height: 100vh !important;
+    height: auto !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+    position: relative !important;
+  }
+
+  /* Page content wrapper takes 100% natural flow width */
+  #page-content-wrapper {
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 100vh !important;
+    height: auto !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: auto !important;
+    margin-left: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+    display: flex !important;
+    flex-direction: column !important;
+    z-index: 1 !important;
+  }
+
+  main.container-fluid {
+    padding: var(--layout-page-padding);
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+}
+
+/* ==========================================================================
+ * 3. SIDEBAR & MOBILE DRAWER (< 992px)
+ * ========================================================================== */
+@media (max-width: 991.98px) {
+  .sidebar,
+  aside.sidebar,
+  #sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    height: 100% !important;
+    height: 100dvh !important;
+    width: min(var(--theme-sidebar-width, 280px), 86vw) !important;
+    max-width: 86vw !important;
+    z-index: 1060 !important;
+    transform: translateX(-100%) !important;
+    transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.32s ease !important;
+    box-shadow: none !important;
+    border-right: 1px solid var(--theme-sidebar-border, rgba(0, 0, 0, 0.12)) !important;
+    visibility: hidden;
+  }
+
+  body.sidebar-collapsed .sidebar,
+  body.sidebar-collapsed aside.sidebar,
+  body.sidebar-collapsed #sidebar {
+    width: min(var(--theme-sidebar-width, 280px), 86vw) !important;
+  }
+
+  .sidebar.mobile-show,
+  aside.sidebar.mobile-show,
+  #sidebar.mobile-show {
+    transform: translateX(0) !important;
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.65), 10px 0 30px rgba(0, 0, 0, 0.3) !important;
+    visibility: visible !important;
+  }
+
+  /* Dedicated Mobile Drawer Close Button */
+  .sidebar-close-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--theme-sidebar-text, #ffffff);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+
+  .sidebar-close-btn:hover,
+  .sidebar-close-btn:focus-visible {
+    background: rgba(255, 255, 255, 0.22);
+    border-color: var(--theme-accent, #C8A96B);
+    color: var(--theme-accent, #C8A96B);
+    outline: none;
+  }
+
+  /* Backdrop Overlay */
+  #sidebar-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100% !important;
+    height: 100dvh !important;
+    background: rgba(15, 23, 42, 0.65) !important;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1055 !important;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+  }
+
+  #sidebar-overlay.active {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+
+  /* Touch target refinement for mobile drawer links */
+  .sidebar .nav-link,
+  .sidebar .dropdown-header {
+    min-height: 44px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  .sidebar .dropdown-item {
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+  }
+}
+
+/* ==========================================================================
+ * 4. TOP NAVBAR RESPONSIVE REFLOW
+ * ========================================================================== */
+.top-navbar {
+  width: 100%;
+  max-width: 100%;
+  position: sticky;
+  top: 0;
+  z-index: 1020;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1199.98px) and (min-width: 768px) {
+  .top-navbar {
+    padding: 0 1.25rem;
+    height: 64px;
+  }
+
+  .context-badge-btn {
+    padding: 0 10px;
+    font-size: 0.8rem;
+  }
+
+  .context-badge-btn .badge-text {
+    max-width: 130px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .top-navbar {
+    padding: 0 0.85rem !important;
+    height: var(--navbar-height-mobile) !important;
+    gap: 8px;
+  }
+
+  .top-navbar .navbar-toggle-btn {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    flex-shrink: 0;
+  }
+
+  .top-navbar .nav-right-actions {
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .top-navbar .nav-icon-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    flex-shrink: 0;
+  }
+
+  .user-profile-toggle {
+    padding: 3px;
+    border-radius: 50%;
+    gap: 0;
+  }
+
+  .user-profile-toggle .user-avatar-badge {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    font-size: 0.82rem;
+  }
+
+  .user-profile-toggle i.fa-chevron-down {
+    display: none !important;
+  }
+}
+
+@media (max-width: 374.98px) {
+  .top-navbar {
+    padding: 0 0.5rem;
+    gap: 6px;
+  }
+
+  .top-navbar .navbar-toggle-btn {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+  }
+
+  .top-navbar .nav-right-actions {
+    gap: 6px;
+  }
+
+  .top-navbar .nav-icon-btn {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+  }
+
+  .user-profile-toggle .user-avatar-badge {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+  }
+}
+
+/* ==========================================================================
+ * 5. CONTEXT BADGES & MODULE SWITCHER
+ * ========================================================================== */
+.navbar-context-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+@media (max-width: 767.98px) {
+  .navbar-context-area {
+    gap: 6px;
+    flex-shrink: 1;
+  }
+
+  .context-badge-btn {
+    height: 34px !important;
+    padding: 0 8px !important;
+    font-size: 0.76rem;
+    gap: 5px;
+    max-width: 140px;
+  }
+
+  .context-badge-btn .badge-text {
+    max-width: 85px;
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .context-badge-btn .badge-prefix {
+    display: none !important;
+  }
+
+  .context-module-btn {
+    padding: 0 8px;
+  }
+
+  .context-module-btn .badge-text {
+    max-width: 65px;
+  }
+}
+
+@media (max-width: 374.98px) {
+  .context-badge-btn {
+    max-width: 105px;
+    padding: 0 6px !important;
+  }
+
+  .context-badge-btn .badge-text {
+    max-width: 55px;
+  }
+}
+
+/* ==========================================================================
+ * 6. SHARED RESPONSIVE CARDS (COMPONENT 1)
+ * ========================================================================== */
+.card,
+.stat-card,
+.category-card,
+.corporate-card,
+.dashboard-card,
+.table-card,
+.filter-card,
+.card-luxury {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Card Header Responsive Reflow */
+.card-header,
+.category-card-header,
+.corporate-card-header,
+.dashboard-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-width: 0;
+}
+
+.card-header-title,
+.corporate-card-title {
+  min-width: 0;
+  word-break: break-word;
+}
+
+.card-header-actions,
+.category-card-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Card Spacing Adjustments by Screen Size */
+@media (max-width: 991.98px) {
+  .card-body,
+  .dashboard-card-body,
+  .corporate-card-body,
+  .category-card-body {
+    padding: var(--layout-card-padding);
+  }
+}
+
+@media (max-width: 767.98px) {
+  .card,
+  .category-card,
+  .corporate-card,
+  .dashboard-card,
+  .table-card,
+  .filter-card {
+    border-radius: var(--theme-radius-card, 14px);
+    margin-bottom: var(--layout-section-gap);
+  }
+
+  .card-header,
+  .category-card-header,
+  .corporate-card-header,
+  .dashboard-card-header {
+    padding: 12px 16px;
+    gap: 8px;
+  }
+
+  .card-body,
+  .dashboard-card-body,
+  .corporate-card-body,
+  .category-card-body {
+    padding: 14px 16px;
+  }
+
+  .card-footer {
+    padding: 12px 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* Stat / KPI Cards Stack Safely */
+  .stat-card {
+    padding: 14px 16px;
+    gap: 12px;
+  }
+
+  .stat-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 1.15rem;
+  }
+
+  .stat-info h3 {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 374.98px) {
+  .card-header,
+  .category-card-header,
+  .corporate-card-header {
+    padding: 10px 12px;
+  }
+
+  .card-body,
+  .category-card-body,
+  .corporate-card-body {
+    padding: 12px 12px;
+  }
+
+  .stat-card {
+    padding: 12px 12px;
+    gap: 10px;
+  }
+
+  .stat-icon {
+    width: 38px;
+    height: 38px;
+    font-size: 1rem;
+  }
+
+  .stat-info h3 {
+    font-size: 1.15rem;
+  }
+}
+
+/* ==========================================================================
+ * 7. SHARED RESPONSIVE BUTTONS & ACTION TOOLBARS (COMPONENT 2)
+ * ========================================================================== */
+.header-action-buttons,
+.action-buttons-group,
+.wrap-actions,
+.btn-group-responsive {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Mobile full-width helper for primary action buttons */
+.btn-mobile-block {
+  display: inline-flex;
+}
+
+@media (max-width: 767.98px) {
+  .header-action-buttons {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .header-action-buttons > .btn,
+  .header-action-buttons > .btn-header-action,
+  .header-action-buttons > .btn-header-action-secondary {
+    flex: 1 1 160px;
+    min-width: 0;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .btn-mobile-block {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .btn-header-action,
+  .btn-header-action-secondary {
+    min-height: var(--button-height-mobile);
+    padding: 8px 14px;
+    font-size: 0.82rem;
+  }
+
+  /* Compact table action buttons retain tap-friendly hit boxes */
+  .action-btn-table,
+  .table-action-btn {
+    width: 34px;
+    height: 34px;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 374.98px) {
+  .header-action-buttons .btn,
+  .header-action-buttons .btn-header-action {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+
+/* ==========================================================================
+ * 8. SHARED RESPONSIVE FORMS & CONTROLS (COMPONENT 3)
+ * ========================================================================== */
+.form-control,
+.form-select {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.input-group {
+  max-width: 100%;
+}
+
+.input-group-nowrap {
+  flex-wrap: nowrap;
+}
+
+.input-group > .form-control,
+.input-group > .form-select {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+/* Responsive Form Rows & Groups */
+@media (max-width: 767.98px) {
+  .form-label {
+    font-size: 0.82rem;
+    margin-bottom: 4px;
+  }
+
+  .form-control,
+  .form-select {
+    font-size: 0.88rem;
+    min-height: var(--input-height-mobile);
+    padding: 8px 12px;
+  }
+
+  textarea.form-control {
+    min-height: 80px;
+  }
+
+  .input-group-text {
+    padding: 8px 12px;
+    font-size: 0.84rem;
+  }
+
+  /* Ensure help text and error feedback wrap naturally */
+  .form-text,
+  .invalid-feedback {
+    font-size: 0.75rem;
+    word-break: break-word;
+  }
+}
+
+@media (max-width: 575.98px) {
+  /* On small phones, allow input groups with buttons to stack if necessary */
+  .input-group-stack-xs {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .input-group-stack-xs > * {
+    width: 100% !important;
+    border-radius: var(--theme-radius-md, 10px) !important;
+  }
+}
+
+/* ==========================================================================
+ * 9. SHARED RESPONSIVE TABLES & DATA GRIDS (COMPONENT 4)
+ * ========================================================================== */
+
+/* Strategy 1: Horizontal Momentum Scrolling */
+.table-responsive {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  position: relative;
+  border-radius: var(--theme-radius-card, 14px);
+}
+
+/* Table scroll visual hint container */
+.table-scroll-container {
+  position: relative;
+  width: 100%;
+}
+
+.table-scroll-container.has-scroll::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 24px;
+  background: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.08) 100%);
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.25s ease;
+  border-top-right-radius: inherit;
+  border-bottom-right-radius: inherit;
+}
+
+.table-scroll-container.scrolled-end::after {
+  opacity: 0;
+}
+
+/* Table Card dropdown safety: prevent vertical row clipping */
+.table-card .table-responsive {
+  margin-bottom: 0;
+}
+
+/* Strategy 2: Compact Mobile Table Mode */
+@media (max-width: 767.98px) {
+  .table-responsive > .table:not(.table-preserve-size) th,
+  .modern-table:not(.table-preserve-size) th,
+  .table-compact-mobile th {
+    padding: 10px 12px;
+    font-size: 0.72rem;
+    letter-spacing: 0.3px;
+  }
+
+  .table-responsive > .table:not(.table-preserve-size) td,
+  .modern-table:not(.table-preserve-size) td,
+  .table-compact-mobile td {
+    padding: 9px 12px;
+    font-size: 0.8rem;
+  }
+
+  .table-compact-mobile th,
+  .table-compact-mobile td {
+    padding: 7px 9px;
+    font-size: 0.76rem;
+  }
+
+  /* Prevent primary identifier columns from shrinking to unreadable widths */
+  .table-responsive > .table:not(.table-preserve-size) td:first-child,
+  .modern-table:not(.table-preserve-size) td:first-child {
+    min-width: 36px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .table-responsive > .table:not(.table-preserve-size) th,
+  .modern-table:not(.table-preserve-size) th,
+  .table-compact-mobile th {
+    padding: 8px 10px;
+    font-size: 0.7rem;
+  }
+
+  .table-responsive > .table:not(.table-preserve-size) td,
+  .modern-table:not(.table-preserve-size) td,
+  .table-compact-mobile td {
+    padding: 8px 10px;
+    font-size: 0.78rem;
+  }
+}
+
+/* Strategy 3: Sticky Header & Column Utilities */
+.table-sticky-header thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: var(--theme-surface-secondary, #f8fafc);
+}
+
+.table-sticky-col-first th:first-child,
+.table-sticky-col-first td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  background-color: inherit;
+}
+
+.table-sticky-col-last th:last-child,
+.table-sticky-col-last td:last-child {
+  position: sticky;
+  right: 0;
+  z-index: 3;
+  background-color: inherit;
+}
+
+/* ==========================================================================
+ * 10. SHARED FILTERS & SEARCH TOOLBARS (COMPONENT 5)
+ * ========================================================================== */
+.filter-card,
+.search-filter-box {
+  background: var(--theme-surface, #ffffff);
+  border-radius: var(--theme-radius-card, 16px);
+  border: 1px solid var(--theme-border, #E9DFD8);
+  box-shadow: var(--theme-shadow-card, 0 4px 16px rgba(0, 0, 0, 0.04));
+  padding: 18px 22px;
+  margin-bottom: var(--layout-section-gap);
+  box-sizing: border-box;
+}
+
+@media (max-width: 767.98px) {
+  .filter-card,
+  .search-filter-box {
+    padding: 14px 16px;
+    border-radius: var(--theme-radius-card, 14px);
+  }
+
+  .filter-card form.row {
+    row-gap: 12px;
+  }
+}
+
+@media (max-width: 991.98px) {
+  .filter-card form.row > [class*="col-"] {
+    min-width: 0;
+  }
+
+  .filter-card form.row {
+    row-gap: 12px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .filter-card,
+  .search-filter-box {
+    padding: 12px 14px;
+  }
+}
+
+@media (max-width: 479.98px) {
+  .filter-card form.row > [class*="col-"] {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
+
+/* ==========================================================================
+ * 11. SHARED PAGE HEADERS & HERO BANNERS (COMPONENT 6)
+ * ========================================================================== */
+.project-header,
+.exam-header-banner,
+.page-header-luxury,
+.builder-hero-banner,
+.vacation-hero,
+.planner-hero {
+  border-radius: var(--theme-radius-card, 18px);
+  padding: 22px 26px;
+  margin-bottom: var(--layout-section-gap);
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.header-with-actions,
+.lx-header-inner,
+.exam-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.header-title-section {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+@media (max-width: 767.98px) {
+  .project-header,
+  .exam-header-banner,
+  .page-header-luxury,
+  .builder-hero-banner,
+  .vacation-hero,
+  .planner-hero {
+    padding: 16px 18px;
+    border-radius: var(--theme-radius-card, 14px);
+  }
+
+  .project-title,
+  .page-title {
+    font-size: 1.35rem;
+    line-height: 1.25;
+  }
+
+  .project-meta {
+    font-size: 0.82rem;
+  }
+}
+
+@media (max-width: 374.98px) {
+  .project-header,
+  .exam-header-banner,
+  .page-header-luxury {
+    padding: 12px 14px;
+  }
+
+  .project-title,
+  .page-title {
+    font-size: 1.2rem;
+  }
+}
+
+/* ==========================================================================
+ * 12. SHARED RESPONSIVE PAGINATION (COMPONENT 7)
+ * ========================================================================== */
+.pagination {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 0;
+}
+
+.pagination-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+@media (max-width: 767.98px) {
+  .pagination-container {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+  }
+
+  .page-item .page-link {
+    padding: 6px 11px;
+    font-size: 0.8rem;
+    min-width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .pagination-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    justify-content: center;
+    padding: 4px 0;
+  }
+}
+
+/* ==========================================================================
+ * 13. SHARED BADGES, STATUS PILLS & TAGS (COMPONENT 8)
+ * ========================================================================== */
+.badge,
+.status-pill,
+.affiliation-badge,
+.category-icon-badge,
+.code-badge {
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1.2;
+}
+
+@media (max-width: 767.98px) {
+  .badge {
+    font-size: 0.72rem;
+    padding: 4px 8px;
+  }
+
+  .affiliation-badge {
+    padding: 3px 8px;
+    font-size: 0.72rem;
+  }
+}
+
+/* ==========================================================================
+ * 14. SHARED ALERTS, NOTICES & EMPTY STATES (COMPONENT 9)
+ * ========================================================================== */
+.alert {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Scoped flex layout for application alerts with icons or action rows */
+.alert-with-icon,
+.alert-flex {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.alert-with-icon > i,
+.alert-flex > i {
+  flex-shrink: 0;
+  margin-top: 2px;
+  font-size: 1.15rem;
+}
+
+.alert-with-icon .alert-content,
+.alert-flex .alert-content {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.empty-state {
+  text-align: center;
+  padding: clamp(24px, 4vw, 48px) 16px;
+}
+
+@media (max-width: 767.98px) {
+  .alert {
+    padding: 12px 14px;
+    font-size: 0.84rem;
+  }
+
+  .alert-dismissible {
+    padding-right: 2.75rem;
+  }
+
+  .empty-state-icon {
+    width: 54px;
+    height: 54px;
+    font-size: 1.5rem;
+    margin-bottom: 12px;
+  }
+
+  .empty-state-title {
+    font-size: 1.1rem;
+  }
+
+  .empty-state-text {
+    font-size: 0.82rem;
+  }
+}
+
+/* ==========================================================================
+ * 15. SHARED DROPDOWN VIEWPORT PROTECTION (COMPONENT 10)
+ * ========================================================================== */
+@media (min-width: 768px) {
+  .module-dropdown-menu {
+    min-width: 320px;
+  }
+  .notifications-dropdown-menu {
+    min-width: 300px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .dropdown-menu,
+  .branch-dropdown-menu,
+  .user-dropdown-menu,
+  .module-dropdown-menu,
+  .notifications-dropdown-menu,
+  .action-dropdown-menu {
+    max-width: calc(100vw - 16px);
+    box-sizing: border-box;
+    overflow-x: hidden;
+    margin-top: 8px;
+    border-radius: 14px;
+  }
+
+  .dropdown-item {
+    white-space: normal;
+    word-break: break-word;
+    min-height: 38px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .dropdown-menu,
+  .branch-dropdown-menu,
+  .user-dropdown-menu,
+  .module-dropdown-menu,
+  .notifications-dropdown-menu,
+  .action-dropdown-menu {
+    min-width: 0;
+    width: auto;
+  }
+}
+
+@media (max-width: 374.98px) {
+  .dropdown-menu,
+  .branch-dropdown-menu,
+  .user-dropdown-menu,
+  .module-dropdown-menu,
+  .notifications-dropdown-menu {
+    max-width: calc(100vw - 12px);
+  }
+}
+
+/* ==========================================================================
+ * 16. SHARED MODALS RESPONSIVE BEHAVIOR (COMPONENT 11)
+ * ========================================================================== */
+.modal-dialog {
+  transition: transform 0.25s ease-out;
+}
+
+@media (max-width: 575.98px) {
+  .modal-dialog {
+    margin: 0.5rem;
+    max-width: calc(100% - 1rem);
+    width: auto;
+  }
+
+  .modal-dialog-centered {
+    min-height: calc(100% - 1rem);
+  }
+
+  .modal-content {
+    border-radius: 16px;
+    max-height: calc(100dvh - 1.5rem);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .modal-header {
+    padding: 14px 16px;
+  }
+
+  .modal-body {
+    padding: 16px;
+    max-height: calc(100dvh - 120px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .modal-footer {
+    padding: 12px 16px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .modal-footer > * {
+    margin: 0;
+    flex: 0 1 auto;
+  }
+
+  /* Equal-width split helper when dual buttons are specifically desired */
+  .modal-footer.modal-footer-2btn > * {
+    flex: 1 1 calc(50% - 4px);
+    min-width: calc(50% - 4px);
+  }
+
+  /* Full-width stacked helper for mobile actions */
+  .modal-footer.modal-footer-stacked > *,
+  .modal-footer > .btn-mobile-block {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+}
+
+/* ==========================================================================
+ * 17. SHARED TABS & NAV PILLS (COMPONENT 12)
+ * ========================================================================== */
+.nav-pills:not(.flex-column) {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+@media (max-width: 767.98px) {
+  .nav-tabs:not(.flex-column):not(.nav-tabs-stacked-mobile),
+  .nav-pills:not(.flex-column):not(.nav-tabs-stacked-mobile),
+  .nav-tabs-scrollable,
+  .nav-pills-scrollable,
+  .attendance-nav-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+
+  .nav-tabs:not(.flex-column)::-webkit-scrollbar,
+  .nav-pills:not(.flex-column)::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-tabs:not(.flex-column):not(.nav-tabs-stacked-mobile) .nav-link,
+  .nav-pills:not(.flex-column):not(.nav-tabs-stacked-mobile) .nav-link {
+    white-space: nowrap;
+    padding: 8px 14px;
+    font-size: 0.82rem;
+    flex-shrink: 0;
+  }
+}
+
+/* Strategy: Controlled Stacking for Multi-Section Forms */
+.nav-tabs-stacked-mobile {
+  flex-direction: column;
+  width: 100%;
+}
+
+@media (max-width: 767.98px) {
+  .nav-tabs-stacked-mobile .nav-link {
+    width: 100%;
+    text-align: left;
+    border-radius: var(--theme-radius-md, 10px);
+    margin-bottom: 4px;
+  }
+}
+
+/* ==========================================================================
+ * 18. SHARED BREADCRUMBS (COMPONENT 13)
+ * ========================================================================== */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+@media (max-width: 767.98px) {
+  .breadcrumb {
+    font-size: 0.78rem;
+  }
+
+  .breadcrumb-item {
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .breadcrumb-item.active {
+    max-width: 180px;
+  }
+}
+
+/* ==========================================================================
+ * 19. SHARED RESPONSIVE GRID & LAYOUT UTILITIES (COMPONENT 14)
+ * ========================================================================== */
+/* Auto-Fit Card Grid: scales seamlessly from 1 col on mobile to 4+ on ultrawide */
+.responsive-grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: var(--layout-grid-gap);
+  margin-bottom: var(--layout-section-gap);
+}
+
+/* Auto-Fit Stat/KPI Grid: scales from 1 col on 320px to 4 cols on desktop */
+.responsive-grid-stats,
+.stats-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: var(--layout-grid-gap);
+  margin-bottom: var(--layout-section-gap);
+}
+
+/* Flex layout that stacks on mobile (< 768px) and rows on desktop */
+.stack-on-mobile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+@media (max-width: 767.98px) {
+  .stack-on-mobile {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* Wrap actions flex utility */
+.wrap-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Mobile full-width element utility */
+@media (max-width: 767.98px) {
+  .mobile-w-100 {
+    width: 100% !important;
+  }
+}
+
+/* ==========================================================================
+ * 20. SHARED RESPONSIVE TYPOGRAPHY & FLUID SCALING (COMPONENT 15)
+ * ========================================================================== */
+/* Application-specific responsive page titles & headings */
+.page-title,
+.page-header-title,
+.project-title,
+.builder-header-title,
+.responsive-heading-1 {
+  font-size: clamp(1.35rem, 2.5vw, 1.85rem);
+  line-height: 1.25;
+}
+
+.page-subtitle,
+.section-title,
+.modal-title,
+.responsive-heading-2 {
+  font-size: clamp(1.15rem, 2vw, 1.5rem);
+  line-height: 1.3;
+}
+
+.card-title,
+.stat-info h3,
+.widget-title,
+.responsive-heading-3 {
+  font-size: clamp(1.05rem, 1.6vw, 1.25rem);
+  line-height: 1.35;
+}
+
+.card-subtitle,
+.sub-heading,
+.responsive-heading-4 {
+  font-size: clamp(0.9rem, 1.3vw, 1.05rem);
+}
+
+@media (max-width: 575.98px) {
+  .page-header h1,
+  .page-header .h1 {
+    font-size: clamp(1.25rem, 5vw, 1.5rem);
+  }
+}
+
+/* Long text truncation utility with responsive maximums */
+.text-truncate-responsive {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+ * 21. FOOTER RESPONSIVE FLOW
+ * ========================================================================== */
+footer.border-top {
+  width: 100%;
+  box-sizing: border-box;
+  background-color: var(--theme-surface, #ffffff);
+  border-top-color: var(--theme-border, #e2e8f0);
+  color: var(--theme-text-muted, #64748b);
+  transition: background-color 0.25s ease;
+}
+
+@media (max-width: 767.98px) {
+  footer.border-top {
+    padding: 1rem;
+  }
+
+  footer.border-top .d-flex {
+    flex-direction: column;
+    text-align: center;
+    gap: 6px;
+  }
+}
+
+/* ==========================================================================
+ * 22. AUTH LAYOUT RESPONSIVE ADAPTATION (GLOBAL SAFEGUARDS)
+ * ========================================================================== */
+.auth-wrapper {
+  min-height: 100vh;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+.admin-login-card,
+.auth-card {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+  .auth-wrapper {
+    padding: 0.5rem;
+  }
+
+  .admin-login-card,
+  .auth-card {
+    border-radius: 16px;
+    margin: 0.5rem auto;
+    width: 100%;
+  }
+}
+
+/* ==========================================================================
+ * 23. TOUCH TARGETS & ACCESSIBILITY (COMPONENTS 17 & 18)
+ * ========================================================================== */
+@media (hover: none) and (pointer: coarse) {
+  /* Enforce minimum touch target on touchscreen devices */
+  button,
+  .btn,
+  .nav-link,
+  .dropdown-item,
+  .context-badge-btn,
+  .nav-icon-btn,
+  .user-profile-toggle,
+  .page-link,
+  .action-btn-table {
+    min-height: 40px;
+    touch-action: manipulation;
+  }
+
+  /* Clear sticky hover transforms on touch taps */
+  .btn:hover,
+  .dropdown-item:hover,
+  .context-badge-btn:hover,
+  .action-btn-table:hover {
+    transform: none;
+  }
+}
+
+/* Accessibility: High-Visibility Focus Outline */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--theme-primary, #B9828F);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+ * 24. SHARED MULTI-STEP WIZARD PROGRESS BAR (COMPONENT 16)
+ * ========================================================================== */
+.wizard-steps-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+}
+
+@media (max-width: 767.98px) {
+  .wizard-progress-card {
+    padding: 16px 14px;
+  }
+
+  .wizard-steps-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    justify-content: flex-start;
+    gap: 16px;
+    padding: 14px 12px;
+  }
+
+  .wizard-steps-container::-webkit-scrollbar {
+    display: none;
+  }
+
+  .wizard-step-node,
+  .wizard-step-item {
+    flex-shrink: 0;
+  }
+
+  .wizard-progress-line,
+  .wizard-progress-fill,
+  .wizard-progress-bar-fill {
+    display: none;
+  }
+
+  .wizard-step-node .step-badge,
+  .wizard-step-item .wizard-step-icon {
+    width: 38px;
+    height: 38px;
+    font-size: 0.88rem;
+  }
+
+  .wizard-step-node .step-title,
+  .wizard-step-item .wizard-step-label {
+    font-size: 0.72rem;
+  }
+
+  .form-footer-action,
+  .wizard-footer-actions {
+    padding: 14px 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .btn-step-prev,
+  .btn-wiz-prev,
+  .btn-save-submit,
+  .btn-wiz-next,
+  .btn-wiz-submit {
+    flex: 1 1 calc(50% - 6px);
+    justify-content: center;
+    text-align: center;
+  }
+}
+
+@media (max-width: 374.98px) {
+  .btn-step-prev,
+  .btn-wiz-prev,
+  .btn-save-submit,
+  .btn-wiz-next,
+  .btn-wiz-submit {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+}
+
+/* ==========================================================================
+ * 25. SPECIFICATION TABLES & KEY-VALUE PAIRS (COMPONENT 17)
+ * ========================================================================== */
+@media (max-width: 575.98px) {
+  .spec-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    padding: 10px 14px !important;
+    gap: 4px !important;
+  }
+
+  .spec-label {
+    width: 100% !important;
+    font-size: 0.72rem !important;
+    margin-bottom: 2px;
+  }
+
+  .spec-value {
+    width: 100% !important;
+    font-size: 0.86rem !important;
+  }
+}
+
+/* ==========================================================================
+ * 26. MODULE CUSTOM TABS & NAVIGATION (COMPONENT 18)
+ * ========================================================================== */
+@media (max-width: 767.98px) {
+  .nav-student-tabs,
+  .nav-emp-tabs,
+  .edit-tab-nav {
+    display: flex;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+
+  .nav-student-tabs::-webkit-scrollbar,
+  .nav-emp-tabs::-webkit-scrollbar,
+  .edit-tab-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-student-tabs .nav-link,
+  .nav-emp-tabs .nav-link,
+  .edit-tab-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .edit-footer {
+    padding: 12px 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .edit-footer .btn-save {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+}
+
+/* ==========================================================================
+ * 27. COMPACT RUNTIME FILTER BAR (COMPONENT 19)
+ * ========================================================================== */
+@media (max-width: 991.98px) {
+  body .filter-bar-compact {
+    gap: 10px;
+  }
+
+  body .filter-bar-compact .fbc-search {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  body .filter-bar-compact select {
+    flex: 1 1 calc(50% - 5px);
+    min-width: 0;
+  }
+
+  body .filter-bar-compact .fbc-actions-end {
+    flex: 1 1 100%;
+    margin-left: 0;
+  }
+
+  body .filter-bar-compact .fbc-btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 479.98px) {
+  body .filter-bar-compact {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 12px 14px;
+  }
+
+  body .filter-bar-compact .fbc-search,
+  body .filter-bar-compact select,
+  body .filter-bar-compact .fbc-actions-end {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+
+  body .filter-bar-compact .fbc-actions-end {
+    margin-left: 0;
+  }
+
+  body .filter-bar-compact .fbc-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ==========================================================================
+ * 28. ATTENDANCE ROSTER & MOBILE MARKING CONTROLS
+ * ========================================================================== */
+.status-selector-group {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.status-option-btn {
+  min-width: 38px;
+  min-height: 38px;
+  padding: 6px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  border-radius: var(--border-radius-sm, 6px);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+@media (max-width: 575.98px) {
+  .status-selector-group {
+    gap: 3px;
+  }
+  .status-option-btn {
+    min-width: 34px;
+    min-height: 34px;
+    padding: 4px 6px;
+    font-size: 0.75rem;
+  }
+  .sticky-save-bar {
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .sticky-save-bar .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ==========================================================================
+ * 29. TIMETABLE RESPONSIVE SCROLL CONTAINERS
+ * ========================================================================== */
+.timetable-editor-scroll,
+.view-timetable-scroll {
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+  position: relative;
+}
+
+.view-timetable-grid {
+  min-width: 720px;
+}
+
+@media (max-width: 767.98px) {
+  .timetable-editor-scroll table,
+  .view-timetable-scroll table {
+    min-width: 640px;
+  }
+}
+
+/* ==========================================================================
+ * 30. HOLIDAY CALENDAR GRID TOUCH ADAPTATION
+ * ========================================================================== */
+.cal-body-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+
+@media (max-width: 575.98px) {
+  .calendar-month-grid {
+    min-width: 520px;
+  }
+}
+
+/* ==========================================================================
+ * 31. EXAM MARKSHEET RESPONSIVE INPUT CONTROLS
+ * ========================================================================== */
+.mark-input-field {
+  min-width: 70px;
+  max-width: 100px;
+  text-align: center;
+}
+
+@media (max-width: 575.98px) {
+  .mark-input-field {
+    min-width: 60px;
+    padding: 6px 4px;
+    font-size: 0.875rem;
+  }
+}
+
+/* ==========================================================================
+ * 32. FINANCE LEDGER & DIGITAL RECEIPT RESPONSIVE RULES
+ * ========================================================================== */
+.receipt-card {
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+.financial-stat-amount {
+  font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+  font-weight: 800;
+  word-break: break-word;
+}
+
+@media (max-width: 575.98px) {
+  .receipt-card .receipt-header {
+    padding: 1.25rem !important;
+  }
+  .receipt-card .receipt-body {
+    padding: 1.25rem !important;
+  }
+}
+
+/* Print Isolation for Receipts */
+@media print {
+  .project-header,
+  .btn-header-action,
+  .sidebar,
+  .top-navbar,
+  .header-actions {
+    display: none !important;
+  }
+  .receipt-card {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+}
+
+/* ==========================================================================
+ * 33. HOSTEL BED MATRIX & OCCUPANCY CHIPS
+ * ========================================================================== */
+.bed-chip-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 220px;
+}
+
+.bed-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+@media (max-width: 767.98px) {
+  .hostel-action-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .hostel-action-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* ==========================================================================
+ * 34. LIBRARY BOOK CATALOG & CIRCULATION DESK
+ * ========================================================================== */
+.book-title-wrap {
+  word-break: break-word;
+  max-width: 280px;
+}
+
+.table-library th,
+.table-library td {
+  vertical-align: middle;
+}
+
+@media (max-width: 575.98px) {
+  .book-title-wrap {
+    max-width: 190px;
+    font-size: 0.875rem;
+  }
+}
+
+/* ==========================================================================
+ * 35. FLEET & ASSET INVENTORY RESPONSIVE TABLES
+ * ========================================================================== */
+.table-transport th,
+.table-transport td,
+.table-inventory th,
+.table-inventory td {
+  vertical-align: middle;
+}
+
+.inventory-qty-badge {
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 4px 8px;
+}
+
+/* ==========================================================================
+ * 36. ADMINISTRATIVE TABLES & CONTROLLED SCROLLING STRATEGY (TASK 3D)
+ * ========================================================================== */
+.table-card {
+  overflow: hidden !important;
+}
+
+.table-card .table-responsive,
+.admin-table-responsive {
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+
+@media (max-width: 767.98px) {
+  .modern-table,
+  .rp-tbl,
+  .table-card table {
+    min-width: 680px;
+  }
+
+  .modern-table th,
+  .modern-table td {
+    padding: 10px 10px !important;
+    font-size: 0.8rem !important;
+  }
+
+  .btn-add-branch {
+    padding: 4px 8px !important;
+    font-size: 0.72rem !important;
+  }
+
+  .action-dots-btn {
+    width: 34px !important;
+    height: 34px !important;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .table-card {
+    border-radius: var(--theme-radius-card, 14px) !important;
+  }
+}
+
+/* ==========================================================================
+ * 37. MULTI-STEP ADMIN WIZARDS & ACTION BARS (TASK 3D)
+ * ========================================================================== */
+@media (max-width: 767.98px) {
+  .wizard-steps-container {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    display: flex !important;
+    justify-content: flex-start !important;
+    gap: 16px !important;
+    padding: 14px 12px !important;
+  }
+
+  .wizard-steps-container::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .wizard-step-item {
+    flex-shrink: 0 !important;
+    min-width: 70px !important;
+    padding: 0 4px !important;
+  }
+
+  .wizard-progress-line {
+    display: none !important;
+  }
+
+  .wizard-step-icon {
+    width: 38px !important;
+    height: 38px !important;
+    font-size: 0.85rem !important;
+  }
+
+  .wizard-step-label {
+    font-size: 0.7rem !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+  }
+
+  .form-step-content {
+    padding: 20px 16px !important;
+  }
+
+  .form-section-title {
+    padding: 10px 14px !important;
+    font-size: 0.95rem !important;
+    gap: 10px !important;
+    margin-bottom: 18px !important;
+  }
+
+  .form-footer-action,
+  .bottom-action-card {
+    padding: 14px 16px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .form-footer-action > *,
+  .bottom-action-card > * {
+    width: 100% !important;
+  }
+
+  .form-footer-action .btn-save-submit,
+  .form-footer-action .btn-step-prev,
+  .bottom-action-card .btn-primary-gradient,
+  .bottom-action-card .btn-cancel-action {
+    width: 100% !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  .bottom-action-card .d-flex {
+    width: 100% !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+}
+
+/* ==========================================================================
+ * 38. PERMISSION MATRIX & ACCESS MANAGER (TASK 3D)
+ * ========================================================================== */
+.rp-cards-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)) !important;
+}
+
+@media (max-width: 767.98px) {
+  .rp-cards-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .rp-header {
+    margin: -0.75rem -0.75rem 1.25rem !important;
+    padding: 18px 16px !important;
+  }
+
+  .rp-header-title {
+    font-size: 1.35rem !important;
+  }
+
+  .rp-action-bar {
+    position: sticky !important;
+    bottom: 12px !important;
+    padding: 12px 14px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    margin-top: 20px !important;
+  }
+
+  .rp-action-bar .d-flex {
+    width: 100% !important;
+    justify-content: stretch !important;
+  }
+
+  .rp-action-bar .btn,
+  .rp-action-bar .rp-save-btn {
+    flex: 1 1 50% !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .rp-scope-bar {
+    padding: 8px 10px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .rp-scope-nav {
+    display: flex !important;
+    width: 100% !important;
+  }
+
+  .rp-scope-btn {
+    flex: 1 1 50% !important;
+    justify-content: center !important;
+    padding: 7px 10px !important;
+    font-size: 0.8rem !important;
+  }
+
+  .rp-card-head {
+    padding: 12px 14px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .rp-card-head > div:last-child {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+  }
+
+  .rp-card-body-inner {
+    padding: 12px 14px !important;
+  }
+
+  .rp-btn-row {
+    min-height: 40px !important;
+    padding: 8px 10px !important;
+    touch-action: manipulation !important;
+  }
+
+  .rp-action-bar .d-flex {
+    flex-direction: column !important;
+  }
+
+  .rp-action-bar .btn,
+  .rp-action-bar .rp-save-btn {
+    width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+}
+
+/* ==========================================================================
+ * 39. MULTI-TENANT CONTEXT & SCHOOL / BRANCH SELECTORS (TASK 3D)
+ * ========================================================================== */
+.schools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)) !important;
+  gap: 1.25rem;
+}
+
+@media (max-width: 767.98px) {
+  .top-nav {
+    padding: 0.75rem 1rem !important;
+  }
+
+  .nav-brand-text {
+    font-size: 0.9rem !important;
+  }
+
+  .nav-user-name {
+    display: none !important;
+  }
+
+  .hero-section {
+    padding: 1.35rem 1.25rem !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 1rem !important;
+    border-radius: 16px !important;
+  }
+
+  .hero-title {
+    font-size: 1.35rem !important;
+  }
+
+  .hero-stats {
+    display: flex !important;
+    justify-content: stretch !important;
+    gap: 0.75rem !important;
+    width: 100% !important;
+  }
+
+  .hero-stat {
+    flex: 1 1 auto !important;
+    padding: 0.6rem 0.8rem !important;
+  }
+
+  .page-body {
+    padding: 1rem 0.75rem 2rem !important;
+  }
+
+  .header-card {
+    padding: 1.5rem 1.25rem !important;
+    border-radius: 18px !important;
+    text-align: center !important;
+  }
+
+  .branch-card {
+    padding: 1.25rem 1rem !important;
+    border-radius: 16px !important;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .floating-toast {
+    left: 12px !important;
+    right: 12px !important;
+    top: 12px !important;
+    min-width: auto !important;
+    max-width: calc(100vw - 24px) !important;
+  }
+}
+
+/* ==========================================================================
+ * 40. SETTINGS, BRANDING, LAYOUT & THEME BUILDER REFINEMENTS (TASK 3D)
+ * ========================================================================== */
+.theme-action-sticky-bar {
+  position: sticky;
+  bottom: 16px;
+  z-index: 1050;
+  border-radius: 16px;
+  padding: 12px 20px;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.35);
+  margin-top: 24px;
+}
+
+@media (max-width: 767.98px) {
+  .theme-builder-header {
+    margin: -0.75rem -0.75rem 1.25rem !important;
+    padding: 18px 16px !important;
+  }
+
+  .theme-card-section {
+    padding: 16px !important;
+    border-radius: 14px !important;
+  }
+
+  .theme-action-sticky-bar {
+    padding: 12px 14px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .theme-action-sticky-bar .d-flex:last-child {
+    width: 100% !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .theme-action-sticky-bar .d-flex:last-child .btn {
+    width: 100% !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  .floating-preview-bar {
+    padding: 8px 12px !important;
+    font-size: 0.8rem !important;
+  }
+
+  .floating-preview-bar .d-flex:last-child {
+    width: 100% !important;
+    justify-content: flex-end !important;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .choice-pill-group {
+    gap: 6px !important;
+  }
+
+  .choice-pill-label {
+    padding: 6px 10px !important;
+    font-size: 0.78rem !important;
+  }
+
+  #modalDesignPreviewCanvas .row {
+    flex-direction: column !important;
+  }
+
+  #modalDesignPreviewCanvas .col-lg-3,
+  #modalDesignPreviewCanvas .col-md-4 {
+    width: 100% !important;
+  }
+}
+
+/* ==========================================================================
+ * 33. THEME GALLERY RESPONSIVE WORKSPACE & CARDS
+ * ========================================================================== */
+#section-theme-gallery {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.theme-cat-filter-wrapper {
+  max-width: 100%;
+}
+
+@media (max-width: 767.98px) {
+  .theme-cat-filter-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap !important;
+    padding-bottom: 6px;
+    margin-bottom: -6px;
+  }
+
+  .theme-cat-filter-wrapper .btn {
+    flex-shrink: 0;
+  }
+
+  .theme-design-card {
+    padding: 14px !important;
+  }
+
+  .mini-admin-panel {
+    min-height: 130px;
+  }
+}
+
+@media (max-width: 480px) {
+  .theme-card-actions {
+    flex-direction: column !important;
+  }
+
+  .theme-card-actions .btn {
+    width: 100% !important;
+  }
+}
+
+/* ==========================================================================
+ * 34. EXACT DASHBOARD TOP CARDS DESIGN & RESPONSIVE GRID (APPLIED TO ALL PAGES)
+ * ========================================================================== */
+
+.stats-container,
+.stats-grid,
+.stats-grid-compact,
+.stats-grid-student,
+.kpi-grid,
+.review-kpi-grid,
+.top-cards-grid,
+.dashboard-stats-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+  gap: 16px !important;
+  margin-bottom: 24px !important;
+  width: 100% !important;
+}
+
+.stat-card,
+.stat-card-modern,
+.stat-card-kpi,
+.kpi-card,
+.top-stat-card {
+  padding: 18px 22px !important;
+  gap: 16px !important;
+  border-radius: 16px !important;
+  background: rgba(255, 255, 255, 0.72) !important;
+  backdrop-filter: blur(16px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.55) !important;
+  box-shadow: 0 4px 24px rgba(36, 26, 32, 0.07), 0 1px 0 rgba(255, 255, 255, 0.9) inset !important;
+  display: flex !important;
+  align-items: center !important;
+  position: relative !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.stat-card::before,
+.stat-card-modern::before,
+.stat-card-kpi::before,
+.kpi-card::before,
+.top-stat-card::before {
+  content: "" !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: linear-gradient(135deg, rgba(108, 99, 255, 0.08) 0%, transparent 100%) !important;
+  opacity: 0 !important;
+  transition: opacity 0.3s ease !important;
+  pointer-events: none !important;
+}
+
+.stat-card:hover::before,
+.stat-card-modern:hover::before,
+.stat-card-kpi:hover::before,
+.kpi-card:hover::before,
+.top-stat-card:hover::before {
+  opacity: 1 !important;
+}
+
+[data-theme-mode="dark"] .stat-card,
+[data-theme-mode="dark"] .stat-card-modern,
+[data-theme-mode="dark"] .stat-card-kpi,
+[data-theme-mode="dark"] .kpi-card,
+[data-theme-mode="dark"] .top-stat-card {
+  background: rgba(var(--theme-surface-rgb, 21, 23, 30), 0.65) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.28), 0 1px 0 rgba(255,255,255,0.06) inset !important;
+}
+
+.stat-card:hover,
+.stat-card-modern:hover,
+.stat-card-kpi:hover,
+.kpi-card:hover,
+.top-stat-card:hover {
+  transform: translateY(-5px) !important;
+  box-shadow: 0 12px 32px rgba(var(--theme-primary-rgb, 185, 130, 143), 0.18), 0 1px 0 rgba(255, 255, 255, 0.9) inset !important;
+  border-color: rgba(var(--theme-primary-rgb, 185, 130, 143), 0.35) !important;
+  background: rgba(255, 255, 255, 0.88) !important;
+}
+
+[data-theme-mode="dark"] .stat-card:hover,
+[data-theme-mode="dark"] .stat-card-modern:hover,
+[data-theme-mode="dark"] .stat-card-kpi:hover,
+[data-theme-mode="dark"] .kpi-card:hover,
+[data-theme-mode="dark"] .top-stat-card:hover {
+  background: rgba(var(--theme-surface-rgb, 30, 24, 32), 0.82) !important;
+  border-color: rgba(var(--theme-primary-rgb, 185, 130, 143), 0.4) !important;
+}
+
+.stat-icon,
+.stat-icon-wrapper,
+.stat-card-kpi .icon-box,
+.kpi-icon-wrap {
+  width: 50px !important;
+  height: 50px !important;
+  border-radius: 14px !important;
+  font-size: 1.3rem !important;
+  flex-shrink: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18) !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.stat-info,
+.kpi-info {
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+.stat-info h3,
+.kpi-info h3,
+.stat-val,
+.stat-card-kpi .val {
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 1.45rem !important;
+  font-weight: 700 !important;
+  margin-bottom: 2px !important;
+  color: var(--luxury-text, #30262B) !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  line-height: 1.25 !important;
+}
+
+.stat-info p,
+.kpi-info p,
+.stat-title,
+.stat-card-kpi .lbl {
+  font-size: 0.76rem !important;
+  color: var(--luxury-muted, #82747A) !important;
+  margin: 0 !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.6px !important;
+}
+
+/* Specific icon gradient utilities from reference & dashboard */
+.stat-icon-purple, .stat-icon-indigo, .icon-books { background: linear-gradient(135deg, #6c63ff 0%, #4a44b5 100%) !important; color: #ffffff !important; }
+.stat-icon-cyan, .stat-icon-info, .icon-copies { background: linear-gradient(135deg, #36d1dc 0%, #5b86e5 100%) !important; color: #ffffff !important; }
+.stat-icon-emerald, .stat-icon-success, .icon-available { background: linear-gradient(135deg, #2E7D5B 0%, #236348 100%) !important; color: #ffffff !important; }
+.stat-icon-amber, .stat-icon-warning, .icon-issued { background: linear-gradient(135deg, #C6A15B 0%, #B88B46 100%) !important; color: #ffffff !important; }
+.stat-icon-rose, .stat-icon-danger, .icon-overdue { background: linear-gradient(135deg, #C28236 0%, #A66F2C 100%) !important; color: #ffffff !important; }
+
+/* Responsive Top Cards Breakpoints */
+@media (max-width: 991.98px) {
+  .stats-container,
+  .stats-grid,
+  .stats-grid-compact,
+  .stats-grid-student,
+  .kpi-grid,
+  .review-kpi-grid,
+  .top-cards-grid,
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px !important;
+    margin-bottom: 20px !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .stat-card,
+  .stat-card-modern,
+  .stat-card-kpi,
+  .kpi-card,
+  .top-stat-card {
+    padding: 16px 18px !important;
+    gap: 14px !important;
+    border-radius: 14px !important;
+  }
+
+  .stat-icon,
+  .stat-icon-wrapper,
+  .stat-card-kpi .icon-box,
+  .kpi-icon-wrap {
+    width: 46px !important;
+    height: 46px !important;
+    font-size: 1.2rem !important;
+    border-radius: 12px !important;
+  }
+
+  .stat-info h3,
+  .kpi-info h3,
+  .stat-val,
+  .stat-card-kpi .val {
+    font-size: 1.35rem !important;
+  }
+
+  .stat-info p,
+  .kpi-info p,
+  .stat-title,
+  .stat-card-kpi .lbl {
+    font-size: 0.74rem !important;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .stats-container,
+  .stats-grid,
+  .stats-grid-compact,
+  .stats-grid-student,
+  .kpi-grid,
+  .review-kpi-grid,
+  .top-cards-grid,
+  .dashboard-stats-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .stat-card,
+  .stat-card-modern,
+  .stat-card-kpi,
+  .kpi-card,
+  .top-stat-card {
+    padding: 14px 16px !important;
+    gap: 12px !important;
+  }
+
+  .stat-icon,
+  .stat-icon-wrapper,
+  .stat-card-kpi .icon-box,
+  .kpi-icon-wrap {
+    width: 42px !important;
+    height: 42px !important;
+    font-size: 1.1rem !important;
+    border-radius: 12px !important;
+  }
+
+  .stat-info h3,
+  .kpi-info h3,
+  .stat-val,
+  .stat-card-kpi .val {
+    font-size: 1.25rem !important;
+  }
+
+  .stat-info p,
+  .kpi-info p,
+  .stat-title,
+  .stat-card-kpi .lbl {
+    font-size: 0.72rem !important;
+  }
+}
+
+@media (max-width: 400px) {
+  .stat-card,
+  .stat-card-modern,
+  .stat-card-kpi,
+  .kpi-card,
+  .top-stat-card {
+    padding: 12px 14px !important;
+    gap: 10px !important;
+  }
+
+  .stat-icon,
+  .stat-icon-wrapper,
+  .stat-card-kpi .icon-box,
+  .kpi-icon-wrap {
+    width: 38px !important;
+    height: 38px !important;
+    font-size: 1rem !important;
+    border-radius: 10px !important;
+  }
+
+  .stat-info h3,
+  .kpi-info h3,
+  .stat-val,
+  .stat-card-kpi .val {
+    font-size: 1.18rem !important;
+  }
+}
+
+/* ==========================================================================
+ * 35. PROJECT MANAGEMENT SYSTEM REFERENCE — TABLE-TO-CARDS RESPONSIVE DESIGN
+ * ========================================================================== */
+
+/* Desktop / Tablet Container Visibility */
+@media (min-width: 992px) {
+  .cards-grid {
+    display: none !important;
+  }
+}
+
+@media (max-width: 991.98px) {
+  /* Swap generated cards for their source tables on smaller screens. */
+  .desktop-table-container {
+    display: none !important;
+  }
+
+  /* Grid layout for tablets and larger mobile */
+  .cards-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 18px !important;
+    margin-bottom: 24px !important;
+    width: 100% !important;
+  }
+}
+
+/* Single column for small mobile */
+@media (max-width: 575.98px) {
+  .cards-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
+    margin-bottom: 20px !important;
+  }
+}
+
+/* Modern Card Styles */
+.modern-card {
+  background: var(--theme-surface, #ffffff);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
+  padding: 18px 20px;
+  margin-bottom: 0;
+  transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid var(--theme-border, rgba(0, 0, 0, 0.05));
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  animation: cardFadeInUp 0.4s ease forwards;
+}
+
+/* Gradient Accent Stripe on Card Top */
+.modern-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, var(--theme-primary, #6c63ff), var(--theme-success, #36d1dc));
+  z-index: 2;
+}
+
+.modern-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.11);
+  border-color: rgba(108, 99, 255, 0.25);
+}
+
+/* Card Header */
+.modern-card .card-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 0 0 10px 0 !important;
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid var(--theme-border, rgba(0, 0, 0, 0.06)) !important;
+}
+
+.modern-card .card-title {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--theme-text-primary, #1e293b);
+  margin-bottom: 0;
+  line-height: 1.35;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  word-break: break-word;
+}
+
+.modern-card .card-title img,
+.modern-card .card-title .school-logo-avatar,
+.modern-card .card-title .school-initial-avatar,
+.modern-card .card-title .client-avatar {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+}
+
+/* Card Details (Key-Value Rows) */
+.modern-card .card-details {
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.modern-card .detail-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.86rem;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--theme-border-subtle, rgba(0, 0, 0, 0.04));
+  gap: 10px;
+}
+
+.modern-card .detail-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.modern-card .detail-item-key {
+  font-weight: 600;
+  color: var(--theme-text-secondary, #64748b);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  flex-shrink: 0;
+}
+
+.modern-card .detail-item-key i {
+  color: var(--theme-primary, #6c63ff);
+  width: 16px;
+  text-align: center;
+  font-size: 0.88rem;
+}
+
+.modern-card .detail-item-val {
+  font-weight: 600;
+  color: var(--theme-text-primary, #1e293b);
+  text-align: right;
+  word-break: break-word;
+}
+
+/* Card Actions (Bottom Buttons Row) */
+.modern-card .card-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--theme-border, rgba(0, 0, 0, 0.06));
+}
+
+.modern-card .card-actions .card-action-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Action Buttons within Cards */
+.action-btn-table {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  color: white;
+  text-decoration: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.action-btn-table:hover {
+  transform: translateY(-2px) scale(1.06);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  color: white;
+}
+
+.action-btn-table.view {
+  background: var(--theme-info, #0284c7);
+}
+
+.action-btn-table.edit {
+  background: var(--theme-warning, #f59e0b);
+}
+
+.action-btn-table.delete {
+  background: var(--theme-danger, #ef4444);
+}
+
+/* Three-dots actions popup from reference project */
+.table-action-buttons,
+.card-action-wrapper {
+  position: relative;
+}
+
+.action-toggle-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--theme-border, #e2e8f0);
+  background: var(--theme-surface, #ffffff);
+  color: var(--theme-text-primary, #334155);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-toggle-btn:hover {
+  background: var(--theme-surface-secondary, #f8fafc);
+  border-color: var(--theme-primary, #6c63ff);
+  color: var(--theme-primary, #6c63ff);
+}
+
+/* No data message card */
+.no-data-message.modern-card {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 36px 20px;
+}
+
+.no-data-message .no-data-icon {
+  font-size: 2.5rem;
+  color: #94a3b8;
+  margin-bottom: 12px;
+}
+
+/* Animations for cards */
+@keyframes cardFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modern-card:nth-child(1) { animation-delay: 0.05s; }
+.modern-card:nth-child(2) { animation-delay: 0.1s; }
+.modern-card:nth-child(3) { animation-delay: 0.15s; }
+.modern-card:nth-child(4) { animation-delay: 0.2s; }
+.modern-card:nth-child(5) { animation-delay: 0.25s; }
+.modern-card:nth-child(6) { animation-delay: 0.3s; }
+
+/* Small Mobile (< 575px) Card Polish */
+@media (max-width: 575.98px) {
+  .modern-card {
+    padding: 15px 16px;
+    border-radius: 14px;
+  }
+
+  .modern-card .card-title {
+    font-size: 0.98rem;
+  }
+
+  .modern-card .detail-item {
+    font-size: 0.82rem;
+    padding: 5px 0;
+  }
+
+  .action-btn-table {
+    width: 32px;
+    height: 32px;
+    font-size: 0.82rem;
+  }
+}
+
+/* Dark Mode Tokens Compatibility for Cards */
+[data-theme-mode="dark"] .modern-card {
+  background: var(--theme-surface, #1e222d);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme-mode="dark"] .modern-card .card-header {
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme-mode="dark"] .modern-card .card-title {
+  color: #f1f5f9;
+}
+
+[data-theme-mode="dark"] .modern-card .detail-item {
+  border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme-mode="dark"] .modern-card .detail-item-val {
+  color: #e2e8f0;
+}
+
+[data-theme-mode="dark"] .modern-card .card-actions {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme-mode="dark"] .action-toggle-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+}
+
+[data-theme-mode="dark"] .stat-card,
+[data-theme-mode="dark"] .stat-card-modern,
+[data-theme-mode="dark"] .kpi-card,
+[data-theme-mode="dark"] .top-stat-card {
+  background: rgba(var(--theme-surface-rgb, 21, 23, 30), 0.65) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.28), 0 1px 0 rgba(255,255,255,0.06) inset !important;
+}
+
+[data-theme-mode="dark"] .stat-card:hover,
+[data-theme-mode="dark"] .stat-card-modern:hover,
+[data-theme-mode="dark"] .kpi-card:hover,
+[data-theme-mode="dark"] .top-stat-card:hover {
+  background: rgba(var(--theme-surface-rgb, 30, 24, 32), 0.82) !important;
+  border-color: rgba(var(--theme-primary-rgb, 185, 130, 143), 0.4) !important;
+}
+
+[data-theme-mode="dark"] .stat-info h3,
+[data-theme-mode="dark"] .kpi-info h3,
+[data-theme-mode="dark"] .stat-val {
+  color: #f8fafc !important;
+}
+
+/* Shared table pagination, including the pager generated for responsive cards. */
+.responsive-page-hidden {
+  display: none !important;
+}
+
+.pagination-wrapper {
+  min-width: 0;
+}
+
+body .pagination-wrapper:not(.decision-board-pagination) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  gap: 1rem;
+  min-height: 64px;
+  margin: 0 0 1.25rem;
+  padding: 14px 18px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+}
+
+.pagination-wrapper .pagination .page-item .page-link,
+.pagination-wrapper .pagination > a,
+.responsive-table-page-links a {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 4px;
+  padding: 0;
+  border: 1px solid rgba(108, 99, 255, 0.15);
+  border-radius: 10px;
+  background: rgba(108, 99, 255, 0.08);
+  color: #6c63ff;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+}
+
+.pagination-wrapper .pagination .page-item.active .page-link,
+.pagination-wrapper .pagination > a.active,
+.responsive-table-page-links a.active {
+  border-color: transparent !important;
+  background: linear-gradient(135deg, #6c63ff, #36d1dc) !important;
+  color: #fff !important;
+  box-shadow: 0 6px 16px rgba(108, 99, 255, 0.35);
+}
+
+.pagination-wrapper .pagination .page-item.disabled .page-link,
+.pagination-wrapper .pagination > a.disabled,
+.responsive-table-page-links a.disabled {
+  pointer-events: none;
+  color: #6c63ff;
+  opacity: 0.3;
+}
+
+.pagination-wrapper .pagination .page-item:not(.active):not(.disabled) .page-link,
+.pagination-wrapper .pagination > a:not(.active):not(.disabled),
+.responsive-table-page-links a:not(.active):not(.disabled) {
+  background: rgba(108, 99, 255, 0.08);
+}
+
+.pagination-wrapper .pagination .page-item:not(.active):not(.disabled) .page-link:hover,
+.pagination-wrapper .pagination > a:not(.active):not(.disabled):hover,
+.responsive-table-page-links a:not(.active):not(.disabled):hover {
+  transform: translateY(-3px) !important;
+  border-color: transparent !important;
+  background: var(--theme-brand-gradient, var(--theme-primary)) !important;
+  box-shadow: var(--theme-btn-shadow, 0 6px 16px rgba(var(--theme-primary-rgb), 0.35)) !important;
+  color: var(--theme-btn-primary-text, #fff) !important;
+}
+
+.pagination-wrapper .pagination .page-item.disabled .pagination-dots {
+  width: auto;
+  min-width: 0;
+  height: auto;
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--theme-primary) !important;
+  font-weight: 700;
+  opacity: 1 !important;
+  pointer-events: none !important;
+}
+
+.pagination-wrapper .pagination-info,
+.pagination-wrapper .decision-board-pagination-summary {
+  flex: 0 0 auto;
+  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.pagination-wrapper .pagination-info span {
+  color: var(--theme-primary);
+  font-weight: 700;
+}
+
+.pagination-controls,
+.responsive-table-pagination-controls,
+.decision-board-pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+  gap: 0.65rem;
+  min-width: max-content;
+  white-space: nowrap;
+}
+
+.pagination-page-size-label,
+.responsive-table-page-size-label {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pagination-page-size,
+.responsive-table-pagination-controls {
+  flex: 0 0 auto;
+}
+
+.pagination-page-size,
+.responsive-table-page-size {
+  width: 74px;
+  min-height: 38px;
+  border-color: #dbe2ea;
+  border-radius: 8px;
+  font-size: 0.8rem;
+}
+
+.responsive-table-page-links {
+  gap: 0.35rem;
+  flex-wrap: nowrap;
+}
+
+.responsive-table-page-links .dots {
+  padding: 0 6px;
+  color: var(--theme-primary);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  body .pagination-wrapper:not(.decision-board-pagination) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 14px;
+    max-width: 100%;
+    padding: 12px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  body .pagination-wrapper:not(.decision-board-pagination)::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pagination-wrapper:not(.decision-board-pagination) .pagination-info {
+    text-align: left;
+    font-size: 12px;
+  }
+
+  .responsive-table-pagination-info {
+    text-align: left;
+  }
+
+  .pagination-controls,
+  .responsive-table-pagination-controls {
+    width: max-content;
+    flex: 0 0 auto;
+    justify-content: flex-start;
+  }
+
+  .pagination-wrapper .pagination .page-item .page-link,
+  .pagination-wrapper .pagination > a,
+  .responsive-table-page-links a {
+    width: 30px;
+    height: 32px;
+    margin: 0 2px;
+    border-radius: 8px;
+    font-size: 12px;
+  }
+
+  .pagination-wrapper .pagination .page-item.disabled .pagination-dots {
+    width: auto;
+    height: auto;
+    margin: 0 2px;
+  }
+}

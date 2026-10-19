@@ -1,0 +1,528 @@
+[2026-10-19 12:02:24] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/login"}
+[2026-10-19 12:04:32] [SECURITY] Rejected GPS submission: Driver profile 3 does not have an active authorized trip assignment. 
+[2026-10-19 12:13:44] [SECURITY] Rejected GPS submission: Driver profile 3 does not have an active authorized trip assignment. 
+[2026-10-19 12:19:49] [SECURITY] Unauthorized role access attempt {"user_id":4,"role":"driver","required":["admin","dispatcher"],"path":"/office/dashboard"}
+[2026-10-19 12:19:55] [SECURITY] Rejected GPS submission: Driver profile 3 does not have an active authorized trip assignment. 
+[2026-10-19 12:28:04] [SECURITY] Rejected GPS submission: Driver profile 3 does not have an active authorized trip assignment. 
+[2026-10-19 12:50:10] [SECURITY] Rejected GPS submission: Driver profile 3 does not have an active authorized trip assignment. 
+[2026-10-19 12:50:11] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 12:50:11] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 12:50:55] [SECURITY] Rejected GPS submission: Driver profile 3 does not have an active authorized trip assignment. 
+[2026-10-19 12:50:57] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 12:50:57] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 12:51:54] [SECURITY] Rejected GPS submission: Driver profile 3 does not have an active authorized trip assignment. 
+[2026-10-19 12:51:55] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 12:51:55] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 12:53:47] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 12:54:18] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 12:54:53] [SECURITY] Rejected GPS submission: Driver profile 3 does not have an active authorized trip assignment. 
+[2026-10-19 12:54:55] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 12:54:55] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 12:54:55] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 12:54:55] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 13:04:14] [SECURITY] Rejected GPS submission: Driver profile 3 does not have an active authorized trip assignment. 
+[2026-10-19 13:04:16] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 13:04:16] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 13:04:16] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 13:04:16] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 13:11:18] [SECURITY] Rejected GPS submission: Driver profile 3 does not have an active authorized trip assignment. 
+[2026-10-19 13:11:20] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 13:11:20] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 13:11:20] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 13:11:20] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 13:21:30] [SECURITY] Rejected GPS submission: Driver profile 3 does not have an active authorized trip assignment. 
+[2026-10-19 13:21:32] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 13:21:32] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 13:21:32] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 13:21:32] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 13:22:37] [SECURITY] CSRF token validation failed {"ip":"::1","path":"/login"}
+[2026-10-19 13:23:46] [SECURITY] Rejected GPS submission: Driver profile 3 does not have an active authorized trip assignment. 
+[2026-10-19 13:23:48] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 13:23:48] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 13:23:48] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 13:23:48] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 13:36:35] [SECURITY] Rejected GPS submission: Driver profile 3 does not have an active authorized trip assignment. 
+[2026-10-19 13:36:37] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 13:36:37] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 13:36:37] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 13:36:37] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 13:40:15] [SECURITY] Rejected GPS submission: Driver profile 3 does not have an active authorized trip assignment. 
+[2026-10-19 13:40:17] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 13:40:17] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 13:40:17] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 13:40:17] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 13:40:54] [SECURITY] Rejected GPS submission: Driver profile 3 does not have an active authorized trip assignment. 
+[2026-10-19 13:40:56] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 13:40:56] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 13:40:56] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 13:40:56] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 13:41:28] [SECURITY] Rejected GPS submission: Driver profile 3 does not have an active authorized trip assignment. 
+[2026-10-19 13:41:30] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 13:41:30] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 13:41:30] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 13:41:30] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 13:42:09] [SECURITY] Rejected GPS submission: Driver profile 3 does not have an active authorized trip assignment. 
+[2026-10-19 13:42:11] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 13:42:11] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 13:42:12] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 13:42:12] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 13:43:50] [SECURITY] Rejected GPS submission: Driver profile 3 does not have an active authorized trip assignment. 
+[2026-10-19 13:43:52] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 13:43:52] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 13:43:52] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 13:43:52] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 13:52:03] [SECURITY] Rejected GPS submission: Driver profile 3 does not have an active authorized trip assignment. 
+[2026-10-19 13:52:04] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 13:52:04] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 13:52:05] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 13:52:05] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 13:53:20] [SECURITY] Rejected GPS submission: Driver profile 3 does not have an active authorized trip assignment. 
+[2026-10-19 13:53:21] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 13:53:21] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 13:53:22] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 13:53:22] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 14:13:45] [SECURITY] Login attempt with unknown username/email: admin@voyagego.com 
+[2026-10-19 14:14:16] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 14:14:16] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 14:14:17] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 14:14:17] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 14:32:49] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 14:32:49] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 14:32:49] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 14:32:49] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 14:37:42] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 14:37:42] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 14:37:42] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 14:37:42] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 14:37:43] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 14:37:43] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 14:38:14] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 14:38:14] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 14:38:15] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 14:38:15] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 14:38:16] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 14:38:16] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 14:43:04] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/login"}
+[2026-10-19 14:43:11] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 14:43:11] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 14:43:12] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 14:43:12] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 14:43:12] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 14:43:12] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 14:48:16] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/login"}
+[2026-10-19 14:48:24] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 14:48:24] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 14:48:24] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 14:48:24] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 14:48:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 14:48:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 15:09:58] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 15:09:58] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 15:09:59] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 15:09:59] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 15:10:00] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 15:10:00] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 15:10:49] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 15:10:49] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 15:10:50] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 15:10:50] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 15:10:52] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 15:10:52] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 15:12:41] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/login"}
+[2026-10-19 15:12:51] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 15:12:51] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 15:12:52] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 15:12:52] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 15:12:55] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 15:12:55] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 15:27:00] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 15:27:00] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 15:27:00] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 15:27:00] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 15:27:01] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 15:27:01] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 18:05:00] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 18:05:00] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 18:05:01] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 18:05:01] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 18:05:02] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 18:05:02] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 18:21:55] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 18:21:55] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 18:21:56] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 18:21:56] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 18:21:57] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 18:21:57] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 18:22:48] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 18:22:48] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 18:22:48] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 18:22:48] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 18:22:49] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 18:22:49] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 18:25:10] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 18:25:10] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 18:25:11] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 18:25:11] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 18:25:12] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 18:25:12] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 18:26:52] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 18:26:52] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 18:26:53] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 18:26:53] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 18:26:54] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 18:26:54] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 18:27:44] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 18:27:44] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 18:27:45] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 18:27:45] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 18:27:46] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 18:27:46] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 18:27:46] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-10-19 18:27:46] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-10-19 18:27:46] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-10-19 18:27:46] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-10-19 18:29:29] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 18:29:29] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 18:29:29] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 18:29:29] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 18:29:30] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 18:29:30] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 18:29:30] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-10-19 18:29:30] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-10-19 18:29:30] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-10-19 18:29:30] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-10-19 18:29:30] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-10-19 18:29:30] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-10-19 18:30:15] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 18:30:15] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 18:30:15] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 18:30:15] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 18:30:16] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 18:30:16] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 18:30:16] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-10-19 18:30:16] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-10-19 18:30:16] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-10-19 18:30:16] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-10-19 18:30:17] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-10-19 18:30:17] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-10-19 18:39:31] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 18:39:31] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 18:39:31] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 18:39:31] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 18:39:32] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 18:39:32] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 18:39:32] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-10-19 18:39:32] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-10-19 18:39:32] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-10-19 18:39:32] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-10-19 18:39:32] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-10-19 18:39:32] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-10-19 18:45:23] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 18:45:23] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 18:45:24] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 18:45:24] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 18:45:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 18:45:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 18:45:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-10-19 18:45:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-10-19 18:45:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-10-19 18:45:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-10-19 18:45:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-10-19 18:45:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-10-19 18:54:27] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 18:54:27] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 18:54:28] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 18:54:28] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 18:54:29] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 18:54:29] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 18:54:29] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-10-19 18:54:29] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-10-19 18:54:29] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-10-19 18:54:29] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-10-19 18:54:29] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-10-19 18:54:29] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-10-19 18:57:52] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 18:57:52] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 18:57:52] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 18:57:53] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 18:57:54] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 18:57:54] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 18:57:54] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-10-19 18:57:54] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-10-19 18:57:54] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-10-19 18:57:54] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-10-19 18:57:54] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-10-19 18:57:54] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-10-19 19:11:01] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 19:11:01] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 19:11:02] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 19:11:02] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 19:11:03] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 19:11:03] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 19:13:21] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 19:13:21] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 19:13:22] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 19:13:22] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 19:13:23] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 19:13:23] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 19:14:26] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 19:14:26] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 19:14:26] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 19:14:26] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 19:14:27] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 19:14:27] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 19:16:14] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 19:16:14] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 19:16:15] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 19:16:15] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 19:16:16] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 19:16:16] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 19:16:16] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-10-19 19:16:16] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-10-19 19:16:16] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-10-19 19:16:16] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-10-19 19:17:06] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 19:17:06] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 19:17:06] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 19:17:06] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 19:17:07] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 19:17:07] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 19:17:07] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-10-19 19:17:07] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-10-19 19:17:07] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-10-19 19:17:07] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-10-19 19:17:08] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-10-19 19:17:08] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-10-19 19:23:41] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 19:23:41] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 19:23:41] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 19:23:41] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 19:23:42] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 19:23:42] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 19:23:42] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-10-19 19:23:42] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-10-19 19:23:43] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-10-19 19:23:43] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-10-19 19:23:43] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-10-19 19:23:43] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-10-19 19:30:14] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 19:30:14] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 19:30:15] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 19:30:15] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 19:30:16] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 19:30:16] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 19:30:16] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-10-19 19:30:16] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-10-19 19:30:16] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-10-19 19:30:16] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-10-19 19:30:16] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-10-19 19:30:16] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-10-19 19:32:23] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 19:32:23] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 19:32:24] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 19:32:24] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 19:32:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 19:32:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 19:32:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-10-19 19:32:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-10-19 19:32:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-10-19 19:32:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-10-19 19:32:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-10-19 19:32:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-10-19 20:19:53] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 20:19:53] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 20:19:54] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 20:19:54] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 20:19:55] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 20:19:55] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 20:19:55] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-10-19 20:19:55] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-10-19 20:19:55] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-10-19 20:19:55] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-10-19 20:19:55] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-10-19 20:19:55] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-10-19 20:41:06] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 20:41:06] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 20:41:06] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 20:41:06] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 20:41:07] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 20:41:07] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 20:41:07] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-10-19 20:41:07] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-10-19 20:41:07] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-10-19 20:41:07] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-10-19 20:41:07] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-10-19 20:41:07] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-10-19 20:42:06] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 20:42:06] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 20:42:06] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 20:42:06] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 20:42:07] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 20:42:07] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 20:42:08] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-10-19 20:42:08] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-10-19 20:42:08] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-10-19 20:42:08] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-10-19 20:42:08] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-10-19 20:42:08] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-10-19 20:47:33] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 20:47:33] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 20:47:34] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 20:47:34] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 20:47:35] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 20:47:35] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 20:47:35] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-10-19 20:47:35] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-10-19 20:47:35] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-10-19 20:47:35] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-10-19 20:47:35] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-10-19 20:47:35] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-10-19 21:00:54] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 21:00:54] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 21:00:55] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 21:00:55] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 21:00:56] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 21:00:56] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 21:00:56] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-10-19 21:00:56] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-10-19 21:00:56] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/roles"}
+[2026-10-19 21:00:56] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-10-19 21:00:56] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-10-19 21:00:56] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-10-19 21:00:56] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-10-19 21:12:23] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 21:12:23] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 21:12:24] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 21:12:24] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 21:12:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 21:12:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 21:12:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-10-19 21:12:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-10-19 21:12:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/roles"}
+[2026-10-19 21:12:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-10-19 21:12:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-10-19 21:12:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-10-19 21:12:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-10-19 21:24:28] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 21:24:28] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 21:24:28] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 21:24:28] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 21:24:29] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 21:24:29] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 21:24:29] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-10-19 21:24:29] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-10-19 21:24:29] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/roles"}
+[2026-10-19 21:24:29] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-10-19 21:24:29] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-10-19 21:24:29] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-10-19 21:24:29] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-10-19 21:24:30] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/role-permission"}
+[2026-10-19 21:24:30] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/roles"}
+[2026-10-19 21:24:30] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/role-permission"}
+[2026-10-19 21:24:30] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/roles/0/update"}
+[2026-10-19 21:24:30] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/roles/7/delete"}
+[2026-10-19 21:24:30] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/roles/0/delete"}
+[2026-10-19 21:28:08] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 21:28:08] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 21:28:09] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 21:28:09] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 21:28:10] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 21:28:10] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 21:28:10] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-10-19 21:28:10] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-10-19 21:28:10] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/roles"}
+[2026-10-19 21:28:10] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-10-19 21:28:10] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-10-19 21:28:10] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-10-19 21:28:10] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-10-19 21:28:10] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/role-permission"}
+[2026-10-19 21:28:10] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/roles"}
+[2026-10-19 21:28:10] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/role-permission"}
+[2026-10-19 21:28:10] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/roles/0/update"}
+[2026-10-19 21:28:10] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/roles/7/delete"}
+[2026-10-19 21:28:10] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/roles/0/delete"}
+[2026-10-19 21:28:39] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/roles"}
+[2026-10-19 21:29:27] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 21:29:27] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 21:29:28] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 21:29:28] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 21:29:29] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 21:29:29] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 21:29:29] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-10-19 21:29:29] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-10-19 21:29:29] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/roles"}
+[2026-10-19 21:29:29] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-10-19 21:29:29] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-10-19 21:29:29] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-10-19 21:29:29] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-10-19 21:29:29] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/role-permission"}
+[2026-10-19 21:41:53] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 21:41:53] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 21:41:53] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 21:41:53] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 21:41:54] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 21:41:54] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 21:41:54] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-10-19 21:41:54] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-10-19 21:41:54] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/roles"}
+[2026-10-19 21:41:54] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-10-19 21:41:54] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-10-19 21:41:55] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-10-19 21:41:55] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-10-19 21:41:55] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/role-permission"}
+[2026-10-19 21:51:12] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 21:51:12] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 21:51:12] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 21:51:12] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 21:51:13] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 21:51:13] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 21:51:13] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-10-19 21:51:13] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-10-19 21:51:13] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/roles"}
+[2026-10-19 21:51:13] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-10-19 21:51:13] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-10-19 21:51:13] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-10-19 21:51:13] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-10-19 21:51:13] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/role-permission"}
+[2026-10-19 21:51:55] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 21:51:55] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 21:51:55] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 21:51:55] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 21:51:56] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 21:51:56] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 21:51:56] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-10-19 21:51:56] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-10-19 21:51:56] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/roles"}
+[2026-10-19 21:51:56] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-10-19 21:51:56] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-10-19 21:51:56] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-10-19 21:51:56] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-10-19 21:51:57] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/role-permission"}
+[2026-10-19 21:52:31] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 21:52:31] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 21:52:32] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 21:52:32] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 21:52:33] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 21:52:33] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 21:52:33] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-10-19 21:52:33] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-10-19 21:52:33] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/roles"}
+[2026-10-19 21:52:33] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-10-19 21:52:33] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-10-19 21:52:33] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-10-19 21:52:33] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-10-19 21:52:33] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/role-permission"}
+[2026-10-19 21:53:01] [SECURITY] Failed password attempt for user: owner 
+[2026-10-19 21:53:01] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-10-19 21:53:01] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-10-19 21:53:01] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-10-19 21:53:02] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 21:53:02] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-10-19 21:53:02] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-10-19 21:53:02] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-10-19 21:53:03] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/roles"}
+[2026-10-19 21:53:03] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-10-19 21:53:03] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-10-19 21:53:03] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-10-19 21:53:03] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-10-19 21:53:03] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/role-permission"}
