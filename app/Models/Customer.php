@@ -78,8 +78,10 @@ class Customer extends Model
             $params = array_merge($params, [$term, $term, $term, $term, $term, $term]);
         }
 
-        if (!empty($status) && in_array($status, ['active', 'inactive'], true)) {
-            $clauses[] = "`status` = ?";
+        if ($status === 'with_bookings' || $status === 'bookings') {
+            $clauses[] = "EXISTS (SELECT 1 FROM `bookings` b WHERE b.customer_profile_id = c.id OR (b.customer_profile_id IS NULL AND b.customer_id = c.user_id))";
+        } elseif (!empty($status) && in_array($status, ['active', 'inactive'], true)) {
+            $clauses[] = "c.`status` = ?";
             $params[] = $status;
         }
 
@@ -93,7 +95,7 @@ class Customer extends Model
     public function countFiltered(?string $search = null, ?string $status = null): int
     {
         [$whereSql, $params] = $this->buildFilterConditions($search, $status);
-        $sql = "SELECT COUNT(*) FROM `{$this->table}` {$whereSql}";
+        $sql = "SELECT COUNT(*) FROM `{$this->table}` c {$whereSql}";
         $stmt = $this->getPdo()->prepare($sql);
         $stmt->execute($params);
         return (int)$stmt->fetchColumn();
@@ -142,4 +144,29 @@ class Customer extends Model
         $stmt->execute([$customerId, $customerId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
+
+    /**
+     * Toggle customer active / inactive status
+     */
+    public function toggleStatus(int $id, ?string $desiredStatus = null): string
+    {
+        $customer = $this->find($id);
+        if (!$customer) {
+            throw new \RuntimeException('Customer record not found.');
+        }
+
+        if ($desiredStatus !== null && in_array($desiredStatus, ['active', 'inactive'], true)) {
+            $newStatus = $desiredStatus;
+        } else {
+            $newStatus = ($customer['status'] === 'active') ? 'inactive' : 'active';
+        }
+
+        $this->update($id, [
+            'status'     => $newStatus,
+            'updated_at' => date('Y-m-d H:i:s'),
+        ]);
+
+        return $newStatus;
+    }
 }
+

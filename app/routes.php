@@ -42,6 +42,22 @@ $router->get('/', function ($request) {
     return Response::redirect(url('/login'));
 });
 
+$router->get('/admin', function ($request) {
+    return Response::redirect(url('/office/dashboard'));
+});
+
+$router->get('/dashboard', function ($request) {
+    return Response::redirect(url('/office/dashboard'));
+});
+
+$router->get('/customers/create', function ($request) {
+    return Response::redirect(url('/office/customers/create'));
+});
+
+$router->get('/customers', function ($request) {
+    return Response::redirect(url('/office/customers'));
+});
+
 // -----------------------------------------------------------------------------
 // Language Selection & Persistence
 // -----------------------------------------------------------------------------
@@ -74,6 +90,9 @@ $router->post('/office/customers', [CustomerController::class, 'store'], ['auth'
 $router->get('/office/customers/{id}', [CustomerController::class, 'show'], ['auth', 'role:admin,dispatcher']);
 $router->get('/office/customers/{id}/edit', [CustomerController::class, 'edit'], ['auth', 'role:admin']);
 $router->post('/office/customers/{id}', [CustomerController::class, 'update'], ['auth', 'role:admin', 'csrf']);
+$router->post('/office/customers/{id}/toggle-status', [CustomerController::class, 'toggleStatus'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->post('/office/customers/{id}/status', [CustomerController::class, 'toggleStatus'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->post('/office/customers/{id}/delete', [CustomerController::class, 'delete'], ['auth', 'role:admin', 'csrf']);
 
 // -----------------------------------------------------------------------------
 // MODULE 3: Bookings — Create Booking and Booking List

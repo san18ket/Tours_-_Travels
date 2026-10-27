@@ -1230,13 +1230,13 @@
             document.body.appendChild(container);
         }
 
-        // Prevent duplicate toasts from displaying simultaneously
-        const existingCards = container.querySelectorAll('.vg-floating-msg-text');
-        for (let i = 0; i < existingCards.length; i++) {
-            if (existingCards[i].textContent.trim() === String(message).trim()) {
-                return; // Suppress duplicate notification
-            }
-        }
+        // Ensure ONLY ONE message box shows at a time (professional single-toast display).
+        // Immediately dismiss and remove any existing toast message cards so the newest message displays first cleanly.
+        const existingCards = container.querySelectorAll('.vg-floating-msg');
+        existingCards.forEach(c => {
+            if (c._dismissTimer) clearTimeout(c._dismissTimer);
+            c.remove();
+        });
 
         const safeType = (type === 'danger' || type === 'error') ? 'error' : (['warning', 'info'].includes(type) ? type : 'success');
 
@@ -1286,6 +1286,7 @@
 
         const dismiss = () => {
             if (dismissTimer) clearTimeout(dismissTimer);
+            card._dismissTimer = null;
             card.classList.remove('is-active');
             card.classList.add('is-dismissing');
             setTimeout(() => {
@@ -1300,12 +1301,14 @@
             dismissTimer = setTimeout(() => {
                 dismiss();
             }, remainingTime);
+            card._dismissTimer = dismissTimer;
         };
 
         const pauseTimer = () => {
             if (!dismissTimer) return;
             clearTimeout(dismissTimer);
             dismissTimer = null;
+            card._dismissTimer = null;
             const elapsed = Date.now() - startTime;
             remainingTime = Math.max(200, remainingTime - elapsed);
             const computedWidth = (remainingTime / duration) * 100;

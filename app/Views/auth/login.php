@@ -451,14 +451,14 @@
         <i class="fa-solid fa-flask"></i> Quick Dev Credentials <i class="fa-solid fa-chevron-down" id="devChevron"></i>
     </button>
     <div class="dev-quickfill-grid" id="devCredsGrid">
-        <button type="button" class="dev-cred-btn" onclick="fillCreds('owner', 'owner123')">
-            👑 System Owner
+        <button type="button" class="dev-cred-btn" onclick="fillCreds('owner', 'owner123', true)" title="Instant Login as System Owner">
+            👑 System Owner <span style="font-size:0.7rem; color:#10B981; font-weight:700;">(Auto-Login)</span>
         </button>
-        <button type="button" class="dev-cred-btn" onclick="fillCreds('admin', 'Admin@12345')">
-            💼 Administrator
+        <button type="button" class="dev-cred-btn" onclick="fillCreds('admin', 'Admin@12345', true)" title="Instant Login as Administrator">
+            💼 Administrator <span style="font-size:0.7rem; color:#10B981; font-weight:700;">(Auto-Login)</span>
         </button>
-        <button type="button" class="dev-cred-btn" onclick="fillCreds('dispatcher', 'Dispatcher@12345')">
-            📡 Dispatcher
+        <button type="button" class="dev-cred-btn" onclick="fillCreds('dispatcher', 'Dispatcher@12345', true)" title="Instant Login as Dispatcher">
+            📡 Dispatcher <span style="font-size:0.7rem; color:#10B981; font-weight:700;">(Auto-Login)</span>
         </button>
         <button type="button" class="dev-cred-btn" onclick="fillCreds('rajesh.driver', 'Driver@12345')">
             🚗 Chauffeur
@@ -498,11 +498,20 @@ function toggleDevCreds() {
     }
 }
 
-function fillCreds(login, password) {
+function fillCreds(login, password, andSubmit) {
     var l = document.getElementById('login');
     var p = document.getElementById('password');
     if (l) l.value = login;
     if (p) p.value = password;
+    if (andSubmit) {
+        setTimeout(function() {
+            var form = document.getElementById('loginForm');
+            if (form) {
+                var submitEvt = new Event('submit', { cancelable: true });
+                form.dispatchEvent(submitEvt);
+            }
+        }, 60);
+    }
 }
 
 function dismissAlert(alertEl) {
@@ -513,12 +522,32 @@ function dismissAlert(alertEl) {
     }, 400);
 }
 
+function showLoginAlert(msg, type) {
+    var existing = document.querySelector('.glass-alert');
+    if (existing) existing.remove();
+
+    var alertDiv = document.createElement('div');
+    alertDiv.className = 'glass-alert ' + (type === 'danger' ? 'glass-alert-danger' : 'glass-alert-info') + ' flash-auto-dismiss';
+    alertDiv.setAttribute('role', 'alert');
+    alertDiv.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> <span>' + msg + '</span>' +
+                         '<button type="button" class="glass-alert-close" onclick="dismissAlert(this.closest(\'.glass-alert\'))" aria-label="Dismiss">&times;</button>';
+
+    var formEl = document.getElementById('loginForm');
+    if (formEl && formEl.parentNode) {
+        formEl.parentNode.insertBefore(alertDiv, formEl);
+    }
+
+    setTimeout(function() {
+        dismissAlert(alertDiv);
+    }, 4500);
+}
+
 document.addEventListener('DOMContentLoaded', function () {
-    // Auto-dismiss flash alerts after 3 seconds (3000ms) with hover pause
+    // Auto-dismiss existing flash alerts
     var alerts = document.querySelectorAll('.flash-auto-dismiss');
     alerts.forEach(function (alert) {
         var timer = null;
-        var remaining = 3000;
+        var remaining = 3500;
         var start = Date.now();
 
         function startTimer() {
@@ -543,19 +572,80 @@ document.addEventListener('DOMContentLoaded', function () {
         startTimer();
     });
 
-    // Single submit handler for login form
+    // Lightning-fast AJAX Submit Handler for Login
     var form = document.getElementById('loginForm');
     var btn = document.getElementById('signInBtn');
+
     if (form && btn) {
         form.addEventListener('submit', function (e) {
+            e.preventDefault();
+
             if (btn.dataset.submitting === 'true') {
-                e.preventDefault();
                 return false;
             }
+
+            var loginInput = document.getElementById('login');
+            var passInput = document.getElementById('password');
+            var loginVal = (loginInput ? loginInput.value : '').trim();
+            var passVal = (passInput ? passInput.value : '');
+
+            if (!loginVal || !passVal) {
+                showLoginAlert('Please enter your username/email and password.', 'danger');
+                if (!loginVal && loginInput) loginInput.focus();
+                else if (passInput) passInput.focus();
+                return false;
+            }
+
             btn.dataset.submitting = 'true';
             btn.style.pointerEvents = 'none';
-            btn.style.opacity = '0.75';
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>' + (btn.innerText || 'Signing in...') + '</span>';
+            btn.style.opacity = '0.88';
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Authenticating...</span>';
+
+            var formData = new FormData(form);
+
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: formData
+            })
+            .then(function(res) {
+                if (res.redirected) {
+                    window.location.href = res.url;
+                    return null;
+                }
+                return res.json().catch(function() {
+                    if (res.ok) {
+                        window.location.href = '<?= url('/office/dashboard') ?>';
+                        return null;
+                    }
+                    throw new Error('Authentication failed (HTTP ' + res.status + ')');
+                });
+            })
+            .then(function(data) {
+                if (!data) return;
+
+                if (data.success) {
+                    btn.style.background = 'linear-gradient(135deg, #10B981 0%, #059669 100%)';
+                    btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> <span>Success! Opening Admin Panel...</span>';
+                    var target = data.redirect || '<?= url('/office/dashboard') ?>';
+                    window.location.href = target;
+                } else {
+                    btn.dataset.submitting = 'false';
+                    btn.style.pointerEvents = '';
+                    btn.style.opacity = '1';
+                    btn.innerHTML = '<i class="fa-solid fa-arrow-right"></i> <span><?= e(__('auth.login_btn', 'Login')) ?></span>';
+                    showLoginAlert(data.message || 'Invalid credentials provided. Please check username or password.', 'danger');
+                }
+            })
+            .catch(function(err) {
+                console.error('AJAX Login error:', err);
+                // Fallback to standard form submission
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Signing in...</span>';
+                form.submit();
+            });
         });
     }
 });

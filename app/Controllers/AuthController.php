@@ -56,19 +56,27 @@ class AuthController extends Controller
             $ip = $request->getClientIp();
             RateLimiter::clear("throttle:login:{$ip}:" . hash('sha256', strtolower($loginIdentifier)));
 
-            Session::setFlash('success', "Welcome back, {$user['name']}!");
+            $targetUrl = ($user['role'] === 'driver') ? url('/driver/dashboard') : url('/office/dashboard');
 
-            $redirectUrl = Session::get('redirect_after_login');
-            if ($redirectUrl) {
-                Session::remove('redirect_after_login');
-                return $this->redirect($redirectUrl);
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success'  => true,
+                    'message'  => "Welcome back, {$user['name']}!",
+                    'redirect' => $targetUrl,
+                ]);
             }
 
-            return $this->redirectBasedOnRole($user['role']);
+            return $this->redirect($targetUrl);
         } catch (ValidationException $e) {
+            if ($request->isAjax()) {
+                return $this->json(['success' => false, 'message' => $e->getMessage()], 422);
+            }
             Session::setFlash('danger', $e->getMessage());
             return $this->redirect(url('/login'));
         } catch (Throwable $e) {
+            if ($request->isAjax()) {
+                return $this->json(['success' => false, 'message' => $e->getMessage()], 401);
+            }
             Session::setFlash('danger', $e->getMessage());
             return $this->redirect(url('/login'));
         }
