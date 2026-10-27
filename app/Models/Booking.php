@@ -85,10 +85,23 @@ class Booking extends Model
         return (int)($res['total'] ?? 0);
     }
 
-    public function getPaginatedDetailed(string $filter = '', array $params = [], int $page = 1, int $perPage = 10): array
+    public function getPaginatedDetailed(string $filter = '', array $params = [], int $page = 1, int $perPage = 10, string $orderBy = 'b.id DESC'): array
     {
         $whereClause = $filter ? "WHERE {$filter}" : "";
         $offset = max(0, ($page - 1) * $perPage);
+
+        $allowedOrders = [
+            'b.id DESC',
+            'b.id ASC',
+            'COALESCE(c.name, u.name) ASC',
+            'COALESCE(c.name, u.name) DESC',
+            'b.start_date ASC',
+            'b.start_date DESC'
+        ];
+        if (!in_array($orderBy, $allowedOrders, true)) {
+            $orderBy = 'b.id DESC';
+        }
+
         $sql = "SELECT b.*,
                        COALESCE(c.name, u.name) as customer_name,
                        COALESCE(c.email, u.email) as customer_email,
@@ -109,7 +122,7 @@ class Booking extends Model
                 LEFT JOIN `users` u_drv ON dp.user_id = u_drv.id
                 LEFT JOIN `invoices` inv ON b.id = inv.booking_id
                 {$whereClause}
-                ORDER BY b.id DESC
+                ORDER BY {$orderBy}
                 LIMIT ? OFFSET ?";
         $stmt = $this->getPdo()->prepare($sql);
         $idx = 1;
@@ -121,5 +134,31 @@ class Booking extends Model
         $stmt->execute();
         return $stmt->fetchAll();
     }
+
+    public function getBookingStatistics(?int $customerId = null): array
+    {
+        $where = $customerId ? "WHERE customer_id = ?" : "";
+        $params = $customerId ? [$customerId] : [];
+        $sql = "SELECT 
+                    COUNT(*) as total_count,
+                    COALESCE(SUM(CASE WHEN status IN ('confirmed', 'assigned', 'in_progress') THEN 1 ELSE 0 END), 0) as active_count,
+                    COALESCE(SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END), 0) as completed_count,
+                    COALESCE(SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END), 0) as pending_count,
+                    COALESCE(SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END), 0) as cancelled_count,
+                    COALESCE(SUM(CASE WHEN status != 'cancelled' THEN total_amount ELSE 0 END), 0) as total_revenue
+                FROM `bookings` {$where}";
+        $stmt = $this->getPdo()->prepare($sql);
+        $stmt->execute($params);
+        $row = $stmt->fetch();
+        return [
+            'total'     => (int)($row['total_count'] ?? 0),
+            'active'    => (int)($row['active_count'] ?? 0),
+            'completed' => (int)($row['completed_count'] ?? 0),
+            'pending'   => (int)($row['pending_count'] ?? 0),
+            'cancelled' => (int)($row['cancelled_count'] ?? 0),
+            'revenue'   => (float)($row['total_revenue'] ?? 0),
+        ];
+    }
 }
+
 

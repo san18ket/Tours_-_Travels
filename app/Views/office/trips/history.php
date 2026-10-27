@@ -1,250 +1,474 @@
-<!-- Header Ribbon -->
-<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-    <div>
-        <h1 style="font-size: 1.6rem; font-weight: 800; color: var(--vg-navy-900); letter-spacing: -0.02em; margin: 0 0 0.25rem 0;">Trip Operations History</h1>
-        <p style="color: var(--vg-text-secondary); font-size: 0.9rem; margin: 0;">Comprehensive audit log of commercial dispatches, chauffeur duty states, and odometer verifications.</p>
-    </div>
-    <div>
-        <a href="<?= url('/office/trips/assign') ?>" class="btn btn-navy" style="display: flex; align-items: center; gap: 0.5rem;">
-            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-            <span>Assign Trip to Driver</span>
-        </a>
-    </div>
-</div>
-
-<!-- KPI Metrics Ribbon -->
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-    <div class="vg-card" style="padding: 1.25rem; display: flex; align-items: center; gap: 1rem;">
-        <div class="stat-icon info" style="width: 48px; height: 48px; border-radius: 12px; background: rgba(37, 99, 235, 0.1); color: var(--vg-blue-500); display: flex; align-items: center; justify-content: center;">
-            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
-        </div>
-        <div>
-            <div style="font-size: 0.8rem; color: var(--vg-text-muted); font-weight: 600; text-transform: uppercase;">Total Historical Dispatches</div>
-            <div style="font-size: 1.5rem; font-weight: 800; color: var(--vg-navy-900);"><?= number_format($totalRecords) ?></div>
-        </div>
+<div class="bookings-page-view">
+    <!-- 1. DESKTOP ONLY: Unified Page Header (Preserved on Large Screens >= 769px) -->
+    <div class="desktop-header-wrapper">
+        <?= render_page_header([
+            'title'       => 'Trip Operations & Deployment History',
+            'description' => 'Comprehensive audit log of commercial dispatches, chauffeur duty states, and odometer verifications.',
+            'image'       => 'header-dispatch.jpg',
+            'badge'       => 'Dispatch Operations',
+            'breadcrumbs' => [
+                ['label' => __('sidebar.dashboard', 'Dashboard'), 'url' => url('/office/dashboard')],
+                ['label' => 'Trip Operations', 'url' => ''],
+            ],
+            'actions'     => '<a href="' . url('/office/trips/assign') . '" class="btn btn-primary"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg><span>Assign Trip to Driver</span></a>',
+        ]) ?>
     </div>
 
-    <div class="vg-card" style="padding: 1.25rem; display: flex; align-items: center; gap: 1rem;">
-        <div class="stat-icon purple" style="width: 48px; height: 48px; border-radius: 12px; background: rgba(139, 92, 246, 0.1); color: #8B5CF6; display: flex; align-items: center; justify-content: center;">
-            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-        </div>
-        <div>
-            <div style="font-size: 0.8rem; color: var(--vg-text-muted); font-weight: 600; text-transform: uppercase;">Active Deployments</div>
-            <div style="font-size: 1.5rem; font-weight: 800; color: var(--vg-navy-900);"><?= number_format($totalActive) ?></div>
-        </div>
-    </div>
-
-    <div class="vg-card" style="padding: 1.25rem; display: flex; align-items: center; gap: 1rem;">
-        <div class="stat-icon success" style="width: 48px; height: 48px; border-radius: 12px; background: rgba(16, 185, 129, 0.1); color: var(--vg-success); display: flex; align-items: center; justify-content: center;">
-            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-        </div>
-        <div>
-            <div style="font-size: 0.8rem; color: var(--vg-text-muted); font-weight: 600; text-transform: uppercase;">Completed Trips</div>
-            <div style="font-size: 1.5rem; font-weight: 800; color: var(--vg-navy-900);"><?= number_format($totalCompleted) ?></div>
-        </div>
-    </div>
-
-    <div class="vg-card" style="padding: 1.25rem; display: flex; align-items: center; gap: 1rem;">
-        <div class="stat-icon danger" style="width: 48px; height: 48px; border-radius: 12px; background: rgba(239, 68, 68, 0.1); color: var(--vg-danger); display: flex; align-items: center; justify-content: center;">
-            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-        </div>
-        <div>
-            <div style="font-size: 0.8rem; color: var(--vg-text-muted); font-weight: 600; text-transform: uppercase;">Cancelled Trips</div>
-            <div style="font-size: 1.5rem; font-weight: 800; color: var(--vg-navy-900);"><?= number_format($totalCancelled) ?></div>
-        </div>
-    </div>
-</div>
-
-<!-- Search & Filters Ribbon -->
-<div class="vg-card" style="margin-bottom: 1.5rem; padding: 1.25rem;">
-    <form action="<?= url('/office/trips/history') ?>" method="GET" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; justify-content: space-between;">
-        <div style="display: flex; gap: 0.75rem; flex: 1; min-width: 280px; flex-wrap: wrap;">
-            <div style="flex: 2; min-width: 220px; position: relative;">
-                <input type="text" name="search" class="form-control" placeholder="Search dispatch code, booking code, plate, chauffeur..." value="<?= e($search) ?>" style="padding-left: 2.25rem;">
-                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--vg-text-muted);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+    <!-- 2. DESKTOP ONLY: Top KPI Summary Cards (Exact Bookings Architecture) -->
+    <div class="booking-kpi-grid">
+        <!-- Card 1: Total Dispatches -->
+        <div class="booking-kpi-card">
+            <div class="booking-kpi-top">
+                <span class="booking-kpi-label">Total Dispatches</span>
+                <span class="booking-kpi-icon icon-teal">
+                    <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+                </span>
             </div>
-
-            <select name="status" class="form-select" style="flex: 1; min-width: 150px;" onchange="this.form.submit()">
-                <option value="">All Statuses</option>
-                <option value="assigned" <?= $selectedStatus === 'assigned' ? 'selected' : '' ?>>Assigned (Pending Driver)</option>
-                <option value="driver_accepted" <?= $selectedStatus === 'driver_accepted' ? 'selected' : '' ?>>Driver Accepted</option>
-                <option value="trip_started" <?= $selectedStatus === 'trip_started' ? 'selected' : '' ?>>In Transit / Started</option>
-                <option value="completed" <?= $selectedStatus === 'completed' ? 'selected' : '' ?>>Completed</option>
-                <option value="cancelled" <?= $selectedStatus === 'cancelled' ? 'selected' : '' ?>>Cancelled</option>
-            </select>
-
-            <input type="date" name="from_date" class="form-control" value="<?= e($fromDate) ?>" title="From Departure Date" style="width: 145px;" onchange="this.form.submit()">
-            <input type="date" name="to_date" class="form-control" value="<?= e($toDate) ?>" title="To Departure Date" style="width: 145px;" onchange="this.form.submit()">
+            <div class="booking-kpi-val"><?= number_format($totalRecords ?? count($trips)) ?></div>
+            <div class="booking-kpi-sub">
+                <span>All dispatch logs recorded</span>
+            </div>
         </div>
 
-        <div style="display: flex; gap: 0.5rem; align-items: center;">
-            <select name="per_page" class="form-select" style="width: 110px;" onchange="this.form.submit()">
-                <option value="10" <?= $perPage === 10 ? 'selected' : '' ?>>10 / page</option>
-                <option value="25" <?= $perPage === 25 ? 'selected' : '' ?>>25 / page</option>
-                <option value="50" <?= $perPage === 50 ? 'selected' : '' ?>>50 / page</option>
-            </select>
+        <!-- Card 2: Active Deployments -->
+        <div class="booking-kpi-card">
+            <div class="booking-kpi-top">
+                <span class="booking-kpi-label">Active Deployments</span>
+                <span class="booking-kpi-icon icon-emerald">
+                    <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </span>
+            </div>
+            <div class="booking-kpi-val"><?= number_format($totalActive ?? 0) ?></div>
+            <div class="booking-kpi-sub">
+                <span class="pulse-dot"></span>
+                <span>Assigned &amp; en-route</span>
+            </div>
+        </div>
 
-            <button type="submit" class="btn btn-navy btn-sm">Filter</button>
+        <!-- Card 3: Completed Trips -->
+        <div class="booking-kpi-card">
+            <div class="booking-kpi-top">
+                <span class="booking-kpi-label">Completed Trips</span>
+                <span class="booking-kpi-icon icon-navy">
+                    <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </span>
+            </div>
+            <div class="booking-kpi-val"><?= number_format($totalCompleted ?? 0) ?></div>
+            <div class="booking-kpi-sub">
+                <span>Closed with verified odo</span>
+            </div>
+        </div>
+
+        <!-- Card 4: Cancelled Trips -->
+        <div class="booking-kpi-card">
+            <div class="booking-kpi-top">
+                <span class="booking-kpi-label">Cancelled Trips</span>
+                <span class="booking-kpi-icon icon-amber">
+                    <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </span>
+            </div>
+            <div class="booking-kpi-val"><?= number_format($totalCancelled ?? 0) ?></div>
+            <div class="booking-kpi-sub">
+                <span>Aborted or reassigned</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. DESKTOP ONLY: Compact Filter Bar (Exact Bookings Architecture) -->
+    <form method="GET" action="<?= url('/office/trips/history') ?>" class="filter-bar-compact" id="tripFilterForm">
+        <div class="fbc-search">
+            <i class="fa-solid fa-magnifying-glass fbc-search-icon"></i>
+            <input type="text" name="search" id="searchInput" placeholder="Search dispatch code, booking code, plate, chauffeur..." value="<?= e($search ?? '') ?>" autocomplete="off">
+        </div>
+
+        <select name="status" id="statusInput" onchange="document.getElementById('tripFilterForm').submit()">
+            <option value="">All Statuses</option>
+            <option value="assigned" <?= ($selectedStatus ?? '') === 'assigned' ? 'selected' : '' ?>>Assigned (Pending Driver)</option>
+            <option value="driver_accepted" <?= ($selectedStatus ?? '') === 'driver_accepted' ? 'selected' : '' ?>>Driver Accepted</option>
+            <option value="trip_started" <?= ($selectedStatus ?? '') === 'trip_started' ? 'selected' : '' ?>>In Transit / Started</option>
+            <option value="completed" <?= ($selectedStatus ?? '') === 'completed' ? 'selected' : '' ?>>Completed</option>
+            <option value="cancelled" <?= ($selectedStatus ?? '') === 'cancelled' ? 'selected' : '' ?>>Cancelled</option>
+        </select>
+
+        <select name="per_page" id="perPageInput" title="Records per page" onchange="document.getElementById('tripFilterForm').submit()">
+            <?php foreach ([10, 25, 50, 100] as $opt): ?>
+                <option value="<?= $opt ?>" <?= ($perPage ?? 10) == $opt ? 'selected' : '' ?>><?= $opt ?> per page</option>
+            <?php endforeach; ?>
+        </select>
+
+        <div class="fbc-actions">
+            <button type="submit" class="fbc-btn" title="Filter"><i class="fa-solid fa-filter"></i> <span>Apply</span></button>
+            <a href="<?= url('/office/trips/history') ?>" class="fbc-btn" id="refreshBtn" title="Refresh"><i class="fa-solid fa-rotate-right"></i></a>
+        </div>
+
+        <div class="fbc-actions-end">
             <?php if (!empty($search) || !empty($selectedStatus) || !empty($fromDate) || !empty($toDate)): ?>
-                <a href="<?= url('/office/trips/history') ?>" class="btn btn-outline btn-sm">Reset</a>
+                <a href="<?= url('/office/trips/history') ?>" class="fbc-btn fbc-btn-clear" title="Clear Filters"><i class="fa-solid fa-xmark"></i> <span>Clear</span></a>
             <?php endif; ?>
         </div>
     </form>
-</div>
 
-<!-- History Ledger -->
-<div class="vg-card">
-    <?php if (empty($trips)): ?>
-        <div style="text-align: center; padding: 3.5rem 1.5rem;">
-            <div style="font-size: 3rem; margin-bottom: 1rem;">🗺️</div>
-            <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--vg-navy-900); margin-bottom: 0.5rem;">No Trip Operations Recorded</h3>
-            <p style="color: var(--vg-text-secondary); font-size: 0.9rem; max-width: 420px; margin: 0 auto 1.5rem auto;">
-                <?= (!empty($search) || !empty($selectedStatus) || !empty($fromDate) || !empty($toDate)) ? 'No trip records match the current filter query. Try resetting your search filters.' : 'Deploy your first reservation assignment to begin tracking trip lifecycles.' ?>
-            </p>
-            <a href="<?= url('/office/trips/assign') ?>" class="btn btn-navy">
-                + Deploy First Trip
+    <!-- 4. MOBILE ONLY: Top App Bar, Search, Drawer & Status Scroll -->
+    <div class="mv-bookings-header">
+        <div class="mv-top-bar">
+            <div class="mv-top-bar-left">
+                <a href="<?= url('/office/dashboard') ?>" class="mv-back-btn" title="Back to Dashboard">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+                <h2 class="mv-page-title">Trip History</h2>
+            </div>
+            <a href="<?= url('/office/trips/assign') ?>" class="mv-add-btn">
+                <i class="fa-solid fa-plus"></i>
+                <span>Assign Trip</span>
             </a>
         </div>
-    <?php else: ?>
-        <!-- Desktop Table View -->
-        <div class="table-responsive">
-            <table class="table" style="margin-bottom: 0;">
+
+        <!-- Mobile Search Bar & Filter Toggle -->
+        <div class="mv-search-bar-wrap">
+            <form method="GET" action="<?= url('/office/trips/history') ?>" class="mv-search-form" id="mvSearchForm">
+                <div class="mv-search-input-box">
+                    <i class="fa-solid fa-magnifying-glass mv-search-ico"></i>
+                    <input type="text" name="search" id="mvSearchInput" placeholder="Search dispatch, driver..." value="<?= e($search ?? '') ?>" autocomplete="off">
+                    <?php if (!empty($search)): ?>
+                        <a href="<?= url('/office/trips/history' . (!empty($selectedStatus) ? '?status=' . urlencode($selectedStatus) : '')) ?>" class="mv-search-clear" title="Clear search">
+                            <i class="fa-solid fa-xmark"></i>
+                        </a>
+                    <?php endif; ?>
+                    <?php if (!empty($selectedStatus)): ?>
+                        <input type="hidden" name="status" value="<?= e($selectedStatus) ?>">
+                    <?php endif; ?>
+                </div>
+                <button type="button" class="mv-filter-toggle" id="mvFilterToggleBtn" onclick="toggleMobileFilter()" title="Filter options">
+                    <i class="fa-solid fa-sliders"></i>
+                </button>
+            </form>
+
+            <!-- Collapsible Mobile Filter Panel -->
+            <div class="mv-filter-panel" id="mvFilterPanel" style="display: none;">
+                <form method="GET" action="<?= url('/office/trips/history') ?>">
+                    <?php if (!empty($search)): ?><input type="hidden" name="search" value="<?= e($search) ?>"><?php endif; ?>
+                    <div class="mv-filter-row">
+                        <label for="mvPerPageSelect">Per Page:</label>
+                        <select name="per_page" id="mvPerPageSelect" onchange="this.form.submit()">
+                            <?php foreach ([10, 25, 50] as $opt): ?>
+                                <option value="<?= $opt ?>" <?= ($perPage ?? 10) == $opt ? 'selected' : '' ?>><?= $opt ?> per page</option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <?php if (!empty($selectedStatus)): ?>
+                        <input type="hidden" name="status" value="<?= e($selectedStatus) ?>">
+                    <?php endif; ?>
+                </form>
+            </div>
+        </div>
+
+        <!-- Horizontal Scrollable Status Pills -->
+        <?php
+            $currStatus = strtolower($selectedStatus ?? '');
+            $makeStatusUrl = function(string $st) use ($search, $perPage) {
+                $p = [];
+                if (!empty($st)) $p['status'] = $st;
+                if (!empty($search)) $p['search'] = $search;
+                if (!empty($perPage) && $perPage != 10) $p['per_page'] = $perPage;
+                return url('/office/trips/history' . (!empty($p) ? '?' . http_build_query($p) : ''));
+            };
+        ?>
+        <div class="mv-status-scroll">
+            <a href="<?= $makeStatusUrl('') ?>" class="mv-pill <?= empty($currStatus) ? 'active' : '' ?>">
+                <span>All</span>
+                <span class="mv-pill-cnt"><?= (int)($totalRecords ?? count($trips)) ?></span>
+            </a>
+            <a href="<?= $makeStatusUrl('trip_started') ?>" class="mv-pill <?= in_array($currStatus, ['assigned', 'driver_accepted', 'trip_started']) ? 'active' : '' ?>">
+                <span>Active</span>
+                <span class="mv-pill-cnt"><?= (int)($totalActive ?? 0) ?></span>
+            </a>
+            <a href="<?= $makeStatusUrl('completed') ?>" class="mv-pill <?= $currStatus === 'completed' ? 'active' : '' ?>">
+                <span>Completed</span>
+                <span class="mv-pill-cnt"><?= (int)($totalCompleted ?? 0) ?></span>
+            </a>
+            <a href="<?= $makeStatusUrl('cancelled') ?>" class="mv-pill <?= $currStatus === 'cancelled' ? 'active' : '' ?>">
+                <span>Cancelled</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 5. All Trips Section: Desktop PMS Modern Table + Mobile App Cards -->
+    <section class="recent-bookings-section">
+        <div class="section-header">
+            <h3 class="section-title">All Trip Deployments</h3>
+            <div class="total-records-box">
+                <i class="fa-solid fa-layer-group"></i>
+                <span class="total-records-label">Total Records:</span>
+                <span class="total-records-badge" id="totalRecordsPill"><?= number_format($totalRecords ?? count($trips)) ?></span>
+            </div>
+        </div>
+
+        <!-- Modern Table for Large Screens (Exact PMS Table Architecture) -->
+        <div class="modern-table-container">
+            <table class="modern-table" id="tripsTable">
                 <thead>
                     <tr>
-                        <th>Dispatch Code</th>
-                        <th>Reservation Manifest</th>
-                        <th>Assigned Chauffeur</th>
-                        <th>Fleet Vehicle</th>
-                        <th>Odometer Readings</th>
-                        <th>Trip Lifecycle</th>
-                        <th style="text-align: right;">Action</th>
+                        <th class="text-center" style="width: 48px;">#</th>
+                        <th style="width: 20%;">Dispatch &amp; Booking</th>
+                        <th style="width: 20%;">Passenger / Client</th>
+                        <th style="width: 18%;">Chauffeur &amp; Phone</th>
+                        <th style="width: 16%;">Assigned Vehicle</th>
+                        <th class="text-center" style="width: 14%;">Odometer Start/End</th>
+                        <th class="text-center" style="width: 12%;">Status</th>
+                        <th class="text-center" style="width: 55px;">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <?php foreach ($trips as $t): ?>
-                        <tr>
-                            <td>
-                                <strong style="color: var(--vg-navy-900); font-family: monospace; font-size: 0.95rem;"><?= e($t['dispatch_code']) ?></strong>
-                                <div style="font-size: 0.75rem; color: var(--vg-text-muted);">
-                                    Assigned by <?= e($t['assigner_name'] ?? 'Operations') ?>
+                <tbody id="tripsTableBody">
+                    <?php foreach ($trips as $i => $d):
+                        $serial = (($currentPage ?? 1) - 1) * ($perPage ?? 10) + $i + 1;
+                        $status = strtolower($d['status'] ?? 'assigned');
+                        $statusClass = match($status) {
+                            'completed' => 'completed',
+                            'trip_started', 'driver_accepted', 'en_route_pickup' => 'in-progress',
+                            'assigned' => 'assigned',
+                            'cancelled' => 'cancelled',
+                            default => 'pending'
+                        };
+                        $statusText = ucfirst(str_replace('_', ' ', $status));
+                    ?>
+                    <tr>
+                        <td class="text-center">
+                            <div class="project-name" style="padding: 3px 8px;"><?= $serial ?></div>
+                        </td>
+                        <td>
+                            <div class="project-name" style="font-family:monospace;letter-spacing:-0.01em;">
+                                <?= e($d['dispatch_code']) ?>
+                            </div>
+                            <div style="margin-top: 3px;">
+                                <a href="<?= url('/office/bookings/' . $d['booking_id']) ?>" style="font-size:12px;font-weight:700;color:var(--brand-primary, #176B5B);text-decoration:none;">
+                                    #<?= e($d['booking_code']) ?>
+                                </a>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="client-cell">
+                                <div class="client-info">
+                                    <span class="client-name"><?= e($d['customer_name'] ?? 'Guest') ?></span>
+                                    <small class="text-muted d-block" style="font-size:11.5px;margin-top:2px;">
+                                        <?= format_date($d['start_date']) ?> &rarr; <?= format_date($d['end_date']) ?>
+                                    </small>
                                 </div>
-                            </td>
-                            <td>
-                                <div>
-                                    <a href="<?= url('/office/bookings/' . $t['booking_id']) ?>" style="font-weight: 700; color: var(--vg-blue-500); text-decoration: none;">
-                                        <?= e($t['booking_code']) ?>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-weight: 700; color: #1e293b; font-size: 13.5px;">
+                                <?= e($d['driver_name']) ?>
+                            </div>
+                            <?php if (!empty($d['driver_phone'])): ?>
+                                <small class="text-muted d-block" style="font-size:12px;margin-top:2px;">
+                                    <i class="fa-solid fa-phone" style="font-size:10px;color:var(--brand-primary, #176B5B);"></i> <?= e($d['driver_phone']) ?>
+                                </small>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <div style="font-weight: 700; color: #1e293b; font-size: 13px;">
+                                <?= e($d['make_model']) ?>
+                            </div>
+                            <small style="font-family:monospace;color:var(--brand-primary, #176B5B);font-weight:600;font-size:11px;">
+                                <?= e($d['vehicle_number']) ?>
+                            </small>
+                        </td>
+                        <td class="text-center">
+                            <div style="font-weight:700;color:#1e293b;font-size:13px;">
+                                <?= $d['start_odometer'] ? number_format((int)$d['start_odometer']) . ' km' : '—' ?>
+                            </div>
+                            <small class="text-muted" style="font-size:11px;">
+                                End: <?= $d['end_odometer'] ? number_format((int)$d['end_odometer']) . ' km' : 'In transit' ?>
+                            </small>
+                        </td>
+                        <td class="text-center">
+                            <div class="status-cell">
+                                <span class="status-dot <?= $statusClass ?>"></span>
+                                <span class="status-badge bg-<?= $statusClass ?>"><?= $statusText ?></span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="table-action-buttons">
+                                <button type="button" class="action-toggle-btn" onclick="toggleActions(this, event)" title="Actions">
+                                    <i class="fa-solid fa-ellipsis"></i>
+                                </button>
+                                <div class="action-btns-popup">
+                                    <a href="<?= url('/office/bookings/' . $d['booking_id']) ?>" class="action-btn-table view" title="View Reservation Manifest">
+                                        <i class="fa-solid fa-eye"></i>
                                     </a>
-                                    <span style="font-size: 0.78rem; color: var(--vg-text-muted); margin-left: 0.35rem;">(<?= (int)$t['passenger_count'] ?> Guests)</span>
+                                    <a href="<?= url('/office/trips/assign?booking_id=' . $d['booking_id']) ?>" class="action-btn-table dispatch" title="Reassign Dispatch">
+                                        <i class="fa-solid fa-paper-plane"></i>
+                                    </a>
                                 </div>
-                                <div style="font-size: 0.78rem; color: var(--vg-text-secondary); max-width: 240px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                    <?= e($t['pickup_address']) ?> → <?= e($t['drop_address']) ?>
-                                </div>
-                            </td>
-                            <td>
-                                <div style="font-weight: 700; color: var(--vg-navy-900);"><?= e($t['driver_name']) ?></div>
-                                <div style="font-size: 0.78rem; color: var(--vg-text-muted);"><?= e($t['driver_phone']) ?></div>
-                            </td>
-                            <td>
-                                <div style="font-weight: 600; color: var(--vg-navy-900);"><?= e($t['make_model']) ?></div>
-                                <div style="font-size: 0.78rem; color: var(--vg-blue-500); font-family: monospace; font-weight: 700;"><?= e($t['vehicle_number']) ?></div>
-                            </td>
-                            <td>
-                                <div style="font-size: 0.88rem; font-weight: 600; color: var(--vg-navy-900);">
-                                    <?= $t['start_odometer'] ? number_format((int)$t['start_odometer']) . ' km' : '—' ?>
-                                </div>
-                                <div style="font-size: 0.75rem; color: var(--vg-text-muted);">
-                                    End: <?= $t['end_odometer'] ? number_format((int)$t['end_odometer']) . ' km' : ($t['status'] === 'trip_started' ? '<span style="color:#0284C7;">In Transit</span>' : '—') ?>
-                                </div>
-                            </td>
-                            <td>
-                                <?= render_status_badge($t['status']) ?>
-                            </td>
-                            <td style="text-align: right;">
-                                <div style="display: flex; gap: 0.35rem; justify-content: flex-end;">
-                                    <a href="<?= url('/office/bookings/' . $t['booking_id']) ?>" class="btn btn-outline btn-sm" title="Inspect Booking">Inspect</a>
-                                    <?php if (!in_array($t['status'], ['completed', 'cancelled'], true) && auth_role() === 'admin'): ?>
-                                        <form action="<?= url('/office/trips/' . $t['id'] . '/cancel') ?>" method="POST" style="margin: 0;" onsubmit="return confirm('Cancel this trip deployment? Vehicle and chauffeur will be returned to available roster.')">
-                                            <?= csrf_field() ?>
-                                            <input type="hidden" name="reason" value="Cancelled via operations console">
-                                            <button type="submit" class="btn btn-danger btn-sm" title="Cancel Trip">Cancel</button>
-                                        </form>
-                                    <?php endif; ?>
-                                </div>
-                            </td>
-                        </tr>
+                            </div>
+                        </td>
+                    </tr>
                     <?php endforeach; ?>
+                    <?php if (empty($trips)): ?>
+                    <tr>
+                        <td colspan="8">
+                            <div class="no-data-message">
+                                <div class="no-data-icon"><i class="fa-regular fa-folder-open"></i></div>
+                                <h4 style="font-weight:700;color:#1e293b;margin-bottom:6px;">No trip deployments recorded</h4>
+                                <p class="text-muted" style="margin:0;">Try adjusting your search or filter parameters.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
 
-        <!-- Mobile Record Cards View -->
-        <div class="vg-mobile-cards" style="padding: 1rem;">
-            <?php foreach ($trips as $t): ?>
-                <div class="vg-record-card">
-                    <div class="vg-card-row-header">
-                        <div>
-                            <span class="badge badge-navy" style="font-family: monospace; font-size: 0.8rem; font-weight: 700;">
-                                <?= e($t['dispatch_code']) ?>
-                            </span>
-                            <div style="font-size: 0.75rem; color: var(--vg-text-muted); margin-top: 0.25rem;">
-                                Booking: <a href="<?= url('/office/bookings/' . $t['booking_id']) ?>" style="color: var(--vg-blue-500); font-weight: 700;"><?= e($t['booking_code']) ?></a>
-                            </div>
-                        </div>
-                        <div>
-                            <?= render_status_badge($t['status']) ?>
-                        </div>
-                    </div>
-                    <div class="vg-card-grid">
-                        <div class="vg-card-field">
-                            <span class="vg-card-label">Chauffeur</span>
-                            <span class="vg-card-value"><?= e($t['driver_name']) ?></span>
-                        </div>
-                        <div class="vg-card-field">
-                            <span class="vg-card-label">Vehicle</span>
-                            <span class="vg-card-value" style="font-family: monospace;"><?= e($t['vehicle_number']) ?></span>
-                        </div>
-                        <div class="vg-card-field">
-                            <span class="vg-card-label">Start Odo</span>
-                            <span class="vg-card-value"><?= $t['start_odometer'] ? number_format((int)$t['start_odometer']) . ' km' : '—' ?></span>
-                        </div>
-                        <div class="vg-card-field">
-                            <span class="vg-card-label">End Odo</span>
-                            <span class="vg-card-value"><?= $t['end_odometer'] ? number_format((int)$t['end_odometer']) . ' km' : 'In transit' ?></span>
+        <!-- Mobile Cards List (Exact Screen 3 Design Architecture) -->
+        <div class="cards-grid" id="tripsCards">
+            <?php foreach ($trips as $d):
+                $status = strtolower($d['status'] ?? 'assigned');
+                $statusClass = match($status) {
+                    'completed' => 'completed',
+                    'trip_started', 'driver_accepted' => 'confirmed',
+                    'assigned' => 'assigned',
+                    'cancelled' => 'cancelled',
+                    default => 'pending'
+                };
+                $statusText = ucfirst(str_replace('_', ' ', $status));
+            ?>
+            <div class="mv-booking-card-wrapper">
+                <a href="<?= url('/office/bookings/' . $d['booking_id']) ?>" class="mv-booking-card">
+                    <!-- Left: Trip Monogram Icon -->
+                    <div class="mv-thumb-wrap">
+                        <div class="mv-thumb-avatar">
+                            <i class="fa-solid fa-route" style="font-size:22px;"></i>
                         </div>
                     </div>
-                    <div class="vg-card-actions">
-                        <a href="<?= url('/office/bookings/' . $t['booking_id']) ?>" class="btn btn-outline btn-sm" style="flex: 1; text-align: center;">View Booking</a>
-                        <?php if (!in_array($t['status'], ['completed', 'cancelled'], true) && auth_role() === 'admin'): ?>
-                            <form action="<?= url('/office/trips/' . $t['id'] . '/cancel') ?>" method="POST" style="flex: 1; margin: 0;" onsubmit="return confirm('Cancel trip?')">
-                                <?= csrf_field() ?>
-                                <button type="submit" class="btn btn-danger btn-block btn-sm">Cancel</button>
-                            </form>
-                        <?php endif; ?>
+
+                    <!-- Middle: Details -->
+                    <div class="mv-details">
+                        <div class="mv-code"><?= e($d['dispatch_code']) ?> &bull; #<?= e($d['booking_code']) ?></div>
+                        <div class="mv-tour-title" title="<?= e($d['customer_name'] ?? 'Guest') ?>">
+                            <?= e($d['customer_name'] ?? 'Guest') ?>
+                        </div>
+                        <div class="mv-date-duration">
+                            <i class="fa-solid fa-user-tie"></i>
+                            <span><?= e($d['driver_name']) ?> &bull; <?= e($d['driver_phone']) ?></span>
+                        </div>
+                        <div class="mv-passenger">
+                            <i class="fa-solid fa-car"></i>
+                            <span><?= e($d['make_model']) ?> (<?= e($d['vehicle_number']) ?>)</span>
+                        </div>
+                        <div class="mv-vehicle">
+                            <i class="fa-solid fa-gauge-high"></i>
+                            <span><?= $d['start_odometer'] ? number_format((int)$d['start_odometer']) . ' km' : '—' ?> &rarr; <?= $d['end_odometer'] ? number_format((int)$d['end_odometer']) . ' km' : 'Active' ?></span>
+                        </div>
                     </div>
-                </div>
-            <?php endforeach; ?>
-        </div>
 
-        <!-- Server-side Pagination Ribbon -->
-        <?php if ($totalPages > 1): ?>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.25rem; border-top: 1px solid var(--vg-pearl-200); flex-wrap: wrap; gap: 0.75rem;">
-                <div style="font-size: 0.85rem; color: var(--vg-text-muted);">
-                    Showing page <strong><?= $currentPage ?></strong> of <strong><?= $totalPages ?></strong> (<?= number_format($totalRecords) ?> total dispatches)
-                </div>
-                <div style="display: flex; gap: 0.35rem;">
-                    <?php if ($currentPage > 1): ?>
-                        <a href="<?= url('/office/trips/history?' . http_build_query(array_merge($_GET, ['page' => $currentPage - 1]))) ?>" class="btn btn-outline btn-sm">‹ Previous</a>
-                    <?php endif; ?>
+                    <!-- Right: Status pill top, Booking code bottom -->
+                    <div class="mv-right-col">
+                        <span class="mv-status-badge mv-status-<?= $statusClass ?>"><?= $statusText ?></span>
+                        <div class="mv-price" style="font-size: 11px; color: #16443B; font-weight: 700;">
+                            #<?= e($d['booking_code']) ?>
+                        </div>
+                    </div>
+                </a>
 
-                    <?php for ($p = max(1, $currentPage - 2); $p <= min($totalPages, $currentPage + 2); $p++): ?>
-                        <a href="<?= url('/office/trips/history?' . http_build_query(array_merge($_GET, ['page' => $p]))) ?>" class="btn <?= $p === $currentPage ? 'btn-navy' : 'btn-outline' ?> btn-sm"><?= $p ?></a>
-                    <?php endfor; ?>
-
-                    <?php if ($currentPage < $totalPages): ?>
-                        <a href="<?= url('/office/trips/history?' . http_build_query(array_merge($_GET, ['page' => $currentPage + 1]))) ?>" class="btn btn-outline btn-sm">Next ›</a>
-                    <?php endif; ?>
+                <!-- 3-Dots Quick Action Popup -->
+                <div class="mv-card-actions">
+                    <button type="button" class="mv-action-dots-btn" onclick="toggleCardActions(this, event)" title="Actions">
+                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                    </button>
+                    <div class="card-btns-popup">
+                        <a href="<?= url('/office/bookings/' . $d['booking_id']) ?>" class="action-btn-table view" title="View Booking">
+                            <i class="fa-solid fa-eye"></i>
+                        </a>
+                        <a href="<?= url('/office/trips/assign?booking_id=' . $d['booking_id']) ?>" class="action-btn-table dispatch" title="Reassign">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </a>
+                    </div>
                 </div>
             </div>
-        <?php endif; ?>
+            <?php endforeach; ?>
+            <?php if (empty($trips)): ?>
+            <div class="no-data-message">
+                <div class="no-data-icon"><i class="fa-regular fa-folder-open"></i></div>
+                <h4 style="font-weight:700;color:#1e293b;margin-bottom:6px;">No trip deployments found</h4>
+                <p class="text-muted" style="margin:0;">Try adjusting your search or filter parameters.</p>
+            </div>
+            <?php endif; ?>
+        </div>
+    </section>
+
+    <!-- Modern Pagination (Exact Bookings Architecture) -->
+    <?php
+        $totRec = $totalRecords ?? count($trips);
+        $currP = $currentPage ?? 1;
+        $pSize = $perPage ?? 10;
+        $from = $totRec > 0 ? (($currP - 1) * $pSize) + 1 : 0;
+        $to   = min($currP * $pSize, $totRec);
+        $buildPageUrl = function(int $p) use ($search, $selectedStatus, $fromDate, $toDate, $pSize) {
+            $q = [];
+            if (!empty($search)) $q['search'] = $search;
+            if (!empty($selectedStatus)) $q['status'] = $selectedStatus;
+            if (!empty($fromDate)) $q['from_date'] = $fromDate;
+            if (!empty($toDate)) $q['to_date'] = $toDate;
+            if (!empty($pSize) && $pSize != 10) $q['per_page'] = $pSize;
+            $q['page'] = $p;
+            return url('/office/trips/history?' . http_build_query($q));
+        };
+    ?>
+    <?php if (($totalPages ?? 1) > 1): ?>
+    <div class="pagination-wrapper">
+        <div class="pagination-info">Showing <span><?= $from ?>&ndash;<?= $to ?></span> of <span><?= $totRec ?></span> trip(s)</div>
+        <div class="pagination">
+            <a href="<?= $buildPageUrl(max(1, $currP - 1)) ?>" class="<?= $currP <= 1 ? 'disabled' : '' ?>" title="Previous Page">&#10094;</a>
+            <?php
+                $rangeStart = max(1, $currP - 1);
+                $rangeEnd   = min($totalPages, $rangeStart + 2);
+                if ($rangeEnd - $rangeStart < 2 && $rangeStart > 1) {
+                    $rangeStart = max(1, $rangeEnd - 2);
+                }
+                for ($i = $rangeStart; $i <= $rangeEnd; $i++):
+            ?>
+                <a href="<?= $buildPageUrl($i) ?>" class="<?= $i === $currP ? 'active' : '' ?>"><?= $i ?></a>
+            <?php endfor; ?>
+            <?php if ($rangeEnd < $totalPages): ?>
+                <span class="dots">...</span>
+                <a href="<?= $buildPageUrl($totalPages) ?>" class="<?= $currP === $totalPages ? 'active' : '' ?>"><?= $totalPages ?></a>
+            <?php endif; ?>
+            <a href="<?= $buildPageUrl(min($totalPages, $currP + 1)) ?>" class="<?= $currP >= $totalPages ? 'disabled' : '' ?>" title="Next Page">&#10095;</a>
+        </div>
+    </div>
     <?php endif; ?>
 </div>
+
+<script>
+    function toggleActions(btn, e) {
+        e.stopPropagation();
+        const popup = btn.nextElementSibling;
+        const isOpen = popup.classList.contains('open');
+        document.querySelectorAll('.action-btns-popup.open, .card-btns-popup.open').forEach(p => p.classList.remove('open'));
+        if (!isOpen) popup.classList.add('open');
+    }
+
+    function toggleCardActions(btn, e) {
+        e.stopPropagation();
+        const popup = btn.nextElementSibling;
+        const isOpen = popup.classList.contains('open');
+        document.querySelectorAll('.action-btns-popup.open, .card-btns-popup.open').forEach(p => p.classList.remove('open'));
+        if (!isOpen) popup.classList.add('open');
+    }
+
+    function toggleMobileFilter() {
+        const p = document.getElementById('mvFilterPanel');
+        const b = document.getElementById('mvFilterToggleBtn');
+        if (p) {
+            const isHidden = p.style.display === 'none' || p.style.display === '';
+            p.style.display = isHidden ? 'block' : 'none';
+            if (b) b.classList.toggle('active', isHidden);
+        }
+    }
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.table-action-buttons') && !e.target.closest('.mv-card-actions')) {
+            document.querySelectorAll('.action-btns-popup.open, .card-btns-popup.open').forEach(p => p.classList.remove('open'));
+        }
+    });
+</script>

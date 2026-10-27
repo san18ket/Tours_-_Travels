@@ -30,7 +30,7 @@ class UserController extends Controller
         $role = trim($request->get('role', ''));
         $status = trim($request->get('status', ''));
         $page = max(1, (int)$request->get('page', 1));
-        $perPage = 10;
+        $perPage = in_array((int)$request->get('per_page'), [5, 10, 15, 20, 25, 50, 100], true) ? (int)$request->get('per_page') : 10;
 
         $totalUsers = $this->userModel->countFiltered($search, $role, $status);
         $users = $this->userModel->getPaginated($search, $role, $status, $page, $perPage);
@@ -47,6 +47,7 @@ class UserController extends Controller
             'totalUsers'       => $totalUsers,
             'currentPage'      => $page,
             'totalPages'       => $totalPages,
+            'perPage'          => $perPage,
             'search'           => $search,
             'selectedRole'     => $role,
             'selectedStatus'   => $status,
@@ -104,10 +105,17 @@ class UserController extends Controller
                 }
             }
 
+            if (empty($input['role'])) {
+                $input['role'] = 'driver';
+            }
+
             $roleModel = new \App\Models\Role();
             $validRoles = array_column($roleModel->all(), 'slug');
             if (empty($validRoles)) {
                 $validRoles = ['admin', 'dispatcher', 'driver', 'customer'];
+            }
+            if (!in_array('driver', $validRoles, true)) {
+                $validRoles[] = 'driver';
             }
 
             $data = $this->validate($input, [
@@ -140,7 +148,9 @@ class UserController extends Controller
                 throw new ValidationException("The email '{$data['email']}' is already registered.", ['email' => ['This email address is already registered.']]);
             }
 
-            $passwordHash = password_hash($data['password'], PASSWORD_BCRYPT, ['cost' => 12]);
+            $selectedLanguage = in_array($input['language'] ?? '', ['en', 'hi', 'mr'], true)
+                ? $input['language']
+                : \App\Core\Language::getLocale();
 
             $newUserId = $this->userModel->create([
                 'name'       => $data['name'],
@@ -150,6 +160,7 @@ class UserController extends Controller
                 'password'   => $passwordHash,
                 'role'       => $data['role'],
                 'status'     => $data['status'],
+                'language'   => $selectedLanguage,
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s'),
             ]);
@@ -274,6 +285,10 @@ class UserController extends Controller
                 }
             }
 
+            $selectedLanguage = in_array($input['language'] ?? '', ['en', 'hi', 'mr'], true)
+                ? $input['language']
+                : ($user['language'] ?? 'en');
+
             $updateData = [
                 'name'       => $data['name'],
                 'username'   => $newUsername,
@@ -281,6 +296,7 @@ class UserController extends Controller
                 'phone'      => trim($input['phone'] ?? ''),
                 'role'       => $data['role'],
                 'status'     => $data['status'],
+                'language'   => $selectedLanguage,
                 'updated_at' => date('Y-m-d H:i:s'),
             ];
 

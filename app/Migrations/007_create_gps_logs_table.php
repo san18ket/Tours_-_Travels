@@ -8,12 +8,13 @@ return new class {
     {
         $sql = "CREATE TABLE IF NOT EXISTS `gps_logs` (
             `id` INT AUTO_INCREMENT PRIMARY KEY,
-            `dispatch_id` INT NOT NULL,
+            `dispatch_id` INT NULL,
             `driver_id` INT NOT NULL,
             `latitude` DECIMAL(10, 8) NOT NULL,
             `longitude` DECIMAL(11, 8) NOT NULL,
             `speed_kmh` DECIMAL(5, 2) NULL DEFAULT 0.00,
             `heading_degrees` DECIMAL(5, 2) NULL,
+            `accuracy_m` DECIMAL(8, 2) NULL,
             `battery_level` INT NULL,
             `recorded_at` DATETIME NOT NULL,
             `created_at` DATETIME NOT NULL,

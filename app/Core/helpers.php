@@ -47,6 +47,13 @@ if (!function_exists('auth')) {
     }
 }
 
+if (!function_exists('auth_user')) {
+    function auth_user(): ?array
+    {
+        return Session::getUser();
+    }
+}
+
 if (!function_exists('auth_id')) {
     function auth_id(): ?int
     {
@@ -92,7 +99,13 @@ if (!function_exists('format_date')) {
 if (!function_exists('url')) {
     function url(string $path = ''): string
     {
-        $base = rtrim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/\\');
+        $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+        $base = rtrim(str_replace('\\', '/', dirname($scriptName)), '/');
+        if ($base === '.' || $base === '') {
+            $base = '';
+        } elseif (!str_starts_with($base, '/')) {
+            $base = '/' . $base;
+        }
         $cleanPath = '/' . ltrim($path, '/');
         return ($base === '' || $base === '/') ? $cleanPath : $base . $cleanPath;
     }
@@ -105,12 +118,27 @@ if (!function_exists('asset')) {
     }
 }
 
+if (!function_exists('redirect')) {
+    function redirect(string $path, int $status = 302): \App\Core\Response
+    {
+        $target = str_starts_with($path, 'http://') || str_starts_with($path, 'https://')
+            ? $path
+            : url($path);
+        return \App\Core\Response::redirect($target, $status);
+    }
+}
+
 if (!function_exists('render_status_badge')) {
     function render_status_badge(string $status, string $context = 'general'): string
     {
         $statusLower = strtolower(trim($status));
         $badgeClass = 'badge-neutral';
-        $label = ucwords(str_replace('_', ' ', $statusLower));
+
+        $transKey = 'status.' . $statusLower;
+        $label = class_exists('\App\Core\Language') ? \App\Core\Language::get($transKey) : $transKey;
+        if ($label === $transKey) {
+            $label = ucwords(str_replace('_', ' ', $statusLower));
+        }
 
         switch ($statusLower) {
             case 'confirmed':
@@ -120,12 +148,16 @@ if (!function_exists('render_status_badge')) {
             case 'paid':
             case 'on_duty':
             case 'success':
+            case 'published':
                 $badgeClass = 'badge-success';
                 break;
             case 'pending':
             case 'partially_paid':
+            case 'partial':
             case 'assigned':
             case 'driver_accepted':
+            case 'unassigned':
+            case 'draft':
                 $badgeClass = 'badge-warning';
                 break;
             case 'on_trip':
@@ -139,9 +171,11 @@ if (!function_exists('render_status_badge')) {
             case 'unpaid':
             case 'failed':
             case 'retired':
+            case 'terminated':
                 $badgeClass = 'badge-danger';
                 break;
             case 'maintenance':
+            case 'on_leave':
                 $badgeClass = 'badge-gold';
                 break;
             case 'admin':
@@ -149,6 +183,7 @@ if (!function_exists('render_status_badge')) {
                 $badgeClass = 'badge-navy';
                 break;
             case 'off_duty':
+            case 'archived':
                 $badgeClass = 'badge-neutral';
                 break;
         }
@@ -174,13 +209,24 @@ if (!function_exists('render_pagination')) {
         };
 
         $html = '<div class="pagination-wrapper">';
-        $html .= '<div class="pagination-info">Showing <strong>' . $from . '</strong> to <strong>' . $to . '</strong> of <strong>' . $totalRecords . '</strong> entries</div>';
+        $showingText = class_exists('\App\Core\Language') ? \App\Core\Language::get('pagination.showing', [
+            'from' => '<strong>' . $from . '</strong>',
+            'to' => '<strong>' . $to . '</strong>',
+            'total' => '<strong>' . $totalRecords . '</strong>'
+        ]) : 'pagination.showing';
+        if ($showingText === 'pagination.showing') {
+            $showingText = 'Showing <strong>' . $from . '</strong> to <strong>' . $to . '</strong> of <strong>' . $totalRecords . '</strong> entries';
+        }
+        $html .= '<div class="pagination-info">' . $showingText . '</div>';
         
         $html .= '<div class="pagination-controls">';
         
+        $prevTitle = class_exists('\App\Core\Language') ? \App\Core\Language::get('pagination.previous') : 'Previous Page';
+        $nextTitle = class_exists('\App\Core\Language') ? \App\Core\Language::get('pagination.next') : 'Next Page';
+
         // Prev button
         if ($currentPage > 1) {
-            $html .= '<a href="' . $buildUrl($currentPage - 1) . '" class="pagination-btn" title="Previous Page">&lsaquo;</a>';
+            $html .= '<a href="' . $buildUrl($currentPage - 1) . '" class="pagination-btn" title="' . e($prevTitle) . '">&lsaquo;</a>';
         } else {
             $html .= '<span class="pagination-btn disabled">&lsaquo;</span>';
         }
@@ -213,7 +259,7 @@ if (!function_exists('render_pagination')) {
 
         // Next button
         if ($currentPage < $totalPages) {
-            $html .= '<a href="' . $buildUrl($currentPage + 1) . '" class="pagination-btn" title="Next Page">&rsaquo;</a>';
+            $html .= '<a href="' . $buildUrl($currentPage + 1) . '" class="pagination-btn" title="' . e($nextTitle) . '">&rsaquo;</a>';
         } else {
             $html .= '<span class="pagination-btn disabled">&rsaquo;</span>';
         }
@@ -260,4 +306,137 @@ if (!function_exists('has_permission')) {
         }
     }
 }
+
+if (!function_exists('__')) {
+    /**
+     * Translate key using active or specified locale
+     *
+     * @param string $key
+     * @param array<string, mixed>|string $replace Replacements array or string fallback default
+     * @param string|null $locale
+     * @return string
+     */
+    function __(string $key, array|string $replace = [], ?string $locale = null): string
+    {
+        if (is_string($replace)) {
+            $val = \App\Core\Language::get($key, [], $locale);
+            return $val !== $key ? $val : $replace;
+        }
+        return \App\Core\Language::get($key, $replace, $locale);
+    }
+}
+
+if (!function_exists('trans')) {
+    /**
+     * Alias for __() translation helper
+     *
+     * @param string $key
+     * @param array<string, mixed>|string $replace Replacements array or string fallback default
+     * @param string|null $locale
+     * @return string
+     */
+    function trans(string $key, array|string $replace = [], ?string $locale = null): string
+    {
+        if (is_string($replace)) {
+            $val = \App\Core\Language::get($key, [], $locale);
+            return $val !== $key ? $val : $replace;
+        }
+        return \App\Core\Language::get($key, $replace, $locale);
+    }
+}
+
+if (!function_exists('config')) {
+    /**
+     * Get a configuration value using dot notation
+     */
+    function config(string $key, mixed $default = null): mixed
+    {
+        return \App\Core\Config::get($key, $default);
+    }
+}
+
+if (!function_exists('render_page_header')) {
+    /**
+     * Render the shared travel-themed page header component
+     *
+     * @param array<string, mixed> $config
+     * @return string
+     */
+    function render_page_header(array $config): string
+    {
+        extract($config);
+        ob_start();
+        require dirname(__DIR__) . '/Views/components/page_header.php';
+        return (string)ob_get_clean();
+    }
+}
+
+if (!function_exists('customer_avatar_url')) {
+    /**
+     * Resolve public URL for customer profile avatar
+     */
+    function customer_avatar_url(?string $path): ?string
+    {
+        if (empty($path)) {
+            return null;
+        }
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://') || str_starts_with($path, 'data:')) {
+            return $path;
+        }
+        $clean = ltrim(str_replace('\\', '/', $path), '/');
+        $projectRoot = dirname(__DIR__, 2);
+
+        if (file_exists($projectRoot . '/public/assets/uploads/' . $clean)) {
+            return asset('uploads/' . $clean);
+        }
+        if (file_exists($projectRoot . '/public/storage/' . $clean)) {
+            return url('/storage/' . $clean);
+        }
+        if (file_exists($projectRoot . '/public/assets/' . $clean)) {
+            return asset($clean);
+        }
+        if (file_exists($projectRoot . '/storage/private_uploads/' . $clean)) {
+            $dest = $projectRoot . '/public/assets/uploads/' . $clean;
+            if (!is_dir(dirname($dest))) @mkdir(dirname($dest), 0777, true);
+            @copy($projectRoot . '/storage/private_uploads/' . $clean, $dest);
+            return asset('uploads/' . $clean);
+        }
+
+        return asset('uploads/' . $clean);
+    }
+}
+
+if (!function_exists('customer_document_url')) {
+    /**
+     * Resolve public URL for customer verification document
+     */
+    function customer_document_url(?string $path): ?string
+    {
+        if (empty($path)) {
+            return null;
+        }
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+        $clean = ltrim(str_replace('\\', '/', $path), '/');
+        $projectRoot = dirname(__DIR__, 2);
+
+        if (file_exists($projectRoot . '/public/assets/uploads/' . $clean)) {
+            return asset('uploads/' . $clean);
+        }
+        if (file_exists($projectRoot . '/public/storage/' . $clean)) {
+            return url('/storage/' . $clean);
+        }
+        if (file_exists($projectRoot . '/storage/private_uploads/' . $clean)) {
+            $dest = $projectRoot . '/public/assets/uploads/' . $clean;
+            if (!is_dir(dirname($dest))) @mkdir(dirname($dest), 0777, true);
+            @copy($projectRoot . '/storage/private_uploads/' . $clean, $dest);
+            return asset('uploads/' . $clean);
+        }
+
+        return asset('uploads/' . $clean);
+    }
+}
+
+
 

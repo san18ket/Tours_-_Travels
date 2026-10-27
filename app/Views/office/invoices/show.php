@@ -1,27 +1,31 @@
 <?php 
     $balance = max(0.0, (float)$invoice['total_amount'] - (float)$invoice['paid_amount']);
 ?>
-<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-    <div>
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
-            <h1 style="font-size: 1.55rem; font-weight: 800; color: var(--vg-navy-900);">Tax Invoice <?= e($invoice['invoice_number']) ?></h1>
-            <?= render_status_badge($invoice['payment_status']) ?>
-        </div>
-        <p style="color: var(--vg-text-secondary); font-size: 0.9rem;">Issued on <?= format_datetime($invoice['issued_at']) ?></p>
-    </div>
-    <div style="display: flex; gap: 0.75rem;">
-        <a href="<?= url('/office/invoices') ?>" class="btn btn-outline btn-sm">Back to Ledger</a>
-        <a href="<?= url('/office/invoices/' . $invoice['id'] . '/print') ?>" target="_blank" class="btn btn-navy btn-sm">
-            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-            <span>Print Official Invoice</span>
-        </a>
-    </div>
-</div>
+<?php
+$invoiceActions = '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">'
+    . '<a href="' . url('/office/invoices') . '" class="btn btn-outline btn-sm">&larr; Back to Invoices</a>'
+    . '<button type="button" onclick="navigator.clipboard.writeText(window.location.href); alert(\'Invoice URL copied to clipboard!\');" class="btn btn-outline btn-sm"><span>🔗 Share Bill</span></button>'
+    . '<a href="' . url('/office/invoices/' . $invoice['id'] . '/print') . '" target="_blank" class="btn btn-primary btn-sm">'
+    . '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="vertical-align:-2px;margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>'
+    . '<span>Print / Download PDF</span></a>'
+    . '</div>';
+?>
+<?= render_page_header([
+    'title'       => 'Tax Invoice ' . e($invoice['invoice_number']),
+    'subtitle'    => 'Issued on ' . format_datetime($invoice['issued_at']) . ' • Customer: ' . e($invoice['customer_name'] ?? 'Guest'),
+    'breadcrumbs' => [
+        ['label' => 'Tax Invoices', 'url' => url('/office/invoices')],
+        ['label' => e($invoice['invoice_number']), 'url' => ''],
+    ],
+    'actions'     => $invoiceActions,
+    'image'       => 'header-invoices.jpg',
+    'badge'       => ucfirst(str_replace('_', ' ', $invoice['payment_status'])),
+]) ?>
 
-<!-- Immutability Security Banner -->
-<div style="background: var(--vg-gold-50); border: 1px solid var(--vg-gold-400); border-radius: var(--vg-radius-md); padding: 0.95rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; font-size: 0.88rem; color: var(--vg-navy-900); box-shadow: var(--vg-shadow-sm);">
-    <svg width="22" height="22" fill="none" stroke="var(--vg-gold-600)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-    <span><strong>Statutory Tax Sealed:</strong> This document is immutable under accounting compliance. Financial line items are permanently finalized.</span>
+<!-- Manaswi Official Invoice Banner -->
+<div style="background: rgba(23, 107, 91, 0.08); border: 1px solid rgba(23, 107, 91, 0.25); border-radius: var(--vg-radius-md); padding: 0.95rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; font-size: 0.88rem; color: var(--vg-deep-blue); box-shadow: var(--vg-shadow-sm);">
+    <svg width="22" height="22" fill="none" stroke="var(--vg-primary-blue)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+    <span><strong>MANASWI Official Billing Receipt:</strong> Verified against statutory tax records. Financial records sealed for audit compliance.</span>
 </div>
 
 <div class="vg-detail-grid">
@@ -152,7 +156,7 @@
         <?php if ($balance > 0 && in_array(auth_role(), ['admin', 'dispatcher'], true)): ?>
         <div class="vg-card">
             <div class="card-header">
-                <span class="card-title">Allocate Payment</span>
+                <span class="card-title"><?= e(__('invoice_form.allocate_payment')) ?></span>
             </div>
             <div class="card-body">
                 <form action="<?= url('/office/invoices/' . $invoice['id'] . '/payment') ?>" method="POST">
@@ -160,32 +164,32 @@
                     <input type="hidden" name="idempotency_key" value="<?= bin2hex(random_bytes(16)) ?>">
 
                     <div class="form-group">
-                        <label class="form-label" for="amount">Payment Amount (INR) *</label>
+                        <label class="form-label" for="amount"><?= e(__('invoice_form.payment_amount')) ?></label>
                         <input type="number" id="amount" name="amount" class="form-control" step="0.01" min="1" max="<?= $balance ?>" value="<?= $balance ?>" required>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="payment_method">Payment Method *</label>
+                        <label class="form-label" for="payment_method"><?= e(__('invoice_form.payment_method')) ?></label>
                         <select id="payment_method" name="payment_method" class="form-select" required>
-                            <option value="upi">UPI / QR Code</option>
-                            <option value="net_banking">Net Banking / NEFT</option>
-                            <option value="card">Credit / Debit Card</option>
-                            <option value="cash">Cash Settlement</option>
+                            <option value="upi"><?= e(__('invoice_form.method_upi')) ?></option>
+                            <option value="net_banking"><?= e(__('invoice_form.method_netbanking')) ?></option>
+                            <option value="card"><?= e(__('invoice_form.method_card')) ?></option>
+                            <option value="cash"><?= e(__('invoice_form.method_cash')) ?></option>
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="transaction_id">Transaction / UTR Number</label>
-                        <input type="text" id="transaction_id" name="transaction_id" class="form-control" placeholder="e.g. UPI-20261019-9831">
+                        <label class="form-label" for="transaction_id"><?= e(__('invoice_form.transaction_id')) ?></label>
+                        <input type="text" id="transaction_id" name="transaction_id" class="form-control" placeholder="<?= e(__('invoice_form.transaction_placeholder')) ?>">
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="notes">Internal Remarks</label>
-                        <input type="text" id="notes" name="notes" class="form-control" placeholder="Optional allocation memo">
+                        <label class="form-label" for="notes"><?= e(__('invoice_form.internal_remarks')) ?></label>
+                        <input type="text" id="notes" name="notes" class="form-control" placeholder="<?= e(__('invoice_form.internal_placeholder')) ?>">
                     </div>
 
                     <button type="submit" class="btn btn-primary btn-block">
-                        Record Payment
+                        <?= e(__('invoice_form.record_payment_btn')) ?>
                     </button>
                 </form>
             </div>

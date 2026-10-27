@@ -16,7 +16,7 @@ return new class {
             `phone` VARCHAR(30) NOT NULL,
             `alternate_phone` VARCHAR(30) NULL,
             `email` VARCHAR(150) NULL,
-            `department` ENUM('operations','dispatch','fleet_chauffeur','management','administration','maintenance') NOT NULL DEFAULT 'operations',
+            `department` VARCHAR(80) NOT NULL DEFAULT 'operations',
             `designation` VARCHAR(100) NOT NULL DEFAULT 'Operations Executive',
             `employment_type` ENUM('full_time','part_time','contract','probation') NOT NULL DEFAULT 'full_time',
             `joining_date` DATE NOT NULL,

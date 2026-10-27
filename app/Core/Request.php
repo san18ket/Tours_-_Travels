@@ -8,6 +8,7 @@ class Request
     private array $server;
     private array $files;
     private ?array $json = null;
+    private array $attributes = [];
 
     public function __construct(
         ?array $get = null,
@@ -62,7 +63,7 @@ class Request
 
     public function isJson(): bool
     {
-        $contentType = $this->server['CONTENT_TYPE'] ?? '';
+        $contentType = $this->server['CONTENT_TYPE'] ?? $this->server['HTTP_CONTENT_TYPE'] ?? '';
         return strpos($contentType, 'application/json') !== false;
     }
 
@@ -132,7 +133,14 @@ class Request
     public function getHeader(string $name): ?string
     {
         $formatted = 'HTTP_' . strtoupper(str_replace('-', '_', $name));
-        return $this->server[$formatted] ?? null;
+        if (isset($this->server[$formatted])) {
+            return $this->server[$formatted];
+        }
+        $direct = strtoupper(str_replace('-', '_', $name));
+        if (isset($this->server[$direct])) {
+            return $this->server[$direct];
+        }
+        return $this->server[$name] ?? null;
     }
 
     public function getClientIp(): string
@@ -189,16 +197,51 @@ class Request
         $extension = $allowedMimes[$mime];
         $filename = bin2hex(random_bytes(16)) . '.' . $extension;
 
-        $targetDir = Config::get('paths.private_uploads') . '/' . trim($subDirectory, '/');
+        $basePrivateDir = Config::get('paths.private_uploads')
+            ?: (Config::get('app.paths.private_uploads') ?: (dirname(__DIR__, 2) . '/storage/private_uploads'));
+        $targetDir = rtrim(str_replace('\\', '/', $basePrivateDir), '/') . '/' . trim($subDirectory, '/');
         if (!is_dir($targetDir)) {
-            @mkdir($targetDir, 0750, true);
+            @mkdir($targetDir, 0777, true);
         }
 
         $destination = $targetDir . '/' . $filename;
         if (!move_uploaded_file($file['tmp_name'], $destination)) {
-            throw new \RuntimeException('Failed to save uploaded file safely.');
+            if (!@copy($file['tmp_name'], $destination)) {
+                throw new \RuntimeException('Failed to save uploaded file safely.');
+            }
         }
 
         return trim($subDirectory, '/') . '/' . $filename;
     }
+
+    public function setAttribute(string $key, mixed $value): self
+    {
+        $this->attributes[$key] = $value;
+        return $this;
+    }
+
+    public function getAttribute(string $key, mixed $default = null): mixed
+    {
+        return $this->attributes[$key] ?? $default;
+    }
+
+    public function post(?string $key = null, mixed $default = null): mixed
+    {
+        if ($key === null) {
+            return $this->post;
+        }
+        return $this->post[$key] ?? $default;
+    }
+
+    public function isAjax(): bool
+    {
+        return ($this->server['HTTP_X_REQUESTED_WITH'] ?? '') === 'XMLHttpRequest' || $this->wantsJson();
+    }
+
+    public function mergeAttributes(array $attributes): self
+    {
+        $this->attributes = array_merge($this->attributes, $attributes);
+        return $this;
+    }
 }
+

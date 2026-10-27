@@ -4,9 +4,9 @@
  */
 
 return [
-    'name' => 'VoyageGo Tours & Travels',
-    'tagline' => 'Enterprise Fleet Dispatch & Tour Operations',
-    'version' => '1.0.0',
+    'name' => 'MANASWI Tours & Travels',
+    'tagline' => 'Safe Journey • Happy Memories',
+    'version' => '2.0.0',
     'env' => 'production', // 'development' or 'production'
     'debug' => false,
     'timezone' => 'Asia/Kolkata',
@@ -22,9 +22,9 @@ return [
     ],
 
     // Default contact / branding
-    'support_email' => 'support@voyagego.internal',
-    'support_phone' => '+91 98765 43210',
-    'company_address' => 'VoyageGo Hub, Aero Mall Road, Terminal 2, New Delhi 110037',
+    'support_email' => 'contact@manaswitravels.com',
+    'support_phone' => '+91 98220 12345',
+    'company_address' => 'Manaswi Tours & Travels, Main Office Road, Maharashtra, India',
     
     // Key directories
     'paths' => [

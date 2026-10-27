@@ -131,6 +131,10 @@ class DispatchService
             throw new RuntimeException("Unauthorized: This trip assignment does not belong to you.");
         }
 
+        if ($dispatch['status'] !== 'assigned') {
+            throw new RuntimeException("Invalid status transition: Trip is already '{$dispatch['status']}'.");
+        }
+
         $oldStatus = $dispatch['status'];
         $updated = $this->dispatchModel->update($dispatchId, ['status' => 'driver_accepted']);
         if ($updated) {
@@ -145,6 +149,10 @@ class DispatchService
         $dispatch = $this->dispatchModel->find($dispatchId);
         if (!$dispatch || (int)$dispatch['driver_id'] !== $driverProfileId) {
             throw new RuntimeException("Unauthorized: Assignment mismatch.");
+        }
+
+        if (!in_array($dispatch['status'], ['assigned', 'driver_accepted'], true)) {
+            throw new RuntimeException("Invalid status transition: Cannot start trip with status '{$dispatch['status']}'.");
         }
 
         $vehicle = $this->vehicleModel->find($dispatch['vehicle_id']);
@@ -186,6 +194,10 @@ class DispatchService
         $dispatch = $this->dispatchModel->find($dispatchId);
         if (!$dispatch || (int)$dispatch['driver_id'] !== $driverProfileId) {
             throw new RuntimeException("Unauthorized: Assignment mismatch.");
+        }
+
+        if ($dispatch['status'] !== 'trip_started') {
+            throw new RuntimeException("Invalid status transition: Only active trips with status 'trip_started' can be completed.");
         }
 
         $startOdo = (int)($dispatch['start_odometer'] ?? 0);

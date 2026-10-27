@@ -208,19 +208,26 @@ $runner->runSuite('Business Rules, Pricing, Invoices & Idempotency', function (T
     );
     $t->assert($duplicatePayment['id'] === $payment['id'], 'Duplicate payment prevented via idempotency key; double charging thwarted');
 
-    // 5. GPS Submission Validation Against Active Assignment
+    // 5. GPS Submission Validation: On-Duty Standby Policy vs Off-Duty Privacy Rejection
     $driverModel = new DriverProfile();
     $allDrivers = $driverModel->all();
     if (!empty($allDrivers)) {
         $driverId = (int)$allDrivers[0]['id'];
-        // Driver without an active trip should be rejected
-        $dispatchModel = new Dispatch();
-        $activeTrip = $dispatchModel->getActiveAssignmentForDriver($driverId);
-        if (!$activeTrip) {
-            $t->assertThrows(function () use ($gpsService, $driverId) {
-                $gpsService->recordDriverLocation($driverId, 28.6139, 77.2090, 45.0);
-            }, RuntimeException::class, 'GPS coordinates rejected when chauffeur has no active authorized trip assignment');
-        }
+        $originalStatus = $allDrivers[0]['duty_status'] ?? 'off_duty';
+
+        // When off-duty, GPS location update MUST be rejected to preserve chauffeur privacy
+        $driverModel->update($driverId, ['duty_status' => 'off_duty']);
+        $t->assertThrows(function () use ($gpsService, $driverId) {
+            $gpsService->recordDriverLocation($driverId, 28.6139, 77.2090, 45.0);
+        }, RuntimeException::class, 'GPS coordinates rejected when chauffeur is off-duty (privacy safeguard)');
+
+        // When on-duty without active trip, location sharing is allowed under on_duty_standby policy
+        $driverModel->update($driverId, ['duty_status' => 'on_duty']);
+        $standbyResult = $gpsService->recordDriverLocation($driverId, 28.6139, 77.2090, 45.0);
+        $t->assert($standbyResult['success'] === true && $standbyResult['policy'] === 'on_duty_standby', 'GPS coordinates accepted for on-duty chauffeur under on_duty_standby policy');
+
+        // Restore status
+        $driverModel->update($driverId, ['duty_status' => $originalStatus]);
     }
 
     // Invalid coordinates boundary check
@@ -1090,5 +1097,681 @@ $runner->runSuite('Role & Permissions System Matching School Management Architec
     $pdo->prepare("DELETE FROM `roles` WHERE `id` = ?")->execute([$newRoleId]);
 });
 
+// =========================================================================
+// SUITE 9: MODULE 19 — Dedicated Driver Portal (Role-Based UI, Security & Isolation)
+// =========================================================================
+$runner->runSuite('MODULE 19: Dedicated Driver Portal — Role-Based UI, Security & Data Isolation', function (TestRunner $t) {
+    $pdo = Database::getConnection();
+    $router = require dirname(__DIR__) . '/app/routes.php';
+    $userModel = new User();
+    $driverModel = new DriverProfile();
+    $dispatchModel = new Dispatch();
+    $vehicleModel = new Vehicle();
+    $bookingModel = new Booking();
+    $dispatchService = new DispatchService();
+    $csrf = Csrf::getToken();
+
+    // -------------------------------------------------------------------------
+    // Setup Test Drivers & Profiles
+    // -------------------------------------------------------------------------
+    // Driver 1
+    $drv1Email = 'driver.suite19.1.' . uniqid() . '@voyagego.com';
+    $drv1UserId = $userModel->create([
+        'name'     => 'Marcus Sterling',
+        'username' => 'msterling_' . uniqid(),
+        'email'    => $drv1Email,
+        'phone'    => '+91 98111 ' . rand(10000, 99999),
+        'password' => password_hash('Chauffeur@123', PASSWORD_BCRYPT, ['cost' => 12]),
+        'role'     => 'driver',
+        'status'   => 'active',
+    ]);
+    $drv1ProfileId = $driverModel->create([
+        'user_id'          => $drv1UserId,
+        'license_number'   => 'DL-MH-19-' . rand(100000, 999999),
+        'license_expiry'   => date('Y-m-d', strtotime('+3 years')),
+        'experience_years' => 7,
+        'duty_status'      => 'on_duty',
+        'rating'           => 4.95,
+        'current_latitude' => 18.9220,
+        'current_longitude'=> 72.8347,
+        'last_gps_at'      => date('Y-m-d H:i:s'),
+    ]);
+
+    // Driver 2 (For Isolation Testing)
+    $drv2Email = 'driver.suite19.2.' . uniqid() . '@voyagego.com';
+    $drv2UserId = $userModel->create([
+        'name'     => 'Devin Vance',
+        'username' => 'dvance_' . uniqid(),
+        'email'    => $drv2Email,
+        'phone'    => '+91 98222 ' . rand(10000, 99999),
+        'password' => password_hash('Chauffeur@123', PASSWORD_BCRYPT, ['cost' => 12]),
+        'role'     => 'driver',
+        'status'   => 'active',
+    ]);
+    $drv2ProfileId = $driverModel->create([
+        'user_id'          => $drv2UserId,
+        'license_number'   => 'DL-KA-19-' . rand(100000, 999999),
+        'license_expiry'   => date('Y-m-d', strtotime('+2 years')),
+        'experience_years' => 5,
+        'duty_status'      => 'on_duty',
+        'rating'           => 4.88,
+        'current_latitude' => 12.9716,
+        'current_longitude'=> 77.5946,
+        'last_gps_at'      => date('Y-m-d H:i:s'),
+    ]);
+
+    // Test Vehicle & Bookings
+    $testVehicleId = $vehicleModel->create([
+        'vehicle_number'      => 'MH-01-DR-' . rand(1000, 9999),
+        'make_model'          => 'Mercedes-Benz E-Class Luxury',
+        'vehicle_type'        => 'sedan',
+        'seating_capacity'    => 4,
+        'fuel_type'           => 'diesel',
+        'status'              => 'available',
+        'odometer_km'         => 25400,
+        'registration_expiry' => date('Y-m-d', strtotime('+1 year')),
+        'insurance_expiry'    => date('Y-m-d', strtotime('+1 year')),
+    ]);
+
+    $bookingService = new \App\Services\BookingService();
+    $existingCust = $pdo->query("SELECT id FROM `customers` ORDER BY id ASC LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+    $testCustId = $existingCust ? (int)$existingCust['id'] : (int)(new \App\Models\Customer())->create([
+        'customer_code' => 'VG-CUST-T19-' . substr(uniqid(), 0, 8),
+        'first_name'    => 'VIP',
+        'last_name'     => 'Passenger',
+        'phone'         => '+9199999' . rand(10000, 99999),
+        'email'         => 'vip' . uniqid() . '@example.com',
+        'status'        => 'active'
+    ]);
+
+    $b1 = $bookingService->createBooking([
+        'customer_profile_id' => $testCustId,
+        'pickup_address'      => 'The Taj Mahal Palace, Colaba',
+        'drop_address'        => 'Mumbai International Airport T2',
+        'start_date'          => date('Y-m-d'),
+        'end_date'            => date('Y-m-d'),
+        'passenger_count'     => 2,
+        'custom_subtotal'     => 4500.0,
+        'idempotency_token'   => bin2hex(random_bytes(16)),
+    ]);
+    $b2 = $bookingService->createBooking([
+        'customer_profile_id' => $testCustId,
+        'pickup_address'      => 'Bandra Kurla Complex',
+        'drop_address'        => 'St. Regis Mumbai',
+        'start_date'          => date('Y-m-d', strtotime('+1 day')),
+        'end_date'            => date('Y-m-d', strtotime('+1 day')),
+        'passenger_count'     => 1,
+        'custom_subtotal'     => 3200.0,
+        'idempotency_token'   => bin2hex(random_bytes(16)),
+    ]);
+
+    // Dispatch 1 -> Driver 1
+    $dispatch1 = $dispatchService->assignBooking((int)$b1['id'], $testVehicleId, $drv1ProfileId, 1);
+    // Dispatch 2 -> Driver 2
+    $testVehicle2Id = $vehicleModel->create([
+        'vehicle_number'      => 'MH-02-VG-' . rand(1000, 9999),
+        'make_model'          => 'BMW 7 Series Executive',
+        'vehicle_type'        => 'sedan',
+        'seating_capacity'    => 4,
+        'fuel_type'           => 'diesel',
+        'status'              => 'available',
+        'odometer_km'         => 18900,
+        'registration_expiry' => date('Y-m-d', strtotime('+1 year')),
+        'insurance_expiry'    => date('Y-m-d', strtotime('+1 year')),
+    ]);
+    $dispatch2 = $dispatchService->assignBooking((int)$b2['id'], $testVehicle2Id, $drv2ProfileId, 1);
+
+    // -------------------------------------------------------------------------
+    // TEST 1: Admin login redirects to the authorized management dashboard
+    // -------------------------------------------------------------------------
+    $authController = new \App\Controllers\AuthController();
+    $refMethod = new \ReflectionMethod($authController, 'redirectBasedOnRole');
+    $refMethod->setAccessible(true);
+    $adminRedirect = $refMethod->invoke($authController, 'admin');
+    $t->assert(str_contains($adminRedirect->getHeader('Location') ?? '', '/office/dashboard'), '1. Admin login redirects to authorized management dashboard (/office/dashboard)');
+
+    // -------------------------------------------------------------------------
+    // TEST 2: Driver login redirects to dedicated driver dashboard
+    // -------------------------------------------------------------------------
+    $driverRedirect = $refMethod->invoke($authController, 'driver');
+    $t->assert(str_contains($driverRedirect->getHeader('Location') ?? '', '/driver/dashboard'), '2. Driver login redirects to dedicated driver dashboard (/driver/dashboard)');
+
+    // Root route redirect test for driver session
+    Session::start();
+    Session::set('user_id', $drv1UserId);
+    Session::set('user_role', 'driver');
+    Session::set('user', $userModel->find($drv1UserId));
+
+    $rootReq = new \App\Core\Request([], [], ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => '/']);
+    $rootRes = $router->dispatch($rootReq);
+    $t->assert(str_contains($rootRes->getHeader('Location') ?? '', '/driver/dashboard'), '2b. Authenticated driver at root route / redirects to /driver/dashboard');
+
+    // -------------------------------------------------------------------------
+    // TEST 3: Driver sees driver-specific sidebar and navbar
+    // -------------------------------------------------------------------------
+    $dashReq = new \App\Core\Request([], [], ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => '/driver/dashboard']);
+    $dashRes = $router->dispatch($dashReq);
+    $t->assert($dashRes->getStatusCode() === 200, '3. Driver dashboard loads with 200 OK');
+    $dashHtml = (string)$dashRes->getBody();
+    $t->assert(str_contains($dashHtml, 'id="sidebar"'), '3a. Driver layout contains dedicated driver sidebar');
+    $t->assert(str_contains($dashHtml, 'CHAUFFEUR PORTAL') || str_contains($dashHtml, 'Chauffeur Console'), '3b. Sidebar displays brand and chauffeur section label');
+    $t->assert(str_contains($dashHtml, '/driver/dashboard') && str_contains($dashHtml, '/driver/trips') && str_contains($dashHtml, '/driver/history') && str_contains($dashHtml, '/driver/vehicle') && str_contains($dashHtml, '/driver/location') && str_contains($dashHtml, '/driver/profile'), '3c. Driver sidebar contains all 6 driver navigation routes');
+
+    // -------------------------------------------------------------------------
+    // TEST 4: Administrative menu items are NOT displayed to drivers
+    // -------------------------------------------------------------------------
+    $t->assert(!str_contains($dashHtml, '/office/customers') && !str_contains($dashHtml, '/office/employees') && !str_contains($dashHtml, '/office/users') && !str_contains($dashHtml, '/office/roles') && !str_contains($dashHtml, '/office/role-permission'), '4. Administrative menu items (customers, employees, users, roles) are completely absent from driver layout');
+
+    // -------------------------------------------------------------------------
+    // TEST 5: Direct access to protected admin URLs is denied to drivers
+    // -------------------------------------------------------------------------
+    $adminEndpoints = [
+        '/office/dashboard',
+        '/office/customers',
+        '/office/employees',
+        '/office/vehicles',
+        '/office/bookings',
+        '/office/invoices',
+        '/office/users',
+        '/office/roles',
+        '/office/trips/assign',
+        '/office/tracking',
+    ];
+    $allBlocked = true;
+    foreach ($adminEndpoints as $ep) {
+        $epReq = new \App\Core\Request([], [], ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => $ep]);
+        $epRes = $router->dispatch($epReq);
+        if ($epRes->getStatusCode() !== 403) {
+            $allBlocked = false;
+            echo "    Failed block on endpoint {$ep} (Status: {$epRes->getStatusCode()})\n";
+        }
+    }
+    $t->assert($allBlocked, '5. Direct access to all protected admin and office routes returns 403 Forbidden for drivers');
+
+    // -------------------------------------------------------------------------
+    // TEST 6: Driver sees ONLY their own assigned trips
+    // -------------------------------------------------------------------------
+    $tripsReq = new \App\Core\Request([], [], ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => '/driver/trips']);
+    $tripsRes = $router->dispatch($tripsReq);
+    $t->assert($tripsRes->getStatusCode() === 200, '6a. Driver trips page loads with 200 OK');
+    $tripsHtml = (string)$tripsRes->getBody();
+    $t->assert(str_contains($tripsHtml, $b1['booking_code']), '6b. Driver 1 sees their assigned booking: ' . $b1['booking_code']);
+    $t->assert(!str_contains($tripsHtml, $b2['booking_code']), '6c. Driver 1 CANNOT see Driver 2\'s assigned booking: ' . $b2['booking_code']);
+
+    // -------------------------------------------------------------------------
+    // TEST 7: Changing trip ID or URL parameter cannot expose another driver's records
+    // -------------------------------------------------------------------------
+    // Driver 1 accessing their own trip details
+    $ownTripReq = new \App\Core\Request([], [], ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => '/driver/trips/' . $dispatch1['id']]);
+    $ownTripRes = $router->dispatch($ownTripReq);
+    $t->assert($ownTripRes->getStatusCode() === 200, '7a. Driver 1 can view own trip details (200 OK)');
+
+    // Driver 1 attempting to access Driver 2's trip details
+    $otherTripReq = new \App\Core\Request([], [], ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => '/driver/trips/' . $dispatch2['id']]);
+    $otherTripRes = $router->dispatch($otherTripReq);
+    $t->assert($otherTripRes->getStatusCode() === 302, '7b. Driver 1 attempting to view Driver 2\'s trip is intercepted and redirected (302)');
+    $otherHtml = (string)$otherTripRes->getBody();
+    $t->assert(!str_contains($otherHtml, $b2['booking_code']), '7c. Driver 2\'s booking data is never exposed to Driver 1');
+
+    // -------------------------------------------------------------------------
+    // TEST 8: Unauthorized trip status transitions are rejected
+    // -------------------------------------------------------------------------
+    // Cannot start trip without accepting
+    $t->assertThrows(function () use ($dispatchService, $dispatch1, $drv1ProfileId) {
+        // Complete trip directly from assigned status
+        $dispatchService->completeTrip((int)$dispatch1['id'], $drv1ProfileId, 30000);
+    }, \RuntimeException::class, '8a. Attempt to complete an unstarted/assigned trip is firmly rejected');
+
+    // Cannot start with lower odometer
+    $t->assertThrows(function () use ($dispatchService, $dispatch1, $drv1ProfileId) {
+        $dispatchService->startTrip((int)$dispatch1['id'], $drv1ProfileId, 100);
+    }, \RuntimeException::class, '8b. Attempt to start trip with odometer lower than vehicle reading is rejected');
+
+    // Driver 1 cannot accept Driver 2's trip
+    $t->assertThrows(function () use ($dispatchService, $dispatch2, $drv1ProfileId) {
+        $dispatchService->driverAccept((int)$dispatch2['id'], $drv1ProfileId);
+    }, \RuntimeException::class, '8c. Attempt to accept another driver\'s trip is rejected with Unauthorized error');
+
+    // Valid workflow progression
+    $accepted = $dispatchService->driverAccept((int)$dispatch1['id'], $drv1ProfileId);
+    $t->assert($accepted === true, '8d. Driver 1 accepts assigned trip successfully');
+
+    $started = $dispatchService->startTrip((int)$dispatch1['id'], $drv1ProfileId, 25420, 'Departed hotel smoothly');
+    $t->assert($started === true, '8e. Driver 1 starts trip with valid odometer reading');
+
+    // -------------------------------------------------------------------------
+    // TEST 11: Location sharing accurately reflects actual implementation
+    // -------------------------------------------------------------------------
+    // GPS API submission test while trip is active
+    $gpsReq = new \App\Core\Request([], [
+        'latitude'  => 18.9250,
+        'longitude' => 72.8360,
+        'speed_kmh' => 45.2,
+    ], [
+        'REQUEST_METHOD' => 'POST',
+        'REQUEST_URI'    => '/api/gps/update',
+        'CONTENT_TYPE'   => 'application/json',
+        'HTTP_X_CSRF_TOKEN' => $csrf,
+    ]);
+    $gpsRes = $router->dispatch($gpsReq);
+    $t->assert($gpsRes->getStatusCode() === 200, '11d. Driver can submit live GPS coordinates via /api/gps/update (200 OK)');
+    $gpsJson = json_decode((string)$gpsRes->getBody(), true);
+    $t->assert($gpsJson['data']['policy'] === 'active_trip' && (int)$gpsJson['data']['dispatch_id'] === (int)$dispatch1['id'], '11d-2. Active trip tracking policy applied with valid dispatch ID');
+    $updatedDriver = $driverModel->find($drv1ProfileId);
+    $t->assert(abs((float)$updatedDriver['current_latitude'] - 18.9250) < 0.001, '11e. Database driver profile coordinates updated accurately');
+    $gpsLogModel = new \App\Models\GpsLog();
+    $latestLogs = $gpsLogModel->getLatestForDriver($drv1ProfileId, 1);
+    $t->assert(!empty($latestLogs) && (int)$latestLogs[0]['dispatch_id'] === (int)$dispatch1['id'], '11f. gps_logs table logs active dispatch ID');
+
+    $completed = $dispatchService->completeTrip((int)$dispatch1['id'], $drv1ProfileId, 25465, 'Arrived at airport terminal on time');
+    $t->assert($completed === true, '8f. Driver 1 completes trip with verified end odometer');
+
+    // TEST: On-duty standby tracking policy without active trip
+    $onDutyGpsReq = new \App\Core\Request([], [
+        'latitude'  => 18.9300,
+        'longitude' => 72.8400,
+        'speed_kmh' => 0.0,
+    ], [
+        'REQUEST_METHOD' => 'POST',
+        'REQUEST_URI'    => '/api/gps/update',
+        'CONTENT_TYPE'   => 'application/json',
+        'HTTP_X_CSRF_TOKEN' => $csrf,
+    ]);
+    $onDutyGpsRes = $router->dispatch($onDutyGpsReq);
+    $t->assert($onDutyGpsRes->getStatusCode() === 200, '11g. Driver can submit live GPS coordinates while on-duty without active trip (200 OK)');
+    $onDutyJson = json_decode((string)$onDutyGpsRes->getBody(), true);
+    $t->assert($onDutyJson['data']['policy'] === 'on_duty_standby' && $onDutyJson['data']['dispatch_id'] === null, '11h. On-duty standby policy applied with null dispatch ID');
+    $standbyDriver = $driverModel->find($drv1ProfileId);
+    $t->assert(abs((float)$standbyDriver['current_latitude'] - 18.9300) < 0.001, '11i. Standby driver coordinates persisted to driver_profiles');
+    $standbyLogs = $gpsLogModel->getLatestForDriver($drv1ProfileId, 1);
+    $t->assert(!empty($standbyLogs) && $standbyLogs[0]['dispatch_id'] === null, '11j. gps_logs table persists on-duty breadcrumb with null dispatch_id');
+
+    // TEST: Off-duty rejection (privacy safeguard)
+    $driverModel->update($drv1ProfileId, ['duty_status' => 'off_duty']);
+    $offDutyGpsReq = new \App\Core\Request([], [
+        'latitude'  => 18.9350,
+        'longitude' => 72.8450,
+    ], [
+        'REQUEST_METHOD' => 'POST',
+        'REQUEST_URI'    => '/api/gps/update',
+        'CONTENT_TYPE'   => 'application/json',
+        'HTTP_X_CSRF_TOKEN' => $csrf,
+    ]);
+    $offDutyGpsRes = $router->dispatch($offDutyGpsReq);
+    $t->assert($offDutyGpsRes->getStatusCode() === 422, '11k. Off-duty location submission rejected to protect chauffeur privacy (422)');
+    $offDutyJson = json_decode((string)$offDutyGpsRes->getBody(), true);
+    $t->assert(str_contains($offDutyJson['error'] ?? '', 'off duty'), '11l. Informative error returned when off-duty driver attempts location sharing');
+
+    // Restore on-duty
+    $driverModel->update($drv1ProfileId, ['duty_status' => 'on_duty']);
+
+    // TEST: Invalid coordinate bounds (null island & out of bounds)
+    $badCoordsReq = new \App\Core\Request([], [
+        'latitude'  => 0.0,
+        'longitude' => 0.0,
+    ], [
+        'REQUEST_METHOD' => 'POST',
+        'REQUEST_URI'    => '/api/gps/update',
+        'CONTENT_TYPE'   => 'application/json',
+        'HTTP_X_CSRF_TOKEN' => $csrf,
+    ]);
+    $badCoordsRes = $router->dispatch($badCoordsReq);
+    $t->assert($badCoordsRes->getStatusCode() === 422, '11m. Null island (0,0) coordinates rejected (422)');
+
+    // TEST: CSRF rejection
+    $tamperedCsrfReq = new \App\Core\Request([], [
+        'latitude'  => 18.9300,
+        'longitude' => 72.8400,
+    ], [
+        'REQUEST_METHOD' => 'POST',
+        'REQUEST_URI'    => '/api/gps/update',
+        'CONTENT_TYPE'   => 'application/json',
+        'HTTP_X_CSRF_TOKEN' => 'tampered_invalid_csrf_token',
+    ]);
+    $tamperedCsrfRes = $router->dispatch($tamperedCsrfReq);
+    $t->assert($tamperedCsrfRes->getStatusCode() === 403, '11n. Tampered CSRF token on GPS update rejected with 403 Forbidden');
+
+    // Cannot accept an already completed trip
+    $t->assertThrows(function () use ($dispatchService, $dispatch1, $drv1ProfileId) {
+        $dispatchService->driverAccept((int)$dispatch1['id'], $drv1ProfileId);
+    }, \RuntimeException::class, '8g. Duplicate acceptance on already completed trip is rejected');
+
+    // -------------------------------------------------------------------------
+    // TEST 9: Driver trip history contains only authenticated driver's records
+    // -------------------------------------------------------------------------
+    $histReq = new \App\Core\Request([], [], ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => '/driver/history']);
+    $histRes = $router->dispatch($histReq);
+    $t->assert($histRes->getStatusCode() === 200, '9a. Driver trip history loads with 200 OK');
+    $histHtml = (string)$histRes->getBody();
+    $t->assert(str_contains($histHtml, $b1['booking_code']), '9b. Completed trip appears in Driver 1\'s history archive');
+    $t->assert(!str_contains($histHtml, $b2['booking_code']), '9c. Driver 2\'s trip does NOT appear in Driver 1\'s history archive');
+
+    // -------------------------------------------------------------------------
+    // TEST 10: Vehicle page displays only valid assignments & empty states
+    // -------------------------------------------------------------------------
+    $vehReq = new \App\Core\Request([], [], ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => '/driver/vehicle']);
+    $vehRes = $router->dispatch($vehReq);
+    $t->assert($vehRes->getStatusCode() === 200, '10a. Driver vehicle page loads with 200 OK');
+    $vehHtml = (string)$vehRes->getBody();
+    $t->assert(str_contains($vehHtml, 'Mercedes-Benz E-Class Luxury'), '10b. Displays vehicle assigned from completed/active trip');
+
+    // Test driver with NO vehicle assigned
+    $drv3UserId = $userModel->create([
+        'name'     => 'Fresh Chauffeur',
+        'username' => 'fresh_' . uniqid(),
+        'email'    => 'fresh.' . uniqid() . '@voyagego.com',
+        'phone'    => '+91 98333 ' . rand(10000, 99999),
+        'password' => password_hash('Chauffeur@123', PASSWORD_BCRYPT, ['cost' => 12]),
+        'role'     => 'driver',
+        'status'   => 'active',
+    ]);
+    $driverModel->create([
+        'user_id'          => $drv3UserId,
+        'license_number'   => 'DL-MH-99-' . rand(100000, 999999),
+        'license_expiry'   => date('Y-m-d', strtotime('+3 years')),
+        'experience_years' => 2,
+        'duty_status'      => 'off_duty',
+        'rating'           => 5.0,
+    ]);
+    Session::set('user_id', $drv3UserId);
+    Session::set('user', $userModel->find($drv3UserId));
+
+    $freshVehReq = new \App\Core\Request([], [], ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => '/driver/vehicle']);
+    $freshVehRes = $router->dispatch($freshVehReq);
+    $freshVehHtml = (string)$freshVehRes->getBody();
+    $t->assert(str_contains($freshVehHtml, 'No vehicle assigned yet'), '10c. Driver with no vehicle assignments receives professional empty state');
+
+    // Test Driver 3 (driver with NO coordinates recorded yet) loading location console
+    $drv3LocReq = new \App\Core\Request([], [], ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => '/driver/location']);
+    $drv3LocRes = $router->dispatch($drv3LocReq);
+    $t->assert($drv3LocRes->getStatusCode() === 200, '11o. Driver without coordinates loads location console (200 OK)');
+    $drv3LocHtml = (string)$drv3LocRes->getBody();
+    $t->assert(!str_contains($drv3LocHtml, '19.0760'), '11p. Driver without coordinates does NOT have hardcoded Mumbai latitude presented');
+    $t->assert(!str_contains($drv3LocHtml, '72.8777'), '11q. Driver without coordinates does NOT have hardcoded Mumbai longitude presented');
+    $t->assert(str_contains($drv3LocHtml, 'Awaiting browser GPS lock'), '11r. Unlocated driver shows clear awaiting signal notice');
+
+    // Switch session back to Driver 1
+    Session::set('user_id', $drv1UserId);
+    Session::set('user', $userModel->find($drv1UserId));
+
+    // Location console page test
+    $locReq = new \App\Core\Request([], [], ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => '/driver/location']);
+    $locRes = $router->dispatch($locReq);
+    $t->assert($locRes->getStatusCode() === 200, '11a. Driver location console loads with 200 OK');
+    $locHtml = (string)$locRes->getBody();
+    $t->assert(str_contains($locHtml, 'driverLiveMap'), '11b. Location page includes live map container');
+    $t->assert(str_contains($locHtml, 'VoyageTelemetry'), '11c. Integrates genuinely with client telemetry engine');
+
+    // Test Office Central Live Fleet Tracker reflects Driver 1's position
+    $adminUser = $userModel->findBy('role', 'admin') ?? $userModel->findBy('email', 'admin@voyagego.com');
+    Session::set('user_id', $adminUser['id']);
+    Session::set('user_role', 'admin');
+    Session::set('user', $adminUser);
+    $fleetReq = new \App\Core\Request([], [], ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => '/api/fleet/live']);
+    $fleetRes = $router->dispatch($fleetReq);
+    $t->assert($fleetRes->getStatusCode() === 200, '11s. Office dispatch live fleet tracker returns 200 OK');
+    $fleetData = json_decode((string)$fleetRes->getBody(), true);
+    $t->assert(!empty($fleetData['fleet']), '11t. Fleet tracker returns active vehicles and on-duty chauffeurs');
+    $foundDriver = false;
+    foreach ($fleetData['fleet'] as $f) {
+        if ((int)$f['driver_id'] === $drv1ProfileId) {
+            $foundDriver = true;
+            $t->assert(abs((float)$f['current_latitude'] - 18.9300) < 0.001, '11u. Office tracker reflects chauffeur\'s updated latitude');
+            break;
+        }
+    }
+    $t->assert($foundDriver, '11v. Chauffeur profile exists in central fleet tracker');
+
+    // Switch session back to Driver 1 for profile test
+    Session::set('user_id', $drv1UserId);
+    Session::set('user_role', 'driver');
+    Session::set('user', $userModel->find($drv1UserId));
+
+    // -------------------------------------------------------------------------
+    // TEST 12: Driver profile respects field-level permissions
+    // -------------------------------------------------------------------------
+    $profReq = new \App\Core\Request([], [], ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => '/driver/profile']);
+    $profRes = $router->dispatch($profReq);
+    $t->assert($profRes->getStatusCode() === 200, '12a. Driver profile page loads with 200 OK');
+    $profHtml = (string)$profRes->getBody();
+    $t->assert(str_contains($profHtml, 'Verified Professional Credentials (Read-Only)'), '12b. Credentials marked clearly as read-only');
+
+    // Update permitted field (phone)
+    $newPhone = '+91 99888 ' . rand(10000, 99999);
+    $updateProfReq = new \App\Core\Request([], [
+        '_token'            => $csrf,
+        'phone'             => $newPhone,
+        'emergency_contact' => 'Sarah Sterling (+91 98999 11111)',
+        'address'           => '12 Palm Grove Avenue',
+        'role'              => 'admin', // Tampering attempt: trying to elevate role
+    ], [
+        'REQUEST_METHOD' => 'POST',
+        'REQUEST_URI'    => '/driver/profile',
+    ]);
+    $updateProfRes = $router->dispatch($updateProfReq);
+    $t->assert($updateProfRes->getStatusCode() === 302, '12c. Profile update redirects with success flash');
+
+    $reloadedUser = $userModel->find($drv1UserId);
+    $t->assert($reloadedUser['phone'] === $newPhone, '12d. Permitted phone number updated successfully');
+    $t->assert($reloadedUser['role'] === 'driver', '12e. Role tampering rejected: driver role remains strictly "driver"');
+
+    // Password change test
+    $pwReq = new \App\Core\Request([], [
+        '_token'           => $csrf,
+        'current_password' => 'Chauffeur@123',
+        'new_password'     => 'NewSuperSecurePass@2026',
+        'confirm_password' => 'NewSuperSecurePass@2026',
+    ], [
+        'REQUEST_METHOD' => 'POST',
+        'REQUEST_URI'    => '/driver/profile/password',
+    ]);
+    $pwRes = $router->dispatch($pwReq);
+    $t->assert($pwRes->getStatusCode() === 302, '12f. Password change redirects with success message');
+    $reloadedUserPw = $userModel->find($drv1UserId);
+    $t->assert(password_verify('NewSuperSecurePass@2026', $reloadedUserPw['password']), '12g. New password successfully verified with bcrypt');
+
+    // -------------------------------------------------------------------------
+    // TEST 13: Sidebar and navbar work on desktop and mobile
+    // -------------------------------------------------------------------------
+    $t->assert(str_contains($dashHtml, 'sidebar-toggle-btn') && str_contains($dashHtml, 'toggleSidebarCollapse'), '13a. Desktop toggle collapse trigger present');
+    $t->assert(str_contains($dashHtml, 'sidebar-backdrop') && str_contains($dashHtml, 'closeSidebar'), '13b. Mobile slide-in drawer backdrop and close controls present');
+    $t->assert(str_contains($dashHtml, 'bottom-nav') && str_contains($dashHtml, 'Driver Mobile Navigation'), '13c. Mobile bottom navigation dock present');
+
+    // -------------------------------------------------------------------------
+    // TEST 14: Theme variables apply consistently across the driver portal
+    // -------------------------------------------------------------------------
+    $t->assert(str_contains($dashHtml, 'var(--vg-navy-950)') || str_contains($dashHtml, 'var(--vg-blue-500)'), '14a. Driver dashboard utilizes master luxury CSS design tokens');
+    $t->assert(str_contains($dashHtml, 'asset(\'css/app.css\')') || str_contains($dashHtml, 'app.css'), '14b. Links to unified app.css theme engine');
+
+    // -------------------------------------------------------------------------
+    // TEST 15: Empty assignments and missing data produce professional empty states
+    // -------------------------------------------------------------------------
+    Session::set('user_id', $drv3UserId);
+    Session::set('user', $userModel->find($drv3UserId));
+    $emptyTripsReq = new \App\Core\Request([], [], ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => '/driver/trips']);
+    $emptyTripsRes = $router->dispatch($emptyTripsReq);
+    $emptyTripsHtml = (string)$emptyTripsRes->getBody();
+    $t->assert(str_contains($emptyTripsHtml, 'No trips assigned yet'), '15. Empty assignments produce professional luxury empty state: "No trips assigned yet"');
+
+    // -------------------------------------------------------------------------
+    // TEST 16: Existing admin and employee workflows continue to work
+    // -------------------------------------------------------------------------
+    Session::set('user_id', 1);
+    Session::set('user_role', 'admin');
+    Session::set('user', $userModel->find(1));
+
+    $adminDashReq = new \App\Core\Request([], [], ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => '/office/dashboard']);
+    $adminDashRes = $router->dispatch($adminDashReq);
+    $t->assert($adminDashRes->getStatusCode() === 200, '16a. Existing admin dashboard continues to work (200 OK)');
+
+    $adminAssignReq = new \App\Core\Request([], [], ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => '/office/trips/assign']);
+    $adminAssignRes = $router->dispatch($adminAssignReq);
+    $t->assert($adminAssignRes->getStatusCode() === 200, '16b. Existing admin trip assignment workflow continues to work (200 OK)');
+
+    $adminHistReq = new \App\Core\Request([], [], ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => '/office/trips/history']);
+    $adminHistRes = $router->dispatch($adminHistReq);
+    $t->assert($adminHistRes->getStatusCode() === 200, '16c. Existing admin fleet trip history continues to work (200 OK)');
+
+    // Clean up created test records
+    $pdo->prepare("DELETE FROM `gps_logs` WHERE `driver_id` IN (?, ?, ?)")->execute([$drv1ProfileId, $drv2ProfileId, 0]);
+    $pdo->prepare("DELETE FROM `trip_status_history` WHERE `dispatch_id` IN (?, ?)")->execute([(int)$dispatch1['id'], (int)$dispatch2['id']]);
+    $pdo->prepare("DELETE FROM `dispatches` WHERE `id` IN (?, ?)")->execute([(int)$dispatch1['id'], (int)$dispatch2['id']]);
+    $pdo->prepare("DELETE FROM `bookings` WHERE `id` IN (?, ?)")->execute([(int)$b1['id'], (int)$b2['id']]);
+    $pdo->prepare("DELETE FROM `vehicles` WHERE `id` IN (?, ?)")->execute([$testVehicleId, $testVehicle2Id]);
+    $pdo->prepare("DELETE FROM `driver_profiles` WHERE `id` IN (?, ?)")->execute([$drv1ProfileId, $drv2ProfileId]);
+    $pdo->prepare("DELETE FROM `driver_profiles` WHERE `user_id` = ?")->execute([$drv3UserId]);
+    $pdo->prepare("DELETE FROM `users` WHERE `id` IN (?, ?, ?)")->execute([$drv1UserId, $drv2UserId, $drv3UserId]);
+});
+
+// =========================================================================
+// SUITE 20: Dedicated Mobile Driver API, Tokens & Offline GPS Telemetry
+// =========================================================================
+$runner->runSuite('MODULE 20: Dedicated Mobile Driver API, Authentication Tokens & Offline Telemetry', function (TestRunner $t) {
+    $router = require dirname(__DIR__) . '/app/routes.php';
+    $pdo = \App\Core\Database::getConnection();
+
+    $userModel = new \App\Models\User();
+    $driverModel = new \App\Models\DriverProfile();
+
+    $testUsername = 'mobiledrv_' . bin2hex(random_bytes(3));
+    $testPassword = 'TestPassword123!';
+    $now = date('Y-m-d H:i:s');
+
+    $userId = $userModel->create([
+        'name'       => 'Mobile Test Chauffeur',
+        'username'   => $testUsername,
+        'email'      => $testUsername . '@voyagego.internal',
+        'phone'      => '+91 99887 76655',
+        'password'   => password_hash($testPassword, PASSWORD_BCRYPT, ['cost' => 10]),
+        'role'       => 'driver',
+        'status'     => 'active',
+        'created_at' => $now,
+        'updated_at' => $now,
+    ]);
+
+    $driverProfileId = $driverModel->create([
+        'user_id'           => $userId,
+        'license_number'    => 'DL-MOB-' . bin2hex(random_bytes(4)),
+        'license_expiry'    => date('Y-m-d', strtotime('+2 years')),
+        'experience_years'  => 5,
+        'duty_status'       => 'on_duty',
+        'current_latitude'  => 28.6139,
+        'current_longitude' => 77.2090,
+        'last_gps_at'       => $now,
+        'created_at'        => $now,
+        'updated_at'        => $now,
+    ]);
+
+    $t->assert($userId > 0 && $driverProfileId > 0, '20.1. Mobile chauffeur account provisioned');
+
+    // 2. Authentication validation
+    $badReq = new \App\Core\Request([], [
+        'login' => $testUsername,
+        'password' => 'wrong',
+        'device_uuid' => 'qa-uuid'
+    ], [
+        'REQUEST_METHOD' => 'POST',
+        'REQUEST_URI'    => '/api/mobile/v1/auth/login',
+        'CONTENT_TYPE'   => 'application/json'
+    ]);
+    $badRes = $router->dispatch($badReq);
+    $t->assert($badRes->getStatusCode() === 401, '20.2. Invalid password rejected with 401');
+
+    // 3. Successful login
+    $deviceUuid = 'qa-dev-' . bin2hex(random_bytes(4));
+    $loginReq = new \App\Core\Request([], [
+        'login'       => $testUsername,
+        'password'    => $testPassword,
+        'device_uuid' => $deviceUuid,
+        'device_name' => 'Pixel 8 Native Test',
+        'platform'    => 'android'
+    ], [
+        'REQUEST_METHOD' => 'POST',
+        'REQUEST_URI'    => '/api/mobile/v1/auth/login',
+        'CONTENT_TYPE'   => 'application/json'
+    ]);
+    $loginRes = $router->dispatch($loginReq);
+    $t->assert($loginRes->getStatusCode() === 200, '20.3a. Mobile login succeeds with 200 OK');
+    $loginData = json_decode($loginRes->getContent(), true);
+    $token = $loginData['auth']['access_token'] ?? '';
+    $refreshToken = $loginData['auth']['refresh_token'] ?? '';
+    $t->assert(!empty($token) && !empty($refreshToken), '20.3b. Cryptographic access & refresh tokens issued');
+
+    // 4. Mobile Auth Middleware enforcement
+    $meReqNoAuth = new \App\Core\Request([], [], [
+        'REQUEST_METHOD' => 'GET',
+        'REQUEST_URI'    => '/api/mobile/v1/driver/me',
+        'HTTP_ACCEPT'    => 'application/json'
+    ]);
+    $meResNoAuth = $router->dispatch($meReqNoAuth);
+    $t->assert($meResNoAuth->getStatusCode() === 401, '20.4. Unauthenticated mobile request rejected with 401');
+
+    $meReqAuth = new \App\Core\Request([], [], [
+        'REQUEST_METHOD'     => 'GET',
+        'REQUEST_URI'        => '/api/mobile/v1/driver/me',
+        'HTTP_ACCEPT'        => 'application/json',
+        'HTTP_AUTHORIZATION' => 'Bearer ' . $token
+    ]);
+    $meResAuth = $router->dispatch($meReqAuth);
+    $t->assert($meResAuth->getStatusCode() === 200, '20.5. Authenticated chauffeur profile retrieved (200 OK)');
+
+    // 5. Tracking status and start
+    $startReq = new \App\Core\Request([], [], [
+        'REQUEST_METHOD'     => 'POST',
+        'REQUEST_URI'        => '/api/mobile/v1/tracking/start',
+        'HTTP_ACCEPT'        => 'application/json',
+        'HTTP_AUTHORIZATION' => 'Bearer ' . $token
+    ]);
+    $startRes = $router->dispatch($startReq);
+    $t->assert($startRes->getStatusCode() === 200, '20.6. Tracking session initialized (200 OK)');
+
+    // 6. Offline batch GPS synchronization
+    $batchReq = new \App\Core\Request([], [
+        'locations' => [
+            ['point_id' => 'p1', 'latitude' => 28.6145, 'longitude' => 77.2095, 'speed_kmh' => 30, 'timestamp' => date('Y-m-d H:i:s', time() + 5)],
+            ['point_id' => 'p2', 'latitude' => 28.6150, 'longitude' => 77.2100, 'speed_kmh' => 35, 'timestamp' => date('Y-m-d H:i:s', time() + 10)],
+        ]
+    ], [
+        'REQUEST_METHOD'     => 'POST',
+        'REQUEST_URI'        => '/api/mobile/v1/gps',
+        'HTTP_ACCEPT'        => 'application/json',
+        'HTTP_AUTHORIZATION' => 'Bearer ' . $token
+    ]);
+    $batchRes = $router->dispatch($batchReq);
+    $t->assert($batchRes->getStatusCode() === 200, '20.7a. Batch offline GPS queue processed with 200 OK');
+    $batchData = json_decode($batchRes->getContent(), true);
+    $t->assert(($batchData['processed_count'] ?? 0) === 2, '20.7b. Exactly 2 breadcrumbs synchronized');
+
+    // 7. Refresh token rotation
+    $refReq = new \App\Core\Request([], ['refresh_token' => $refreshToken], [
+        'REQUEST_METHOD' => 'POST',
+        'REQUEST_URI'    => '/api/mobile/v1/auth/refresh',
+        'CONTENT_TYPE'   => 'application/json'
+    ]);
+    $refRes = $router->dispatch($refReq);
+    $t->assert($refRes->getStatusCode() === 200, '20.8. Refresh token rotated successfully (200 OK)');
+    $newAccessToken = json_decode($refRes->getContent(), true)['auth']['access_token'] ?? '';
+
+    // 8. Logout & Revocation
+    $logoutReq = new \App\Core\Request([], [], [
+        'REQUEST_METHOD'     => 'POST',
+        'REQUEST_URI'        => '/api/mobile/v1/auth/logout',
+        'HTTP_AUTHORIZATION' => 'Bearer ' . $newAccessToken
+    ]);
+    $logoutRes = $router->dispatch($logoutReq);
+    $t->assert($logoutRes->getStatusCode() === 200, '20.9. Device session revoked on logout (200 OK)');
+
+    $revokedCheck = $router->dispatch($logoutReq);
+    $t->assert($revokedCheck->getStatusCode() === 401, '20.10. Revoked token rejected with 401');
+
+    // Cleanup
+    $pdo->prepare("DELETE FROM `gps_logs` WHERE `driver_id` = ?")->execute([$driverProfileId]);
+    $pdo->prepare("DELETE FROM `tracking_sessions` WHERE `driver_id` = ?")->execute([$driverProfileId]);
+    $pdo->prepare("DELETE FROM `driver_mobile_devices` WHERE `driver_id` = ?")->execute([$driverProfileId]);
+    $pdo->prepare("DELETE FROM `driver_profiles` WHERE `id` = ?")->execute([$driverProfileId]);
+    $pdo->prepare("DELETE FROM `users` WHERE `id` = ?")->execute([$userId]);
+});
+
 exit($runner->summary());
+
 

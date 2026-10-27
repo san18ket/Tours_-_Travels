@@ -34,12 +34,15 @@ return [
     ],
 
     'uploads' => [
-        'max_file_size' => 5 * 1024 * 1024, // 5MB
+        'max_file_size' => 10 * 1024 * 1024, // 10MB
         'allowed_mimes' => [
-            'image/jpeg' => 'jpg',
-            'image/png'  => 'png',
-            'image/webp' => 'webp',
-            'application/pdf' => 'pdf',
+            'image/jpeg'        => 'jpg',
+            'image/pjpeg'       => 'jpg',
+            'image/png'         => 'png',
+            'image/x-png'       => 'png',
+            'image/webp'        => 'webp',
+            'application/pdf'   => 'pdf',
+            'application/x-pdf' => 'pdf',
         ],
     ],
 
@@ -48,7 +51,6 @@ return [
         'X-Content-Type-Options' => 'nosniff',
         'X-Frame-Options'        => 'SAMEORIGIN',
         'X-XSS-Protection'       => '1; mode=block',
-        'Referrer-Policy'        => 'strict-origin-when-cross-origin',
-        'Content-Security-Policy' => "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self';",
+        'Content-Security-Policy' => "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: blob: https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://unpkg.com; connect-src 'self';",
     ],
 ];

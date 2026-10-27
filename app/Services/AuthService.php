@@ -44,12 +44,23 @@ class AuthService
         // Store user state
         Session::set('user_id', (int)$user['id']);
         Session::set('user_role', $user['role']);
+        
+        // Synchronize user language preference
+        $userLocale = !empty($user['language']) ? (string)$user['language'] : null;
+        if ($userLocale && \App\Core\Language::isSupported($userLocale)) {
+            \App\Core\Language::setLocale($userLocale, true, (int)$user['id']);
+        } else {
+            $currentLocale = \App\Core\Language::getLocale();
+            \App\Core\Language::saveUserLocale((int)$user['id'], $currentLocale);
+        }
+
         Session::set('user', [
             'id'       => $user['id'],
             'name'     => $user['name'],
             'username' => $user['username'] ?? '',
             'email'    => $user['email'],
             'role'     => $user['role'],
+            'language' => \App\Core\Language::getLocale(),
         ]);
 
         $this->auditLog->record('auth_login_success', 'users', $user['id'], null, ['username' => $user['username'], 'email' => $user['email']], $user['id']);

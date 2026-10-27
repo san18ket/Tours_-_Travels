@@ -1,25 +1,26 @@
-<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-    <div>
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
-            <h1 style="font-size: 1.55rem; font-weight: 800; color: var(--vg-navy-900);">Reservation <?= e($booking['booking_code']) ?></h1>
-            <?= render_status_badge($booking['status']) ?>
-        </div>
-        <p style="color: var(--vg-text-secondary); font-size: 0.9rem;">Created on <?= format_datetime($booking['created_at']) ?></p>
-    </div>
-    <div style="display: flex; gap: 0.75rem;">
-        <a href="<?= url('/office/bookings') ?>" class="btn btn-outline btn-sm">Back to List</a>
-        <?php if ($booking['invoice_id']): ?>
-            <a href="<?= url('/office/invoices/' . $booking['invoice_id']) ?>" class="btn btn-primary btn-sm">
-                View Tax Invoice <?= e($booking['invoice_number']) ?>
-            </a>
-        <?php elseif (in_array(auth_role(), ['admin', 'dispatcher'], true)): ?>
-            <form action="<?= url('/office/invoices/generate/' . $booking['id']) ?>" method="POST" style="margin:0;">
-                <?= csrf_field() ?>
-                <button type="submit" class="btn btn-navy btn-sm">Generate Tax Invoice</button>
-            </form>
-        <?php endif; ?>
-    </div>
-</div>
+<?php
+$bookingActions = '<div style="display:flex;gap:0.65rem;flex-wrap:wrap;align-items:center;">'
+    . '<a href="' . url('/office/bookings') . '" class="btn btn-outline btn-sm">Back to List</a>';
+if ($booking['invoice_id']) {
+    $bookingActions .= '<a href="' . url('/office/invoices/' . $booking['invoice_id']) . '" class="btn btn-primary btn-sm">'
+        . 'View Tax Invoice ' . e($booking['invoice_number']) . '</a>';
+} elseif (in_array(auth_role(), ['admin', 'dispatcher'], true)) {
+    $bookingActions .= '<form action="' . url('/office/invoices/generate/' . $booking['id']) . '" method="POST" style="margin:0;">'
+        . csrf_field() . '<button type="submit" class="btn btn-navy btn-sm">Generate Tax Invoice</button></form>';
+}
+$bookingActions .= '</div>';
+?>
+<?= render_page_header([
+    'title'       => 'Reservation ' . e($booking['booking_code']),
+    'subtitle'    => 'Created on ' . format_datetime($booking['created_at']) . ' • Guest: ' . e($booking['customer_name']),
+    'breadcrumbs' => [
+        ['label' => 'Bookings', 'url' => url('/office/bookings')],
+        ['label' => e($booking['booking_code']), 'url' => ''],
+    ],
+    'actions'     => $bookingActions,
+    'image'       => 'header-bookings.jpg',
+    'badge'       => ucfirst(str_replace('_', ' ', $booking['status'])),
+]) ?>
 
 <div class="vg-detail-grid">
     <!-- Left Column: Itinerary & Dispatch Assignment -->

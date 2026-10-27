@@ -12,6 +12,7 @@ class Customer extends Model
         'customer_code', 'user_id', 'title', 'name', 'date_of_birth', 'gender',
         'phone', 'alternate_phone', 'email',
         'address_line', 'city', 'state', 'postal_code', 'country',
+        'profile_photo', 'id_type', 'id_number', 'id_expiry', 'id_document_file', 'notes',
         'status', 'marketing_consent', 'created_at', 'updated_at'
     ];
 

@@ -1,0 +1,43 @@
+{
+  "name": "VoyageGoDriver",
+  "displayName": "VoyageGo Driver",
+  "expo": {
+    "name": "VoyageGo Driver",
+    "slug": "voyagego-driver",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0B192C"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.voyagego.driver",
+      "infoPlist": {
+        "UIBackgroundModes": ["location", "fetch", "processing"],
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "VoyageGo requires continuous background location access during active passenger trips and authorized duty shifts to transmit live telemetry to dispatch operations.",
+        "NSLocationWhenInUseUsageDescription": "VoyageGo requires location access to track trip routes and estimate pickup arrivals."
+      }
+    },
+    "android": {
+      "package": "com.voyagego.driver",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0B192C"
+      },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION",
+        "WAKE_LOCK",
+        "RECEIVE_BOOT_COMPLETED",
+        "POST_NOTIFICATIONS"
+      ]
+    }
+  }
+}

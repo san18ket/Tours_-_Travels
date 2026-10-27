@@ -164,20 +164,76 @@ class Router
             switch ($name) {
                 case 'csrf':
                     if (in_array($request->getMethod(), ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
-                        $token = $request->input('_csrf_token') ?? $request->input('csrf_token') ?? $request->input('_token') ?? $request->getHeader('X-CSRF-TOKEN');
+                        $token = $request->input('_csrf_token') ?? $request->input('csrf_token') ?? $request->input('_token') ?? $request->getHeader('X-CSRF-TOKEN') ?? $request->getHeader('x-csrf-token');
                         if (!Csrf::validate($token)) {
                             Logger::security('CSRF token validation failed', [
                                 'ip' => $request->getClientIp(),
                                 'path' => $request->getPath()
                             ]);
 
-                            if ($request->isJson()) {
-                                return Response::json(['error' => 'Invalid or expired CSRF security token.'], 403);
+                            if ($request->isJson() || str_starts_with($request->getPath(), '/api/')) {
+                                return Response::json(['success' => false, 'error' => 'Invalid or expired CSRF security token.'], 403);
                             }
 
                             Session::setFlash('danger', 'Security verification failed or your session expired. Please refresh the page.');
                             return Response::redirect(url('/login'));
                         }
+                    }
+                    break;
+
+                case 'mobile_auth':
+                    $authHeader = $request->getHeader('Authorization') ?? $request->getHeader('authorization');
+                    $token = null;
+                    if ($authHeader && preg_match('/Bearer\s+(\S+)/i', $authHeader, $matches)) {
+                        $token = $matches[1];
+                    }
+
+                    if (!$token) {
+                        return Response::json([
+                            'success' => false,
+                            'error'   => 'Missing or malformed Authorization bearer token.'
+                        ], 401);
+                    }
+
+                    try {
+                        $pdo = Database::getConnection();
+                        $stmt = $pdo->prepare("SELECT dmd.id as device_id, dmd.driver_id, dmd.access_token_expires_at, dmd.is_revoked,
+                                                      dp.user_id, u.status as user_status, dp.duty_status
+                                               FROM `driver_mobile_devices` dmd
+                                               JOIN `driver_profiles` dp ON dmd.driver_id = dp.id
+                                               JOIN `users` u ON dp.user_id = u.id
+                                               WHERE dmd.access_token = ? LIMIT 1");
+                        $stmt->execute([$token]);
+                        $device = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+                        if (!$device || (int)$device['is_revoked'] === 1 || ($device['user_status'] ?? '') !== 'active') {
+                            return Response::json([
+                                'success' => false,
+                                'error'   => 'Unauthorized: Invalid or revoked mobile token.'
+                            ], 401);
+                        }
+
+                        if (strtotime($device['access_token_expires_at']) < time()) {
+                            return Response::json([
+                                'success' => false,
+                                'error'   => 'Unauthorized: Access token has expired. Please refresh credentials.',
+                                'code'    => 'TOKEN_EXPIRED'
+                            ], 401);
+                        }
+
+                        // Attach driver profile ID, device ID, and user ID to request context
+                        $request->setAttribute('auth_driver_id', (int)$device['driver_id']);
+                        $request->setAttribute('auth_device_id', (int)$device['device_id']);
+                        $request->setAttribute('auth_user_id', (int)$device['user_id']);
+
+                        // Update last active timestamp
+                        $pdo->prepare("UPDATE `driver_mobile_devices` SET `last_active_at` = NOW() WHERE `id` = ?")->execute([$device['device_id']]);
+                    } catch (\Throwable $e) {
+                        Logger::error("Mobile auth verification failed: " . $e->getMessage());
+                        return Response::json([
+                            'success' => false,
+                            'error'   => 'Authentication verification failure.'
+                        ], 500);
                     }
                     break;
 

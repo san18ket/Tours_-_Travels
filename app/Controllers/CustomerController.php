@@ -27,10 +27,10 @@ class CustomerController extends Controller
      */
     public function index(Request $request): Response
     {
-        $search = trim((string)$request->get('search', ''));
+        $search = trim((string)$request->get('search', (string)$request->get('q', '')));
         $status = trim((string)$request->get('status', ''));
         $page = max(1, (int)$request->get('page', 1));
-        $perPage = 12;
+        $perPage = in_array((int)$request->get('per_page'), [5, 10, 15, 20, 25, 30, 50, 100], true) ? (int)$request->get('per_page') : 10;
 
         $totalCustomers = $this->customerModel->countFiltered($search, $status);
         $customers = $this->customerModel->getPaginated($search, $status, $page, $perPage);
@@ -39,17 +39,20 @@ class CustomerController extends Controller
         // Metric summaries
         $totalActive = $this->customerModel->count("`status` = 'active'");
         $totalInactive = $this->customerModel->count("`status` = 'inactive'");
+        $totalWithBookings = $this->customerModel->count("EXISTS (SELECT 1 FROM `bookings` WHERE `bookings`.`customer_id` = `customers`.`id`)");
 
         return $this->render('office/customers/index', [
-            'customers'       => $customers,
-            'totalCustomers'  => $totalCustomers,
-            'totalActive'     => $totalActive,
-            'totalInactive'   => $totalInactive,
-            'currentPage'     => $page,
-            'totalPages'      => $totalPages,
-            'search'          => $search,
-            'selectedStatus'  => $status,
-            'title'           => 'Customer Directory',
+            'customers'          => $customers,
+            'totalCustomers'     => $totalCustomers,
+            'totalActive'        => $totalActive,
+            'totalInactive'      => $totalInactive,
+            'totalWithBookings'  => $totalWithBookings,
+            'currentPage'        => $page,
+            'totalPages'         => $totalPages,
+            'perPage'            => $perPage,
+            'search'             => $search,
+            'selectedStatus'     => $status,
+            'title'              => 'Customer Directory',
         ], 'layouts/office');
     }
 
@@ -80,6 +83,9 @@ class CustomerController extends Controller
             $input = $request->all();
             if (empty($input['phone']) && !empty($input['primary_mobile'])) {
                 $input['phone'] = $input['primary_mobile'];
+            }
+            if (empty($input['address_line']) && !empty($input['address'])) {
+                $input['address_line'] = $input['address'];
             }
 
             // 1. Server-side validation
@@ -128,7 +134,40 @@ class CustomerController extends Controller
             $customerCode = $this->customerModel->generateCustomerCode();
 
             $dateOfBirth = !empty($input['date_of_birth']) ? date('Y-m-d', strtotime($input['date_of_birth'])) : null;
-            $marketingConsent = !empty($input['marketing_consent']) ? 1 : 0;
+            $marketingConsent = isset($input['marketing_consent']) ? (int)$input['marketing_consent'] : 1;
+
+            // Handle optional profile photo and document file upload (supporting both file upload and Base64 payloads)
+            $uploadedAvatarPath = $this->saveUploadedFileOrBase64(
+                $request,
+                $input,
+                'profile_photo',
+                'profile_photo_base64',
+                'customers/avatars',
+                [
+                    'image/jpeg'  => 'jpg',
+                    'image/pjpeg' => 'jpg',
+                    'image/png'   => 'png',
+                    'image/x-png' => 'png',
+                    'image/webp'  => 'webp',
+                ]
+            );
+
+            $uploadedDocPath = $this->saveUploadedFileOrBase64(
+                $request,
+                $input,
+                'id_document_file',
+                'id_document_file_base64',
+                'customers/documents',
+                [
+                    'application/pdf'   => 'pdf',
+                    'application/x-pdf' => 'pdf',
+                    'image/jpeg'        => 'jpg',
+                    'image/pjpeg'       => 'jpg',
+                    'image/png'         => 'png',
+                    'image/x-png'       => 'png',
+                    'image/webp'        => 'webp',
+                ]
+            );
 
             // 5. Database insertion (Customer profile ONLY, no login credentials, no admin roles)
             $customerId = $this->customerModel->create([
@@ -146,6 +185,12 @@ class CustomerController extends Controller
                 'state'             => !empty($input['state']) ? trim((string)$input['state']) : null,
                 'postal_code'       => !empty($input['postal_code']) ? trim((string)$input['postal_code']) : null,
                 'country'           => !empty($input['country']) ? trim((string)$input['country']) : 'India',
+                'profile_photo'     => $uploadedAvatarPath,
+                'id_type'           => !empty($input['id_type']) ? trim((string)$input['id_type']) : null,
+                'id_number'         => !empty($input['id_number']) ? trim((string)$input['id_number']) : null,
+                'id_expiry'         => !empty($input['id_expiry']) ? date('Y-m-d', strtotime($input['id_expiry'])) : null,
+                'id_document_file'  => $uploadedDocPath,
+                'notes'             => !empty($input['notes']) ? trim((string)$input['notes']) : null,
                 'status'            => $input['status'] ?? 'active',
                 'marketing_consent' => $marketingConsent,
                 'created_at'        => date('Y-m-d H:i:s'),
@@ -166,7 +211,13 @@ class CustomerController extends Controller
             );
 
             Session::setFlash('success', "Customer profile [{$customerCode}] for {$input['name']} registered successfully!");
-            return $this->redirect(url('/office/customers/' . $customerId));
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success'  => true,
+                    'redirect' => url('/office/customers')
+                ]);
+            }
+            return $this->redirect(url('/office/customers'));
 
         } catch (ValidationException $e) {
             Session::setFlash('form_errors', $e->getErrors());
@@ -260,7 +311,7 @@ class CustomerController extends Controller
             $dateOfBirth = !empty($input['date_of_birth']) ? date('Y-m-d', strtotime($input['date_of_birth'])) : null;
             $marketingConsent = !empty($input['marketing_consent']) ? 1 : 0;
 
-            $this->customerModel->update($id, [
+            $updateData = [
                 'title'             => !empty($input['title']) ? trim((string)$input['title']) : null,
                 'name'              => trim((string)$input['name']),
                 'date_of_birth'     => $dateOfBirth,
@@ -273,10 +324,54 @@ class CustomerController extends Controller
                 'state'             => !empty($input['state']) ? trim((string)$input['state']) : null,
                 'postal_code'       => !empty($input['postal_code']) ? trim((string)$input['postal_code']) : null,
                 'country'           => !empty($input['country']) ? trim((string)$input['country']) : 'India',
+                'id_type'           => !empty($input['id_type']) ? trim((string)$input['id_type']) : null,
+                'id_number'         => !empty($input['id_number']) ? trim((string)$input['id_number']) : null,
+                'id_expiry'         => !empty($input['id_expiry']) ? date('Y-m-d', strtotime($input['id_expiry'])) : null,
+                'notes'             => !empty($input['notes']) ? trim((string)$input['notes']) : null,
                 'status'            => $input['status'] ?? 'active',
                 'marketing_consent' => $marketingConsent,
                 'updated_at'        => date('Y-m-d H:i:s'),
-            ]);
+            ];
+
+            $newAvatar = $this->saveUploadedFileOrBase64(
+                $request,
+                $input,
+                'profile_photo',
+                'profile_photo_base64',
+                'customers/avatars',
+                [
+                    'image/jpeg'  => 'jpg',
+                    'image/pjpeg' => 'jpg',
+                    'image/png'   => 'png',
+                    'image/x-png' => 'png',
+                    'image/webp'  => 'webp',
+                ]
+            );
+            if ($newAvatar) {
+                $updateData['profile_photo'] = $newAvatar;
+            }
+
+            $newDoc = $this->saveUploadedFileOrBase64(
+                $request,
+                $input,
+                'id_document_file',
+                'id_document_file_base64',
+                'customers/documents',
+                [
+                    'application/pdf'   => 'pdf',
+                    'application/x-pdf' => 'pdf',
+                    'image/jpeg'        => 'jpg',
+                    'image/pjpeg'       => 'jpg',
+                    'image/png'         => 'png',
+                    'image/x-png'       => 'png',
+                    'image/webp'        => 'webp',
+                ]
+            );
+            if ($newDoc) {
+                $updateData['id_document_file'] = $newDoc;
+            }
+
+            $this->customerModel->update($id, $updateData);
 
             $this->auditLog->record(
                 'customer_updated',
@@ -298,5 +393,77 @@ class CustomerController extends Controller
             Session::setFlash('error', 'Failed to update customer profile.');
             return $this->redirect(url('/office/customers/' . $id . '/edit'));
         }
+    }
+
+    /**
+     * Process file upload supporting both multipart $_FILES and Base64 payloads with public mirroring
+     */
+    private function saveUploadedFileOrBase64(Request $request, array $input, string $fileKey, string $b64Key, string $subDir, array $allowedMimes): ?string
+    {
+        $savedRelPath = null;
+        $projectRoot = dirname(__DIR__, 2);
+
+        // 1. Genuine multipart file upload
+        if ($request->hasFile($fileKey)) {
+            try {
+                $savedRelPath = $request->storeUploadedFile($fileKey, $subDir);
+            } catch (\Throwable $e) {
+                Logger::warning("File upload error on key {$fileKey}: " . $e->getMessage());
+            }
+        }
+
+        // 2. Base64 fallback if file was serialized by client into hidden input
+        $b64Val = $input[$b64Key] ?? null;
+        if (empty($savedRelPath) && !empty($b64Val) && str_starts_with($b64Val, 'data:')) {
+            try {
+                $commaPos = strpos($b64Val, ',');
+                if ($commaPos !== false) {
+                    $header = substr($b64Val, 0, $commaPos);
+                    $dataPart = substr($b64Val, $commaPos + 1);
+
+                    if (preg_match('/^data:([a-zA-Z0-9\/\-\+\.]+);base64/i', $header, $m)) {
+                        $mime = strtolower(trim($m[1]));
+                        if ($mime === 'image/jpg') $mime = 'image/jpeg';
+                        if ($mime === 'application/x-pdf') $mime = 'application/pdf';
+
+                        if (isset($allowedMimes[$mime])) {
+                            $ext = $allowedMimes[$mime];
+                            $binary = base64_decode($dataPart);
+                            if ($binary !== false && strlen($binary) > 0 && strlen($binary) <= 10485760) {
+                                $prefix = str_contains($subDir, 'avatar') ? 'avatar_' : 'doc_';
+                                $filename = $prefix . bin2hex(random_bytes(16)) . '.' . $ext;
+                                $savedRelPath = trim($subDir, '/') . '/' . $filename;
+
+                                $privDir = $projectRoot . '/storage/private_uploads/' . trim($subDir, '/');
+                                if (!is_dir($privDir)) @mkdir($privDir, 0777, true);
+                                file_put_contents($privDir . '/' . $filename, $binary);
+                            }
+                        } else {
+                            Logger::warning("Base64 mime type '{$mime}' not in allowed list for {$b64Key}");
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                Logger::warning("Base64 save error on key {$b64Key}: " . $e->getMessage());
+            }
+        }
+
+        // 3. Mirror saved file to public/assets/uploads and public/storage for direct Apache delivery
+        if ($savedRelPath) {
+            $source = $projectRoot . '/storage/private_uploads/' . $savedRelPath;
+            if (file_exists($source)) {
+                $pubUploadsFile = $projectRoot . '/public/assets/uploads/' . $savedRelPath;
+                $pubUploadsDir = dirname($pubUploadsFile);
+                if (!is_dir($pubUploadsDir)) @mkdir($pubUploadsDir, 0777, true);
+                @copy($source, $pubUploadsFile);
+
+                $pubStorageFile = $projectRoot . '/public/storage/' . $savedRelPath;
+                $pubStorageDir = dirname($pubStorageFile);
+                if (!is_dir($pubStorageDir)) @mkdir($pubStorageDir, 0777, true);
+                @copy($source, $pubStorageFile);
+            }
+        }
+
+        return $savedRelPath;
     }
 }

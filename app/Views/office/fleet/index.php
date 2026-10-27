@@ -1,305 +1,386 @@
-<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-    <div>
-        <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--vg-navy-900);">Fleet & Chauffeur Roster</h1>
-        <p style="color: var(--vg-text-secondary); font-size: 0.9rem;">Maintain commercial fleet readiness, vehicle compliance cycles, and chauffeur duty rosters.</p>
-    </div>
-    <?php if (auth_role() === 'admin'): ?>
-    <div>
-        <a href="<?= url('/office/fleet/vehicles/create') ?>" class="btn btn-primary">
-            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-            <span>Register New Vehicle</span>
-        </a>
-    </div>
-    <?php endif; ?>
-</div>
-
-<?php
+<div class="bookings-page-view">
+    <!-- 1. DESKTOP ONLY: Unified Page Header (Preserved on Large Screens >= 769px) -->
+    <?php
+    $fleetActions = '';
+    if (auth_role() === 'admin') {
+        $fleetActions = '<a href="' . url('/office/vehicles/create') . '" class="btn btn-primary"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg><span>Register New Vehicle</span></a>';
+    }
     $currentTab = $_GET['tab'] ?? 'vehicles';
-?>
 
-<!-- Tab Navigation Bar -->
-<div style="display: flex; gap: 0.5rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--vg-pearl-200); padding-bottom: 0.5rem;">
-    <a href="<?= url('/office/fleet?tab=vehicles') ?>" class="btn <?= $currentTab === 'vehicles' ? 'btn-primary' : 'btn-outline' ?> btn-sm">
-        Commercial Vehicles (<?= count($vehicles) ?>)
-    </a>
-    <a href="<?= url('/office/fleet?tab=drivers') ?>" class="btn <?= $currentTab === 'drivers' ? 'btn-primary' : 'btn-outline' ?> btn-sm">
-        Chauffeur Duty Roster (<?= count($drivers) ?>)
-    </a>
-    <a href="<?= url('/office/fleet?tab=documents') ?>" class="btn <?= $currentTab === 'documents' ? 'btn-primary' : 'btn-outline' ?> btn-sm">
-        Document Compliance
-    </a>
+    $availCount = 0;
+    $onTripCount = 0;
+    $maintCount = 0;
+    foreach ($vehicles as $vItem) {
+        $st = strtolower($vItem['status'] ?? '');
+        if ($st === 'available') $availCount++;
+        elseif ($st === 'on_trip') $onTripCount++;
+        elseif ($st === 'maintenance') $maintCount++;
+    }
+    ?>
+    <div class="desktop-header-wrapper">
+        <?= render_page_header([
+            'title'       => 'Fleet & Chauffeur Roster',
+            'description' => 'Maintain commercial fleet readiness, vehicle compliance cycles, and chauffeur duty rosters.',
+            'breadcrumbs' => [
+                ['label' => __('sidebar.dashboard', 'Dashboard'), 'url' => url('/office/dashboard')],
+                ['label' => 'Fleet Management', 'url' => ''],
+            ],
+            'actions'     => $fleetActions,
+            'image'       => 'header-vehicles.jpg',
+            'badge'       => count($vehicles) . ' Commercial Vehicles',
+        ]) ?>
+    </div>
+
+    <!-- 2. DESKTOP ONLY: Top KPI Summary Cards (Exact Bookings Architecture) -->
+    <div class="booking-kpi-grid">
+        <!-- Card 1: Total Fleet -->
+        <div class="booking-kpi-card">
+            <div class="booking-kpi-top">
+                <span class="booking-kpi-label">Commercial Fleet</span>
+                <span class="booking-kpi-icon icon-teal">
+                    <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 17a5 5 0 01-.916-9.916 5.002 5.002 0 019.832 0A5.002 5.002 0 0116 17m-7-5l3-3m0 0l3 3m-3-3v12"></path></svg>
+                </span>
+            </div>
+            <div class="booking-kpi-val"><?= count($vehicles) ?></div>
+            <div class="booking-kpi-sub">
+                <span>All registered vehicles</span>
+            </div>
+        </div>
+
+        <!-- Card 2: Ready for Duty -->
+        <div class="booking-kpi-card">
+            <div class="booking-kpi-top">
+                <span class="booking-kpi-label">Available for Duty</span>
+                <span class="booking-kpi-icon icon-emerald">
+                    <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </span>
+            </div>
+            <div class="booking-kpi-val"><?= $availCount ?></div>
+            <div class="booking-kpi-sub">
+                <span class="pulse-dot"></span>
+                <span>Ready for dispatch</span>
+            </div>
+        </div>
+
+        <!-- Card 3: Active Deployments -->
+        <div class="booking-kpi-card">
+            <div class="booking-kpi-top">
+                <span class="booking-kpi-label">On Active Trip</span>
+                <span class="booking-kpi-icon icon-amber">
+                    <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </span>
+            </div>
+            <div class="booking-kpi-val"><?= $onTripCount ?></div>
+            <div class="booking-kpi-sub">
+                <span>In transit across routes</span>
+            </div>
+        </div>
+
+        <!-- Card 4: Chauffeurs Roster -->
+        <div class="booking-kpi-card">
+            <div class="booking-kpi-top">
+                <span class="booking-kpi-label">Chauffeur Roster</span>
+                <span class="booking-kpi-icon icon-navy">
+                    <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                </span>
+            </div>
+            <div class="booking-kpi-val"><?= count($drivers) ?></div>
+            <div class="booking-kpi-sub">
+                <span>Active chauffeurs</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Tab Navigation & Filter Bar -->
+    <div class="filter-bar-compact" style="justify-content: space-between;">
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <a href="<?= url('/office/fleet?tab=vehicles') ?>" class="fbc-btn <?= $currentTab === 'vehicles' ? 'btn-primary' : '' ?>" style="<?= $currentTab === 'vehicles' ? 'background:#176B5B;color:#FFF;border-color:#176B5B;' : '' ?>">
+                <i class="fa-solid fa-van-shuttle" style="<?= $currentTab === 'vehicles' ? 'color:#FFF;' : '' ?>"></i>
+                <span>Commercial Vehicles (<?= count($vehicles) ?>)</span>
+            </a>
+            <a href="<?= url('/office/fleet?tab=drivers') ?>" class="fbc-btn <?= $currentTab === 'drivers' ? 'btn-primary' : '' ?>" style="<?= $currentTab === 'drivers' ? 'background:#176B5B;color:#FFF;border-color:#176B5B;' : '' ?>">
+                <i class="fa-solid fa-id-card" style="<?= $currentTab === 'drivers' ? 'color:#FFF;' : '' ?>"></i>
+                <span>Chauffeur Roster (<?= count($drivers) ?>)</span>
+            </a>
+            <a href="<?= url('/office/vehicles') ?>" class="fbc-btn">
+                <i class="fa-solid fa-list-check"></i>
+                <span>Detailed Vehicle Directory &rarr;</span>
+            </a>
+        </div>
+        <div class="fbc-actions-end">
+            <a href="<?= url('/office/fleet') ?>" class="fbc-btn" title="Refresh"><i class="fa-solid fa-rotate-right"></i></a>
+        </div>
+    </div>
+
+    <!-- 4. MOBILE ONLY: Top App Bar -->
+    <div class="mv-bookings-header">
+        <div class="mv-top-bar">
+            <div class="mv-top-bar-left">
+                <a href="<?= url('/office/dashboard') ?>" class="mv-back-btn" title="Back to Dashboard">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+                <h2 class="mv-page-title">Fleet Roster</h2>
+            </div>
+            <?php if (auth_role() === 'admin'): ?>
+            <a href="<?= url('/office/vehicles/create') ?>" class="mv-add-btn">
+                <i class="fa-solid fa-plus"></i>
+                <span>Add Vehicle</span>
+            </a>
+            <?php endif; ?>
+        </div>
+
+        <div class="mv-status-scroll">
+            <a href="<?= url('/office/fleet?tab=vehicles') ?>" class="mv-pill <?= $currentTab === 'vehicles' ? 'active' : '' ?>">
+                <span>Vehicles</span>
+                <span class="mv-pill-cnt"><?= count($vehicles) ?></span>
+            </a>
+            <a href="<?= url('/office/fleet?tab=drivers') ?>" class="mv-pill <?= $currentTab === 'drivers' ? 'active' : '' ?>">
+                <span>Chauffeurs</span>
+                <span class="mv-pill-cnt"><?= count($drivers) ?></span>
+            </a>
+            <a href="<?= url('/office/vehicles') ?>" class="mv-pill">
+                <span>Directory</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 5. Content Section -->
+    <section class="recent-bookings-section">
+        <?php if ($currentTab === 'vehicles'): ?>
+            <div class="section-header">
+                <h3 class="section-title">Commercial Vehicles</h3>
+                <div class="total-records-box">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <span class="total-records-label">Total Records:</span>
+                    <span class="total-records-badge"><?= count($vehicles) ?></span>
+                </div>
+            </div>
+
+            <!-- Modern Table -->
+            <div class="modern-table-container">
+                <table class="modern-table" id="fleetVehiclesTable">
+                    <thead>
+                        <tr>
+                            <th class="text-center" style="width: 48px;">#</th>
+                            <th style="width: 22%;">Plate &amp; Registration</th>
+                            <th style="width: 22%;">Make &amp; Model</th>
+                            <th style="width: 16%;">Classification</th>
+                            <th class="text-center" style="width: 14%;">Capacity &amp; Fuel</th>
+                            <th class="text-center" style="width: 14%;">Odometer</th>
+                            <th class="text-center" style="width: 12%;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($vehicles as $i => $v):
+                            $status = strtolower($v['status'] ?? 'available');
+                            $statusClass = match($status) {
+                                'available' => 'completed',
+                                'on_trip' => 'in-progress',
+                                'maintenance' => 'assigned',
+                                default => 'cancelled'
+                            };
+                            $statusText = ucfirst(str_replace('_', ' ', $status));
+                        ?>
+                        <tr>
+                            <td class="text-center">
+                                <div class="project-name" style="padding: 3px 8px;"><?= $i + 1 ?></div>
+                            </td>
+                            <td>
+                                <div class="project-name" style="font-family:monospace;letter-spacing:0.02em;font-weight:700;">
+                                    <?= e($v['vehicle_number']) ?>
+                                </div>
+                            </td>
+                            <td>
+                                <div style="font-weight: 700; color: #1e293b;">
+                                    <?= e($v['make_model']) ?>
+                                </div>
+                            </td>
+                            <td>
+                                <span style="display:inline-block;background:rgba(23,107,91,0.08);color:#16443B;border:1px solid rgba(23,107,91,0.15);border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600;text-transform:capitalize;">
+                                    <?= e(str_replace('_', ' ', $v['vehicle_type'])) ?>
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div style="font-weight:700;color:#1e293b;font-size:13px;">
+                                    <?= (int)$v['seating_capacity'] ?> Seats
+                                </div>
+                                <small class="text-muted" style="font-size:11px;text-transform:uppercase;">
+                                    <?= e($v['fuel_type']) ?>
+                                </small>
+                            </td>
+                            <td class="text-center">
+                                <div style="font-weight:800;color:var(--brand-secondary, #16443B);font-size:13.5px;">
+                                    <?= number_format((int)$v['odometer_km']) ?> km
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <div class="status-cell">
+                                    <span class="status-dot <?= $statusClass ?>"></span>
+                                    <span class="status-badge bg-<?= $statusClass ?>"><?= $statusText ?></span>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mobile Cards -->
+            <div class="cards-grid" id="fleetCards">
+                <?php foreach ($vehicles as $v):
+                    $status = strtolower($v['status'] ?? 'available');
+                    $statusClass = match($status) {
+                        'available' => 'available',
+                        'on_trip' => 'on_trip',
+                        'maintenance' => 'maintenance',
+                        default => 'pending'
+                    };
+                    $statusText = ucfirst(str_replace('_', ' ', $status));
+                ?>
+                <div class="mv-booking-card-wrapper">
+                    <div class="mv-booking-card">
+                        <div class="mv-thumb-wrap">
+                            <div class="mv-thumb-avatar">
+                                <i class="fa-solid fa-van-shuttle" style="font-size:22px;"></i>
+                            </div>
+                        </div>
+                        <div class="mv-details">
+                            <div class="mv-code"><?= e($v['vehicle_number']) ?></div>
+                            <div class="mv-tour-title"><?= e($v['make_model']) ?></div>
+                            <div class="mv-date-duration">
+                                <i class="fa-solid fa-car"></i>
+                                <span><?= e(ucfirst(str_replace('_', ' ', $v['vehicle_type']))) ?> &bull; <?= (int)$v['seating_capacity'] ?> Seats</span>
+                            </div>
+                            <div class="mv-vehicle">
+                                <i class="fa-solid fa-gauge-high"></i>
+                                <span><?= number_format((int)$v['odometer_km']) ?> km</span>
+                            </div>
+                        </div>
+                        <div class="mv-right-col">
+                            <span class="mv-status-badge mv-status-<?= $statusClass ?>"><?= $statusText ?></span>
+                        </div>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+
+        <?php elseif ($currentTab === 'drivers'): ?>
+            <div class="section-header">
+                <h3 class="section-title">Chauffeur Duty Roster</h3>
+                <div class="total-records-box">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <span class="total-records-label">Total Records:</span>
+                    <span class="total-records-badge"><?= count($drivers) ?></span>
+                </div>
+            </div>
+
+            <!-- Drivers Modern Table -->
+            <div class="modern-table-container">
+                <table class="modern-table" id="fleetDriversTable">
+                    <thead>
+                        <tr>
+                            <th class="text-center" style="width: 48px;">#</th>
+                            <th style="width: 25%;">Chauffeur Profile</th>
+                            <th style="width: 20%;">License &amp; Expiry</th>
+                            <th class="text-center" style="width: 16%;">Experience &amp; Rating</th>
+                            <th class="text-center" style="width: 14%;">Duty Status</th>
+                            <th class="text-center" style="width: 15%;">GPS Telemetry</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($drivers as $i => $d):
+                            $duty = strtolower($d['duty_status'] ?? 'off_duty');
+                            $dutyClass = match($duty) {
+                                'on_duty', 'available' => 'completed',
+                                'on_trip' => 'in-progress',
+                                default => 'cancelled'
+                            };
+                            $dutyText = ucfirst(str_replace('_', ' ', $duty));
+                        ?>
+                        <tr>
+                            <td class="text-center">
+                                <div class="project-name" style="padding: 3px 8px;"><?= $i + 1 ?></div>
+                            </td>
+                            <td>
+                                <div class="client-cell">
+                                    <div class="client-info">
+                                        <span class="client-name"><?= e($d['name']) ?></span>
+                                        <small class="text-muted d-block" style="font-size:11.5px;margin-top:2px;">
+                                            <i class="fa-solid fa-phone" style="font-size:10px;color:var(--brand-primary, #176B5B);"></i> <?= e($d['phone']) ?>
+                                        </small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div style="font-family:monospace;font-weight:700;color:var(--brand-primary, #176B5B);">
+                                    <?= e($d['license_number']) ?>
+                                </div>
+                                <small class="text-muted" style="font-size:11px;">
+                                    Exp: <?= format_date($d['license_expiry']) ?>
+                                </small>
+                            </td>
+                            <td class="text-center">
+                                <div style="font-weight:700;color:#1e293b;font-size:13px;">
+                                    <?= (int)$d['experience_years'] ?> Yrs
+                                </div>
+                                <small style="color:#d97706;font-weight:700;font-size:11.5px;">
+                                    ★ <?= e($d['rating']) ?>
+                                </small>
+                            </td>
+                            <td class="text-center">
+                                <div class="status-cell">
+                                    <span class="status-dot <?= $dutyClass ?>"></span>
+                                    <span class="status-badge bg-<?= $dutyClass ?>"><?= $dutyText ?></span>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <?php if (!empty($d['last_gps_at'])): ?>
+                                    <span style="font-size:11.5px;font-weight:700;color:#10b981;">📡 Live Synced</span>
+                                    <small class="text-muted d-block" style="font-size:10.5px;">
+                                        <?= format_datetime($d['last_gps_at'], 'H:i, d M') ?>
+                                    </small>
+                                <?php else: ?>
+                                    <span style="color:#94a3b8;font-size:11.5px;">Standby</span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mobile Cards -->
+            <div class="cards-grid" id="driversCards">
+                <?php foreach ($drivers as $d):
+                    $duty = strtolower($d['duty_status'] ?? 'off_duty');
+                    $initials = strtoupper(mb_substr($d['name'] ?? 'D', 0, 1));
+                ?>
+                <div class="mv-booking-card-wrapper">
+                    <div class="mv-booking-card">
+                        <div class="mv-thumb-wrap">
+                            <div class="mv-thumb-avatar">
+                                <?= e($initials) ?>
+                            </div>
+                        </div>
+                        <div class="mv-details">
+                            <div class="mv-code"><?= e($d['license_number']) ?></div>
+                            <div class="mv-tour-title"><?= e($d['name']) ?></div>
+                            <div class="mv-date-duration">
+                                <i class="fa-solid fa-phone"></i>
+                                <span><?= e($d['phone']) ?></span>
+                            </div>
+                            <div class="mv-passenger">
+                                <i class="fa-solid fa-award"></i>
+                                <span><?= (int)$d['experience_years'] ?> Yrs &bull; Rating: ★ <?= e($d['rating']) ?></span>
+                            </div>
+                        </div>
+                        <div class="mv-right-col">
+                            <span class="mv-status-badge mv-status-<?= $duty === 'on_duty' ? 'active' : 'inactive' ?>"><?= ucfirst(str_replace('_', ' ', $duty)) ?></span>
+                        </div>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+    </section>
 </div>
-
-<?php if ($currentTab === 'vehicles'): ?>
-    <!-- Commercial Vehicles Section -->
-    <div class="vg-card">
-        <div class="card-header">
-            <span class="card-title">Commercial Vehicles</span>
-            <span class="badge badge-navy"><?= count($vehicles) ?> Total</span>
-        </div>
-        <div class="card-body" style="padding: 0;">
-            <!-- Desktop Data Grid -->
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Plate & Model</th>
-                            <th>Type & Capacity</th>
-                            <th>Fuel Type</th>
-                            <th>Odometer</th>
-                            <th>Readiness Status</th>
-                            <th style="text-align: right;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($vehicles as $v): ?>
-                            <tr>
-                                <td>
-                                    <strong style="color:var(--vg-navy-900);"><?= e($v['make_model']) ?></strong>
-                                    <div style="font-size:0.8rem; color:var(--vg-blue-500);"><code><?= e($v['vehicle_number']) ?></code></div>
-                                </td>
-                                <td>
-                                    <div style="font-weight:600; color:var(--vg-navy-900);"><?= e(ucfirst(str_replace('_', ' ', $v['vehicle_type']))) ?></div>
-                                    <div style="font-size:0.75rem; color:var(--vg-text-muted);"><?= (int)$v['seating_capacity'] ?> Passenger Seats</div>
-                                </td>
-                                <td><span class="badge badge-neutral"><?= strtoupper(e($v['fuel_type'])) ?></span></td>
-                                <td><strong style="color:var(--vg-navy-900);"><?= number_format((int)$v['odometer_km']) ?> km</strong></td>
-                                <td>
-                                    <?= render_status_badge($v['status']) ?>
-                                </td>
-                                <td style="text-align: right;">
-                                    <?php if ($v['status'] !== 'on_trip'): ?>
-                                        <form action="<?= url('/office/fleet/vehicles/' . $v['id'] . '/status') ?>" method="POST" style="display:inline-block; margin:0;">
-                                            <?= csrf_field() ?>
-                                            <?php if ($v['status'] === 'available'): ?>
-                                                <input type="hidden" name="status" value="maintenance">
-                                                <button type="submit" class="btn btn-outline btn-sm" title="Mark for Maintenance">Service</button>
-                                            <?php else: ?>
-                                                <input type="hidden" name="status" value="available">
-                                                <button type="submit" class="btn btn-success btn-sm">Set Ready</button>
-                                            <?php endif; ?>
-                                        </form>
-                                    <?php else: ?>
-                                        <span style="font-size:0.78rem; color:var(--vg-text-muted); font-weight:600;">On Active Trip</span>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Mobile Record Cards View -->
-            <div class="vg-mobile-cards" style="padding: 1rem;">
-                <?php foreach ($vehicles as $v): ?>
-                    <div class="vg-record-card">
-                        <div class="vg-card-row-header">
-                            <div>
-                                <span class="vg-card-id"><?= e($v['make_model']) ?></span>
-                                <div style="font-size: 0.75rem; color: var(--vg-blue-500);"><code><?= e($v['vehicle_number']) ?></code></div>
-                            </div>
-                            <div>
-                                <?= render_status_badge($v['status']) ?>
-                            </div>
-                        </div>
-                        <div class="vg-card-grid">
-                            <div class="vg-card-field">
-                                <span class="vg-card-label">Type</span>
-                                <span class="vg-card-value"><?= e(ucfirst(str_replace('_', ' ', $v['vehicle_type']))) ?></span>
-                            </div>
-                            <div class="vg-card-field">
-                                <span class="vg-card-label">Capacity</span>
-                                <span class="vg-card-value"><?= (int)$v['seating_capacity'] ?> Seats</span>
-                            </div>
-                            <div class="vg-card-field">
-                                <span class="vg-card-label">Odometer</span>
-                                <span class="vg-card-value"><?= number_format((int)$v['odometer_km']) ?> km</span>
-                            </div>
-                            <div class="vg-card-field">
-                                <span class="vg-card-label">Fuel</span>
-                                <span class="vg-card-value"><?= strtoupper(e($v['fuel_type'])) ?></span>
-                            </div>
-                        </div>
-                        <div class="vg-card-actions">
-                            <?php if ($v['status'] !== 'on_trip'): ?>
-                                <form action="<?= url('/office/fleet/vehicles/' . $v['id'] . '/status') ?>" method="POST" style="margin:0;">
-                                    <?= csrf_field() ?>
-                                    <?php if ($v['status'] === 'available'): ?>
-                                        <input type="hidden" name="status" value="maintenance">
-                                        <button type="submit" class="btn btn-outline btn-sm">Service</button>
-                                    <?php else: ?>
-                                        <input type="hidden" name="status" value="available">
-                                        <button type="submit" class="btn btn-success btn-sm">Set Ready</button>
-                                    <?php endif; ?>
-                                </form>
-                            <?php else: ?>
-                                <span style="font-size:0.78rem; color:var(--vg-text-muted);">Executing Trip</span>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        </div>
-    </div>
-
-<?php elseif ($currentTab === 'drivers'): ?>
-    <!-- Driver Profiles Section -->
-    <div class="vg-card">
-        <div class="card-header">
-            <span class="card-title">Chauffeur Duty Roster</span>
-            <span class="badge badge-navy"><?= count($drivers) ?> Chauffeurs</span>
-        </div>
-        <div class="card-body" style="padding: 0;">
-            <!-- Desktop Data Table -->
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Chauffeur Name</th>
-                            <th>License & Expiry</th>
-                            <th>Experience & Rating</th>
-                            <th>Duty State</th>
-                            <th>Last Telemetry Sync</th>
-                            <th style="text-align: right;">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($drivers as $d): ?>
-                            <tr>
-                                <td>
-                                    <strong style="color:var(--vg-navy-900);"><?= e($d['name']) ?></strong>
-                                    <div style="font-size:0.75rem; color:var(--vg-text-muted);"><?= e($d['phone']) ?> • <?= e($d['email']) ?></div>
-                                </td>
-                                <td>
-                                    <div><code><?= e($d['license_number']) ?></code></div>
-                                    <div style="font-size:0.75rem; color:var(--vg-text-muted);">Exp: <?= format_date($d['license_expiry']) ?></div>
-                                </td>
-                                <td>
-                                    <div style="font-weight:600; color:var(--vg-navy-900);"><?= (int)$d['experience_years'] ?> Yrs Exp</div>
-                                    <div style="color:var(--vg-gold-500); font-size:0.85rem; font-weight:700;">★ <?= e($d['rating']) ?></div>
-                                </td>
-                                <td>
-                                    <?= render_status_badge($d['duty_status']) ?>
-                                </td>
-                                <td>
-                                    <?php if (!empty($d['last_gps_at'])): ?>
-                                        <span style="font-size:0.85rem; font-weight:600;"><?= format_datetime($d['last_gps_at'], 'H:i:s, d M') ?></span>
-                                        <div style="font-size:0.72rem; color:var(--vg-success);">📡 Synced (<?= round((float)$d['current_latitude'], 3) ?>, <?= round((float)$d['current_longitude'], 3) ?>)</div>
-                                    <?php else: ?>
-                                        <span style="color:var(--vg-text-muted); font-size:0.85rem;">Standby</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td style="text-align: right;">
-                                    <?php if ($d['duty_status'] !== 'on_trip'): ?>
-                                        <form action="<?= url('/office/fleet/drivers/' . $d['id'] . '/duty') ?>" method="POST" style="margin:0;">
-                                            <?= csrf_field() ?>
-                                            <button type="submit" class="btn btn-outline btn-sm">
-                                                <?= $d['duty_status'] === 'on_duty' ? 'Set Off-Duty' : 'Set On-Duty' ?>
-                                            </button>
-                                        </form>
-                                    <?php else: ?>
-                                        <span style="font-size:0.78rem; color:var(--vg-blue-500); font-weight:600;">Trip Executing</span>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Mobile Record Cards View -->
-            <div class="vg-mobile-cards" style="padding: 1rem;">
-                <?php foreach ($drivers as $d): ?>
-                    <div class="vg-record-card">
-                        <div class="vg-card-row-header">
-                            <div>
-                                <span class="vg-card-id"><?= e($d['name']) ?></span>
-                                <div style="font-size: 0.72rem; color: var(--vg-text-muted);"><?= e($d['phone']) ?></div>
-                            </div>
-                            <div>
-                                <?= render_status_badge($d['duty_status']) ?>
-                            </div>
-                        </div>
-                        <div class="vg-card-grid">
-                            <div class="vg-card-field">
-                                <span class="vg-card-label">License</span>
-                                <span class="vg-card-value"><code><?= e($d['license_number']) ?></code></span>
-                            </div>
-                            <div class="vg-card-field">
-                                <span class="vg-card-label">License Expiry</span>
-                                <span class="vg-card-value"><?= format_date($d['license_expiry']) ?></span>
-                            </div>
-                            <div class="vg-card-field">
-                                <span class="vg-card-label">Experience</span>
-                                <span class="vg-card-value"><?= (int)$d['experience_years'] ?> Years</span>
-                            </div>
-                            <div class="vg-card-field">
-                                <span class="vg-card-label">Rating</span>
-                                <span class="vg-card-value" style="color:var(--vg-gold-500);">★ <?= e($d['rating']) ?></span>
-                            </div>
-                        </div>
-                        <div class="vg-card-actions">
-                            <?php if ($d['duty_status'] !== 'on_trip'): ?>
-                                <form action="<?= url('/office/fleet/drivers/' . $d['id'] . '/duty') ?>" method="POST" style="margin:0;">
-                                    <?= csrf_field() ?>
-                                    <button type="submit" class="btn btn-outline btn-sm">
-                                        <?= $d['duty_status'] === 'on_duty' ? 'Set Off-Duty' : 'Set On-Duty' ?>
-                                    </button>
-                                </form>
-                            <?php else: ?>
-                                <span style="font-size:0.78rem; color:var(--vg-blue-500); font-weight:600;">Trip Executing</span>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        </div>
-    </div>
-
-<?php elseif ($currentTab === 'documents'): ?>
-    <!-- Document Compliance Overview -->
-    <div class="vg-card">
-        <div class="card-header">
-            <span class="card-title">Commercial Document Compliance</span>
-            <span class="badge badge-gold">Active Monitoring</span>
-        </div>
-        <div class="card-body" style="padding: 0;">
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Vehicle Number</th>
-                            <th>Make & Model</th>
-                            <th>Registration Expiry</th>
-                            <th>Insurance Expiry</th>
-                            <th>Compliance Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($vehicles as $v): ?>
-                            <?php
-                                $now = time();
-                                $regTime = !empty($v['registration_expiry']) ? strtotime($v['registration_expiry']) : null;
-                                $insTime = !empty($v['insurance_expiry']) ? strtotime($v['insurance_expiry']) : null;
-                                $isExpiringSoon = ($regTime && ($regTime - $now < 30 * 86400)) || ($insTime && ($insTime - $now < 30 * 86400));
-                            ?>
-                            <tr>
-                                <td><code><?= e($v['vehicle_number']) ?></code></td>
-                                <td><strong><?= e($v['make_model']) ?></strong></td>
-                                <td><?= format_date($v['registration_expiry']) ?></td>
-                                <td><?= format_date($v['insurance_expiry']) ?></td>
-                                <td>
-                                    <?php if ($isExpiringSoon): ?>
-                                        <span class="badge badge-warning"><span class="badge-dot"></span>Renewal Due Soon</span>
-                                    <?php else: ?>
-                                        <span class="badge badge-success"><span class="badge-dot"></span>Compliant</span>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-<?php endif; ?>

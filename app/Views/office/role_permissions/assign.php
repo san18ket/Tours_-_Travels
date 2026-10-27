@@ -18,12 +18,13 @@ $isOwnerUser = (bool)($user && strtolower((string)($user['role'] ?? '')) === 'ad
 $isOwner = $scopeMode === 'user' ? $isOwnerUser : $isOwnerRole;
 
 $selectedPermissionIds = array_map('intval', $selectedPermissionIds ?? []);
+$selectedPermissionNames = (array)($selectedPermissionNames ?? []);
 ?>
 <style>
 :root {
-    --rp-primary: #0284c7;
-    --rp-primary-dark: #0369a1;
-    --rp-cyan: #38bdf8;
+    --rp-primary: #176B5B;
+    --rp-primary-dark: #125748;
+    --rp-cyan: #1E7A68;
     --rp-success: #10b981;
     --rp-warning: #f59e0b;
     --rp-danger: #ef4444;
@@ -50,7 +51,7 @@ $selectedPermissionIds = array_map('intval', $selectedPermissionIds ?? []);
     top: -60px; right: -60px;
     width: 280px; height: 280px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(2, 132, 199, 0.2) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(23, 107, 91, 0.25) 0%, transparent 70%);
     pointer-events: none;
 }
 .rp-header::after {
@@ -59,12 +60,12 @@ $selectedPermissionIds = array_map('intval', $selectedPermissionIds ?? []);
     bottom: -40px; left: 30%;
     width: 200px; height: 200px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(30, 122, 104, 0.18) 0%, transparent 70%);
     pointer-events: none;
 }
 .rp-header-inner { position: relative; z-index: 1; }
 .rp-header-title { font-size: 1.75rem; font-weight: 800; margin: 0 0 6px; letter-spacing: -.025em; }
-.rp-header-title i { color: #38bdf8; filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.5)); }
+.rp-header-title i { color: #176B5B; filter: drop-shadow(0 0 10px rgba(23, 107, 91, 0.5)); }
 .rp-header-sub { color: rgba(248, 250, 252, 0.85); font-size: 0.9rem; margin: 0; }
 .rp-header-btn {
     background: rgba(255, 255, 255, 0.12);
@@ -512,22 +513,26 @@ $selectedPermissionIds = array_map('intval', $selectedPermissionIds ?? []);
 </style>
 
 <!-- HEADER BANNER -->
-<div class="rp-header">
-    <div class="rp-header-inner d-flex justify-content-between align-items-center flex-wrap gap-3">
-        <div>
-            <h1 class="rp-header-title"><i class="fa-solid fa-key me-2"></i>Role Permission Assignment Matrix</h1>
-            <p class="rp-header-sub">Configure granular access rights, page routes, and functional buttons for operational roles &amp; accounts.</p>
-        </div>
-        <div class="d-flex align-items-center gap-2">
-            <a href="<?= url('/office/role-permission') ?>" class="rp-header-btn">
-                <i class="fa-solid fa-arrow-left"></i>Roles &amp; Permissions Overview
-            </a>
-            <a href="<?= url('/office/roles') ?>" class="rp-header-btn">
-                <i class="fa-solid fa-shield-halved"></i>Roles Directory
-            </a>
-        </div>
-    </div>
-</div>
+<?php
+$assignActions = '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">'
+    . '<a href="' . url('/office/role-permission') . '" class="btn btn-outline btn-sm">'
+    . '<i class="fa-solid fa-arrow-left me-1.5"></i>Permissions Overview</a>'
+    . '<a href="' . url('/office/roles') . '" class="btn btn-outline btn-sm">'
+    . '<i class="fa-solid fa-shield-halved me-1.5"></i>Roles Directory</a>'
+    . '</div>';
+?>
+<?= render_page_header([
+    'title'       => 'Role Permission Assignment Matrix',
+    'subtitle'    => 'Configure granular access rights, page routes, and functional buttons for operational roles & accounts.',
+    'breadcrumbs' => [
+        ['label' => 'Access Control', 'url' => url('/office/roles')],
+        ['label' => 'Permissions Overview', 'url' => url('/office/role-permission')],
+        ['label' => 'Assignment Matrix', 'url' => ''],
+    ],
+    'actions'     => $assignActions,
+    'image'       => 'header-roles.jpg',
+    'badge'       => 'Enterprise Security Matrix',
+]) ?>
 
 <!-- SCOPE SWITCHER BAR -->
 <div class="rp-scope-bar">
@@ -702,8 +707,12 @@ $selectedPermissionIds = array_map('intval', $selectedPermissionIds ?? []);
                 <!-- Cards Grid -->
                 <div class="rp-cards-grid">
                     <?php foreach ($category['pages'] as $page): 
+                        $pagePermKey = (string)($page['permission'] ?? '');
                         $pagePermId = (int)($page['permission_id'] ?? 0);
-                        $isPageGranted = in_array($pagePermId, $selectedPermissionIds, true) || $isOwner;
+                        $pagePermVal = $pagePermId > 0 ? $pagePermId : $pagePermKey;
+                        $isPageGranted = ($pagePermId > 0 && in_array($pagePermId, $selectedPermissionIds, true))
+                            || in_array($pagePermKey, $selectedPermissionNames, true)
+                            || $isOwner;
                     ?>
                         <div class="rp-page-card <?= $isPageGranted ? 'access-granted' : '' ?> <?= $isOwner ? 'owner-locked' : '' ?>" 
                              data-page-id="<?= e($page['id']) ?>" 
@@ -714,15 +723,15 @@ $selectedPermissionIds = array_map('intval', $selectedPermissionIds ?? []);
                                 <div class="rp-card-title-row">
                                     <input type="checkbox" 
                                            name="permissions[]" 
-                                           value="<?= $pagePermId ?>" 
+                                           value="<?= e($pagePermVal) ?>" 
                                            class="rp-main-chk rp-perm-chk" 
-                                           id="perm_<?= $pagePermId ?>" 
+                                           id="perm_<?= e($pagePermKey) ?>" 
                                            data-page-chk="<?= e($page['id']) ?>"
                                            onchange="onPageCheckChange('<?= e($page['id']) ?>', this.checked)"
                                            <?= $isPageGranted ? 'checked' : '' ?> 
                                            <?= $isOwner ? 'disabled' : '' ?>>
                                     <div class="flex-grow-1 min-w-0">
-                                        <label for="perm_<?= $pagePermId ?>" class="rp-card-page-name m-0 d-block">
+                                        <label for="perm_<?= e($pagePermKey) ?>" class="rp-card-page-name m-0 d-block">
                                             <?= e($page['title']) ?>
                                         </label>
                                         <span class="rp-card-route"><?= e($page['route']) ?></span>
@@ -742,14 +751,18 @@ $selectedPermissionIds = array_map('intval', $selectedPermissionIds ?? []);
                                         <div class="rp-btn-list">
                                             <!-- Header Buttons -->
                                             <?php foreach ($page['header_buttons'] as $hBtn): 
+                                                $btnPermKey = (string)($hBtn['name'] ?? '');
                                                 $btnPermId = (int)($hBtn['permission_id'] ?? 0);
-                                                $isBtnGranted = in_array($btnPermId, $selectedPermissionIds, true) || $isOwner;
+                                                $btnPermVal = $btnPermId > 0 ? $btnPermId : $btnPermKey;
+                                                $isBtnGranted = ($btnPermId > 0 && in_array($btnPermId, $selectedPermissionIds, true))
+                                                    || in_array($btnPermKey, $selectedPermissionNames, true)
+                                                    || $isOwner;
                                             ?>
-                                                <label class="rp-btn-row <?= $isBtnGranted ? 'is-checked' : '' ?>" for="btn_perm_<?= $btnPermId ?>">
+                                                <label class="rp-btn-row <?= $isBtnGranted ? 'is-checked' : '' ?>" for="btn_perm_<?= e($btnPermKey) ?>">
                                                     <input type="checkbox" 
                                                            name="permissions[]" 
-                                                           value="<?= $btnPermId ?>" 
-                                                           id="btn_perm_<?= $btnPermId ?>"
+                                                           value="<?= e($btnPermVal) ?>" 
+                                                           id="btn_perm_<?= e($btnPermKey) ?>"
                                                            class="rp-btn-chk rp-perm-chk" 
                                                            data-parent-page="<?= e($page['id']) ?>"
                                                            onchange="onActionCheckChange(this)"
@@ -767,14 +780,18 @@ $selectedPermissionIds = array_map('intval', $selectedPermissionIds ?? []);
 
                                             <!-- Row Action Buttons -->
                                             <?php foreach ($page['action_buttons'] as $aBtn): 
+                                                $btnPermKey = (string)($aBtn['name'] ?? '');
                                                 $btnPermId = (int)($aBtn['permission_id'] ?? 0);
-                                                $isBtnGranted = in_array($btnPermId, $selectedPermissionIds, true) || $isOwner;
+                                                $btnPermVal = $btnPermId > 0 ? $btnPermId : $btnPermKey;
+                                                $isBtnGranted = ($btnPermId > 0 && in_array($btnPermId, $selectedPermissionIds, true))
+                                                    || in_array($btnPermKey, $selectedPermissionNames, true)
+                                                    || $isOwner;
                                             ?>
-                                                <label class="rp-btn-row <?= $isBtnGranted ? 'is-checked' : '' ?>" for="btn_perm_<?= $btnPermId ?>">
+                                                <label class="rp-btn-row <?= $isBtnGranted ? 'is-checked' : '' ?>" for="btn_perm_<?= e($btnPermKey) ?>">
                                                     <input type="checkbox" 
                                                            name="permissions[]" 
-                                                           value="<?= $btnPermId ?>" 
-                                                           id="btn_perm_<?= $btnPermId ?>"
+                                                           value="<?= e($btnPermVal) ?>" 
+                                                           id="btn_perm_<?= e($btnPermKey) ?>"
                                                            class="rp-btn-chk rp-perm-chk" 
                                                            data-parent-page="<?= e($page['id']) ?>"
                                                            onchange="onActionCheckChange(this)"
@@ -956,16 +973,22 @@ document.getElementById('permissionForm').addEventListener('submit', function(e)
         btn.disabled = false;
         btn.innerHTML = originalText;
         if (data.status === 'success' || data.success) {
-            alert(data.message || 'Permissions updated successfully!');
-            window.location.reload();
+            if (typeof window.vgNotify === 'function') {
+                window.vgNotify(data.message || 'Permissions updated successfully!', 'success');
+            }
+            setTimeout(() => window.location.reload(), 1200);
         } else {
-            alert(data.message || 'Error saving permissions.');
+            if (typeof window.vgNotify === 'function') {
+                window.vgNotify(data.message || 'Error saving permissions.', 'error');
+            }
         }
     })
     .catch(err => {
         btn.disabled = false;
         btn.innerHTML = originalText;
-        alert('An unexpected error occurred while saving permissions.');
+        if (typeof window.vgNotify === 'function') {
+            window.vgNotify('An unexpected error occurred while saving permissions.', 'error');
+        }
     });
 });
 </script>

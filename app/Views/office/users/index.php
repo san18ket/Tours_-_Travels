@@ -1,302 +1,509 @@
-<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-    <div>
-        <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--navy-900); letter-spacing: -0.02em;">User Accounts &amp; Access Control</h1>
-        <p style="color: var(--text-secondary); font-size: 0.9rem;">Manage system administrators, dispatchers, chauffeurs, and client portal credentials.</p>
-    </div>
-    <div style="display: flex; gap: 0.75rem;">
-        <a href="<?= url('/office/users/create') ?>" class="btn btn-primary">
-            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
-            <span>Add New User</span>
-        </a>
-    </div>
-</div>
-
-<!-- 4 KPI Stat Cards -->
-<div class="grid-cols-4" style="margin-bottom: 1.5rem;">
-    <div class="stat-card">
-        <div class="stat-icon primary">
-            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-        </div>
-        <div class="stat-info">
-            <div class="stat-label">Total Accounts</div>
-            <div class="stat-value"><?= (int)$totalAll ?></div>
-        </div>
+<div class="bookings-page-view">
+    <!-- 1. DESKTOP ONLY: Unified Page Header (Preserved on Large Screens >= 769px) -->
+    <div class="desktop-header-wrapper">
+        <?= render_page_header([
+            'title'       => 'User Accounts & Access Control',
+            'description' => 'Manage system administrators, fleet dispatchers, commercial chauffeurs, and client portal credentials.',
+            'image'       => 'header-users.jpg',
+            'badge'       => 'Security & RBAC Active',
+            'breadcrumbs' => [
+                ['label' => __('sidebar.dashboard', 'Dashboard'), 'url' => url('/office/dashboard')],
+                ['label' => 'Users & Staff', 'url' => ''],
+            ],
+            'actions'     => '<a href="' . url('/office/users/create') . '" class="btn btn-primary"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg><span>Add New User</span></a>',
+        ]) ?>
     </div>
 
-    <div class="stat-card">
-        <div class="stat-icon navy">
-            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+    <!-- 2. DESKTOP ONLY: Top KPI Summary Cards (Exact Bookings Architecture) -->
+    <div class="booking-kpi-grid">
+        <!-- Card 1: Total Accounts -->
+        <div class="booking-kpi-card">
+            <div class="booking-kpi-top">
+                <span class="booking-kpi-label">Total Accounts</span>
+                <span class="booking-kpi-icon icon-teal">
+                    <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                </span>
+            </div>
+            <div class="booking-kpi-val"><?= number_format($totalAll ?? (int)$totalUsers) ?></div>
+            <div class="booking-kpi-sub">
+                <span>All provisioned credentials</span>
+            </div>
         </div>
-        <div class="stat-info">
-            <div class="stat-label">Active Administrators</div>
-            <div class="stat-value">
-                <?= (int)$activeAdmins ?>
-                <?php if ($activeAdmins === 1): ?>
-                    <span class="badge badge-warning" style="font-size:0.7rem;vertical-align:middle;margin-left:4px;">Protected Core</span>
-                <?php endif; ?>
+
+        <!-- Card 2: Active Administrators -->
+        <div class="booking-kpi-card">
+            <div class="booking-kpi-top">
+                <span class="booking-kpi-label">Active Administrators</span>
+                <span class="booking-kpi-icon icon-emerald">
+                    <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                </span>
+            </div>
+            <div class="booking-kpi-val"><?= number_format($activeAdmins ?? 0) ?></div>
+            <div class="booking-kpi-sub">
+                <span class="pulse-dot"></span>
+                <span>Root system controllers</span>
+            </div>
+        </div>
+
+        <!-- Card 3: Active Dispatchers -->
+        <div class="booking-kpi-card">
+            <div class="booking-kpi-top">
+                <span class="booking-kpi-label">Active Dispatchers</span>
+                <span class="booking-kpi-icon icon-amber">
+                    <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </span>
+            </div>
+            <div class="booking-kpi-val"><?= number_format($totalDispatchers ?? 0) ?></div>
+            <div class="booking-kpi-sub">
+                <span>Fleet operations desk</span>
+            </div>
+        </div>
+
+        <!-- Card 4: Chauffeurs on Roster -->
+        <div class="booking-kpi-card">
+            <div class="booking-kpi-top">
+                <span class="booking-kpi-label">Chauffeurs on Roster</span>
+                <span class="booking-kpi-icon icon-navy">
+                    <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                </span>
+            </div>
+            <div class="booking-kpi-val"><?= number_format($totalDrivers ?? 0) ?></div>
+            <div class="booking-kpi-sub">
+                <span>Driver mobile app users</span>
             </div>
         </div>
     </div>
 
-    <div class="stat-card">
-        <div class="stat-icon info">
-            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+    <!-- 3. DESKTOP ONLY: Compact Filter Bar (Exact Bookings Architecture) -->
+    <form method="GET" action="<?= url('/office/users') ?>" class="filter-bar-compact" id="userFilterForm">
+        <div class="fbc-search">
+            <i class="fa-solid fa-magnifying-glass fbc-search-icon"></i>
+            <input type="text" name="search" id="searchInput" placeholder="Search by name, username, email, phone..." value="<?= e($search ?? '') ?>" autocomplete="off">
         </div>
-        <div class="stat-info">
-            <div class="stat-label">Active Dispatchers</div>
-            <div class="stat-value"><?= (int)$totalDispatchers ?></div>
-        </div>
-    </div>
 
-    <div class="stat-card">
-        <div class="stat-icon success">
-            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
-        </div>
-        <div class="stat-info">
-            <div class="stat-label">Chauffeurs on Roster</div>
-            <div class="stat-value"><?= (int)$totalDrivers ?></div>
-        </div>
-    </div>
-</div>
+        <select name="role" id="roleInput" onchange="document.getElementById('userFilterForm').submit()">
+            <option value="">All Roles</option>
+            <option value="admin" <?= ($selectedRole ?? '') === 'admin' ? 'selected' : '' ?>>Administrator</option>
+            <option value="dispatcher" <?= ($selectedRole ?? '') === 'dispatcher' ? 'selected' : '' ?>>Dispatcher</option>
+            <option value="driver" <?= ($selectedRole ?? '') === 'driver' ? 'selected' : '' ?>>Chauffeur</option>
+            <option value="customer" <?= ($selectedRole ?? '') === 'customer' ? 'selected' : '' ?>>Customer</option>
+        </select>
 
-<!-- Search & Filtering Toolbar -->
-<div class="card" style="margin-bottom: 1.5rem;">
-    <div class="card-body" style="padding: 1.25rem;">
-        <form method="GET" action="<?= url('/office/users') ?>" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
-            <div style="flex: 2; min-width: 200px;">
-                <label class="form-label" for="search">Search Users</label>
-                <input type="text" id="search" name="search" class="form-control" placeholder="Search by name, username, email, or phone..." value="<?= e($search) ?>">
+        <select name="status" id="statusInput" onchange="document.getElementById('userFilterForm').submit()">
+            <option value="">All Statuses</option>
+            <option value="active" <?= ($selectedStatus ?? '') === 'active' ? 'selected' : '' ?>>Active</option>
+            <option value="inactive" <?= ($selectedStatus ?? '') === 'inactive' ? 'selected' : '' ?>>Inactive</option>
+            <option value="suspended" <?= ($selectedStatus ?? '') === 'suspended' ? 'selected' : '' ?>>Suspended</option>
+        </select>
+
+        <select name="per_page" id="perPageInput" title="Records per page" onchange="document.getElementById('userFilterForm').submit()">
+            <?php foreach ([10, 25, 50, 100] as $opt): ?>
+                <option value="<?= $opt ?>" <?= ($perPage ?? 10) == $opt ? 'selected' : '' ?>><?= $opt ?> per page</option>
+            <?php endforeach; ?>
+        </select>
+
+        <div class="fbc-actions">
+            <button type="submit" class="fbc-btn" title="Filter"><i class="fa-solid fa-filter"></i> <span>Apply</span></button>
+            <a href="<?= url('/office/users') ?>" class="fbc-btn" id="refreshBtn" title="Refresh"><i class="fa-solid fa-rotate-right"></i></a>
+        </div>
+
+        <div class="fbc-actions-end">
+            <?php if (!empty($search) || !empty($selectedRole) || !empty($selectedStatus)): ?>
+                <a href="<?= url('/office/users') ?>" class="fbc-btn fbc-btn-clear" title="Clear Filters"><i class="fa-solid fa-xmark"></i> <span>Clear</span></a>
+            <?php endif; ?>
+        </div>
+    </form>
+
+    <!-- 4. MOBILE ONLY: Top App Bar, Search, Drawer & Status Scroll -->
+    <div class="mv-bookings-header">
+        <div class="mv-top-bar">
+            <div class="mv-top-bar-left">
+                <a href="<?= url('/office/dashboard') ?>" class="mv-back-btn" title="Back to Dashboard">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+                <h2 class="mv-page-title">Users</h2>
             </div>
+            <a href="<?= url('/office/users/create') ?>" class="mv-add-btn">
+                <i class="fa-solid fa-plus"></i>
+                <span>Add User</span>
+            </a>
+        </div>
 
-            <div style="flex: 1; min-width: 150px;">
-                <label class="form-label" for="role">Filter by Role</label>
-                <select id="role" name="role" class="form-control">
-                    <option value="">All Roles</option>
-                    <option value="admin" <?= $selectedRole === 'admin' ? 'selected' : '' ?>>Administrator</option>
-                    <option value="dispatcher" <?= $selectedRole === 'dispatcher' ? 'selected' : '' ?>>Dispatcher</option>
-                    <option value="driver" <?= $selectedRole === 'driver' ? 'selected' : '' ?>>Chauffeur</option>
-                    <option value="customer" <?= $selectedRole === 'customer' ? 'selected' : '' ?>>Customer</option>
-                </select>
-            </div>
-
-            <div style="flex: 1; min-width: 150px;">
-                <label class="form-label" for="status">Account Status</label>
-                <select id="status" name="status" class="form-control">
-                    <option value="">All Statuses</option>
-                    <option value="active" <?= $selectedStatus === 'active' ? 'selected' : '' ?>>Active</option>
-                    <option value="inactive" <?= $selectedStatus === 'inactive' ? 'selected' : '' ?>>Inactive</option>
-                    <option value="suspended" <?= $selectedStatus === 'suspended' ? 'selected' : '' ?>>Suspended</option>
-                </select>
-            </div>
-
-            <div style="display: flex; gap: 0.5rem;">
-                <button type="submit" class="btn btn-navy">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    <span>Filter</span>
+        <!-- Mobile Search Bar & Filter Toggle -->
+        <div class="mv-search-bar-wrap">
+            <form method="GET" action="<?= url('/office/users') ?>" class="mv-search-form" id="mvSearchForm">
+                <div class="mv-search-input-box">
+                    <i class="fa-solid fa-magnifying-glass mv-search-ico"></i>
+                    <input type="text" name="search" id="mvSearchInput" placeholder="Search users..." value="<?= e($search ?? '') ?>" autocomplete="off">
+                    <?php if (!empty($search)): ?>
+                        <a href="<?= url('/office/users' . (!empty($selectedStatus) ? '?status=' . urlencode($selectedStatus) : '')) ?>" class="mv-search-clear" title="Clear search">
+                            <i class="fa-solid fa-xmark"></i>
+                        </a>
+                    <?php endif; ?>
+                    <?php if (!empty($selectedRole)): ?>
+                        <input type="hidden" name="role" value="<?= e($selectedRole) ?>">
+                    <?php endif; ?>
+                    <?php if (!empty($selectedStatus)): ?>
+                        <input type="hidden" name="status" value="<?= e($selectedStatus) ?>">
+                    <?php endif; ?>
+                </div>
+                <button type="button" class="mv-filter-toggle" id="mvFilterToggleBtn" onclick="toggleMobileFilter()" title="Filter options">
+                    <i class="fa-solid fa-sliders"></i>
                 </button>
-                <?php if (!empty($search) || !empty($selectedRole) || !empty($selectedStatus)): ?>
-                    <a href="<?= url('/office/users') ?>" class="btn btn-outline" title="Reset Filters">Reset</a>
-                <?php endif; ?>
-            </div>
-        </form>
-    </div>
-</div>
+            </form>
 
-<!-- Users Data Table Card -->
-<div class="card">
-    <div class="card-header">
-        <span class="card-title">Registered System Users (<?= (int)$totalUsers ?> matching)</span>
-        <span style="font-size: 0.85rem; color: var(--text-muted);">Page <?= (int)$currentPage ?> of <?= (int)$totalPages ?></span>
+            <!-- Collapsible Mobile Filter Panel -->
+            <div class="mv-filter-panel" id="mvFilterPanel" style="display: none;">
+                <form method="GET" action="<?= url('/office/users') ?>">
+                    <?php if (!empty($search)): ?><input type="hidden" name="search" value="<?= e($search) ?>"><?php endif; ?>
+                    <div class="mv-filter-row">
+                        <label for="mvRoleSelect">Role:</label>
+                        <select name="role" id="mvRoleSelect" onchange="this.form.submit()">
+                            <option value="">All Roles</option>
+                            <option value="admin" <?= ($selectedRole ?? '') === 'admin' ? 'selected' : '' ?>>Administrator</option>
+                            <option value="dispatcher" <?= ($selectedRole ?? '') === 'dispatcher' ? 'selected' : '' ?>>Dispatcher</option>
+                            <option value="driver" <?= ($selectedRole ?? '') === 'driver' ? 'selected' : '' ?>>Chauffeur</option>
+                            <option value="customer" <?= ($selectedRole ?? '') === 'customer' ? 'selected' : '' ?>>Customer</option>
+                        </select>
+                    </div>
+                    <div class="mv-filter-row">
+                        <label for="mvPerPageSelect">Per Page:</label>
+                        <select name="per_page" id="mvPerPageSelect" onchange="this.form.submit()">
+                            <?php foreach ([10, 25, 50] as $opt): ?>
+                                <option value="<?= $opt ?>" <?= ($perPage ?? 10) == $opt ? 'selected' : '' ?>><?= $opt ?> per page</option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <?php if (!empty($selectedStatus)): ?>
+                        <input type="hidden" name="status" value="<?= e($selectedStatus) ?>">
+                    <?php endif; ?>
+                </form>
+            </div>
+        </div>
+
+        <!-- Horizontal Scrollable Status Pills -->
+        <?php
+            $currStatus = strtolower($selectedStatus ?? '');
+            $makeStatusUrl = function(string $st) use ($search, $selectedRole, $perPage) {
+                $p = [];
+                if (!empty($st)) $p['status'] = $st;
+                if (!empty($selectedRole)) $p['role'] = $selectedRole;
+                if (!empty($search)) $p['search'] = $search;
+                if (!empty($perPage) && $perPage != 10) $p['per_page'] = $perPage;
+                return url('/office/users' . (!empty($p) ? '?' . http_build_query($p) : ''));
+            };
+        ?>
+        <div class="mv-status-scroll">
+            <a href="<?= $makeStatusUrl('') ?>" class="mv-pill <?= empty($currStatus) ? 'active' : '' ?>">
+                <span>All</span>
+                <span class="mv-pill-cnt"><?= (int)($totalUsers ?? count($users)) ?></span>
+            </a>
+            <a href="<?= $makeStatusUrl('active') ?>" class="mv-pill <?= $currStatus === 'active' ? 'active' : '' ?>">
+                <span>Active</span>
+            </a>
+            <a href="<?= $makeStatusUrl('inactive') ?>" class="mv-pill <?= $currStatus === 'inactive' ? 'active' : '' ?>">
+                <span>Inactive</span>
+            </a>
+            <a href="<?= $makeStatusUrl('suspended') ?>" class="mv-pill <?= $currStatus === 'suspended' ? 'active' : '' ?>">
+                <span>Suspended</span>
+            </a>
+        </div>
     </div>
-    <div class="card-body" style="padding: 0;">
-        <div class="table-responsive">
-            <table class="table">
+
+    <!-- 5. All Users Section: Desktop PMS Modern Table + Mobile App Cards -->
+    <section class="recent-bookings-section">
+        <div class="section-header">
+            <h3 class="section-title">All System Accounts</h3>
+            <div class="total-records-box">
+                <i class="fa-solid fa-layer-group"></i>
+                <span class="total-records-label">Total Records:</span>
+                <span class="total-records-badge" id="totalRecordsPill"><?= number_format($totalUsers ?? count($users)) ?></span>
+            </div>
+        </div>
+
+        <!-- Modern Table for Large Screens (Exact PMS Table Architecture) -->
+        <div class="modern-table-container">
+            <table class="modern-table" id="usersTable">
                 <thead>
                     <tr>
-                        <th style="width: 50px;">ID</th>
-                        <th>User Profile</th>
-                        <th>Username</th>
-                        <th>Email &amp; Contact</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Created Date</th>
-                        <th style="text-align: right;">Actions</th>
+                        <th class="text-center" style="width: 48px;">#</th>
+                        <th style="width: 25%;">User Profile & Handle</th>
+                        <th style="width: 20%;">Email & Contact</th>
+                        <th style="width: 15%;">System Role</th>
+                        <th class="text-center" style="width: 14%;">Joined Date</th>
+                        <th class="text-center" style="width: 12%;">Status</th>
+                        <th class="text-center" style="width: 55px;">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <?php if (empty($users)): ?>
-                        <tr>
-                            <td colspan="8" style="text-align: center; padding: 3rem; color: var(--text-muted);">
-                                <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔍</div>
-                                <div style="font-weight: 600; font-size: 1.1rem; color: var(--navy-900);">No user accounts found</div>
-                                <p style="font-size: 0.88rem;">Try adjusting your search criteria or register a new user.</p>
-                            </td>
-                        </tr>
-                    <?php else: ?>
-                        <?php foreach ($users as $u): ?>
-                            <tr>
-                                <td><span style="font-family: monospace; color: var(--text-muted); font-size: 0.85rem;">#<?= (int)$u['id'] ?></span></td>
-                                <td>
-                                    <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                        <div style="width: 34px; height: 34px; border-radius: 50%; background: var(--navy-800); color: #FFF; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">
-                                            <?= strtoupper(substr($u['name'], 0, 1)) ?>
-                                        </div>
-                                        <div>
-                                            <strong style="color: var(--navy-900);"><?= e($u['name']) ?></strong>
-                                            <?php if ((int)$u['id'] === $currentUserId): ?>
-                                                <span class="badge badge-navy" style="font-size: 0.68rem; margin-left: 4px;">You</span>
-                                            <?php endif; ?>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <code style="background: #F1F5F9; padding: 2px 6px; border-radius: 4px; font-size: 0.85rem; color: var(--blue-600); font-weight: 600;">@<?= e($u['username']) ?></code>
-                                </td>
-                                <td>
-                                    <div><?= e($u['email']) ?></div>
-                                    <?php if (!empty($u['phone'])): ?>
-                                        <div style="font-size: 0.78rem; color: var(--text-muted);"><?= e($u['phone']) ?></div>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <?php if ($u['role'] === 'admin'): ?>
-                                        <span class="badge badge-navy">👑 Admin</span>
-                                    <?php elseif ($u['role'] === 'dispatcher'): ?>
-                                        <span class="badge badge-primary">🎯 Dispatcher</span>
-                                    <?php elseif ($u['role'] === 'driver'): ?>
-                                        <span class="badge badge-info">🚗 Chauffeur</span>
-                                    <?php else: ?>
-                                        <span class="badge badge-neutral">👤 Customer</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <?php if ($u['status'] === 'active'): ?>
-                                        <span class="badge badge-success"><span class="pulse-indicator"></span> Active</span>
-                                    <?php elseif ($u['status'] === 'inactive'): ?>
-                                        <span class="badge badge-warning">Inactive</span>
-                                    <?php else: ?>
-                                        <span class="badge badge-danger"><?= e(ucfirst($u['status'])) ?></span>
-                                    <?php endif; ?>
-                                </td>
-                                <td style="font-size: 0.85rem; color: var(--text-secondary);">
-                                    <?= format_date($u['created_at']) ?>
-                                </td>
-                                <td style="text-align: right;">
-                                    <div style="display: inline-flex; gap: 0.4rem; justify-content: flex-end;">
-                                        <!-- Edit Action -->
-                                        <a href="<?= url('/office/users/' . $u['id'] . '/edit') ?>" class="btn btn-outline btn-sm" title="Edit User Profile">
-                                            Edit
-                                        </a>
-
-                                        <!-- Reset Password Action Trigger -->
-                                        <button type="button" class="btn btn-outline btn-sm" onclick="openResetModal(<?= (int)$u['id'] ?>, '<?= e(addslashes($u['username'])) ?>')" title="Reset Password">
-                                            🔑 Reset
-                                        </button>
-
-                                        <!-- Toggle Status (Activate / Deactivate) -->
+                <tbody id="usersTableBody">
+                    <?php foreach ($users as $i => $u):
+                        $serial = (($currentPage ?? 1) - 1) * ($perPage ?? 10) + $i + 1;
+                        $status = strtolower($u['status'] ?? 'active');
+                        $statusClass = match($status) {
+                            'active' => 'completed',
+                            'inactive' => 'pending',
+                            'suspended' => 'cancelled',
+                            default => 'pending'
+                        };
+                        $statusText = ucfirst($status);
+                    ?>
+                    <tr>
+                        <td class="text-center">
+                            <div class="project-name" style="padding: 3px 8px;"><?= $serial ?></div>
+                        </td>
+                        <td>
+                            <div class="client-cell">
+                                <div class="client-info">
+                                    <span class="client-name">
+                                        <?= e($u['name']) ?>
                                         <?php if ((int)$u['id'] === $currentUserId): ?>
-                                            <button type="button" class="btn btn-outline btn-sm" disabled title="You cannot deactivate your own account" style="opacity: 0.5; cursor: not-allowed;">
-                                                Self
-                                            </button>
-                                        <?php elseif ($u['role'] === 'admin' && $u['status'] === 'active' && $activeAdmins <= 1): ?>
-                                            <button type="button" class="btn btn-outline btn-sm" disabled title="Sole active administrator is protected" style="opacity: 0.5; cursor: not-allowed;">
-                                                Protected
-                                            </button>
-                                        <?php else: ?>
-                                            <form action="<?= url('/office/users/' . $u['id'] . '/toggle-status') ?>" method="POST" style="margin: 0;" onsubmit="return confirm('Are you sure you want to <?= $u['status'] === 'active' ? 'deactivate' : 'activate' ?> user @<?= e(addslashes($u['username'])) ?>?');">
-                                                <?= csrf_field() ?>
-                                                <?php if ($u['status'] === 'active'): ?>
-                                                    <button type="submit" class="btn btn-outline btn-sm" style="color: var(--danger); border-color: rgba(239, 68, 68, 0.4);" title="Deactivate user">
-                                                        Deactivate
-                                                    </button>
-                                                <?php else: ?>
-                                                    <button type="submit" class="btn btn-outline btn-sm" style="color: var(--success); border-color: rgba(16, 185, 129, 0.4);" title="Activate user">
-                                                        Activate
-                                                    </button>
-                                                <?php endif; ?>
-                                            </form>
+                                            <span style="display:inline-block;background:rgba(23,107,91,0.12);color:#176B5B;border-radius:4px;padding:1px 6px;font-size:10.5px;font-weight:700;margin-left:4px;">You</span>
                                         <?php endif; ?>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
+                                    </span>
+                                    <small style="font-family:monospace;color:var(--brand-primary, #176B5B);font-weight:600;font-size:11.5px;margin-top:2px;">
+                                        @<?= e($u['username']) ?>
+                                    </small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-size: 13px; color: #1e293b; font-weight: 500;">
+                                <?= e($u['email']) ?>
+                            </div>
+                            <?php if (!empty($u['phone'])): ?>
+                                <small class="text-muted d-block" style="font-size:11.5px;margin-top:2px;">
+                                    <i class="fa-solid fa-phone" style="font-size:10px;color:var(--brand-primary, #176B5B);"></i> <?= e($u['phone']) ?>
+                                </small>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <?php if ($u['role'] === 'admin'): ?>
+                                <span style="display:inline-block;background:rgba(22,68,59,0.12);color:#16443B;border:1px solid rgba(22,68,59,0.2);border-radius:6px;padding:3px 10px;font-size:12px;font-weight:700;">
+                                    👑 Administrator
+                                </span>
+                            <?php elseif ($u['role'] === 'dispatcher'): ?>
+                                <span style="display:inline-block;background:rgba(23,107,91,0.12);color:#176B5B;border:1px solid rgba(23,107,91,0.2);border-radius:6px;padding:3px 10px;font-size:12px;font-weight:700;">
+                                    🎯 Dispatcher
+                                </span>
+                            <?php elseif ($u['role'] === 'driver'): ?>
+                                <span style="display:inline-block;background:rgba(2,132,199,0.1);color:#0284c7;border:1px solid rgba(2,132,199,0.2);border-radius:6px;padding:3px 10px;font-size:12px;font-weight:700;">
+                                    🚗 Chauffeur
+                                </span>
+                            <?php else: ?>
+                                <span style="display:inline-block;background:rgba(100,116,139,0.1);color:#475569;border:1px solid rgba(100,116,139,0.2);border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600;">
+                                    👤 Customer
+                                </span>
+                            <?php endif; ?>
+                        </td>
+                        <td class="text-center">
+                            <span class="due-date">
+                                <?= format_date($u['created_at']) ?>
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <div class="status-cell">
+                                <span class="status-dot <?= $statusClass ?>"></span>
+                                <span class="status-badge bg-<?= $statusClass ?>"><?= $statusText ?></span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="table-action-buttons">
+                                <button type="button" class="action-toggle-btn" onclick="toggleActions(this, event)" title="Actions">
+                                    <i class="fa-solid fa-ellipsis"></i>
+                                </button>
+                                <div class="action-btns-popup">
+                                    <a href="<?= url('/office/users/' . $u['id'] . '/edit') ?>" class="action-btn-table edit" title="Edit Profile">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </a>
+                                    <button type="button" class="action-btn-table view" onclick="openResetModal(<?= (int)$u['id'] ?>, '<?= e(addslashes($u['username'])) ?>')" title="Reset Password">
+                                        <i class="fa-solid fa-key"></i>
+                                    </button>
+                                    <?php if ((int)$u['id'] !== $currentUserId && !($u['role'] === 'admin' && $u['status'] === 'active' && $activeAdmins <= 1)): ?>
+                                    <form action="<?= url('/office/users/' . $u['id'] . '/toggle-status') ?>" method="POST" style="margin:0;">
+                                        <?= csrf_field() ?>
+                                        <button type="submit" class="action-btn-table dispatch" title="<?= $u['status'] === 'active' ? 'Deactivate' : 'Activate' ?>">
+                                            <i class="fa-solid <?= $u['status'] === 'active' ? 'fa-ban' : 'fa-check' ?>"></i>
+                                        </button>
+                                    </form>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                    <?php if (empty($users)): ?>
+                    <tr>
+                        <td colspan="7">
+                            <div class="no-data-message">
+                                <div class="no-data-icon"><i class="fa-regular fa-folder-open"></i></div>
+                                <h4 style="font-weight:700;color:#1e293b;margin-bottom:6px;">No user accounts found</h4>
+                                <p class="text-muted" style="margin:0;">Try adjusting your search or filter parameters.</p>
+                            </div>
+                        </td>
+                    </tr>
                     <?php endif; ?>
                 </tbody>
             </table>
         </div>
 
-        <!-- Pagination Bar -->
-        <?php if ($totalPages > 1): ?>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-top: 1px solid var(--border-light); flex-wrap: wrap; gap: 0.75rem;">
-                <div style="font-size: 0.88rem; color: var(--text-secondary);">
-                    Showing page <strong><?= (int)$currentPage ?></strong> of <strong><?= (int)$totalPages ?></strong>
-                </div>
-                <div style="display: flex; gap: 0.5rem;">
-                    <?php if ($currentPage > 1): ?>
-                        <a href="<?= url('/office/users?page=' . ($currentPage - 1) . '&search=' . urlencode($search) . '&role=' . urlencode($selectedRole) . '&status=' . urlencode($selectedStatus)) ?>" class="btn btn-outline btn-sm">
-                            &laquo; Previous
-                        </a>
-                    <?php endif; ?>
+        <!-- Mobile Cards List (Exact Screen 3 Design Architecture) -->
+        <div class="cards-grid" id="usersCards">
+            <?php foreach ($users as $u):
+                $status = strtolower($u['status'] ?? 'active');
+                $statusClass = match($status) {
+                    'active' => 'active',
+                    'suspended' => 'cancelled',
+                    default => 'pending'
+                };
+                $statusText = ucfirst($status);
+                $initials = strtoupper(mb_substr($u['name'] ?? 'U', 0, 1));
+            ?>
+            <div class="mv-booking-card-wrapper">
+                <a href="<?= url('/office/users/' . $u['id'] . '/edit') ?>" class="mv-booking-card">
+                    <!-- Left: User Avatar Monogram -->
+                    <div class="mv-thumb-wrap">
+                        <div class="mv-thumb-avatar">
+                            <?= e($initials) ?>
+                        </div>
+                    </div>
 
-                    <?php for ($p = 1; $p <= $totalPages; $p++): ?>
-                        <?php if ($p == $currentPage): ?>
-                            <span class="btn btn-primary btn-sm" style="cursor: default;"><?= $p ?></span>
-                        <?php elseif ($p == 1 || $p == $totalPages || abs($p - $currentPage) <= 2): ?>
-                            <a href="<?= url('/office/users?page=' . $p . '&search=' . urlencode($search) . '&role=' . urlencode($selectedRole) . '&status=' . urlencode($selectedStatus)) ?>" class="btn btn-outline btn-sm">
-                                <?= $p ?>
-                            </a>
+                    <!-- Middle: User Details -->
+                    <div class="mv-details">
+                        <div class="mv-code">@<?= e($u['username']) ?></div>
+                        <div class="mv-tour-title" title="<?= e($u['name']) ?>">
+                            <?= e($u['name']) ?>
+                        </div>
+                        <div class="mv-date-duration">
+                            <i class="fa-regular fa-envelope"></i>
+                            <span><?= e($u['email']) ?></span>
+                        </div>
+                        <?php if (!empty($u['phone'])): ?>
+                        <div class="mv-passenger">
+                            <i class="fa-solid fa-phone"></i>
+                            <span><?= e($u['phone']) ?></span>
+                        </div>
                         <?php endif; ?>
-                    <?php endfor; ?>
+                        <div class="mv-vehicle">
+                            <i class="fa-solid fa-shield-halved"></i>
+                            <span style="text-transform:capitalize;"><?= e($u['role']) ?></span>
+                        </div>
+                    </div>
 
-                    <?php if ($currentPage < $totalPages): ?>
-                        <a href="<?= url('/office/users?page=' . ($currentPage + 1) . '&search=' . urlencode($search) . '&role=' . urlencode($selectedRole) . '&status=' . urlencode($selectedStatus)) ?>" class="btn btn-outline btn-sm">
-                            Next &raquo;
+                    <!-- Right: Status pill top, Role text bottom -->
+                    <div class="mv-right-col">
+                        <span class="mv-status-badge mv-status-<?= $statusClass ?>"><?= $statusText ?></span>
+                        <div class="mv-price" style="font-size: 11px; color: #16443B; font-weight: 700; text-transform: uppercase;">
+                            <?= e($u['role']) ?>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- 3-Dots Quick Action Popup -->
+                <div class="mv-card-actions">
+                    <button type="button" class="mv-action-dots-btn" onclick="toggleCardActions(this, event)" title="Actions">
+                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                    </button>
+                    <div class="card-btns-popup">
+                        <a href="<?= url('/office/users/' . $u['id'] . '/edit') ?>" class="action-btn-table edit" title="Edit Profile">
+                            <i class="fa-solid fa-pen-to-square"></i>
                         </a>
-                    <?php endif; ?>
+                        <button type="button" class="action-btn-table view" onclick="openResetModal(<?= (int)$u['id'] ?>, '<?= e(addslashes($u['username'])) ?>')" title="Reset Password">
+                            <i class="fa-solid fa-key"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
-        <?php endif; ?>
+            <?php endforeach; ?>
+            <?php if (empty($users)): ?>
+            <div class="no-data-message">
+                <div class="no-data-icon"><i class="fa-regular fa-folder-open"></i></div>
+                <h4 style="font-weight:700;color:#1e293b;margin-bottom:6px;">No user accounts found</h4>
+                <p class="text-muted" style="margin:0;">Try adjusting your search or filter parameters.</p>
+            </div>
+            <?php endif; ?>
+        </div>
+    </section>
+
+    <!-- Modern Pagination (Exact Bookings Architecture) -->
+    <?php
+        $totRec = $totalUsers ?? count($users);
+        $currP = $currentPage ?? 1;
+        $pSize = $perPage ?? 10;
+        $from = $totRec > 0 ? (($currP - 1) * $pSize) + 1 : 0;
+        $to   = min($currP * $pSize, $totRec);
+        $buildPageUrl = function(int $p) use ($search, $selectedRole, $selectedStatus, $pSize) {
+            $q = [];
+            if (!empty($search)) $q['search'] = $search;
+            if (!empty($selectedRole)) $q['role'] = $selectedRole;
+            if (!empty($selectedStatus)) $q['status'] = $selectedStatus;
+            if (!empty($pSize) && $pSize != 10) $q['per_page'] = $pSize;
+            $q['page'] = $p;
+            return url('/office/users?' . http_build_query($q));
+        };
+    ?>
+    <?php if (($totalPages ?? 1) > 1): ?>
+    <div class="pagination-wrapper">
+        <div class="pagination-info">Showing <span><?= $from ?>&ndash;<?= $to ?></span> of <span><?= $totRec ?></span> account(s)</div>
+        <div class="pagination">
+            <a href="<?= $buildPageUrl(max(1, $currP - 1)) ?>" class="<?= $currP <= 1 ? 'disabled' : '' ?>" title="Previous Page">&#10094;</a>
+            <?php
+                $rangeStart = max(1, $currP - 1);
+                $rangeEnd   = min($totalPages, $rangeStart + 2);
+                if ($rangeEnd - $rangeStart < 2 && $rangeStart > 1) {
+                    $rangeStart = max(1, $rangeEnd - 2);
+                }
+                for ($i = $rangeStart; $i <= $rangeEnd; $i++):
+            ?>
+                <a href="<?= $buildPageUrl($i) ?>" class="<?= $i === $currP ? 'active' : '' ?>"><?= $i ?></a>
+            <?php endfor; ?>
+            <?php if ($rangeEnd < $totalPages): ?>
+                <span class="dots">...</span>
+                <a href="<?= $buildPageUrl($totalPages) ?>" class="<?= $currP === $totalPages ? 'active' : '' ?>"><?= $totalPages ?></a>
+            <?php endif; ?>
+            <a href="<?= $buildPageUrl(min($totalPages, $currP + 1)) ?>" class="<?= $currP >= $totalPages ? 'disabled' : '' ?>" title="Next Page">&#10095;</a>
+        </div>
     </div>
+    <?php endif; ?>
 </div>
 
 <!-- Modal: Reset User Password -->
 <div id="resetPasswordModal" class="modal-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(11, 25, 44, 0.65); backdrop-filter: blur(4px); z-index: 1050; align-items: center; justify-content: center; padding: 1.5rem;">
-    <div class="card" style="width: 100%; max-width: 440px; margin: 0; box-shadow: var(--shadow-lg);">
-        <div class="card-header">
-            <span class="card-title">Reset User Password</span>
-            <button type="button" onclick="closeResetModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+    <div style="background: #ffffff; border-radius: 16px; width: 100%; max-width: 440px; margin: 0; box-shadow: 0 10px 30px rgba(0,0,0,0.15); overflow: hidden; border: 1px solid rgba(23,107,91,0.15);">
+        <div style="padding: 18px 22px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; background: #f8fafc;">
+            <span style="font-weight: 700; color: #16443B; font-size: 1.05rem;">Reset User Password</span>
+            <button type="button" onclick="closeResetModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #94a3b8; line-height: 1;">&times;</button>
         </div>
-        <div class="card-body">
-            <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
-                Set a new password for account: <strong id="resetTargetUsername" style="color: var(--navy-900);"></strong>
+        <div style="padding: 22px;">
+            <p style="font-size: 0.88rem; color: #64748b; margin-bottom: 1.25rem;">
+                Set a new password for account: <strong id="resetTargetUsername" style="color: #176B5B;"></strong>
             </p>
 
             <form id="resetPasswordForm" method="POST" action="">
                 <?= csrf_field() ?>
 
-                <div class="form-group">
-                    <label class="form-label" for="new_password">New Password</label>
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label class="form-label" for="new_password" style="font-size: 12.5px; font-weight: 600; color: #334155; margin-bottom: 6px; display: block;">New Password</label>
                     <div style="position: relative;">
-                        <input type="password" id="new_password" name="password" class="form-control" required minlength="6" placeholder="Minimum 6 characters" style="padding-right: 2.75rem;">
-                        <button type="button" onclick="toggleInputVisibility('new_password')" title="Toggle visibility" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 4px;">
+                        <input type="password" id="new_password" name="password" class="form-control" required minlength="6" placeholder="Minimum 6 characters" style="padding-right: 2.75rem; width: 100%; height: 42px; border-radius: 10px; border: 1.5px solid #cbd5e1; padding-left: 12px; box-sizing: border-box;">
+                        <button type="button" onclick="toggleInputVisibility('new_password')" title="Toggle visibility" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #94a3b8; padding: 4px;">
                             👁️
                         </button>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="new_password_confirmation">Confirm New Password</label>
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label class="form-label" for="new_password_confirmation" style="font-size: 12.5px; font-weight: 600; color: #334155; margin-bottom: 6px; display: block;">Confirm New Password</label>
                     <div style="position: relative;">
-                        <input type="password" id="new_password_confirmation" name="password_confirmation" class="form-control" required minlength="6" placeholder="Repeat new password" style="padding-right: 2.75rem;">
-                        <button type="button" onclick="toggleInputVisibility('new_password_confirmation')" title="Toggle visibility" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 4px;">
+                        <input type="password" id="new_password_confirmation" name="password_confirmation" class="form-control" required minlength="6" placeholder="Repeat new password" style="padding-right: 2.75rem; width: 100%; height: 42px; border-radius: 10px; border: 1.5px solid #cbd5e1; padding-left: 12px; box-sizing: border-box;">
+                        <button type="button" onclick="toggleInputVisibility('new_password_confirmation')" title="Toggle visibility" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #94a3b8; padding: 4px;">
                             👁️
                         </button>
                     </div>
                 </div>
 
-                <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem;">
-                    <button type="button" class="btn btn-outline" onclick="closeResetModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Update Password</button>
+                <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="closeResetModal()" style="border-radius: 10px; height: 40px; padding: 0 16px;">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="border-radius: 10px; height: 40px; padding: 0 20px; font-weight: 700;">Update Password</button>
                 </div>
             </form>
         </div>
@@ -304,24 +511,56 @@
 </div>
 
 <script>
-function openResetModal(userId, username) {
-    document.getElementById('resetTargetUsername').innerText = '@' + username;
-    document.getElementById('resetPasswordForm').action = '<?= url('/office/users/') ?>' + userId + '/reset-password';
-    document.getElementById('new_password').value = '';
-    document.getElementById('new_password_confirmation').value = '';
-    const modal = document.getElementById('resetPasswordModal');
-    modal.style.display = 'flex';
-}
-
-function closeResetModal() {
-    const modal = document.getElementById('resetPasswordModal');
-    modal.style.display = 'none';
-}
-
-function toggleInputVisibility(id) {
-    const el = document.getElementById(id);
-    if (el) {
-        el.type = (el.type === 'password') ? 'text' : 'password';
+    function toggleActions(btn, e) {
+        e.stopPropagation();
+        const popup = btn.nextElementSibling;
+        const isOpen = popup.classList.contains('open');
+        document.querySelectorAll('.action-btns-popup.open, .card-btns-popup.open').forEach(p => p.classList.remove('open'));
+        if (!isOpen) popup.classList.add('open');
     }
-}
+
+    function toggleCardActions(btn, e) {
+        e.stopPropagation();
+        const popup = btn.nextElementSibling;
+        const isOpen = popup.classList.contains('open');
+        document.querySelectorAll('.action-btns-popup.open, .card-btns-popup.open').forEach(p => p.classList.remove('open'));
+        if (!isOpen) popup.classList.add('open');
+    }
+
+    function toggleMobileFilter() {
+        const p = document.getElementById('mvFilterPanel');
+        const b = document.getElementById('mvFilterToggleBtn');
+        if (p) {
+            const isHidden = p.style.display === 'none' || p.style.display === '';
+            p.style.display = isHidden ? 'block' : 'none';
+            if (b) b.classList.toggle('active', isHidden);
+        }
+    }
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.table-action-buttons') && !e.target.closest('.mv-card-actions')) {
+            document.querySelectorAll('.action-btns-popup.open, .card-btns-popup.open').forEach(p => p.classList.remove('open'));
+        }
+    });
+
+    function openResetModal(userId, username) {
+        document.getElementById('resetTargetUsername').innerText = '@' + username;
+        document.getElementById('resetPasswordForm').action = '<?= url('/office/users/') ?>' + userId + '/reset-password';
+        document.getElementById('new_password').value = '';
+        document.getElementById('new_password_confirmation').value = '';
+        const modal = document.getElementById('resetPasswordModal');
+        modal.style.display = 'flex';
+    }
+
+    function closeResetModal() {
+        const modal = document.getElementById('resetPasswordModal');
+        modal.style.display = 'none';
+    }
+
+    function toggleInputVisibility(id) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.type = (el.type === 'password') ? 'text' : 'password';
+        }
+    }
 </script>

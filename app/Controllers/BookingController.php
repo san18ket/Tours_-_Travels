@@ -60,16 +60,34 @@ class BookingController extends Controller
 
         $filterStr = implode(' AND ', $conditions);
         $page = max(1, (int)$request->input('page', 1));
-        $perPage = in_array((int)$request->input('per_page'), [10, 25, 50, 100], true) ? (int)$request->input('per_page') : 10;
+        $allowedPerPage = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 100];
+        $perPageRaw = (int)$request->input('per_page', 10);
+        $perPage = in_array($perPageRaw, $allowedPerPage, true) ? $perPageRaw : 10;
+
+        $sort = (string)$request->input('sort', 'created_desc');
+        $orderByMap = [
+            'created_desc' => 'b.id DESC',
+            'created_asc'  => 'b.id ASC',
+            'client_asc'   => 'COALESCE(c.name, u.name) ASC',
+            'client_desc'  => 'COALESCE(c.name, u.name) DESC',
+            'date_asc'     => 'b.start_date ASC',
+            'date_desc'    => 'b.start_date DESC',
+        ];
+        $orderBy = $orderByMap[$sort] ?? 'b.id DESC';
 
         $totalRecords = $this->bookingModel->countFilteredDetailed($filterStr, $params);
-        $bookings = $this->bookingModel->getPaginatedDetailed($filterStr, $params, $page, $perPage);
+        $bookings = $this->bookingModel->getPaginatedDetailed($filterStr, $params, $page, $perPage, $orderBy);
         $totalPages = max(1, (int)ceil($totalRecords / $perPage));
+
+        $customerId = (Session::getUserRole() === 'customer') ? Session::getUserId() : null;
+        $stats = $this->bookingModel->getBookingStatistics($customerId);
 
         return $this->render('office/bookings/index', [
             'bookings'       => $bookings,
+            'stats'          => $stats,
             'selectedStatus' => $status,
             'search'         => $search,
+            'sort'           => $sort,
             'currentPage'    => $page,
             'totalPages'     => $totalPages,
             'totalRecords'   => $totalRecords,

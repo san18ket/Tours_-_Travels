@@ -25,16 +25,72 @@ class InvoiceController extends Controller
 
     public function index(Request $request): Response
     {
-        $invoices = $this->invoiceModel->getAllWithDetails();
+        $allInvoices = $this->invoiceModel->getAllWithDetails();
 
         // Customer authorization: only see own invoices
         if (Session::getUserRole() === 'customer') {
-            $invoices = array_filter($invoices, fn($inv) => (int)$inv['customer_id'] === Session::getUserId());
+            $allInvoices = array_values(array_filter($allInvoices, fn($inv) => (int)$inv['customer_id'] === Session::getUserId()));
         }
 
+        $search = trim((string)$request->get('search', (string)$request->get('q', '')));
+        $status = trim((string)$request->get('status', ''));
+        $page = max(1, (int)$request->get('page', 1));
+        $perPage = in_array((int)$request->get('per_page'), [5, 10, 15, 20, 25, 50, 100], true) ? (int)$request->get('per_page') : 10;
+
+        $filtered = array_filter($allInvoices, function($inv) use ($search, $status) {
+            if ($status !== '' && strtolower($inv['payment_status'] ?? '') !== strtolower($status)) {
+                return false;
+            }
+            if ($search !== '') {
+                $needle = strtolower($search);
+                $haystack = strtolower(
+                    ($inv['invoice_number'] ?? '') . ' ' .
+                    ($inv['booking_code'] ?? '') . ' ' .
+                    ($inv['customer_name'] ?? '') . ' ' .
+                    ($inv['customer_email'] ?? '')
+                );
+                if (!str_contains($haystack, $needle)) {
+                    return false;
+                }
+            }
+            return true;
+        });
+
+        $filtered = array_values($filtered);
+        $totalRecords = count($filtered);
+        $totalPages = max(1, (int)ceil($totalRecords / $perPage));
+        $offset = ($page - 1) * $perPage;
+        $paginatedInvoices = array_slice($filtered, $offset, $perPage);
+
+        // Overall financial sums across entire ledger
+        $totalInvoiced = 0.0;
+        $totalPaid = 0.0;
+        $paidCount = 0;
+        $unpaidCount = 0;
+        foreach ($allInvoices as $inv) {
+            $totalInvoiced += (float)($inv['total_amount'] ?? 0);
+            $totalPaid += (float)($inv['paid_amount'] ?? 0);
+            $st = strtolower($inv['payment_status'] ?? 'unpaid');
+            if ($st === 'paid') $paidCount++;
+            else $unpaidCount++;
+        }
+        $totalOutstanding = max(0.0, $totalInvoiced - $totalPaid);
+
         return $this->render('office/invoices/index', [
-            'invoices' => $invoices,
-            'title'    => 'Invoices & Billing Ledger',
+            'invoices'         => $paginatedInvoices,
+            'totalRecords'     => $totalRecords,
+            'totalAll'         => count($allInvoices),
+            'totalInvoiced'    => $totalInvoiced,
+            'totalPaid'        => $totalPaid,
+            'totalOutstanding' => $totalOutstanding,
+            'paidCount'        => $paidCount,
+            'unpaidCount'      => $unpaidCount,
+            'currentPage'      => $page,
+            'totalPages'       => $totalPages,
+            'perPage'          => $perPage,
+            'search'           => $search,
+            'selectedStatus'   => $status,
+            'title'            => 'Invoices & Billing Ledger',
         ], 'layouts/office');
     }
 

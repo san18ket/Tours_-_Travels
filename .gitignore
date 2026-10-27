@@ -1,0 +1,57 @@
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+storage/logs/
+
+# Cache and temporary files
+cache/
+tmp/
+temp/
+*.tmp
+
+# Dependencies
+/vendor/
+/node_modules/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# User uploads and private documents
+/public/assets/uploads/
+/public/storage/
+
+# Database backups and dumps
+*.sql.bak
+*.dump
+*.sqlite
+*.sqlite3
+
+# Application-generated backups
+/backups/
+/storage/backups/
+
+# Runtime and session files
+/sessions/
+*.pid
+
+# Local configuration and installation state
+config/installed.lock
+
+# Scratch files and experiments
+/scratch/
+
+# Nested Git repositories
+**/.git/

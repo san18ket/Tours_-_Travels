@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Sign In - MANASWI Tours &amp; Travels</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="assets/images/manaswi-icon.png">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <!-- Application CSS -->
+    <link rel="stylesheet" href="assets/css/app.css">
+
+    <style>
+        :root {
+            --brand-blue-deep: #08254f;
+            --brand-blue-primary: #1d72f2;
+            --brand-blue-hover: #0856e2;
+            --brand-blue-light: #2583ff;
+            --brand-text-dark: #08254f;
+            --brand-text-muted: #4d6888;
+            --glass-bg: rgba(255, 255, 255, 0.54);
+            --glass-bg-focus: rgba(255, 255, 255, 0.94);
+            --glass-border: rgba(255, 255, 255, 0.82);
+            --glass-shadow: 0 24px 60px rgba(10, 42, 85, 0.16);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body.auth-body {
+            font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+            min-height: 100vh !important;
+            color: var(--brand-text-dark) !important;
+            overflow-x: hidden !important;
+            background-color: #6eb7e8 !important;
+            background-image: url('assets/images/login-scenic-desktop.jpg') !important;
+            background-position: left center !important;
+            background-size: cover !important;
+            background-repeat: no-repeat !important;
+            background-attachment: fixed !important;
+            display: flex !important;
+            flex-direction: column !important;
+            position: relative !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        /* Ambient Lighting Overlay - transparent over scenery and bus */
+        .scenic-ambient-overlay {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at 15% 15%, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0) 60%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Master Stage Wrapper */
+        .auth-stage {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 2.25rem 3.5rem 1.85rem;
+            max-width: 1720px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Top Bar: Brand, Airplane Trajectory, Language */
+        .auth-topbar {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            position: relative;
+            width: 100%;
+        }
+
+        /* Desktop Brand Identity Block (Top-Left) */
+        .desktop-brand-block {
+            display: flex;
+            align-items: center;
+            gap: 1.15rem;
+            user-select: none;
+        }
+
+        .desktop-brand-emblem {
+            width: 68px;
+            height: 68px;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 12px rgba(10, 45, 95, 0.16));
+            transition: transform 0.3s ease;
+        }
+        .desktop-brand-emblem:hover {
+            transform: scale(1.05) rotate(2deg);
+        }
+
+        .desktop-brand-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .desktop-brand-name {
+            font-size: 1.95rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            color: #0b326d;
+            line-height: 1.1;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85);
+        }
+
+        .desktop-brand-sub {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1963b5;
+            letter-spacing: 0.01em;
+            line-height: 1.2;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85);
+        }
+
+        /* Top-Right: Romantic Flight Trail & Airplane */
+        .top-flight-deco {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            user-select: none;
+            padding-top: 0.25rem;
+        }
+
+        .flight-slogan {
+            font-family: 'Caveat', cursive, sans-serif;
+            font-size: 1.45rem;
+            font-weight: 700;
+            color: #1a5ea6;
+            line-height: 1.15;
+            text-align: right;
+            transform: rotate(-3deg);
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9);
+        }
+
+        .flight-trail-svg {
+            width: 145px;
+            height: 58px;
+            overflow: visible;
+        }
+
+        /* Main Center Grid: Left Hero Content vs Right Glassmorphism Card */
+        .auth-center-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.85fr;
+            align-items: center;
+            gap: 3.5rem;
+            margin: auto 0;
+            width: 100%;
+            padding: 1rem 0;
+        }
+
+        /* Left Hero Block - Placed cleanly in the upper sky region with NO card container so the bus beneath is 100% visible */
+        .hero-left-col {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-self: flex-start;
+            padding: 0 !important;
+            margin-top: 0.5rem;
+            max-width: 500px;
+            user-select: none;
+            background: transparent !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        .hero-tagline-caps {
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.22em;
+            color: #245794;
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.95), 0 0 14px rgba(255, 255, 255, 0.85);
+        }
+
+        .hero-headline {
+            font-size: 3.25rem;
+            font-weight: 800;
+            line-height: 1.15;
+            color: #0b3675;
+            letter-spacing: -0.025em;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(255, 255, 255, 0.95), 0 0 25px rgba(255, 255, 255, 0.9);
+        }
+
+        .hero-headline span {
+            display: block;
+        }
+
+        .hero-description {
+            font-size: 1.05rem;
+            line-height: 1.6;
+            color: #1e4572;
+            max-width: 460px;
+            font-weight: 600;
+            text-shadow: 0 1px 3px rgba(255, 255, 255, 0.95), 0 0 18px rgba(255, 255, 255, 0.85);
+        }
+            font-weight: 500;
+            margin: 0;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+        }
+
+        /* Right Column: Glassmorphism Login Card */
+        .hero-right-col {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .glass-login-card {
+            width: 100%;
+            max-width: 440px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(28px) saturate(180%);
+            -webkit-backdrop-filter: blur(28px) saturate(180%);
+            border: 1.5px solid var(--glass-border);
+            border-radius: 32px;
+            padding: 2.75rem 2.35rem;
+            box-shadow: var(--glass-shadow), inset 0 1px 2px rgba(255, 255, 255, 0.85);
+            position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Card Header */
+        .glass-card-header {
+            margin-bottom: 1.65rem;
+        }
+
+        .glass-card-emblem {
+            width: 44px;
+            height: 44px;
+            object-fit: contain;
+            margin-bottom: 0.65rem;
+            filter: drop-shadow(0 3px 8px rgba(15, 45, 90, 0.15));
+        }
+
+        .glass-card-title {
+            font-size: 1.85rem;
+            font-weight: 800;
+            color: #08254f;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+            margin-bottom: 0.3rem;
+        }
+
+        .glass-card-sub {
+            font-size: 0.95rem;
+            color: #516a87;
+            font-weight: 500;
+        }
+
+        /* Form Fields with Frosted Pill Inputs */
+        .glass-field-group {
+            margin-bottom: 1.15rem;
+            position: relative;
+        }
+
+        .glass-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        .glass-input-icon-left {
+            position: absolute;
+            left: 1.25rem;
+            color: #5c7492;
+            font-size: 1.05rem;
+            pointer-events: none;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .glass-input-pill {
+            width: 100%;
+            height: 52px;
+            background: rgba(255, 255, 255, 0.78);
+            border: 1.5px solid rgba(255, 255, 255, 0.95);
+            border-radius: 9999px;
+            padding: 0 1.25rem 0 3.1rem;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #0d2c54;
+            box-shadow: 0 2px 8px rgba(15, 40, 80, 0.04);
+            transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+            outline: none;
+        }
+
+        .glass-input-pill::placeholder {
+            color: #7b91ab;
+            font-weight: 400;
+        }
+
+        .glass-input-pill:hover {
+            background: rgba(255, 255, 255, 0.88);
+            border-color: rgba(255, 255, 255, 1);
+        }
+
+        .glass-input-pill:focus {
+            background: #ffffff;
+            border-color: #1d72f2;
+            box-shadow: 0 0 0 3.5px rgba(29, 114, 242, 0.18), 0 4px 14px rgba(29, 114, 242, 0.12);
+        }
+
+        .glass-input-wrapper.has-toggle .glass-input-pill {
+            padding-right: 3.25rem;
+        }
+
+        .glass-eye-toggle {
+            position: absolute;
+            right: 0.85rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: #6d84a0;
+            padding: 0.5rem;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s ease, background 0.2s ease;
+            z-index: 2;
+        }
+
+        .glass-eye-toggle:hover {
+            color: #1d72f2;
+            background: rgba(29, 114, 242, 0.08);
+        }
+
+        /* Remember Me & Forgot Password Row */
+        .glass-options-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 0.5rem 0 1.45rem;
+            font-size: 0.88rem;
+        }
+
+        .glass-checkbox-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            cursor: pointer;
+            user-select: none;
+            color: #3e5674;
+            font-weight: 500;
+        }
+
+        .glass-checkbox-label input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 1.8px solid #8ba1ba;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            display: grid;
+            place-content: center;
+            transition: all 0.18s ease;
+        }
+
+        .glass-checkbox-label input[type="checkbox"]:checked {
+            background: #1d72f2;
+            border-color: #1d72f2;
+        }
+
+        .glass-checkbox-label input[type="checkbox"]:checked::before {
+            content: "\f00c";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            font-size: 10px;
+            color: #ffffff;
+        }
+
+        .glass-forgot-link {
+            color: #1d72f2;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.18s ease, text-decoration 0.18s ease;
+        }
+
+        .glass-forgot-link:hover {
+            color: #0b4ec2;
+            text-decoration: underline;
+        }
+
+        /* Submit Login Button */
+        .glass-btn-login {
+            width: 100%;
+            height: 52px;
+            background: linear-gradient(90deg, #1f77fa 0%, #0856e2 100%);
+            border: none;
+            border-radius: 9999px;
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 1.05rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.65rem;
+            box-shadow: 0 10px 24px rgba(24, 110, 235, 0.38);
+            transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 30px rgba(24, 110, 235, 0.48);
+            background: linear-gradient(90deg, #2581ff 0%, #0a5ef3 100%);
+        }
+
+        .glass-btn-login:active {
+            transform: translateY(0);
+            box-shadow: 0 6px 16px rgba(24, 110, 235, 0.35);
+        }
+
+        /* Professional Security Seal */
+        .glass-security-footer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1.65rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid rgba(100, 130, 165, 0.2);
+            color: #557292;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            text-align: center;
+        }
+
+        .glass-security-footer i {
+            color: #1d72f2;
+            font-size: 0.88rem;
+        }
+
+        /* Bottom Trust Badges (Desktop) */
+        .auth-bottombar {
+            display: none !important; /* Hidden on LG desktop screens to keep the bus & scenery 100% visible and clean */
+            align-items: center;
+            gap: 2.25rem;
+            padding: 0 !important;
+            user-select: none;
+            background: transparent !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            border: none !important;
+            border-radius: 0 !important;
+            width: fit-content;
+            box-shadow: none !important;
+        }
+
+        .trust-badge-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.65rem;
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: #ffffff !important;
+            text-shadow: 0 1px 4px rgba(0, 18, 48, 0.85), 0 0 10px rgba(0, 18, 48, 0.7);
+        }
+
+        .trust-badge-icon {
+            font-size: 1.05rem;
+            color: #ffffff !important;
+            filter: drop-shadow(0 2px 4px rgba(0, 18, 48, 0.7));
+        }
+
+        .trust-divider {
+            width: 1px;
+            height: 16px;
+            background: rgba(255, 255, 255, 0.65);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Mobile Centered Brand Header (Visible ONLY on phones / tablets) */
+        .mobile-brand-header {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 1.25rem;
+            padding: 0;
+            background: transparent !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            border: none !important;
+            box-shadow: none !important;
+            position: relative;
+        }
+
+        .mobile-brand-emblem {
+            width: 68px;
+            height: 68px;
+            object-fit: contain;
+            margin-bottom: 0.4rem;
+            filter: drop-shadow(0 4px 12px rgba(10, 45, 95, 0.2));
+        }
+
+        .mobile-brand-name {
+            font-size: 1.85rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            color: #0b326d;
+            line-height: 1.1;
+            text-shadow: 0 1px 3px rgba(255, 255, 255, 0.95), 0 0 18px rgba(255, 255, 255, 0.9);
+        }
+
+        .mobile-brand-sub {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #1963b5;
+            margin-bottom: 0.35rem;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9);
+        }
+
+        .mobile-brand-tagline {
+            font-size: 0.8rem;
+            font-weight: 800;
+            letter-spacing: 0.2em;
+            color: #1a4f8b;
+            text-transform: uppercase;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.95);
+        }
+
+        /* =====================================================================
+           RESPONSIVE BREAKPOINTS (Matching Exact Mobile sm login.jpeg)
+           ===================================================================== */
+        @media (max-width: 992px) {
+            body.auth-body {
+                background-image: url('assets/images/login-scenic-mobile.jpg') !important;
+                background-position: left bottom !important;
+                background-size: cover !important;
+                background-attachment: scroll !important;
+            }
+
+            .auth-stage {
+                padding: 1.5rem 1.25rem 1rem;
+                min-height: 100vh;
+                justify-content: space-between;
+            }
+
+            .desktop-brand-block {
+                display: none;
+            }
+
+            .hero-left-col {
+                display: none;
+            }
+
+            .auth-topbar {
+                margin-bottom: 0.25rem;
+                justify-content: flex-end;
+            }
+
+            .mobile-brand-header {
+                display: flex;
+            }
+
+            .auth-center-grid {
+                grid-template-columns: 1fr;
+                margin: 0 auto;
+                padding: 0;
+                width: 100%;
+                max-width: 420px;
+            }
+
+            .hero-right-col {
+                justify-content: center;
+                width: 100%;
+            }
+
+            .glass-login-card {
+                padding: 2.25rem 1.65rem;
+                border-radius: 28px;
+                max-width: 100%;
+                background: rgba(255, 255, 255, 0.48);
+                backdrop-filter: blur(20px) saturate(180%);
+                -webkit-backdrop-filter: blur(20px) saturate(180%);
+            }
+
+            .auth-bottombar {
+                display: flex !important; /* Show ONLY on responsive devices */
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 1.25rem;
+                margin-top: 1.5rem;
+                padding: 0 !important;
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+            }
+
+            .trust-badge-item {
+                font-size: 0.85rem;
+                color: #ffffff !important;
+                text-shadow: 0 1px 4px rgba(0, 18, 48, 0.85), 0 0 10px rgba(0, 18, 48, 0.7);
+            }
+
+            .trust-divider {
+                height: 14px;
+                background: rgba(255, 255, 255, 0.75);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .auth-stage {
+                padding: 1.25rem 1rem 1rem;
+            }
+
+            .mobile-brand-emblem {
+                width: 64px;
+                height: 64px;
+            }
+
+            .mobile-brand-name {
+                font-size: 1.65rem;
+            }
+
+            .mobile-brand-sub {
+                font-size: 1.05rem;
+            }
+
+            .glass-login-card {
+                padding: 1.85rem 1.35rem;
+                border-radius: 24px;
+            }
+
+            .trust-badge-item {
+                font-size: 0.76rem;
+            }
+            .trust-badge-icon {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body class="auth-body">
+    <!-- Ambient Filter Scrim -->
+    <div class="scenic-ambient-overlay"></div>
+
+    <!-- Master Stage -->
+    <div class="auth-stage">
+        
+        <!-- Top Bar Area -->
+        <header class="auth-topbar">
+            <!-- Desktop Brand Header (Top-Left Pill) -->
+            <div class="desktop-brand-block">
+                <img src="assets/images/manaswi-emblem.png" alt="Manaswi Emblem" class="desktop-brand-emblem">
+                <div class="desktop-brand-text">
+                    <span class="desktop-brand-name">MANASWI</span>
+                    <span class="desktop-brand-sub">Tours &amp; Travels</span>
+                </div>
+            </div>
+
+            <!-- Top-Right: Romantic Heart Flight Trajectory & Airplane -->
+            <div class="top-flight-deco">
+                <div class="flight-slogan">
+                    More Journeys<br>More Memories
+                </div>
+                <svg class="flight-trail-svg" viewBox="0 0 150 60" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <!-- Dotted Flight Trail forming heart loop -->
+                    <path d="M 10 42 C 35 44, 45 40, 60 30 C 72 20, 84 10, 96 18 C 104 25, 96 40, 86 42 C 77 44, 71 35, 83 26 C 94 18, 110 20, 126 14" 
+                          stroke="#1d6ec7" 
+                          stroke-width="1.8" 
+                          stroke-dasharray="3.5 3.5" 
+                          stroke-linecap="round"/>
+                    <!-- Angled Ascending Soaring Airplane -->
+                    <g transform="translate(126, 14) rotate(-15) translate(-126, -14)">
+                        <path d="M 124 14 L 140 7 L 134 16 L 142 22 L 137 23 L 129 18 L 126 20 L 127 24 L 124 25 L 122 20 L 117 19 L 120 17 Z" 
+                              fill="#165ea9"/>
+                    </g>
+                </svg>
+            </div>
+        </header>
+
+        <!-- Mobile View Centered Brand Header (Shown on phone / tablet) -->
+        <div class="mobile-brand-header">
+            <img src="assets/images/manaswi-emblem.png" alt="Manaswi Tours & Travels" class="mobile-brand-emblem">
+            <h1 class="mobile-brand-name">MANASWI</h1>
+            <div class="mobile-brand-sub">Tours &amp; Travels</div>
+            <div class="mobile-brand-tagline">Explore &bull; Travel &bull; Discover</div>
+        </div>
+
+        <!-- Center Master Grid: Left Hero vs Right Glass Form -->
+        <main class="auth-center-grid">
+            <!-- Left Hero Content (Desktop Frosted Showcase Card for 100% Contrast & Professional Aesthetics) -->
+            <section class="hero-left-col">
+                <div class="hero-tagline-caps">
+                    <span>EXPLORE</span>
+                    <span>&bull;</span>
+                    <span>TRAVEL</span>
+                    <span>&bull;</span>
+                    <span>DISCOVER</span>
+                </div>
+                <h2 class="hero-headline">
+                    <span>Your Journey</span>
+                    <span>Our Priority</span>
+                </h2>
+                <p class="hero-description">
+                    Book your next adventure with Manaswi Tours &amp; Travels and explore the world with comfort and safety.
+                </p>
+            </section>
+
+            <!-- Right Glassmorphism Card Container -->
+            <section class="hero-right-col">
+                <div class="glass-login-card">
+                    <!-- Inside Glassmorphism Card Header -->
+                    <div class="glass-card-header">
+                        <img src="assets/images/manaswi-icon.png" alt="Manaswi Emblem" class="glass-card-emblem">
+                        <h2 class="glass-card-title">Welcome Back</h2>
+                        <p class="glass-card-sub">Sign in to continue your journey</p>
+                    </div>
+
+                    <!-- Primary Authentication Form -->
+                    <form action="#" method="POST" id="loginForm" autocomplete="on" onsubmit="event.preventDefault(); alert('Login Form Submitted');">
+                        <!-- Field 1: Email or Mobile Number -->
+                        <div class="glass-field-group">
+                            <div class="glass-input-wrapper">
+                                <span class="glass-input-icon-left">
+                                    <i class="fa-regular fa-user"></i>
+                                </span>
+                                <input type="text" 
+                                       id="login" 
+                                       name="login" 
+                                       class="glass-input-pill" 
+                                       required 
+                                       autofocus 
+                                       placeholder="Email or Mobile Number" 
+                                       aria-label="Email or Mobile Number">
+                            </div>
+                        </div>
+
+                        <!-- Field 2: Password with Reveal Toggle -->
+                        <div class="glass-field-group">
+                            <div class="glass-input-wrapper has-toggle">
+                                <span class="glass-input-icon-left">
+                                    <i class="fa-solid fa-lock"></i>
+                                </span>
+                                <input type="password" 
+                                       id="password" 
+                                       name="password" 
+                                       class="glass-input-pill" 
+                                       required 
+                                       placeholder="Password" 
+                                       aria-label="Password">
+                                <button type="button" 
+                                        id="togglePasswordBtn" 
+                                        class="glass-eye-toggle" 
+                                        onclick="togglePasswordVisibility()" 
+                                        title="Toggle password visibility"
+                                        aria-label="Toggle password visibility">
+                                    <i id="eyeIcon" class="fa-regular fa-eye-slash"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Remember Me & Forgot Password -->
+                        <div class="glass-options-row">
+                            <label class="glass-checkbox-label" for="remember">
+                                <input type="checkbox" name="remember" id="remember" value="1" checked>
+                                <span>Remember Me</span>
+                            </label>
+                            <a href="#" class="glass-forgot-link">
+                                Forgot Password?
+                            </a>
+                        </div>
+
+                        <!-- Submit Button: Arrow + Login -->
+                        <button type="submit" id="signInBtn" class="glass-btn-login">
+                            <i class="fa-solid fa-arrow-right"></i>
+                            <span>Login</span>
+                        </button>
+                    </form>
+
+                    <!-- Professional Security Seal -->
+                    <div class="glass-security-footer">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>Enterprise Operations Gateway &bull; 256-Bit SSL Encrypted</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Bottom Trust Badges -->
+        <footer class="auth-bottombar">
+            <div class="trust-badge-item">
+                <i class="fa-solid fa-shield-halved trust-badge-icon"></i>
+                <span>Safe &amp; Secure</span>
+            </div>
+            <div class="trust-divider"></div>
+            <div class="trust-badge-item">
+                <i class="fa-solid fa-headset trust-badge-icon"></i>
+                <span>24/7 Support</span>
+            </div>
+            <div class="trust-divider"></div>
+            <div class="trust-badge-item">
+                <i class="fa-solid fa-location-dot trust-badge-icon"></i>
+                <span>Trusted Travel Partner</span>
+            </div>
+        </footer>
+
+    </div>
+
+    <script>
+    function togglePasswordVisibility() {
+        var pwdInput = document.getElementById('password');
+        var eyeIcon = document.getElementById('eyeIcon');
+        if (!pwdInput) return;
+        
+        if (pwdInput.type === 'password') {
+            pwdInput.type = 'text';
+            if (eyeIcon) {
+                eyeIcon.classList.remove('fa-eye-slash');
+                eyeIcon.classList.add('fa-eye');
+            }
+        } else {
+            pwdInput.type = 'password';
+            if (eyeIcon) {
+                eyeIcon.classList.remove('fa-eye');
+                eyeIcon.classList.add('fa-eye-slash');
+            }
+        }
+    }
+    </script>
+</body>
+</html>

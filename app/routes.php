@@ -23,6 +23,8 @@ use App\Controllers\ApiController;
 use App\Controllers\UserController;
 use App\Controllers\CustomerController;
 use App\Controllers\RoleController;
+use App\Controllers\MobileApiController;
+use App\Controllers\LanguageController;
 
 $router = new Router();
 
@@ -33,12 +35,17 @@ $router->get('/', function ($request) {
     if (Session::isLoggedIn()) {
         $role = Session::getUserRole();
         if ($role === 'driver') {
-            return Response::redirect(url('/driver/duty'));
+            return Response::redirect(url('/driver/dashboard'));
         }
         return Response::redirect(url('/office/dashboard'));
     }
     return Response::redirect(url('/login'));
 });
+
+// -----------------------------------------------------------------------------
+// Language Selection & Persistence
+// -----------------------------------------------------------------------------
+$router->post('/language/set', [LanguageController::class, 'setLanguage'], ['csrf']);
 
 // -----------------------------------------------------------------------------
 // Authentication
@@ -71,10 +78,10 @@ $router->post('/office/customers/{id}', [CustomerController::class, 'update'], [
 // -----------------------------------------------------------------------------
 // MODULE 3: Bookings — Create Booking and Booking List
 // -----------------------------------------------------------------------------
-$router->get('/office/bookings', [BookingController::class, 'index'], ['auth']);
-$router->get('/office/bookings/create', [BookingController::class, 'create'], ['auth']);
-$router->post('/office/bookings', [BookingController::class, 'store'], ['auth', 'csrf']);
-$router->get('/office/bookings/{id}', [BookingController::class, 'show'], ['auth']);
+$router->get('/office/bookings', [BookingController::class, 'index'], ['auth', 'role:admin,dispatcher']);
+$router->get('/office/bookings/create', [BookingController::class, 'create'], ['auth', 'role:admin,dispatcher']);
+$router->post('/office/bookings', [BookingController::class, 'store'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->get('/office/bookings/{id}', [BookingController::class, 'show'], ['auth', 'role:admin,dispatcher']);
 $router->post('/office/bookings/{id}/status', [BookingController::class, 'updateStatus'], ['auth', 'role:admin,dispatcher', 'csrf']);
 
 // -----------------------------------------------------------------------------
@@ -82,6 +89,7 @@ $router->post('/office/bookings/{id}/status', [BookingController::class, 'update
 // -----------------------------------------------------------------------------
 $router->get('/office/employees', [EmployeeController::class, 'index'], ['auth', 'role:admin']);
 $router->get('/office/employees/create', [EmployeeController::class, 'create'], ['auth', 'role:admin']);
+$router->post('/office/employees/create', [EmployeeController::class, 'store'], ['auth', 'role:admin', 'csrf']);
 $router->post('/office/employees', [EmployeeController::class, 'store'], ['auth', 'role:admin', 'csrf']);
 $router->get('/office/employees/{id}', [EmployeeController::class, 'show'], ['auth', 'role:admin']);
 $router->get('/office/employees/{id}/edit', [EmployeeController::class, 'edit'], ['auth', 'role:admin']);
@@ -102,20 +110,17 @@ $router->get('/office/users', [UserController::class, 'index'], ['auth', 'role:a
 $router->get('/office/users/create', [UserController::class, 'create'], ['auth', 'role:admin']);
 $router->post('/office/users/create', [UserController::class, 'store'], ['auth', 'role:admin', 'csrf']);
 $router->post('/office/users', [UserController::class, 'store'], ['auth', 'role:admin', 'csrf']);
-$router->get('/office/users/roles', [RoleController::class, 'permissionIndex'], ['auth', 'role:admin']);
+// Role and Permission Management (Admin Only)
 $router->get('/office/roles', [RoleController::class, 'index'], ['auth', 'role:admin']);
 $router->post('/office/roles', [RoleController::class, 'store'], ['auth', 'role:admin', 'csrf']);
 $router->post('/office/roles/{id}/update', [RoleController::class, 'update'], ['auth', 'role:admin', 'csrf']);
 $router->post('/office/roles/{id}/delete', [RoleController::class, 'destroy'], ['auth', 'role:admin', 'csrf']);
-$router->get('/office/roles/{id}/permissions', [RoleController::class, 'permissionCreate'], ['auth', 'role:admin']);
-
-// Role Permission Matrix (Matches school-management-system architecture)
 $router->get('/office/role-permission', [RoleController::class, 'permissionIndex'], ['auth', 'role:admin']);
 $router->get('/office/role-permission/assign', [RoleController::class, 'permissionCreate'], ['auth', 'role:admin']);
-$router->get('/office/role-permission/create', [RoleController::class, 'permissionCreate'], ['auth', 'role:admin']);
 $router->get('/office/role-permission/options/{id}', [RoleController::class, 'permissionOptions'], ['auth', 'role:admin']);
 $router->get('/office/role-permission/user-options/{id}', [RoleController::class, 'userPermissionOptions'], ['auth', 'role:admin']);
 $router->post('/office/role-permission', [RoleController::class, 'permissionStore'], ['auth', 'role:admin', 'csrf']);
+$router->get('/office/users/roles', [RoleController::class, 'permissionCreate'], ['auth', 'role:admin']);
 $router->get('/office/users/{id}/edit', [UserController::class, 'edit'], ['auth', 'role:admin']);
 $router->post('/office/users/{id}', [UserController::class, 'update'], ['auth', 'role:admin', 'csrf']);
 $router->post('/office/users/{id}/toggle-status', [UserController::class, 'toggleStatus'], ['auth', 'role:admin', 'csrf']);
@@ -161,9 +166,9 @@ $router->post('/office/dispatch/assign', [DispatchController::class, 'assign'], 
 // -----------------------------------------------------------------------------
 // Preserved Billing & Financial Compliance Records (Retained, No Dropped Tables)
 // -----------------------------------------------------------------------------
-$router->get('/office/invoices', [InvoiceController::class, 'index'], ['auth']);
-$router->get('/office/invoices/{id}', [InvoiceController::class, 'show'], ['auth']);
-$router->get('/office/invoices/{id}/print', [InvoiceController::class, 'printInvoice'], ['auth']);
+$router->get('/office/invoices', [InvoiceController::class, 'index'], ['auth', 'role:admin,dispatcher']);
+$router->get('/office/invoices/{id}', [InvoiceController::class, 'show'], ['auth', 'role:admin,dispatcher']);
+$router->get('/office/invoices/{id}/print', [InvoiceController::class, 'printInvoice'], ['auth', 'role:admin,dispatcher']);
 $router->post('/office/invoices/generate/{booking_id}', [InvoiceController::class, 'generate'], ['auth', 'role:admin,dispatcher', 'csrf']);
 $router->post('/office/invoices/{id}/payment', [InvoiceController::class, 'recordPayment'], ['auth', 'role:admin,dispatcher', 'csrf']);
 
@@ -175,20 +180,46 @@ $router->post('/office/backups/create', [BackupController::class, 'create'], ['a
 $router->post('/office/backups/restore', [BackupController::class, 'restore'], ['auth', 'role:admin', 'csrf']);
 
 // -----------------------------------------------------------------------------
-// Driver Mobile Portal (PWA Console)
+// MODULE 19: Dedicated Driver Portal — Role-Based UI, Sidebar, Navbar & Pages
 // -----------------------------------------------------------------------------
-$router->get('/driver/duty', [DriverPortalController::class, 'duty'], ['auth', 'role:driver']);
-$router->post('/driver/duty/toggle', [DriverPortalController::class, 'toggleDuty'], ['auth', 'role:driver', 'csrf']);
+$router->get('/driver', function ($request) {
+    return Response::redirect(url('/driver/dashboard'));
+}, ['auth', 'role:driver']);
+$router->get('/driver/dashboard', [DriverPortalController::class, 'dashboard'], ['auth', 'role:driver']);
+$router->get('/driver/trips', [DriverPortalController::class, 'assignedTrips'], ['auth', 'role:driver']);
+$router->get('/driver/trips/{id}', [DriverPortalController::class, 'tripDetails'], ['auth', 'role:driver']);
 $router->post('/driver/trips/{id}/accept', [DriverPortalController::class, 'acceptTrip'], ['auth', 'role:driver', 'csrf']);
 $router->post('/driver/trips/{id}/start', [DriverPortalController::class, 'startTrip'], ['auth', 'role:driver', 'csrf']);
 $router->post('/driver/trips/{id}/complete', [DriverPortalController::class, 'completeTrip'], ['auth', 'role:driver', 'csrf']);
 $router->get('/driver/history', [DriverPortalController::class, 'history'], ['auth', 'role:driver']);
+$router->get('/driver/vehicle', [DriverPortalController::class, 'vehicle'], ['auth', 'role:driver']);
+$router->get('/driver/location', [DriverPortalController::class, 'location'], ['auth', 'role:driver']);
+$router->get('/driver/profile', [DriverPortalController::class, 'profile'], ['auth', 'role:driver']);
+$router->post('/driver/profile', [DriverPortalController::class, 'updateProfile'], ['auth', 'role:driver', 'csrf']);
+$router->post('/driver/profile/password', [DriverPortalController::class, 'updatePassword'], ['auth', 'role:driver', 'csrf']);
+$router->post('/driver/duty/toggle', [DriverPortalController::class, 'toggleDuty'], ['auth', 'role:driver', 'csrf']);
+$router->get('/driver/duty', function ($request) {
+    return Response::redirect(url('/driver/dashboard'));
+}, ['auth', 'role:driver']);
 
 // -----------------------------------------------------------------------------
 // Telemetry & Sync APIs
 // -----------------------------------------------------------------------------
-$router->post('/api/gps/update', [ApiController::class, 'updateGps'], ['auth', 'role:driver', 'throttle:gps']);
+$router->post('/api/gps/update', [ApiController::class, 'updateGps'], ['auth', 'role:driver', 'csrf', 'throttle:gps']);
 $router->get('/api/fleet/live', [ApiController::class, 'fleetLive'], ['auth', 'role:admin,dispatcher', 'throttle:api']);
 $router->get('/api/sync/status', [ApiController::class, 'syncStatus']);
+
+// -----------------------------------------------------------------------------
+// Versioned Mobile Driver API (Native Background Tracking & Offline Sync)
+// -----------------------------------------------------------------------------
+$router->post('/api/mobile/v1/auth/login', [MobileApiController::class, 'login'], ['throttle:login']);
+$router->post('/api/mobile/v1/auth/refresh', [MobileApiController::class, 'refresh'], ['throttle:api']);
+$router->post('/api/mobile/v1/auth/logout', [MobileApiController::class, 'logout'], ['mobile_auth']);
+$router->get('/api/mobile/v1/driver/me', [MobileApiController::class, 'me'], ['mobile_auth']);
+$router->get('/api/mobile/v1/driver/trips', [MobileApiController::class, 'trips'], ['mobile_auth']);
+$router->get('/api/mobile/v1/tracking/status', [MobileApiController::class, 'trackingStatus'], ['mobile_auth']);
+$router->post('/api/mobile/v1/tracking/start', [MobileApiController::class, 'trackingStart'], ['mobile_auth']);
+$router->post('/api/mobile/v1/tracking/stop', [MobileApiController::class, 'trackingStop'], ['mobile_auth']);
+$router->post('/api/mobile/v1/gps', [MobileApiController::class, 'syncGps'], ['mobile_auth', 'throttle:gps']);
 
 return $router;

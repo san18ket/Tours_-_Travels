@@ -30,6 +30,9 @@ date_default_timezone_set(Config::get('app.timezone', 'Asia/Kolkata'));
 // Start secure session
 Session::start();
 
+// Initialize active language locale from session/cookie/user preference
+\App\Core\Language::init();
+
 // Custom global exception handler
 set_exception_handler(function (\Throwable $e) {
     $incidentId = 'INC-' . strtoupper(substr(hash('sha256', uniqid('', true)), 0, 8));

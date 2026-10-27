@@ -25,9 +25,15 @@ class AuthController extends Controller
             return $this->redirectBasedOnRole(Session::getUserRole());
         }
 
-        return $this->render('auth/login', [
-            'title' => 'Sign In - VoyageGo'
+        $response = $this->render('auth/login', [
+            'title' => 'Sign In - MANASWI Tours & Travels'
         ], 'layouts/auth');
+
+        $response->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0, post-check=0, pre-check=0');
+        $response->setHeader('Pragma', 'no-cache');
+        $response->setHeader('Expires', 'Thu, 01 Jan 1970 00:00:00 GMT');
+
+        return $response;
     }
 
     public function login(Request $request): Response
@@ -79,7 +85,7 @@ class AuthController extends Controller
     {
         switch ($role) {
             case 'driver':
-                return $this->redirect(url('/driver/duty'));
+                return $this->redirect(url('/driver/dashboard'));
             case 'admin':
             case 'dispatcher':
                 return $this->redirect(url('/office/dashboard'));

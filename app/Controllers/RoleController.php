@@ -359,16 +359,25 @@ class RoleController extends Controller
             }
         }
 
+        $selectedPermissionNames = [];
+        if (!empty($selectedPermissionIds)) {
+            $placeholders = implode(',', array_fill(0, count($selectedPermissionIds), '?'));
+            $permNameStmt = $pdo->prepare("SELECT name FROM `permissions` WHERE id IN ({$placeholders})");
+            $permNameStmt->execute($selectedPermissionIds);
+            $selectedPermissionNames = $permNameStmt->fetchAll(PDO::FETCH_COLUMN) ?: [];
+        }
+
         return $this->render('office/role_permissions/assign', [
-            'scopeMode'             => $scopeMode,
-            'roles'                 => $roles,
-            'role'                  => $role,
-            'users'                 => $users,
-            'user'                  => $selectedUser,
-            'isOwnerRole'           => $isOwnerRole,
-            'catalogue'             => $catalogue,
-            'selectedPermissionIds' => $selectedPermissionIds,
-            'title'                 => 'Role Permission Assignment Matrix',
+            'scopeMode'               => $scopeMode,
+            'roles'                   => $roles,
+            'role'                    => $role,
+            'users'                   => $users,
+            'user'                    => $selectedUser,
+            'isOwnerRole'             => $isOwnerRole,
+            'catalogue'               => $catalogue,
+            'selectedPermissionIds'   => $selectedPermissionIds,
+            'selectedPermissionNames' => $selectedPermissionNames,
+            'title'                   => 'Role Permission Assignment Matrix',
         ], 'layouts/office');
     }
 
@@ -509,8 +518,8 @@ class RoleController extends Controller
                 return $this->redirect(url('/office/role-permission'));
             }
 
-            $permissionIds = is_array($data['permissions'] ?? null) ? array_map('intval', $data['permissions']) : [];
-            $permissionIds = array_values(array_unique(array_filter($permissionIds, static fn($id) => $id > 0)));
+            $rawPermissions = is_array($data['permissions'] ?? null) ? $data['permissions'] : [];
+            $permissionIds = PermissionRegistry::resolvePermissionIds($pdo, $rawPermissions);
 
             $pdo->beginTransaction();
             try {
@@ -581,7 +590,8 @@ class RoleController extends Controller
             return $this->redirect(url('/office/role-permission'));
         }
 
-        $permissionIds = is_array($data['permissions'] ?? null) ? array_map('intval', $data['permissions']) : [];
+        $rawPermissions = is_array($data['permissions'] ?? null) ? $data['permissions'] : [];
+        $permissionIds = PermissionRegistry::resolvePermissionIds($pdo, $rawPermissions);
         $this->roleModel->syncPermissions($roleId, $permissionIds);
 
         $this->auditLog->record(

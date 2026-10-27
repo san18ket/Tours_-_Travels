@@ -1,19 +1,20 @@
-<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-    <div>
-        <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--vg-navy-900);">Roles &amp; Permissions Matrix</h1>
-        <p style="color: var(--vg-text-secondary); font-size: 0.9rem;">Architectural access control policy enforced across office command and driver mobile systems.</p>
-    </div>
-    <div style="display: flex; gap: 0.5rem;">
-        <a href="<?= url('/office/users') ?>" class="btn btn-outline btn-sm">
-            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-            <span>User Directory</span>
-        </a>
-        <a href="<?= url('/office/users/create') ?>" class="btn btn-primary btn-sm">
-            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
-            <span>Add User</span>
-        </a>
-    </div>
-</div>
+<?php
+$rolesActions = '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">'
+    . '<a href="' . url('/office/users') . '" class="btn btn-outline btn-sm">User Directory</a>'
+    . '<a href="' . url('/office/users/create') . '" class="btn btn-primary btn-sm">+ Add User</a>'
+    . '</div>';
+?>
+<?= render_page_header([
+    'title'       => 'Roles & Permissions Matrix',
+    'subtitle'    => 'Architectural access control policy enforced across office command and driver mobile systems.',
+    'breadcrumbs' => [
+        ['label' => 'User Management', 'url' => url('/office/users')],
+        ['label' => 'Permissions Matrix', 'url' => ''],
+    ],
+    'actions'     => $rolesActions,
+    'image'       => 'header-roles.jpg',
+    'badge'       => 'Server Enforced Policy',
+]) ?>
 
 <div class="vg-card">
     <div class="card-header">

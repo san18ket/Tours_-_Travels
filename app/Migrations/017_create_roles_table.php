@@ -29,23 +29,7 @@ return new class {
             $pdo->exec("ALTER TABLE `users` MODIFY COLUMN `role` VARCHAR(50) NOT NULL DEFAULT 'customer'");
         }
 
-        // 3. Seed default system roles if table is empty
-        $count = (int)$pdo->query("SELECT COUNT(*) FROM `roles`")->fetchColumn();
-        if ($count === 0) {
-            $now = date('Y-m-d H:i:s');
-            $stmt = $pdo->prepare("INSERT INTO `roles` (`name`, `slug`, `description`, `is_system`, `status`, `created_at`, `updated_at`) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            
-            $defaults = [
-                ['Administrator', 'admin', 'Full command center authority, system settings, and administrative management', 1, 'active'],
-                ['Dispatcher', 'dispatcher', 'Trip operations dispatch, chauffeur duty deployment, and fleet live radar', 1, 'active'],
-                ['Chauffeur / Driver', 'driver', 'Mobile chauffeur duty portal, trip manifests, and transit execution', 1, 'active'],
-                ['Customer', 'customer', 'Verified guest client portal, reservation booking, and invoice receipts', 1, 'active'],
-            ];
-
-            foreach ($defaults as $row) {
-                $stmt->execute([$row[0], $row[1], $row[2], $row[3], $row[4], $now, $now]);
-            }
-        }
+        // 3. Keep roles table blank like other tables - do not insert dummy records
     }
 
     public function down(PDO $pdo): void

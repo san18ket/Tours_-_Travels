@@ -1,18 +1,21 @@
-<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-    <div>
-        <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--vg-navy-900);">Database Backups & Disaster Recovery</h1>
-        <p style="color: var(--vg-text-secondary); font-size: 0.9rem;">Automated snapshots, SHA-256 integrity verification, retention policy enforcement, and transactional safe restore.</p>
-    </div>
-    <div>
-        <form action="<?= url('/office/backups/create') ?>" method="POST" style="margin: 0;">
-            <?= csrf_field() ?>
-            <button type="submit" class="btn btn-primary">
+<?= render_page_header([
+    'title'       => 'Database Backups & Disaster Recovery',
+    'description' => 'Automated snapshots, SHA-256 integrity verification, retention policy enforcement, and transactional safe restore.',
+    'image'       => 'header-backups.jpg',
+    'badge'       => 'System Integrity Active',
+    'breadcrumbs' => [
+        ['label' => __('sidebar.dashboard', 'Dashboard'), 'url' => url('/office/dashboard')],
+        ['label' => 'Backups & Recovery', 'url' => ''],
+    ],
+    'actions'     => '
+        <form action="' . url('/office/backups/create') . '" method="POST" style="margin: 0;">
+            ' . csrf_field() . '
+            <button type="submit" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem;">
                 <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                 <span>Create Backup Snapshot</span>
             </button>
-        </form>
-    </div>
-</div>
+        </form>',
+]) ?>
 
 <div class="vg-card">
     <div class="card-header">

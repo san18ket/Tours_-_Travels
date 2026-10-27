@@ -1,645 +1,724 @@
 <?php
 /**
- * VoyageGo — Premium Multi-Step Customer Profile Registration
- * Professional 4-step onboarding wizard:
- * Step 1: Basic Identity
- * Step 2: Contact Information
- * Step 3: Residential & Billing Address
- * Step 4: Review, Record Settings & Final Confirmation
+ * VoyageGo / MANASWI Tours & Travels — Master Modern Customer Registration Form
+ * Pixel-perfect implementation matching reference UI for desktop (lg) and responsive mobile (sm)
  */
 ?>
 
-<!-- Breadcrumb -->
-<nav class="breadcrumb-container" aria-label="Breadcrumb" style="margin-bottom: 1.25rem;">
-    <ol style="display: flex; align-items: center; gap: 0.5rem; list-style: none; padding: 0; margin: 0; font-size: 0.85rem; color: var(--vg-text-muted);">
-        <li>
-            <a href="<?= url('/office/dashboard') ?>" style="color: var(--vg-blue-500); text-decoration: none; font-weight: 500;">Dashboard</a>
-        </li>
-        <li style="color: var(--vg-text-muted);">&rsaquo;</li>
-        <li>
-            <a href="<?= url('/office/customers') ?>" style="color: var(--vg-blue-500); text-decoration: none; font-weight: 500;">Customers</a>
-        </li>
-        <li style="color: var(--vg-text-muted);">&rsaquo;</li>
-        <li style="color: var(--vg-navy-900); font-weight: 600;" aria-current="page">Add Customer</li>
-    </ol>
-</nav>
+<div class="modern-form-wrapper">
 
-<!-- Page Header with Subtle Glassmorphic Background -->
-<div class="customer-header-card" style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.96) 0%, rgba(30, 41, 59, 0.94) 100%); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--vg-radius-lg); padding: 1.5rem 1.75rem; margin-bottom: 1.75rem; color: #FFF; box-shadow: var(--vg-shadow-md); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-    <div style="display: flex; align-items: center; gap: 1rem;">
-        <div style="width: 52px; height: 52px; border-radius: 12px; background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);">
-            <svg width="26" height="26" fill="none" stroke="#FFFFFF" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
-        </div>
-        <div>
-            <div style="display: flex; align-items: center; gap: 0.65rem;">
-                <h1 style="font-size: 1.45rem; font-weight: 800; color: #FFFFFF; margin: 0; letter-spacing: -0.01em;">Register Customer Profile</h1>
-                <span style="background: rgba(217, 119, 6, 0.2); border: 1px solid rgba(245, 158, 11, 0.4); color: #FBBF24; font-size: 0.72rem; font-weight: 700; padding: 0.2rem 0.55rem; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.05em;">Customer Profile Only</span>
+    <!-- Top Header: Back Button, Title, Subtitle, and 4-Step Stepper -->
+    <div class="modern-form-header-bar">
+        <div class="modern-header-left">
+            <a href="<?= url('/office/customers') ?>" class="modern-back-btn" title="<?= e(__('customer_form.back_to_customers', [], 'Back to Customers')) ?>" aria-label="Back">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <div class="modern-header-meta">
+                <h1 class="modern-form-title"><?= e(__('customer_form.register_title', [], 'Register Customer Profile')) ?></h1>
+                <p class="modern-form-subtitle"><?= e(__('customer_form.register_subtitle', [], 'Create a verified guest profile for reservations.')) ?></p>
             </div>
-            <p style="color: #94A3B8; font-size: 0.88rem; margin: 0.25rem 0 0 0;">Create a verified customer profile for bookings and invoices without office console credentials.</p>
         </div>
-    </div>
-    <div style="display: flex; gap: 0.75rem;">
-        <a href="<?= url('/office/customers') ?>" class="btn" style="background: rgba(255, 255, 255, 0.1); color: #FFF; border: 1px solid rgba(255, 255, 255, 0.2); backdrop-filter: blur(4px);">
-            &larr; Back to Customers
-        </a>
-    </div>
-</div>
 
-<!-- Duplicate Records Warning Banner (If Triggered by Backend) -->
-<?php if (!empty($duplicates)): ?>
-<div style="background: #FFFBEB; border: 1px solid #FCD34D; border-radius: var(--vg-radius-md); padding: 1.25rem 1.5rem; margin-bottom: 1.75rem; box-shadow: var(--vg-shadow-sm);">
-    <div style="display: flex; gap: 0.85rem; align-items: flex-start;">
-        <div style="font-size: 1.5rem; color: #D97706; line-height: 1;">⚠️</div>
-        <div style="flex: 1;">
-            <h3 style="font-size: 1rem; font-weight: 700; color: #92400E; margin: 0 0 0.4rem 0;">Potential Matching Customer Record Detected</h3>
-            <p style="font-size: 0.88rem; color: #78350F; margin: 0 0 0.85rem 0;">
-                The contact phone or email entered matches one or more existing customer records. To avoid accidental duplicates, please review existing accounts:
-            </p>
-            <div style="background: #FFF; border: 1px solid #FDE68A; border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 0.85rem;">
-                <ul style="margin: 0; padding-left: 1.2rem; font-size: 0.88rem; color: var(--vg-navy-900);">
-                    <?php foreach ($duplicates as $dup): ?>
-                        <li style="margin-bottom: 0.35rem;">
-                            <strong><?= e($dup['name']) ?></strong> (<code><?= e($dup['customer_code']) ?></code>) — Phone: <?= e($dup['phone']) ?> <?= !empty($dup['email']) ? '• Email: ' . e($dup['email']) : '' ?> <?= !empty($dup['city']) ? '• City: ' . e($dup['city']) : '' ?>
-                            <a href="<?= url('/office/customers/' . $dup['id']) ?>" target="_blank" style="color: var(--vg-blue-500); font-weight: 600; margin-left: 0.5rem; text-decoration: underline;">View Profile &rarr;</a>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
+        <!-- 4-Step Stepper Track -->
+        <div class="modern-stepper-container">
+            <div class="modern-stepper-track">
+                <!-- Step 1 -->
+                <button type="button" class="modern-step-item active" data-step-target="1" onclick="wizardGoToStep(1)">
+                    <span class="modern-step-circle">1</span>
+                    <span class="modern-step-label"><?= e(__('customer_form.step1_title', [], 'Personal Details')) ?></span>
+                </button>
+                <div class="modern-step-connector" id="stepConn1"></div>
+
+                <!-- Step 2 -->
+                <button type="button" class="modern-step-item" data-step-target="2" onclick="wizardGoToStep(2)">
+                    <span class="modern-step-circle">2</span>
+                    <span class="modern-step-label"><?= e(__('customer_form.step2_title', [], 'Contact Details')) ?></span>
+                </button>
+                <div class="modern-step-connector" id="stepConn2"></div>
+
+                <!-- Step 3 -->
+                <button type="button" class="modern-step-item" data-step-target="3" onclick="wizardGoToStep(3)">
+                    <span class="modern-step-circle">3</span>
+                    <span class="modern-step-label"><?= e(__('customer_form.documents', [], 'Documents')) ?></span>
+                </button>
+                <div class="modern-step-connector" id="stepConn3"></div>
+
+                <!-- Step 4 -->
+                <button type="button" class="modern-step-item" data-step-target="4" onclick="wizardGoToStep(4)">
+                    <span class="modern-step-circle">4</span>
+                    <span class="modern-step-label"><?= e(__('customer_form.step4_title', [], 'Review & Save')) ?></span>
+                </button>
             </div>
-            <label style="display: flex; align-items: center; gap: 0.6rem; font-size: 0.88rem; font-weight: 600; color: #92400E; cursor: pointer;">
-                <input type="checkbox" name="confirm_duplicate" value="1" form="createCustomerForm" id="confirmDuplicateCheckbox" style="width: 17px; height: 17px; cursor: pointer;">
-                <span>I have reviewed the existing records and confirm this is a distinct customer profile with shared contact information.</span>
-            </label>
         </div>
     </div>
-</div>
-<?php endif; ?>
 
-<!-- Multi-Step Wizard Progress Stepper (4 Steps) -->
-<div class="vg-card wizard-stepper-card" style="box-shadow: var(--vg-shadow-sm); border: 1px solid var(--vg-pearl-200); border-radius: var(--vg-radius-md); margin-bottom: 1.75rem; padding: 1.25rem 1.5rem; background: #FFFFFF;">
-    <!-- Progress percentage bar -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-        <span style="font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--vg-navy-900);">
-            Registration Progress: <span id="wizardStepLabel" style="color: var(--vg-blue-500);">Step 1 of 4</span>
-        </span>
-        <span id="wizardPercentLabel" style="font-size: 0.82rem; font-weight: 800; color: var(--vg-blue-500);">25% Complete</span>
+    <!-- Duplicate Warning Banner (If Triggered by Backend) -->
+    <?php if (!empty($duplicates)): ?>
+    <div style="background: #FFFBEB; border: 1.5px solid #FCD34D; border-radius: 18px; padding: 1.25rem 1.5rem; margin-bottom: 1.75rem; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.08);">
+        <div style="display: flex; gap: 0.85rem; align-items: flex-start;">
+            <div style="font-size: 1.5rem; color: #D97706; line-height: 1;">⚠️</div>
+            <div style="flex: 1;">
+                <h3 style="font-size: 1rem; font-weight: 700; color: #92400E; margin: 0 0 0.4rem 0;"><?= __('customer_form.dup_detected', [], 'Potential Duplicate Customer Record Detected') ?></h3>
+                <p style="font-size: 0.88rem; color: #78350F; margin: 0 0 0.85rem 0;">
+                    <?= __('customer_form.dup_desc', [], 'A customer with a matching phone number or email is already registered:') ?>
+                </p>
+                <div style="background: #FFF; border: 1px solid #FDE68A; border-radius: 10px; padding: 0.75rem 1rem; margin-bottom: 0.85rem;">
+                    <ul style="margin: 0; padding-left: 1.2rem; font-size: 0.88rem; color: #0C2B52;">
+                        <?php foreach ($duplicates as $dup): ?>
+                            <li style="margin-bottom: 0.35rem;">
+                                <strong><?= e($dup['name']) ?></strong> (<code><?= e($dup['customer_code']) ?></code>) &bull; <?= e($dup['phone']) ?> <?= !empty($dup['email']) ? '&bull; ' . e($dup['email']) : '' ?>
+                                <a href="<?= url('/office/customers/' . $dup['id']) ?>" target="_blank" style="color: #176B5B; font-weight: 600; margin-left: 0.5rem; text-decoration: underline;">View Profile &rarr;</a>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+                <label style="display: flex; align-items: center; gap: 0.6rem; font-size: 0.88rem; font-weight: 600; color: #92400E; cursor: pointer;">
+                    <input type="checkbox" name="confirm_duplicate" value="1" form="createCustomerForm" id="confirmDuplicateCheckbox" style="width: 17px; height: 17px; cursor: pointer;">
+                    <span><?= __('customer_form.dup_confirm', [], 'I confirm this is a new customer and wish to continue registering.') ?></span>
+                </label>
+            </div>
+        </div>
     </div>
-    
-    <div style="height: 6px; background: #E2E8F0; border-radius: 999px; overflow: hidden; margin-bottom: 1.5rem;">
-        <div id="wizardProgressBar" style="width: 25%; height: 100%; background: linear-gradient(90deg, #2563EB 0%, #3B82F6 100%); transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 999px;"></div>
-    </div>
+    <?php endif; ?>
 
-    <!-- Interactive Step Badges (4 Clean Steps) -->
-    <div class="stepper-indicators-container" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; position: relative;">
-        <!-- Step 1 Indicator -->
-        <button type="button" class="step-indicator-btn active" data-target-step="1" onclick="wizardGoToStep(1)">
-            <div class="step-indicator-badge">
-                <span class="step-num">1</span>
-                <svg class="step-check" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-            </div>
-            <div class="step-indicator-text">
-                <span class="step-title">Basic Info</span>
-                <span class="step-desc">Guest Identity</span>
-            </div>
-        </button>
+    <!-- Master Form Container -->
+    <form action="<?= url('/office/customers') ?>" method="POST" id="createCustomerForm" enctype="multipart/form-data" novalidate>
+        <?= csrf_field() ?>
+        <input type="hidden" name="target_entity" value="customer">
 
-        <!-- Step 2 Indicator -->
-        <button type="button" class="step-indicator-btn" data-target-step="2" onclick="wizardGoToStep(2)">
-            <div class="step-indicator-badge">
-                <span class="step-num">2</span>
-                <svg class="step-check" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-            </div>
-            <div class="step-indicator-text">
-                <span class="step-title">Contact</span>
-                <span class="step-desc">Mobile &amp; Email</span>
-            </div>
-        </button>
-
-        <!-- Step 3 Indicator -->
-        <button type="button" class="step-indicator-btn" data-target-step="3" onclick="wizardGoToStep(3)">
-            <div class="step-indicator-badge">
-                <span class="step-num">3</span>
-                <svg class="step-check" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-            </div>
-            <div class="step-indicator-text">
-                <span class="step-title">Address</span>
-                <span class="step-desc">Billing Details</span>
-            </div>
-        </button>
-
-        <!-- Step 4 Indicator (Review & Save) -->
-        <button type="button" class="step-indicator-btn" data-target-step="4" onclick="wizardGoToStep(4)">
-            <div class="step-indicator-badge">
-                <span class="step-num">4</span>
-                <svg class="step-check" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-            </div>
-            <div class="step-indicator-text">
-                <span class="step-title">Review &amp; Save</span>
-                <span class="step-desc">Settings &amp; Save</span>
-            </div>
-        </button>
-    </div>
-</div>
-
-<!-- Main Multi-Step Form Layout -->
-<form action="<?= url('/office/customers') ?>" method="POST" id="createCustomerForm" novalidate>
-    <?= csrf_field() ?>
-    <input type="hidden" name="target_entity" value="customer">
-
-    <!-- ========================================================================= -->
-    <!-- STEP 1: Basic Information -->
-    <!-- ========================================================================= -->
-    <div class="wizard-step-panel" id="wizardStepPanel1" data-step="1">
-        <div class="vg-card" style="box-shadow: var(--vg-shadow-sm); border: 1px solid var(--vg-pearl-200); border-radius: var(--vg-radius-md);">
-            <div class="card-header" style="background: var(--vg-pearl-50); border-bottom: 1px solid var(--vg-pearl-200); padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between;">
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <span style="width: 28px; height: 28px; border-radius: 50%; background: var(--vg-navy-900); color: #FFF; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 800;">01</span>
-                    <div>
-                        <h2 class="card-title" style="font-size: 1.1rem; font-weight: 700; color: var(--vg-navy-900); margin: 0;">Basic Information</h2>
-                        <span style="font-size: 0.8rem; color: var(--vg-text-muted);">Guest legal identity, respectful title and personal details</span>
+        <!-- ========================================================================= -->
+        <!-- STEP 1: Personal Details & Profile Photo                                 -->
+        <!-- ========================================================================= -->
+        <div class="modern-step-panel" id="wizardPanel1">
+            <div class="modern-form-card">
+                <!-- Section Header -->
+                <div class="modern-section-header">
+                    <div class="modern-section-badge">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div class="modern-section-meta">
+                        <h2 class="modern-section-title">Personal Details</h2>
+                        <p class="modern-section-sub">Basic customer identity, profile photo, and personal information.</p>
                     </div>
                 </div>
-                <span class="step-tag" style="background: #EFF6FF; color: #2563EB; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: 12px; border: 1px solid #BFDBFE;">Step 1 of 4</span>
-            </div>
-            <div class="card-body" style="padding: 1.75rem 1.5rem;">
-                
-                <div style="display: grid; grid-template-columns: 140px 1fr; gap: 1.25rem; margin-bottom: 1.5rem;" class="vg-split-2">
-                    <!-- Title -->
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label class="form-label" for="title" style="font-weight: 600; font-size: 0.85rem; color: var(--vg-navy-900);">Salutation / Title</label>
-                        <select id="title" name="title" class="form-select">
-                            <option value="" <?= empty($old['title']) ? 'selected' : '' ?>>— None —</option>
-                            <option value="Mr" <?= ($old['title'] ?? '') === 'Mr' ? 'selected' : '' ?>>Mr.</option>
-                            <option value="Mrs" <?= ($old['title'] ?? '') === 'Mrs' ? 'selected' : '' ?>>Mrs.</option>
-                            <option value="Ms" <?= ($old['title'] ?? '') === 'Ms' ? 'selected' : '' ?>>Ms.</option>
-                            <option value="Dr" <?= ($old['title'] ?? '') === 'Dr' ? 'selected' : '' ?>>Dr.</option>
-                            <option value="Prof" <?= ($old['title'] ?? '') === 'Prof' ? 'selected' : '' ?>>Prof.</option>
-                            <option value="Lord" <?= ($old['title'] ?? '') === 'Lord' ? 'selected' : '' ?>>Lord</option>
-                            <option value="Lady" <?= ($old['title'] ?? '') === 'Lady' ? 'selected' : '' ?>>Lady</option>
-                        </select>
+
+                <!-- Professional Profile Photo Upload Component -->
+                <div class="customer-avatar-upload-card">
+                    <div class="customer-avatar-preview-wrap" id="avatarDropZone" onclick="document.getElementById('profile_photo').click()" title="Click to upload profile photo">
+                        <input type="file" id="profile_photo" name="profile_photo" accept="image/png,image/jpeg,image/jpg,image/webp" style="display: none;" onchange="handleProfilePhotoChange(this)" onclick="event.stopPropagation()">
+                        <input type="hidden" name="profile_photo_base64" id="profile_photo_base64" value="">
+                        <div class="avatar-default-icon" id="avatarDefaultIcon">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <img id="avatarPreviewImg" src="" alt="Profile Photo" style="display: none; width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                        <div class="avatar-camera-badge" title="Upload Photo">
+                            <i class="fa-solid fa-camera"></i>
+                        </div>
+                    </div>
+                    <div class="customer-avatar-meta">
+                        <div class="customer-avatar-title-row">
+                            <span class="customer-avatar-label">Customer Profile Photo</span>
+                            <span class="modern-badge-subtle">Optional</span>
+                        </div>
+                        <p class="customer-avatar-help">Upload a clear front-facing headshot or passport photo. Supported: JPG, PNG, WEBP (Max 3MB).</p>
+                        <div class="customer-avatar-actions">
+                            <button type="button" class="customer-avatar-btn-upload" onclick="document.getElementById('profile_photo').click()">
+                                <i class="fa-solid fa-arrow-up-from-bracket"></i> Upload Photo
+                            </button>
+                            <button type="button" class="customer-avatar-btn-remove" id="btnRemoveAvatar" style="display: none;" onclick="clearProfilePhoto()">
+                                <i class="fa-solid fa-trash-can"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 1: Salutation, Full Name, Email Address, Mobile Number (Responsive Layout) -->
+                <div class="customer-name-row">
+                    <!-- Honorific Salutation (Positioned before Full Name) -->
+                    <div class="modern-form-group salutation-group">
+                        <label class="modern-form-label" for="title">
+                            <?= e(__('customer_form.salutation', [], 'Honorific Salutation')) ?>
+                        </label>
+                        <div class="modern-input-wrapper">
+                            <span class="modern-input-icon"><i class="fa-solid fa-signature"></i></span>
+                            <select id="title" name="title" class="modern-select-pill">
+                                <option value="" <?= empty($old['title']) ? 'selected' : '' ?>><?= e(__('customer_form.salutation_none', [], 'Select')) ?></option>
+                                <option value="Mr" <?= ($old['title'] ?? '') === 'Mr' ? 'selected' : '' ?>><?= e(__('customer_form.title_mr', [], 'Mr.')) ?></option>
+                                <option value="Mrs" <?= ($old['title'] ?? '') === 'Mrs' ? 'selected' : '' ?>><?= e(__('customer_form.title_mrs', [], 'Mrs.')) ?></option>
+                                <option value="Ms" <?= ($old['title'] ?? '') === 'Ms' ? 'selected' : '' ?>><?= e(__('customer_form.title_ms', [], 'Ms.')) ?></option>
+                                <option value="Dr" <?= ($old['title'] ?? '') === 'Dr' ? 'selected' : '' ?>><?= e(__('customer_form.title_dr', [], 'Dr.')) ?></option>
+                                <option value="Prof" <?= ($old['title'] ?? '') === 'Prof' ? 'selected' : '' ?>><?= e(__('customer_form.title_prof', [], 'Prof.')) ?></option>
+                            </select>
+                        </div>
                     </div>
 
                     <!-- Full Name -->
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label class="form-label" for="name" style="font-weight: 600; font-size: 0.85rem; color: var(--vg-navy-900);">
-                            Full Legal Name <span style="color: var(--vg-danger); font-weight: 700;">*</span>
+                    <div class="modern-form-group name-group">
+                        <label class="modern-form-label" for="name">
+                            <?= e(__('customer_form.full_name', [], 'Full Name')) ?> <span class="req">*</span>
                         </label>
-                        <input type="text" id="name" name="name" class="form-control" required placeholder="e.g. Vikramaditya Sharma or Countess Genevieve" value="<?= e($old['name'] ?? '') ?>" autocomplete="name">
-                        <small style="color: var(--vg-text-muted); font-size: 0.75rem;">As it appears on travel vouchers, invoices, and manifests.</small>
+                        <div class="modern-input-wrapper">
+                            <span class="modern-input-icon"><i class="fa-solid fa-user"></i></span>
+                            <input type="text" id="name" name="name" class="modern-input-pill" required placeholder="<?= e(__('customer_form.full_name_placeholder', [], 'e.g. John Doe')) ?>" value="<?= e($old['name'] ?? '') ?>" autocomplete="name">
+                        </div>
                         <?php if (!empty($errors['name'])): ?>
-                            <div style="color: var(--vg-danger); font-size: 0.8rem; margin-top: 4px;"><?= e($errors['name'][0]) ?></div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-
-                <div class="vg-split-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
-                    <!-- Date of Birth -->
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label class="form-label" for="date_of_birth" style="font-weight: 600; font-size: 0.85rem; color: var(--vg-navy-900);">Date of Birth (Optional)</label>
-                        <input type="date" id="date_of_birth" name="date_of_birth" class="form-control" value="<?= e($old['date_of_birth'] ?? '') ?>">
-                        <small style="color: var(--vg-text-muted); font-size: 0.75rem;">Enables birthday &amp; anniversary special promotions.</small>
-                        <?php if (!empty($errors['date_of_birth'])): ?>
-                            <div style="color: var(--vg-danger); font-size: 0.8rem; margin-top: 4px;"><?= e($errors['date_of_birth'][0]) ?></div>
+                            <div class="modern-field-error"><i class="fa-solid fa-circle-exclamation"></i> <?= e($errors['name'][0]) ?></div>
                         <?php endif; ?>
                     </div>
 
-                    <!-- Gender (Inclusive Options) -->
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label class="form-label" for="gender" style="font-weight: 600; font-size: 0.85rem; color: var(--vg-navy-900);">Gender (Optional)</label>
-                        <select id="gender" name="gender" class="form-select">
-                            <option value="" <?= empty($old['gender']) ? 'selected' : '' ?>>— Unspecified —</option>
-                            <option value="male" <?= ($old['gender'] ?? '') === 'male' ? 'selected' : '' ?>>Male</option>
-                            <option value="female" <?= ($old['gender'] ?? '') === 'female' ? 'selected' : '' ?>>Female</option>
-                            <option value="non_binary" <?= ($old['gender'] ?? '') === 'non_binary' ? 'selected' : '' ?>>Non-Binary</option>
-                            <option value="other" <?= ($old['gender'] ?? '') === 'other' ? 'selected' : '' ?>>Other / Self-Described</option>
-                            <option value="prefer_not_to_say" <?= ($old['gender'] ?? '') === 'prefer_not_to_say' ? 'selected' : '' ?>>Prefer Not to Say</option>
-                        </select>
-                        <small style="color: var(--vg-text-muted); font-size: 0.75rem;">Used for respectful chauffeur communication.</small>
-                    </div>
-                </div>
-
-            </div>
-            
-            <!-- Step 1 Footer -->
-            <div class="card-footer" style="background: var(--vg-pearl-50); border-top: 1px solid var(--vg-pearl-200); padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
-                <a href="<?= url('/office/customers') ?>" class="btn btn-outline" style="color: var(--vg-text-secondary);">Cancel</a>
-                <button type="button" class="btn btn-navy" onclick="wizardNextStep(1)" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.65rem 1.4rem;">
-                    <span>Next: Contact Details</span>
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ========================================================================= -->
-    <!-- STEP 2: Contact Information -->
-    <!-- ========================================================================= -->
-    <div class="wizard-step-panel" id="wizardStepPanel2" data-step="2" style="display: none;">
-        <div class="vg-card" style="box-shadow: var(--vg-shadow-sm); border: 1px solid var(--vg-pearl-200); border-radius: var(--vg-radius-md);">
-            <div class="card-header" style="background: var(--vg-pearl-50); border-bottom: 1px solid var(--vg-pearl-200); padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between;">
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <span style="width: 28px; height: 28px; border-radius: 50%; background: var(--vg-navy-900); color: #FFF; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 800;">02</span>
-                    <div>
-                        <h2 class="card-title" style="font-size: 1.1rem; font-weight: 700; color: var(--vg-navy-900); margin: 0;">Contact Information</h2>
-                        <span style="font-size: 0.8rem; color: var(--vg-text-muted);">Direct mobile numbers and guest email address</span>
-                    </div>
-                </div>
-                <span class="step-tag" style="background: #EFF6FF; color: #2563EB; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: 12px; border: 1px solid #BFDBFE;">Step 2 of 4</span>
-            </div>
-            <div class="card-body" style="padding: 1.75rem 1.5rem;">
-                
-                <div class="vg-split-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem;">
-                    <!-- Primary Mobile -->
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label class="form-label" for="phone" style="font-weight: 600; font-size: 0.85rem; color: var(--vg-navy-900);">
-                            Primary Mobile Number <span style="color: var(--vg-danger); font-weight: 700;">*</span>
+                    <!-- Email Address -->
+                    <div class="modern-form-group email-group">
+                        <label class="modern-form-label" for="email">
+                            <?= e(__('customer_form.email', [], 'Email Address')) ?> <span class="req">*</span>
                         </label>
-                        <input type="tel" id="phone" name="phone" class="form-control" required placeholder="+91 98111 22334" value="<?= e($old['phone'] ?? $old['primary_mobile'] ?? '') ?>" autocomplete="tel">
-                        <small style="color: var(--vg-text-muted); font-size: 0.75rem;">Used for booking reservations and chauffeur coordination.</small>
-                        <?php if (!empty($errors['phone'])): ?>
-                            <div style="color: var(--vg-danger); font-size: 0.8rem; margin-top: 4px;"><?= e($errors['phone'][0]) ?></div>
+                        <div class="modern-input-wrapper">
+                            <span class="modern-input-icon"><i class="fa-solid fa-envelope"></i></span>
+                            <input type="email" id="email" name="email" class="modern-input-pill" required placeholder="<?= e(__('customer_form.email_placeholder', [], 'e.g. john@example.com')) ?>" value="<?= e($old['email'] ?? '') ?>" autocomplete="email">
+                        </div>
+                        <?php if (!empty($errors['email'])): ?>
+                            <div class="modern-field-error"><i class="fa-solid fa-circle-exclamation"></i> <?= e($errors['email'][0]) ?></div>
                         <?php endif; ?>
                     </div>
 
-                    <!-- Alternate Phone -->
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label class="form-label" for="alternate_phone" style="font-weight: 600; font-size: 0.85rem; color: var(--vg-navy-900);">Alternate Phone (Optional)</label>
-                        <input type="tel" id="alternate_phone" name="alternate_phone" class="form-control" placeholder="+91 98222 33445" value="<?= e($old['alternate_phone'] ?? '') ?>">
-                        <small style="color: var(--vg-text-muted); font-size: 0.75rem;">Emergency line, assistant or second passenger contact.</small>
+                    <!-- Mobile Number -->
+                    <div class="modern-form-group phone-group">
+                        <label class="modern-form-label" for="phone">
+                            <?= e(__('customer_form.primary_phone', [], 'Mobile Number')) ?> <span class="req">*</span>
+                        </label>
+                        <div class="modern-input-wrapper">
+                            <span class="modern-input-icon"><i class="fa-solid fa-phone"></i></span>
+                            <input type="tel" id="phone" name="phone" class="modern-input-pill" required placeholder="<?= e(__('customer_form.primary_phone_placeholder', [], 'e.g. +91 9876543210')) ?>" value="<?= e($old['phone'] ?? $old['primary_mobile'] ?? '') ?>" autocomplete="tel">
+                        </div>
+                        <?php if (!empty($errors['phone'])): ?>
+                            <div class="modern-field-error"><i class="fa-solid fa-circle-exclamation"></i> <?= e($errors['phone'][0]) ?></div>
+                        <?php endif; ?>
                     </div>
                 </div>
 
-                <!-- Email -->
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label class="form-label" for="email" style="font-weight: 600; font-size: 0.85rem; color: var(--vg-navy-900);">Email Address (Optional)</label>
-                    <input type="email" id="email" name="email" class="form-control" placeholder="client@example.com" value="<?= e($old['email'] ?? '') ?>" autocomplete="email">
-                    <small style="color: var(--vg-text-muted); font-size: 0.75rem;">For tax invoice delivery, booking vouchers &amp; receipt PDFs.</small>
-                    <?php if (!empty($errors['email'])): ?>
-                        <div style="color: var(--vg-danger); font-size: 0.8rem; margin-top: 4px;"><?= e($errors['email'][0]) ?></div>
-                    <?php endif; ?>
-                </div>
+                <!-- Row 2: Date of Birth, Gender, Nationality (3 Columns) -->
+                <div class="modern-form-grid-3">
+                    <!-- Date of Birth -->
+                    <div class="modern-form-group">
+                        <label class="modern-form-label" for="date_of_birth">
+                            Date of Birth <span class="req">*</span>
+                        </label>
+                        <div class="modern-input-wrapper">
+                            <span class="modern-input-icon"><i class="fa-solid fa-calendar"></i></span>
+                            <input type="date" id="date_of_birth" name="date_of_birth" class="modern-input-pill" required value="<?= e($old['date_of_birth'] ?? '') ?>">
+                        </div>
+                        <?php if (!empty($errors['date_of_birth'])): ?>
+                            <div class="modern-field-error"><i class="fa-solid fa-circle-exclamation"></i> <?= e($errors['date_of_birth'][0]) ?></div>
+                        <?php endif; ?>
+                    </div>
 
-            </div>
+                    <!-- Gender -->
+                    <div class="modern-form-group">
+                        <label class="modern-form-label" for="gender">
+                            Gender <span class="req">*</span>
+                        </label>
+                        <div class="modern-input-wrapper">
+                            <span class="modern-input-icon"><i class="fa-solid fa-venus-mars"></i></span>
+                            <select id="gender" name="gender" class="modern-select-pill" required>
+                                <option value="" <?= empty($old['gender']) ? 'selected' : '' ?>>Select Gender</option>
+                                <option value="male" <?= ($old['gender'] ?? '') === 'male' ? 'selected' : '' ?>>Male</option>
+                                <option value="female" <?= ($old['gender'] ?? '') === 'female' ? 'selected' : '' ?>>Female</option>
+                                <option value="other" <?= ($old['gender'] ?? '') === 'other' ? 'selected' : '' ?>>Other</option>
+                                <option value="non_binary" <?= ($old['gender'] ?? '') === 'non_binary' ? 'selected' : '' ?>>Non-Binary</option>
+                                <option value="prefer_not_to_say" <?= ($old['gender'] ?? '') === 'prefer_not_to_say' ? 'selected' : '' ?>>Prefer Not to Say</option>
+                            </select>
+                        </div>
+                    </div>
 
-            <!-- Step 2 Footer -->
-            <div class="card-footer" style="background: var(--vg-pearl-50); border-top: 1px solid var(--vg-pearl-200); padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
-                <button type="button" class="btn btn-outline" onclick="wizardGoToStep(1)">&larr; Back: Basic Info</button>
-                <button type="button" class="btn btn-navy" onclick="wizardNextStep(2)" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.65rem 1.4rem;">
-                    <span>Next: Billing &amp; Residential Address</span>
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ========================================================================= -->
-    <!-- STEP 3: Address Details -->
-    <!-- ========================================================================= -->
-    <div class="wizard-step-panel" id="wizardStepPanel3" data-step="3" style="display: none;">
-        <div class="vg-card" style="box-shadow: var(--vg-shadow-sm); border: 1px solid var(--vg-pearl-200); border-radius: var(--vg-radius-md);">
-            <div class="card-header" style="background: var(--vg-pearl-50); border-bottom: 1px solid var(--vg-pearl-200); padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between;">
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <span style="width: 28px; height: 28px; border-radius: 50%; background: var(--vg-navy-900); color: #FFF; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 800;">03</span>
-                    <div>
-                        <h2 class="card-title" style="font-size: 1.1rem; font-weight: 700; color: var(--vg-navy-900); margin: 0;">Residential &amp; Billing Address</h2>
-                        <span style="font-size: 0.8rem; color: var(--vg-text-muted);">Physical location for tax invoices, luggage transfers and itineraries</span>
+                    <!-- Nationality -->
+                    <div class="modern-form-group">
+                        <label class="modern-form-label" for="nationality">
+                            Nationality <span class="req">*</span>
+                        </label>
+                        <div class="modern-input-wrapper">
+                            <span class="modern-input-icon"><i class="fa-solid fa-globe"></i></span>
+                            <input type="text" id="nationality" name="nationality" class="modern-input-pill" required placeholder="e.g. Indian" value="<?= e($old['nationality'] ?? 'Indian') ?>">
+                        </div>
                     </div>
                 </div>
-                <span class="step-tag" style="background: #EFF6FF; color: #2563EB; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: 12px; border: 1px solid #BFDBFE;">Step 3 of 4</span>
-            </div>
-            <div class="card-body" style="padding: 1.75rem 1.5rem;">
-                
-                <!-- Address Line -->
-                <div class="form-group" style="margin-bottom: 1.5rem;">
-                    <label class="form-label" for="address_line" style="font-weight: 600; font-size: 0.85rem; color: var(--vg-navy-900);">Street / Suite / Landmark</label>
-                    <input type="text" id="address_line" name="address_line" class="form-control" placeholder="e.g. 42 Palm Avenue, Civil Lines or 12 Place Vendôme" value="<?= e($old['address_line'] ?? '') ?>">
-                </div>
 
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;" class="vg-split-2">
+                <!-- Row 3: Address (2 Columns), City (1 Column) -->
+                <div class="modern-form-grid-3">
+                    <!-- Address -->
+                    <div class="modern-form-group modern-col-span-2">
+                        <label class="modern-form-label" for="address_line">
+                            Address <span class="req">*</span>
+                        </label>
+                        <div class="modern-input-wrapper">
+                            <span class="modern-input-icon"><i class="fa-solid fa-location-dot"></i></span>
+                            <input type="text" id="address_line" name="address_line" class="modern-input-pill" required placeholder="Street address, apartment, suite..." value="<?= e($old['address_line'] ?? $old['address'] ?? '') ?>">
+                        </div>
+                    </div>
+
                     <!-- City -->
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label class="form-label" for="city" style="font-weight: 600; font-size: 0.85rem; color: var(--vg-navy-900);">City</label>
-                        <input type="text" id="city" name="city" class="form-control" placeholder="New Delhi / Paris" value="<?= e($old['city'] ?? '') ?>">
+                    <div class="modern-form-group">
+                        <label class="modern-form-label" for="city">
+                            City <span class="req">*</span>
+                        </label>
+                        <div class="modern-input-wrapper">
+                            <span class="modern-input-icon"><i class="fa-solid fa-city"></i></span>
+                            <input type="text" id="city" name="city" class="modern-input-pill" required placeholder="e.g. Mumbai" value="<?= e($old['city'] ?? '') ?>">
+                        </div>
                     </div>
+                </div>
 
+                <!-- Row 4: State, Country, Postal Code (3 Columns) -->
+                <div class="modern-form-grid-3">
                     <!-- State -->
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label class="form-label" for="state" style="font-weight: 600; font-size: 0.85rem; color: var(--vg-navy-900);">State / Province</label>
-                        <input type="text" id="state" name="state" class="form-control" placeholder="Delhi / Île-de-France" value="<?= e($old['state'] ?? '') ?>">
-                    </div>
-
-                    <!-- Postal Code -->
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label class="form-label" for="postal_code" style="font-weight: 600; font-size: 0.85rem; color: var(--vg-navy-900);">PIN / Postal Code</label>
-                        <input type="text" id="postal_code" name="postal_code" class="form-control" placeholder="110001 / 75001" value="<?= e($old['postal_code'] ?? '') ?>">
+                    <div class="modern-form-group">
+                        <label class="modern-form-label" for="state">
+                            State <span class="req">*</span>
+                        </label>
+                        <div class="modern-input-wrapper">
+                            <span class="modern-input-icon"><i class="fa-solid fa-map-location-dot"></i></span>
+                            <input type="text" id="state" name="state" class="modern-input-pill" required placeholder="e.g. Maharashtra" value="<?= e($old['state'] ?? '') ?>">
+                        </div>
                     </div>
 
                     <!-- Country -->
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label class="form-label" for="country" style="font-weight: 600; font-size: 0.85rem; color: var(--vg-navy-900);">Country</label>
-                        <input type="text" id="country" name="country" class="form-control" value="<?= e($old['country'] ?? 'India') ?>">
+                    <div class="modern-form-group">
+                        <label class="modern-form-label" for="country">
+                            Country <span class="req">*</span>
+                        </label>
+                        <div class="modern-input-wrapper">
+                            <span class="modern-input-icon"><i class="fa-solid fa-earth-americas"></i></span>
+                            <input type="text" id="country" name="country" class="modern-input-pill" required placeholder="e.g. India" value="<?= e($old['country'] ?? 'India') ?>">
+                        </div>
+                    </div>
+
+                    <!-- Postal Code -->
+                    <div class="modern-form-group">
+                        <label class="modern-form-label" for="postal_code">
+                            Postal Code <span class="req">*</span>
+                        </label>
+                        <div class="modern-input-wrapper">
+                            <span class="modern-input-icon"><i class="fa-solid fa-hashtag"></i></span>
+                            <input type="text" id="postal_code" name="postal_code" class="modern-input-pill" required placeholder="e.g. 400001" value="<?= e($old['postal_code'] ?? '') ?>">
+                        </div>
                     </div>
                 </div>
 
-            </div>
-
-            <!-- Step 3 Footer -->
-            <div class="card-footer" style="background: var(--vg-pearl-50); border-top: 1px solid var(--vg-pearl-200); padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
-                <button type="button" class="btn btn-outline" onclick="wizardGoToStep(2)">&larr; Back: Contact</button>
-                <button type="button" class="btn btn-navy" onclick="wizardNextStep(3)" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.65rem 1.4rem;">
-                    <span>Next: Review &amp; Operational Settings</span>
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                </button>
+                <!-- Bottom Actions -->
+                <div class="modern-form-actions">
+                    <a href="<?= url('/office/customers') ?>" class="modern-btn-cancel">
+                        <i class="fa-solid fa-xmark"></i> Cancel
+                    </a>
+                    <button type="button" class="modern-btn-next" onclick="wizardNextStep(1)">
+                        Next <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- ========================================================================= -->
-    <!-- STEP 4: Review, Record Settings & Final Confirmation -->
-    <!-- ========================================================================= -->
-    <div class="wizard-step-panel" id="wizardStepPanel4" data-step="4" style="display: none;">
-        <div style="display: grid; grid-template-columns: 1.35fr 1fr; gap: 1.5rem; align-items: start;" class="customer-form-grid">
-            
-            <!-- Left: Live Customer Review Dossier -->
-            <div class="vg-card" style="box-shadow: var(--vg-shadow-sm); border: 1px solid var(--vg-pearl-200); border-radius: var(--vg-radius-md);">
-                <div class="card-header" style="background: var(--vg-pearl-50); border-bottom: 1px solid var(--vg-pearl-200); padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between;">
-                    <div style="display: flex; align-items: center; gap: 0.75rem;">
-                        <span style="width: 28px; height: 28px; border-radius: 50%; background: #10B981; color: #FFF; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 800;">✓</span>
-                        <div>
-                            <h2 class="card-title" style="font-size: 1.1rem; font-weight: 700; color: var(--vg-navy-900); margin: 0;">Review Profile Dossier</h2>
-                            <span style="font-size: 0.8rem; color: var(--vg-text-muted);">Verify details before registering customer record</span>
-                        </div>
+        <!-- ========================================================================= -->
+        <!-- STEP 2: Contact Details                                                   -->
+        <!-- ========================================================================= -->
+        <div class="modern-step-panel" id="wizardPanel2" style="display: none;">
+            <div class="modern-form-card">
+                <div class="modern-section-header">
+                    <div class="modern-section-badge">
+                        <i class="fa-solid fa-address-book"></i>
                     </div>
-                    <span style="font-size: 0.75rem; color: #10B981; font-weight: 700; text-transform: uppercase;">Ready to Register</span>
-                </div>
-                
-                <div class="card-body" style="padding: 1.5rem;">
-                    <!-- Dossier Summary Grid -->
-                    <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 1.25rem; margin-bottom: 1.25rem;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #E2E8F0; padding-bottom: 0.75rem; margin-bottom: 0.85rem;">
-                            <div>
-                                <span style="font-size: 0.75rem; color: var(--vg-text-muted); text-transform: uppercase; font-weight: 700; display: block;">Customer Full Name</span>
-                                <span id="reviewName" style="font-size: 1.1rem; font-weight: 800; color: var(--vg-navy-900);">—</span>
-                            </div>
-                            <button type="button" onclick="wizardGoToStep(1)" style="background: none; border: none; color: var(--vg-blue-500); font-size: 0.8rem; font-weight: 600; cursor: pointer; text-decoration: underline;">
-                                Edit
-                            </button>
-                        </div>
-
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; border-bottom: 1px solid #E2E8F0; padding-bottom: 0.75rem; margin-bottom: 0.85rem;">
-                            <div>
-                                <span style="font-size: 0.72rem; color: var(--vg-text-muted); text-transform: uppercase; font-weight: 700; display: block;">Primary Mobile</span>
-                                <span id="reviewPhone" style="font-size: 0.9rem; font-weight: 700; color: var(--vg-navy-900);">—</span>
-                            </div>
-                            <div>
-                                <span style="font-size: 0.72rem; color: var(--vg-text-muted); text-transform: uppercase; font-weight: 700; display: block;">Email Address</span>
-                                <span id="reviewEmail" style="font-size: 0.85rem; color: var(--vg-navy-900);">—</span>
-                            </div>
-                        </div>
-
-                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                            <div>
-                                <span style="font-size: 0.72rem; color: var(--vg-text-muted); text-transform: uppercase; font-weight: 700; display: block;">Location / City</span>
-                                <span id="reviewLocation" style="font-size: 0.85rem; color: var(--vg-navy-900);">—</span>
-                            </div>
-                            <button type="button" onclick="wizardGoToStep(3)" style="background: none; border: none; color: var(--vg-blue-500); font-size: 0.8rem; font-weight: 600; cursor: pointer; text-decoration: underline;">
-                                Edit
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Privilege Notice -->
-                    <div style="background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 8px; padding: 1rem; font-size: 0.82rem; color: #334155; line-height: 1.45;">
-                        <strong style="color: var(--vg-navy-900); display: block; margin-bottom: 0.25rem;">🔒 Account Isolation Guarantee</strong>
-                        This registration strictly adds a customer profile to VoyageGo. No staff credentials or administrative access to the office dashboard are generated.
+                    <div class="modern-section-meta">
+                        <h2 class="modern-section-title">Contact Details</h2>
+                        <p class="modern-section-sub">Alternate phone and emergency contact details for tour safety.</p>
                     </div>
                 </div>
 
-                <div class="card-footer" style="background: var(--vg-pearl-50); border-top: 1px solid var(--vg-pearl-200); padding: 1.25rem 1.5rem;">
-                    <button type="button" class="btn btn-outline" onclick="wizardGoToStep(3)">&larr; Back: Address Details</button>
+                <div class="modern-form-grid-3">
+                    <div class="modern-form-group">
+                        <label class="modern-form-label" for="alternate_phone">Alternate Phone</label>
+                        <div class="modern-input-wrapper">
+                            <span class="modern-input-icon"><i class="fa-solid fa-phone-volume"></i></span>
+                            <input type="tel" id="alternate_phone" name="alternate_phone" class="modern-input-pill" placeholder="e.g. +91 9123456789" value="<?= e($old['alternate_phone'] ?? '') ?>">
+                        </div>
+                    </div>
+
+                    <div class="modern-form-group">
+                        <label class="modern-form-label" for="emergency_contact_name">Emergency Contact Name</label>
+                        <div class="modern-input-wrapper">
+                            <span class="modern-input-icon"><i class="fa-solid fa-user-shield"></i></span>
+                            <input type="text" id="emergency_contact_name" name="emergency_contact_name" class="modern-input-pill" placeholder="e.g. Jane Doe" value="<?= e($old['emergency_contact_name'] ?? '') ?>">
+                        </div>
+                    </div>
+
+                    <div class="modern-form-group">
+                        <label class="modern-form-label" for="emergency_contact_phone">Emergency Phone</label>
+                        <div class="modern-input-wrapper">
+                            <span class="modern-input-icon"><i class="fa-solid fa-phone-flip"></i></span>
+                            <input type="tel" id="emergency_contact_phone" name="emergency_contact_phone" class="modern-input-pill" placeholder="e.g. +91 9988776655" value="<?= e($old['emergency_contact_phone'] ?? '') ?>">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modern-form-actions">
+                    <button type="button" class="modern-btn-prev" onclick="wizardGoToStep(1)">
+                        <i class="fa-solid fa-arrow-left"></i> Previous
+                    </button>
+                    <button type="button" class="modern-btn-next" onclick="wizardNextStep(2)">
+                        Next <i class="fa-solid fa-arrow-right"></i>
+                    </button>
                 </div>
             </div>
+        </div>
 
-            <!-- Right: Operational Settings & Confirmation -->
-            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-                
-                <!-- SECTION 04: Operational Settings & Record Settings -->
-                <div class="vg-card" style="box-shadow: var(--vg-shadow-sm); border: 1px solid var(--vg-pearl-200); border-radius: var(--vg-radius-md);">
-                    <div class="card-header" style="background: var(--vg-pearl-50); border-bottom: 1px solid var(--vg-pearl-200); padding: 1rem 1.25rem;">
-                        <div style="display: flex; align-items: center; gap: 0.6rem;">
-                            <span style="width: 24px; height: 24px; border-radius: 50%; background: var(--vg-navy-900); color: #FFF; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800;">04</span>
-                            <h2 class="card-title" style="font-size: 1rem; font-weight: 700; color: var(--vg-navy-900); margin: 0;">Record Settings</h2>
-                        </div>
+        <!-- ========================================================================= -->
+        <!-- STEP 3: Identification & Documents                                        -->
+        <!-- ========================================================================= -->
+        <div class="modern-step-panel" id="wizardPanel3" style="display: none;">
+            <div class="modern-form-card">
+                <div class="modern-section-header">
+                    <div class="modern-section-badge">
+                        <i class="fa-solid fa-file-lines"></i>
                     </div>
-                    <div class="card-body" style="padding: 1.25rem;">
-                        
-                        <!-- Reference Code Display -->
-                        <div class="form-group" style="margin-bottom: 1.25rem;">
-                            <label class="form-label" style="font-weight: 600; font-size: 0.85rem; color: var(--vg-navy-900);">Customer Reference Code</label>
-                            <div style="background: var(--vg-pearl-50); border: 1px solid var(--vg-pearl-200); border-radius: 8px; padding: 0.65rem 0.85rem; display: flex; align-items: center; justify-content: space-between;">
-                                <code style="font-size: 0.95rem; font-weight: 800; color: var(--vg-blue-500);"><?= e($customerCode) ?></code>
-                                <span style="font-size: 0.7rem; color: var(--vg-text-muted); text-transform: uppercase; font-weight: 700;">System Generated</span>
-                            </div>
-                        </div>
+                    <div class="modern-section-meta">
+                        <h2 class="modern-section-title">Identification & Documents</h2>
+                        <p class="modern-section-sub">Government-issued ID details, document scans, and record verification notes.</p>
+                    </div>
+                </div>
 
-                        <!-- Status -->
-                        <div class="form-group" style="margin-bottom: 1.25rem;">
-                            <label class="form-label" for="status" style="font-weight: 600; font-size: 0.85rem; color: var(--vg-navy-900);">Profile Status</label>
-                            <select id="status" name="status" class="form-select">
-                                <option value="active" <?= ($old['status'] ?? 'active') === 'active' ? 'selected' : '' ?>>Active (Can Book Fleet &amp; Tours)</option>
-                                <option value="inactive" <?= ($old['status'] ?? '') === 'inactive' ? 'selected' : '' ?>>Inactive (Dormant Account)</option>
+                <div class="modern-form-grid-3">
+                    <div class="modern-form-group">
+                        <label class="modern-form-label" for="id_type">ID Document Type</label>
+                        <div class="modern-input-wrapper">
+                            <span class="modern-input-icon"><i class="fa-solid fa-id-card"></i></span>
+                            <select id="id_type" name="id_type" class="modern-select-pill" onchange="onDocumentTypeChange(this.value)">
+                                <option value="aadhaar" selected>Aadhaar Card</option>
+                                <option value="passport">Passport</option>
+                                <option value="driving_license">Driving License</option>
+                                <option value="voter_id">Voter ID</option>
+                                <option value="other">Other Official ID</option>
                             </select>
                         </div>
+                    </div>
 
-                        <!-- Marketing Consent -->
-                        <div class="form-group" style="margin-bottom: 0; padding-top: 0.75rem; border-top: 1px solid var(--vg-pearl-200);">
-                            <label style="display: flex; align-items: flex-start; gap: 0.65rem; cursor: pointer;">
-                                <input type="checkbox" id="marketing_consent" name="marketing_consent" value="1" <?= !empty($old['marketing_consent']) ? 'checked' : '' ?> style="margin-top: 0.2rem; width: 16px; height: 16px; cursor: pointer;">
-                                <div>
-                                    <span style="font-weight: 600; font-size: 0.85rem; color: var(--vg-navy-900); display: block;">Marketing &amp; Itinerary Consent</span>
-                                    <span style="font-size: 0.78rem; color: var(--vg-text-muted); display: block; line-height: 1.35;">Explicit consent granted to receive tailored luxury journey alerts.</span>
-                                </div>
-                            </label>
+                    <div class="modern-form-group">
+                        <label class="modern-form-label" for="id_number" id="lblDocNumber">Aadhaar Card Number</label>
+                        <div class="modern-input-wrapper">
+                            <span class="modern-input-icon"><i class="fa-solid fa-hashtag"></i></span>
+                            <input type="text" id="id_number" name="id_number" class="modern-input-pill" placeholder="e.g. 5432 1234 5678" value="<?= e($old['id_number'] ?? '') ?>">
+                        </div>
+                    </div>
+
+                    <div class="modern-form-group">
+                        <label class="modern-form-label" for="id_expiry">Document Expiry Date</label>
+                        <div class="modern-input-wrapper">
+                            <span class="modern-input-icon"><i class="fa-solid fa-calendar-check"></i></span>
+                            <input type="date" id="id_expiry" name="id_expiry" class="modern-input-pill" value="<?= e($old['id_expiry'] ?? '') ?>">
                         </div>
                     </div>
                 </div>
 
-                <!-- Submit Action Box -->
-                <div class="vg-card" style="box-shadow: var(--vg-shadow-md); border: 1px solid var(--vg-pearl-200); border-radius: var(--vg-radius-md); background: #FFFFFF;">
-                    <div class="card-body" style="padding: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem;">
-                        <button type="submit" class="btn btn-navy" id="btnSubmitCustomer" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.85rem 1rem; font-weight: 700; font-size: 1rem; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);">
-                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            <span>Save Customer Profile</span>
-                        </button>
-                        <a href="<?= url('/office/customers') ?>" class="btn btn-outline" style="width: 100%; text-align: center;">
-                            Cancel &amp; Discard
-                        </a>
+                <!-- DYNAMIC PROFESSIONAL DOCUMENT UPLOAD BOX -->
+                <div class="document-upload-container" style="margin-bottom: 1.5rem;">
+                    <div class="document-upload-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                        <label class="modern-form-label" style="margin-bottom: 0; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fa-solid fa-cloud-arrow-up" style="color: #176B5B;"></i>
+                            <span id="docUploadBoxTitle">Upload Aadhaar Card Scan / Image</span>
+                        </label>
+                        <span id="docTypeBadge" class="modern-badge" style="background: #E8F4F0; color: #176B5B; border: 1px solid #B2D8CF; font-size: 0.76rem; font-weight: 700; padding: 4px 12px; border-radius: 50px;">
+                            UIDAI 12-Digit Verification
+                        </span>
+                    </div>
+
+                    <!-- Modern Interactive Dropzone -->
+                    <div class="document-dropzone" id="documentDropzone" onclick="document.getElementById('id_document_file').click()">
+                        <input type="file" id="id_document_file" name="id_document_file" accept="image/png,image/jpeg,image/jpg,image/webp,application/pdf" style="display: none;" onchange="handleDocumentFileChange(this)" onclick="event.stopPropagation()">
+                        <input type="hidden" name="id_document_file_base64" id="id_document_file_base64" value="">
+                        <input type="hidden" name="id_document_file_name" id="id_document_file_name" value="">
+
+                        <!-- Empty State Inside Dropzone -->
+                        <div id="dropzoneEmptyState">
+                            <div class="document-dropzone-halo">
+                                <i class="fa-solid fa-id-card-clip" id="docDropzoneIcon"></i>
+                            </div>
+                            <div class="document-dropzone-prompt">
+                                <strong>Click to upload</strong> or drag and drop your document scan
+                            </div>
+                            <div class="document-dropzone-sub" id="docDropzoneHelp">
+                                Supported formats: PNG, JPG, JPEG, WEBP or PDF (Max 5MB)
+                            </div>
+                        </div>
+
+                        <!-- Populated / Preview State Inside Dropzone -->
+                        <div id="dropzonePreviewState" style="display: none;">
+                            <div class="doc-preview-wrapper" onclick="event.stopPropagation()">
+                                <div class="doc-preview-thumb-box">
+                                    <img id="docPreviewImage" src="" alt="Document preview" style="display: none; width: 100%; height: 100%; object-fit: cover; border-radius: 10px;">
+                                    <div id="docPreviewPdfIcon" style="display: none; font-size: 2.2rem; color: #EF4444;">
+                                        <i class="fa-solid fa-file-pdf"></i>
+                                    </div>
+                                </div>
+                                <div class="doc-preview-meta">
+                                    <div class="doc-preview-name" id="docPreviewName">document_scan.jpg</div>
+                                    <div class="doc-preview-size" id="docPreviewSize">0 KB</div>
+                                    <div class="doc-preview-status">
+                                        <i class="fa-solid fa-circle-check" style="color: #10B981;"></i> Document Attached &amp; Ready
+                                    </div>
+                                </div>
+                                <div class="doc-preview-actions">
+                                    <button type="button" class="btn btn-sm" style="background: #E8F4F0; color: #176B5B; border: 1px solid #B2D8CF; font-weight: 700; border-radius: 8px; padding: 0.35rem 0.85rem;" onclick="document.getElementById('id_document_file').click()">
+                                        <i class="fa-solid fa-arrows-rotate"></i> Change
+                                    </button>
+                                    <button type="button" class="btn btn-sm" style="background: #FEE2E2; color: #B91C1C; border: 1px solid #FECACA; font-weight: 700; border-radius: 8px; padding: 0.35rem 0.85rem;" onclick="clearDocumentUpload()">
+                                        <i class="fa-solid fa-trash-can"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
+                <div class="modern-form-group" style="margin-bottom: 0;">
+                    <label class="modern-form-label" for="notes">Special Operational / Internal Notes</label>
+                    <div class="modern-input-wrapper">
+                        <span class="modern-input-icon"><i class="fa-solid fa-pen-to-square"></i></span>
+                        <input type="text" id="notes" name="notes" class="modern-input-pill" placeholder="e.g. VIP client, referred by travel partner, prefers morning departures" value="<?= e($old['notes'] ?? '') ?>">
+                    </div>
+                </div>
+
+                <div class="modern-form-actions">
+                    <button type="button" class="modern-btn-prev" onclick="wizardGoToStep(2)">
+                        <i class="fa-solid fa-arrow-left"></i> Previous
+                    </button>
+                    <button type="button" class="modern-btn-next" onclick="wizardNextStep(3)">
+                        Next <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
 
-</form>
+        <!-- ========================================================================= -->
+        <!-- STEP 4: Review & Save                                                     -->
+        <!-- ========================================================================= -->
+        <div class="modern-step-panel" id="wizardPanel4" style="display: none;">
+            <div class="modern-form-card">
+                <div class="modern-section-header">
+                    <div class="modern-section-badge" style="background: #E8F8F0; color: #10B981;">
+                        <i class="fa-solid fa-clipboard-check"></i>
+                    </div>
+                    <div class="modern-section-meta">
+                        <h2 class="modern-section-title">Review &amp; Save</h2>
+                        <p class="modern-section-sub">Comprehensive profile verification prior to saving customer record.</p>
+                    </div>
+                </div>
 
-<style>
-/* Stepper Indicators Styling */
-.step-indicator-btn {
-    background: #F8FAFC;
-    border: 1px solid #E2E8F0;
-    border-radius: 10px;
-    padding: 0.75rem 0.65rem;
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-    cursor: pointer;
-    text-align: left;
-    transition: all 0.25s ease;
-    width: 100%;
-}
-.step-indicator-btn:hover {
-    background: #F1F5F9;
-    border-color: #CBD5E1;
-}
-.step-indicator-badge {
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
-    border-radius: 50%;
-    background: #CBD5E1;
-    color: #475569;
-    font-size: 0.8rem;
-    font-weight: 800;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.25s ease;
-}
-.step-check {
-    display: none;
-    width: 16px;
-    height: 16px;
-}
-.step-indicator-text {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-.step-title {
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: var(--vg-navy-900);
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-}
-.step-desc {
-    font-size: 0.7rem;
-    color: var(--vg-text-muted);
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-}
+                <!-- Live Executive Dossier Container -->
+                <div class="review-dossier-wrapper">
 
-/* Active Step State */
-.step-indicator-btn.active {
-    background: #EFF6FF;
-    border-color: #2563EB;
-    box-shadow: 0 0 0 1px #2563EB;
-}
-.step-indicator-btn.active .step-indicator-badge {
-    background: #2563EB;
-    color: #FFFFFF;
-    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
-}
-.step-indicator-btn.active .step-title {
-    color: #1D4ED8;
-}
+                    <!-- Profile Hero Banner -->
+                    <div class="review-hero-banner">
+                        <div class="review-avatar-container">
+                            <div class="review-avatar-monogram" id="sumAvatarMonogram">
+                                <span id="sumAvatarInitial">C</span>
+                            </div>
+                            <img id="sumAvatarImg" src="" alt="Customer Photo" style="display: none; width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                        </div>
 
-/* Completed Step State */
-.step-indicator-btn.completed {
-    background: #F0FDF4;
-    border-color: #86EFAC;
-}
-.step-indicator-btn.completed .step-indicator-badge {
-    background: #10B981;
-    color: #FFFFFF;
-}
-.step-indicator-btn.completed .step-num {
-    display: none;
-}
-.step-indicator-btn.completed .step-check {
-    display: block;
-}
+                        <div class="review-hero-meta">
+                            <div class="review-hero-title-row">
+                                <h3 class="review-hero-name" id="sumHeroName">—</h3>
+                                <span class="review-code-badge">
+                                    <i class="fa-solid fa-id-badge"></i>
+                                    <code><?= e($customerCode ?? 'VG-CUST-AUTO') ?></code>
+                                </span>
+                            </div>
+                            <div class="review-hero-tags">
+                                <span class="review-tag-item" id="sumTagGenderNationality">
+                                    <i class="fa-solid fa-user-tag"></i> <span id="sumTagGenderText">—</span>
+                                </span>
+                                <span class="review-tag-item" id="sumTagDobAge">
+                                    <i class="fa-solid fa-cake-candles"></i> <span id="sumTagDobText">—</span>
+                                </span>
+                                <span class="review-status-pill is-active" id="sumStatusPill">
+                                    <i class="fa-solid fa-circle-check"></i> Active Profile
+                                </span>
+                            </div>
+                        </div>
+                    </div>
 
-/* Animations */
-.wizard-step-panel {
-    animation: fadeInStep 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-@keyframes fadeInStep {
-    from {
-        opacity: 0;
-        transform: translateY(6px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
+                    <!-- 4 Comprehensive Information Section Cards -->
+                    <div class="review-sections-grid">
 
-/* Responsive adjustment */
-@media (max-width: 900px) {
-    .stepper-indicators-container {
-        grid-template-columns: repeat(2, 1fr) !important;
-    }
-    .customer-form-grid {
-        grid-template-columns: 1fr !important;
-    }
-}
-@media (max-width: 600px) {
-    .stepper-indicators-container {
-        grid-template-columns: 1fr !important;
-    }
-}
-</style>
+                        <!-- Card 1: Personal Identity -->
+                        <div class="review-section-card">
+                            <div class="review-card-header">
+                                <i class="fa-solid fa-id-card-clip"></i> Personal Identity
+                            </div>
+                            <div class="review-card-rows">
+                                <div class="review-info-row">
+                                    <span class="review-label">Full Legal Name</span>
+                                    <span class="review-value font-bold" id="sumCardName">—</span>
+                                </div>
+                                <div class="review-info-row">
+                                    <span class="review-label">Salutation</span>
+                                    <span class="review-value" id="sumCardSalutation">—</span>
+                                </div>
+                                <div class="review-info-row">
+                                    <span class="review-label">Date of Birth &amp; Age</span>
+                                    <span class="review-value" id="sumCardDob">—</span>
+                                </div>
+                                <div class="review-info-row">
+                                    <span class="review-label">Gender</span>
+                                    <span class="review-value capitalize" id="sumCardGender">—</span>
+                                </div>
+                                <div class="review-info-row">
+                                    <span class="review-label">Nationality</span>
+                                    <span class="review-value" id="sumCardNationality">Indian</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: Contact & Residential Address -->
+                        <div class="review-section-card">
+                            <div class="review-card-header">
+                                <i class="fa-solid fa-map-location-dot"></i> Contact &amp; Residential Address
+                            </div>
+                            <div class="review-card-rows">
+                                <div class="review-info-row">
+                                    <span class="review-label">Primary Mobile</span>
+                                    <span class="review-value font-bold highlight-teal" id="sumCardPhone">—</span>
+                                </div>
+                                <div class="review-info-row">
+                                    <span class="review-label">Email Address</span>
+                                    <span class="review-value" id="sumCardEmail">—</span>
+                                </div>
+                                <div class="review-info-row">
+                                    <span class="review-label">Alternate Phone</span>
+                                    <span class="review-value" id="sumCardAltPhone">—</span>
+                                </div>
+                                <div class="review-info-row">
+                                    <span class="review-label">Street Address</span>
+                                    <span class="review-value" id="sumCardAddress">—</span>
+                                </div>
+                                <div class="review-info-row">
+                                    <span class="review-label">City, State &amp; PIN</span>
+                                    <span class="review-value" id="sumCardCityStatePin">—</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: Emergency Contact Details -->
+                        <div class="review-section-card">
+                            <div class="review-card-header">
+                                <i class="fa-solid fa-shield-halved"></i> Emergency Contact Details
+                            </div>
+                            <div class="review-card-rows">
+                                <div class="review-info-row">
+                                    <span class="review-label">Emergency Contact</span>
+                                    <span class="review-value font-semibold" id="sumCardEmergName">—</span>
+                                </div>
+                                <div class="review-info-row">
+                                    <span class="review-label">Emergency Phone</span>
+                                    <span class="review-value font-bold highlight-teal" id="sumCardEmergPhone">—</span>
+                                </div>
+                                <div class="review-info-row">
+                                    <span class="review-label">Emergency Protocol</span>
+                                    <span class="review-value" style="color: #059669; font-weight: 600;">
+                                        <i class="fa-solid fa-circle-check"></i> On-file for Passenger Safety
+                                    </span>
+                                </div>
+                                <div class="review-info-row">
+                                    <span class="review-label">Alternate Reachability</span>
+                                    <span class="review-value" id="sumCardAltReachability">—</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 4: Verification Documents & Notes -->
+                        <div class="review-section-card">
+                            <div class="review-card-header">
+                                <i class="fa-solid fa-file-shield"></i> Verification Documents &amp; Notes
+                            </div>
+                            <div class="review-card-rows">
+                                <div class="review-info-row">
+                                    <span class="review-label">ID Document Type</span>
+                                    <span class="review-value font-semibold" id="sumCardDocType">Aadhaar Card</span>
+                                </div>
+                                <div class="review-info-row">
+                                    <span class="review-label">Document Number</span>
+                                    <span class="review-value font-mono" id="sumCardDocNumber">—</span>
+                                </div>
+                                <div class="review-info-row">
+                                    <span class="review-label">Document Expiry</span>
+                                    <span class="review-value" id="sumCardDocExpiry">Lifetime / No Expiry</span>
+                                </div>
+                                <div class="review-info-row">
+                                    <span class="review-label">Attached Scan</span>
+                                    <span class="review-value" id="sumCardDocFile">
+                                        <span class="review-doc-badge empty"><i class="fa-solid fa-circle-xmark"></i> Not attached</span>
+                                    </span>
+                                </div>
+                                <div class="review-info-row">
+                                    <span class="review-label">Internal Notes</span>
+                                    <span class="review-value" id="sumCardNotes">—</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Hidden Defaults: Active Profile and Updates Enabled -->
+                <input type="hidden" name="status" value="active">
+                <input type="hidden" name="marketing_consent" value="1">
+
+                <!-- Bottom Actions -->
+                <div class="modern-form-actions">
+                    <button type="button" class="modern-btn-prev" onclick="wizardGoToStep(3)">
+                        <i class="fa-solid fa-arrow-left"></i> Previous
+                    </button>
+                    <button type="submit" class="modern-btn-submit" id="btnSubmitCustomer">
+                        <i class="fa-solid fa-check"></i> Create Customer Profile
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </form>
+</div>
 
 <script>
-// Wizard State Management (4 Steps)
+// Wizard State & Navigation (4-Step Streamlined Process)
 let currentStep = 1;
 const totalSteps = 4;
+let avatarDataUrl = null;
+let uploadedDocumentMeta = null;
 
-function updateWizardProgress(step) {
-    currentStep = step;
-    const percent = Math.round((step / totalSteps) * 100);
-    
-    // Progress bar and labels
-    const pBar = document.getElementById('wizardProgressBar');
-    const pLabel = document.getElementById('wizardPercentLabel');
-    const sLabel = document.getElementById('wizardStepLabel');
-    
-    if (pBar) pBar.style.width = percent + '%';
-    if (pLabel) pLabel.textContent = percent + '% Complete';
-    if (sLabel) sLabel.textContent = 'Step ' + step + ' of ' + totalSteps;
+function updateStepperUI(activeStep) {
+    currentStep = activeStep;
 
-    // Update Indicators
-    const buttons = document.querySelectorAll('.step-indicator-btn');
-    buttons.forEach(btn => {
-        const btnStep = parseInt(btn.getAttribute('data-target-step'), 10);
-        btn.classList.remove('active');
-        
-        if (btnStep === step) {
+    // Update Step items
+    const stepButtons = document.querySelectorAll('.modern-step-item');
+    stepButtons.forEach((btn, index) => {
+        const stepNum = index + 1;
+        btn.classList.remove('active', 'completed');
+        if (stepNum === activeStep) {
             btn.classList.add('active');
-            btn.classList.remove('completed');
-        } else if (btnStep < step) {
+        } else if (stepNum < activeStep) {
             btn.classList.add('completed');
-        } else {
-            btn.classList.remove('completed');
         }
     });
 
-    // Populate Step 4 live dossier if arriving on Step 4
-    if (step === 4) {
-        populateReviewDossier();
+    // Update connector lines
+    for (let i = 1; i < totalSteps; i++) {
+        const conn = document.getElementById('stepConn' + i);
+        if (conn) {
+            if (i < activeStep) {
+                conn.classList.add('completed');
+            } else {
+                conn.classList.remove('completed');
+            }
+        }
+    }
+
+    // When on step 4, update the comprehensive live summary
+    if (activeStep === 4) {
+        populateSummaryDossier();
     }
 }
 
@@ -649,49 +728,72 @@ function wizardGoToStep(targetStep) {
 
     // Hide all panels
     for (let i = 1; i <= totalSteps; i++) {
-        const panel = document.getElementById('wizardStepPanel' + i);
+        const panel = document.getElementById('wizardPanel' + i);
         if (panel) panel.style.display = 'none';
     }
 
     // Show target panel
-    const targetPanel = document.getElementById('wizardStepPanel' + targetStep);
+    const targetPanel = document.getElementById('wizardPanel' + targetStep);
     if (targetPanel) {
         targetPanel.style.display = 'block';
     }
 
-    updateWizardProgress(targetStep);
+    updateStepperUI(targetStep);
 
-    // Scroll smoothly to top of stepper
-    const stepper = document.querySelector('.wizard-stepper-card');
-    if (stepper) {
-        stepper.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Scroll to top smoothly
+    const wrapper = document.querySelector('.modern-form-wrapper');
+    if (wrapper) {
+        wrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 }
 
-function wizardValidateCurrentStep(step) {
-    const panel = document.getElementById('wizardStepPanel' + step);
+function wizardValidateCurrentStep(stepNum) {
+    const panel = document.getElementById('wizardPanel' + stepNum);
     if (!panel) return true;
 
-    // Check all required inputs/selects in this step panel
-    const requiredInputs = panel.querySelectorAll('input[required], select[required], textarea[required]');
+    if (window.VoyageValidation && typeof window.VoyageValidation.validateContainer === 'function') {
+        const isValid = window.VoyageValidation.validateContainer(panel);
+        if (!isValid) {
+            if (typeof window.vgNotify === 'function') {
+                window.vgNotify('Please fill in all required fields marked with *', 'error');
+            }
+            return false;
+        }
+        return true;
+    }
+
+    const requiredFields = panel.querySelectorAll('input[required], select[required], textarea[required]');
     let isValid = true;
     let firstInvalid = null;
 
-    requiredInputs.forEach(input => {
-        input.style.borderColor = '';
-
-        if (!input.checkValidity() || input.value.trim() === '') {
+    requiredFields.forEach(field => {
+        if (!field.value || field.value.trim() === '') {
             isValid = false;
-            input.style.borderColor = 'var(--vg-danger)';
-            if (!firstInvalid) {
-                firstInvalid = input;
-            }
+            field.style.borderColor = '#EF4444';
+            field.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.15)';
+            if (!firstInvalid) firstInvalid = field;
+
+            const onInput = function() {
+                if (field.value.trim() !== '') {
+                    field.style.borderColor = '';
+                    field.style.boxShadow = '';
+                    field.removeEventListener('input', onInput);
+                    field.removeEventListener('change', onInput);
+                }
+            };
+            field.addEventListener('input', onInput);
+            field.addEventListener('change', onInput);
+        } else {
+            field.style.borderColor = '';
+            field.style.boxShadow = '';
         }
     });
 
     if (!isValid && firstInvalid) {
         firstInvalid.focus();
-        firstInvalid.reportValidity();
+        if (typeof window.vgNotify === 'function') {
+            window.vgNotify('Please fill in all required fields marked with *', 'error');
+        }
         return false;
     }
 
@@ -705,60 +807,959 @@ function wizardNextStep(currentStepNum) {
     wizardGoToStep(currentStepNum + 1);
 }
 
-// Live Review Dossier Population
-function populateReviewDossier() {
-    const titleVal = document.getElementById('title')?.value || '';
-    const nameVal = document.getElementById('name')?.value || 'Customer Name';
-    const fullName = (titleVal ? titleVal + '. ' : '') + nameVal;
-    
-    const phoneVal = document.getElementById('phone')?.value || '—';
-    const emailVal = document.getElementById('email')?.value || '—';
-    
-    const cityVal = document.getElementById('city')?.value || '';
-    const countryVal = document.getElementById('country')?.value || 'India';
-    const locationStr = (cityVal ? cityVal + ', ' : '') + countryVal;
+// Profile Photo Handlers (Step 1)
+function handleProfilePhotoChange(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
 
-    // Update DOM elements
-    const rName = document.getElementById('reviewName');
-    const rPhone = document.getElementById('reviewPhone');
-    const rEmail = document.getElementById('reviewEmail');
-    const rLocation = document.getElementById('reviewLocation');
+    if (!file.type.startsWith('image/')) {
+        if (typeof window.vgNotify === 'function') {
+            window.vgNotify('Please select a valid image file (PNG, JPG, WEBP)', 'error');
+        }
+        input.value = '';
+        return;
+    }
 
-    if (rName) rName.textContent = fullName;
-    if (rPhone) rPhone.textContent = phoneVal;
-    if (rEmail) rEmail.textContent = emailVal;
-    if (rLocation) rLocation.textContent = locationStr;
+    if (file.size > 3 * 1024 * 1024) {
+        if (typeof window.vgNotify === 'function') {
+            window.vgNotify('Profile photo size exceeds 3MB limit', 'error');
+        }
+        input.value = '';
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        avatarDataUrl = e.target.result;
+        const b64Input = document.getElementById('profile_photo_base64');
+        if (b64Input) b64Input.value = avatarDataUrl;
+
+        const previewImg = document.getElementById('avatarPreviewImg');
+        const defaultIcon = document.getElementById('avatarDefaultIcon');
+        const btnRemove = document.getElementById('btnRemoveAvatar');
+
+        if (previewImg) {
+            previewImg.src = avatarDataUrl;
+            previewImg.style.display = 'block';
+        }
+        if (defaultIcon) defaultIcon.style.display = 'none';
+        if (btnRemove) btnRemove.style.display = 'inline-flex';
+    };
+    reader.readAsDataURL(file);
 }
 
-// Unsaved changes confirmation warning
-let isFormDirty = false;
-let isFormSubmitting = false;
+function clearProfilePhoto() {
+    const input = document.getElementById('profile_photo');
+    if (input) input.value = '';
+    const b64Input = document.getElementById('profile_photo_base64');
+    if (b64Input) b64Input.value = '';
+    avatarDataUrl = null;
 
-const customerForm = document.getElementById('createCustomerForm');
-if (customerForm) {
-    customerForm.addEventListener('input', function() {
-        isFormDirty = true;
-    });
+    const previewImg = document.getElementById('avatarPreviewImg');
+    const defaultIcon = document.getElementById('avatarDefaultIcon');
+    const btnRemove = document.getElementById('btnRemoveAvatar');
 
-    customerForm.addEventListener('submit', function() {
-        isFormSubmitting = true;
-    });
+    if (previewImg) {
+        previewImg.src = '';
+        previewImg.style.display = 'none';
+    }
+    if (defaultIcon) defaultIcon.style.display = 'flex';
+    if (btnRemove) btnRemove.style.display = 'none';
 }
 
-window.addEventListener('beforeunload', function(e) {
-    if (isFormDirty && !isFormSubmitting) {
-        e.preventDefault();
-        e.returnValue = 'You have unsaved customer details. Are you sure you want to exit?';
-        return e.returnValue;
+// Calculate age from date of birth string
+function calculateAge(dobString) {
+    if (!dobString) return null;
+    const birthDate = new Date(dobString);
+    if (isNaN(birthDate.getTime())) return null;
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    return age >= 0 ? age : null;
+}
+
+// Format date into human-readable representation
+function formatDobString(dobString) {
+    if (!dobString) return '—';
+    const parts = dobString.split('-');
+    if (parts.length === 3) {
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const y = parts[0];
+        const m = parseInt(parts[1], 10) - 1;
+        const d = parseInt(parts[2], 10);
+        return d + ' ' + (months[m] || parts[1]) + ' ' + y;
+    }
+    return dobString;
+}
+
+// Comprehensive Review & Save Populator (Step 4)
+function populateSummaryDossier() {
+    // 1. Gather all inputs
+    const title = document.getElementById('title')?.value || '';
+    const rawName = document.getElementById('name')?.value || '';
+    const fullName = title ? (title + '. ' + rawName) : (rawName || '—');
+    const email = document.getElementById('email')?.value || '—';
+    const phone = document.getElementById('phone')?.value || '—';
+    const altPhone = document.getElementById('alternate_phone')?.value || '—';
+    const dob = document.getElementById('date_of_birth')?.value || '';
+    const gender = document.getElementById('gender')?.value || '—';
+    const nationality = document.getElementById('nationality')?.value || 'Indian';
+
+    const address = document.getElementById('address_line')?.value || '';
+    const city = document.getElementById('city')?.value || '';
+    const state = document.getElementById('state')?.value || '';
+    const postal = document.getElementById('postal_code')?.value || '';
+    const country = document.getElementById('country')?.value || 'India';
+
+    const emergName = document.getElementById('emergency_contact_name')?.value || '—';
+    const emergPhone = document.getElementById('emergency_contact_phone')?.value || '—';
+
+    const idTypeSelect = document.getElementById('id_type');
+    const idTypeLabel = idTypeSelect?.options[idTypeSelect.selectedIndex]?.text || 'Aadhaar Card';
+    const idNumber = document.getElementById('id_number')?.value || '—';
+    const idExpiry = document.getElementById('id_expiry')?.value || '';
+    const notes = document.getElementById('notes')?.value || '—';
+
+    // 2. Format derived values
+    const age = calculateAge(dob);
+    const dobFormatted = formatDobString(dob);
+    const dobWithAge = dob ? (dobFormatted + (age !== null ? ' (' + age + ' yrs)' : '')) : '—';
+    const cityStatePin = [city, state, postal, country].filter(Boolean).join(', ') || '—';
+    const expiryFormatted = idExpiry ? formatDobString(idExpiry) : 'Lifetime / No Expiry';
+
+    // 3. Hero Avatar & Monogram
+    const heroNameEl = document.getElementById('sumHeroName');
+    const avatarImg = document.getElementById('sumAvatarImg');
+    const avatarMono = document.getElementById('sumAvatarMonogram');
+    const avatarInitial = document.getElementById('sumAvatarInitial');
+
+    if (heroNameEl) heroNameEl.textContent = fullName;
+    const initialChar = (rawName.trim().charAt(0) || 'C').toUpperCase();
+    if (avatarInitial) avatarInitial.textContent = initialChar;
+
+    if (avatarDataUrl) {
+        if (avatarImg) {
+            avatarImg.src = avatarDataUrl;
+            avatarImg.style.display = 'block';
+        }
+        if (avatarMono) avatarMono.style.display = 'none';
+    } else {
+        if (avatarImg) {
+            avatarImg.src = '';
+            avatarImg.style.display = 'none';
+        }
+        if (avatarMono) avatarMono.style.display = 'flex';
+    }
+
+    // Hero Meta Tags
+    const tagGender = document.getElementById('sumTagGenderText');
+    if (tagGender) tagGender.textContent = (gender !== '—' ? gender.toUpperCase() : 'NOT SPECIFIED') + ' • ' + nationality;
+
+    const tagDob = document.getElementById('sumTagDobText');
+    if (tagDob) tagDob.textContent = dobWithAge;
+
+    // Card 1: Personal Identity
+    const sumCardName = document.getElementById('sumCardName');
+    const sumCardSalutation = document.getElementById('sumCardSalutation');
+    const sumCardDob = document.getElementById('sumCardDob');
+    const sumCardGender = document.getElementById('sumCardGender');
+    const sumCardNationality = document.getElementById('sumCardNationality');
+
+    if (sumCardName) sumCardName.textContent = fullName;
+    if (sumCardSalutation) sumCardSalutation.textContent = title ? (title + '.') : 'None';
+    if (sumCardDob) sumCardDob.textContent = dobWithAge;
+    if (sumCardGender) sumCardGender.textContent = gender;
+    if (sumCardNationality) sumCardNationality.textContent = nationality;
+
+    // Card 2: Contact & Address
+    const sumCardPhone = document.getElementById('sumCardPhone');
+    const sumCardEmail = document.getElementById('sumCardEmail');
+    const sumCardAltPhone = document.getElementById('sumCardAltPhone');
+    const sumCardAddress = document.getElementById('sumCardAddress');
+    const sumCardCityStatePin = document.getElementById('sumCardCityStatePin');
+
+    if (sumCardPhone) sumCardPhone.textContent = phone;
+    if (sumCardEmail) sumCardEmail.textContent = email;
+    if (sumCardAltPhone) sumCardAltPhone.textContent = altPhone;
+    if (sumCardAddress) sumCardAddress.textContent = address || '—';
+    if (sumCardCityStatePin) sumCardCityStatePin.textContent = cityStatePin;
+
+    // Card 3: Emergency Contact Details
+    const sumCardEmergName = document.getElementById('sumCardEmergName');
+    const sumCardEmergPhone = document.getElementById('sumCardEmergPhone');
+    const sumCardAltReach = document.getElementById('sumCardAltReachability');
+
+    if (sumCardEmergName) sumCardEmergName.textContent = emergName;
+    if (sumCardEmergPhone) sumCardEmergPhone.textContent = emergPhone;
+    if (sumCardAltReach) sumCardAltReach.textContent = (altPhone && altPhone !== '—') ? altPhone : 'Primary phone only';
+
+    // Card 4: Verification Documents & Notes
+    const sumCardDocType = document.getElementById('sumCardDocType');
+    const sumCardDocNumber = document.getElementById('sumCardDocNumber');
+    const sumCardDocExpiry = document.getElementById('sumCardDocExpiry');
+    const sumCardDocFile = document.getElementById('sumCardDocFile');
+    const sumCardNotes = document.getElementById('sumCardNotes');
+
+    if (sumCardDocType) sumCardDocType.textContent = idTypeLabel;
+    if (sumCardDocNumber) sumCardDocNumber.textContent = idNumber;
+    if (sumCardDocExpiry) sumCardDocExpiry.textContent = expiryFormatted;
+    if (sumCardNotes) sumCardNotes.textContent = notes;
+
+    if (sumCardDocFile) {
+        if (uploadedDocumentMeta) {
+            sumCardDocFile.innerHTML = `
+                <span class="review-doc-badge attached">
+                    <i class="fa-solid fa-file-circle-check"></i>
+                    <strong>${uploadedDocumentMeta.name}</strong> (${uploadedDocumentMeta.size})
+                </span>
+            `;
+        } else {
+            sumCardDocFile.innerHTML = `
+                <span class="review-doc-badge empty">
+                    <i class="fa-solid fa-circle-xmark"></i> Not attached (optional)
+                </span>
+            `;
+        }
+    }
+}
+
+// Dynamic Document Metadata and Custom Upload Box Controller (Step 3)
+const docTypeMetadata = {
+    aadhaar: {
+        title: 'Upload Aadhaar Card Scan / Image',
+        badge: 'UIDAI 12-Digit Verification',
+        icon: 'fa-id-card-clip',
+        numberLabel: 'Aadhaar Card Number',
+        placeholder: 'e.g. 5432 1234 5678',
+        help: 'Upload front & back view of your official Aadhaar Card or e-Aadhaar PDF'
+    },
+    passport: {
+        title: 'Upload Passport Front Bio-Data Page',
+        badge: 'International Travel Document',
+        icon: 'fa-passport',
+        numberLabel: 'Passport Document Number',
+        placeholder: 'e.g. A1234567',
+        help: 'Upload clear photo of Passport front bio page with photo and signature'
+    },
+    driving_license: {
+        title: 'Upload Driving License Card Scan',
+        badge: 'RTO Official Transport License',
+        icon: 'fa-id-badge',
+        numberLabel: 'Driving License Number',
+        placeholder: 'e.g. MH-01-2023-1234567',
+        help: 'Upload front side of valid Driving License showing category and expiry'
+    },
+    voter_id: {
+        title: 'Upload Election Voter ID (EPIC) Scan',
+        badge: 'Election Commission of India',
+        icon: 'fa-check-to-slot',
+        numberLabel: 'Voter ID (EPIC) Number',
+        placeholder: 'e.g. ABC1234567',
+        help: 'Upload front side of official Voter Identity Card'
+    },
+    other: {
+        title: 'Upload Official Identity Verification Document',
+        badge: 'Government / Corporate ID',
+        icon: 'fa-file-shield',
+        numberLabel: 'ID Document Number',
+        placeholder: 'e.g. ID-REG-87421',
+        help: 'Upload clear photo or PDF of government-issued identity proof'
+    }
+};
+
+function onDocumentTypeChange(docType) {
+    const meta = docTypeMetadata[docType] || docTypeMetadata.other;
+    const titleEl = document.getElementById('docUploadBoxTitle');
+    const badgeEl = document.getElementById('docTypeBadge');
+    const iconEl = document.getElementById('docDropzoneIcon');
+    const lblNumber = document.getElementById('lblDocNumber');
+    const inputNumber = document.getElementById('id_number');
+    const helpEl = document.getElementById('docDropzoneHelp');
+
+    if (titleEl) titleEl.textContent = meta.title;
+    if (badgeEl) badgeEl.textContent = meta.badge;
+    if (iconEl) iconEl.className = 'fa-solid ' + meta.icon;
+    if (lblNumber) lblNumber.textContent = meta.numberLabel;
+    if (inputNumber) inputNumber.placeholder = meta.placeholder;
+    if (helpEl && document.getElementById('dropzoneEmptyState').style.display !== 'none') {
+        helpEl.textContent = meta.help;
+    }
+}
+
+function handleDocumentFileChange(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+
+    if (file.size > 5 * 1024 * 1024) {
+        if (typeof window.vgNotify === 'function') {
+            window.vgNotify('Document file size exceeds 5MB limit', 'error');
+        }
+        input.value = '';
+        return;
+    }
+
+    const sizeKb = (file.size / 1024).toFixed(1);
+    const sizeStr = sizeKb > 1024 ? (sizeKb / 1024).toFixed(2) + ' MB' : sizeKb + ' KB';
+
+    uploadedDocumentMeta = {
+        name: file.name,
+        size: sizeStr,
+        type: file.type
+    };
+
+    const emptyState = document.getElementById('dropzoneEmptyState');
+    const previewState = document.getElementById('dropzonePreviewState');
+    const nameEl = document.getElementById('docPreviewName');
+    const sizeEl = document.getElementById('docPreviewSize');
+    const imgEl = document.getElementById('docPreviewImage');
+    const pdfIconEl = document.getElementById('docPreviewPdfIcon');
+
+    if (nameEl) nameEl.textContent = file.name;
+    if (sizeEl) sizeEl.textContent = sizeStr;
+
+    // Read file as Base64 for guaranteed submission
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const b64Input = document.getElementById('id_document_file_base64');
+        if (b64Input) b64Input.value = e.target.result;
+        const nameInput = document.getElementById('id_document_file_name');
+        if (nameInput) nameInput.value = file.name;
+
+        if (file.type.startsWith('image/')) {
+            if (imgEl) {
+                imgEl.src = e.target.result;
+                imgEl.style.display = 'block';
+            }
+            if (pdfIconEl) pdfIconEl.style.display = 'none';
+        } else {
+            if (imgEl) imgEl.style.display = 'none';
+            if (pdfIconEl) pdfIconEl.style.display = 'block';
+        }
+    };
+    reader.readAsDataURL(file);
+
+    if (emptyState) emptyState.style.display = 'none';
+    if (previewState) previewState.style.display = 'block';
+}
+
+function clearDocumentUpload() {
+    const input = document.getElementById('id_document_file');
+    if (input) input.value = '';
+    const b64Input = document.getElementById('id_document_file_base64');
+    if (b64Input) b64Input.value = '';
+    const nameInput = document.getElementById('id_document_file_name');
+    if (nameInput) nameInput.value = '';
+    uploadedDocumentMeta = null;
+
+    const emptyState = document.getElementById('dropzoneEmptyState');
+    const previewState = document.getElementById('dropzonePreviewState');
+    const imgEl = document.getElementById('docPreviewImage');
+
+    if (imgEl) imgEl.src = '';
+    if (emptyState) emptyState.style.display = 'block';
+    if (previewState) previewState.style.display = 'none';
+}
+
+// Drag & drop event registration and initializers
+document.addEventListener('DOMContentLoaded', function() {
+    wizardGoToStep(1);
+
+    // Profile Photo drag & drop
+    const avatarDrop = document.getElementById('avatarDropZone');
+    if (avatarDrop) {
+        ['dragenter', 'dragover'].forEach(eventName => {
+            avatarDrop.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                avatarDrop.style.borderColor = '#10B981';
+                avatarDrop.style.transform = 'scale(1.05)';
+            });
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+            avatarDrop.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                avatarDrop.style.borderColor = '#176B5B';
+                avatarDrop.style.transform = '';
+            });
+        });
+        avatarDrop.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files && files[0]) {
+                const input = document.getElementById('profile_photo');
+                if (input) {
+                    input.files = files;
+                    handleProfilePhotoChange(input);
+                }
+            }
+        });
+    }
+
+    // Document Dropzone drag & drop
+    const dropzone = document.getElementById('documentDropzone');
+    if (dropzone) {
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropzone.classList.add('is-dragover');
+            });
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropzone.classList.remove('is-dragover');
+            });
+        });
+        dropzone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files && files[0]) {
+                const input = document.getElementById('id_document_file');
+                if (input) {
+                    input.files = files;
+                    handleDocumentFileChange(input);
+                }
+            }
+        });
+    }
+
+    const initialDocType = document.getElementById('id_type');
+    if (initialDocType) {
+        onDocumentTypeChange(initialDocType.value);
     }
 });
-
-// Server-side errors auto-focus step
-document.addEventListener('DOMContentLoaded', function() {
-    <?php if (!empty($duplicates) || !empty($errors['phone']) || !empty($errors['email'])): ?>
-        wizardGoToStep(2);
-    <?php else: ?>
-        wizardGoToStep(1);
-    <?php endif; ?>
-});
 </script>
+
+<style>
+/* ========================================================================= */
+/* 1. Profile Photo Upload Component (Step 1)                                */
+/* ========================================================================= */
+.customer-avatar-upload-card {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    background: linear-gradient(135deg, #F8FAFD 0%, #F1F6FA 100%);
+    border: 1.5px solid #DCE6F2;
+    border-radius: 18px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.75rem;
+    box-shadow: 0 4px 14px rgba(11, 25, 44, 0.03);
+}
+
+.customer-avatar-preview-wrap {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    border: 3px solid #176B5B;
+    background: #E8F4F0;
+    position: relative;
+    cursor: pointer;
+    overflow: visible;
+    flex-shrink: 0;
+    box-shadow: 0 6px 18px rgba(23, 107, 91, 0.18);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.customer-avatar-preview-wrap:hover {
+    transform: scale(1.04);
+    box-shadow: 0 8px 22px rgba(23, 107, 91, 0.25);
+    border-color: #10B981;
+}
+
+.avatar-default-icon {
+    font-size: 2.5rem;
+    color: #176B5B;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.avatar-camera-badge {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #176B5B;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.82rem;
+    border: 2.5px solid #FFFFFF;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+.customer-avatar-preview-wrap:hover .avatar-camera-badge {
+    background: #10B981;
+    transform: scale(1.1);
+}
+
+.customer-avatar-meta {
+    flex: 1;
+    min-width: 0;
+}
+.customer-avatar-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.25rem;
+}
+.customer-avatar-label {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0C2B52;
+}
+.modern-badge-subtle {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: #E2E8F0;
+    color: #475569;
+    padding: 2px 8px;
+    border-radius: 20px;
+}
+.customer-avatar-help {
+    font-size: 0.84rem;
+    color: #64748B;
+    margin: 0 0 0.75rem 0;
+    line-height: 1.4;
+}
+.customer-avatar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+.customer-avatar-btn-upload {
+    background: #176B5B;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 9px;
+    padding: 0.45rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(23, 107, 91, 0.2);
+}
+.customer-avatar-btn-upload:hover {
+    background: #13584A;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(23, 107, 91, 0.3);
+}
+.customer-avatar-btn-remove {
+    background: #FEE2E2;
+    color: #B91C1C;
+    border: 1px solid #FECACA;
+    border-radius: 9px;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+.customer-avatar-btn-remove:hover {
+    background: #FCA5A5;
+    color: #7F1D1D;
+}
+
+@media (max-width: 576px) {
+    .customer-avatar-upload-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+        padding: 1.25rem 1rem;
+    }
+    .customer-avatar-title-row {
+        justify-content: center;
+    }
+    .customer-avatar-actions {
+        justify-content: center;
+    }
+}
+
+/* ========================================================================= */
+/* 2. Customer Create Name & Identity Row (Step 1)                           */
+/* ========================================================================= */
+.customer-name-row {
+    display: grid;
+    grid-template-columns: 145px 1.4fr 1.3fr 1.3fr;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+@media (max-width: 1100px) {
+    .customer-name-row {
+        grid-template-columns: 140px 1fr;
+    }
+    .customer-name-row .email-group,
+    .customer-name-row .phone-group {
+        grid-column: span 1;
+    }
+}
+@media (max-width: 640px) {
+    .customer-name-row {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+/* ========================================================================= */
+/* 3. Document Upload Dropzone (Step 3)                                      */
+/* ========================================================================= */
+.document-dropzone {
+    border: 2px dashed #B2D8CF;
+    border-radius: 18px;
+    background: #F8FAFD;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+}
+.document-dropzone:hover,
+.document-dropzone.is-dragover {
+    border-color: #176B5B;
+    background: #E8F4F0;
+    box-shadow: 0 8px 24px rgba(23, 107, 91, 0.1);
+    transform: translateY(-1px);
+}
+.document-dropzone-halo {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: #E8F4F0;
+    color: #176B5B;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 0.85rem;
+    box-shadow: 0 4px 14px rgba(23, 107, 91, 0.12);
+    transition: transform 0.25s ease;
+}
+.document-dropzone:hover .document-dropzone-halo {
+    transform: scale(1.08);
+}
+.document-dropzone-prompt {
+    font-size: 0.95rem;
+    color: #0C2B52;
+    margin-bottom: 0.35rem;
+}
+.document-dropzone-prompt strong {
+    color: #176B5B;
+    text-decoration: underline;
+}
+.document-dropzone-sub {
+    font-size: 0.8rem;
+    color: #64748B;
+}
+
+.doc-preview-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    background: #FFFFFF;
+    border: 1.5px solid #B2D8CF;
+    border-radius: 14px;
+    padding: 1rem 1.25rem;
+    text-align: left;
+    box-shadow: 0 4px 16px rgba(23, 107, 91, 0.08);
+}
+.doc-preview-thumb-box {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    background: #F1F5F9;
+    border: 1px solid #E2E8F0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.doc-preview-meta {
+    flex: 1;
+    min-width: 0;
+}
+.doc-preview-name {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #0C2B52;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+}
+.doc-preview-size {
+    font-size: 0.78rem;
+    color: #64748B;
+    margin-bottom: 4px;
+}
+.doc-preview-status {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #059669;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.doc-preview-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+@media (max-width: 576px) {
+    .doc-preview-wrapper {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.85rem;
+    }
+    .doc-preview-actions {
+        justify-content: stretch;
+    }
+    .doc-preview-actions .btn {
+        flex: 1;
+    }
+}
+
+/* ========================================================================= */
+/* 4. Executive Live Dossier & Review Cards (Step 4)                          */
+/* ========================================================================= */
+.review-dossier-wrapper {
+    background: #F8FAFD;
+    border: 1.5px solid #DCE6F2;
+    border-radius: 20px;
+    padding: 1.75rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 6px 20px rgba(12, 43, 82, 0.04);
+}
+
+.review-hero-banner {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1.5px solid #E2E8F0;
+    flex-wrap: wrap;
+}
+
+.review-avatar-container {
+    width: 82px;
+    height: 82px;
+    border-radius: 50%;
+    border: 3px solid #176B5B;
+    background: linear-gradient(135deg, #176B5B 0%, #0C2B52 100%);
+    box-shadow: 0 6px 18px rgba(23, 107, 91, 0.2);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.review-avatar-monogram {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #FFFFFF;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.review-hero-meta {
+    flex: 1;
+    min-width: 260px;
+}
+.review-hero-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.45rem;
+}
+.review-hero-name {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #0C2B52;
+    margin: 0;
+    letter-spacing: -0.01em;
+}
+.review-code-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #E8F4F0;
+    color: #176B5B;
+    border: 1px solid #B2D8CF;
+    border-radius: 50px;
+    padding: 3px 12px;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+.review-code-badge code {
+    font-family: inherit;
+    font-weight: 800;
+}
+
+.review-hero-tags {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+.review-tag-item {
+    font-size: 0.82rem;
+    color: #64748B;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    padding: 3px 10px;
+    border-radius: 8px;
+}
+.review-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 3px 12px;
+    border-radius: 50px;
+}
+.review-status-pill.is-active {
+    background: #E8F8F0;
+    color: #059669;
+    border: 1px solid #A7F3D0;
+}
+.review-status-pill.is-inactive {
+    background: #F1F5F9;
+    color: #64748B;
+    border: 1px solid #CBD5E1;
+}
+
+/* 4-Section Grid */
+.review-sections-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+}
+@media (max-width: 900px) {
+    .review-sections-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.review-section-card {
+    background: #FFFFFF;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 14px;
+    padding: 1.25rem 1.35rem;
+    box-shadow: 0 2px 8px rgba(11, 25, 44, 0.02);
+}
+.review-card-header {
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: #0C2B52;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.75rem;
+    margin-bottom: 0.85rem;
+    border-bottom: 1.5px solid #F1F5F9;
+}
+.review-card-header i {
+    color: #176B5B;
+    font-size: 0.95rem;
+}
+
+.review-card-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+.review-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    font-size: 0.86rem;
+}
+.review-label {
+    color: #64748B;
+    font-weight: 600;
+    flex-shrink: 0;
+    max-width: 45%;
+}
+.review-value {
+    color: #0C2B52;
+    text-align: right;
+    word-break: break-word;
+    font-weight: 500;
+}
+.review-value.font-bold {
+    font-weight: 700;
+}
+.review-value.font-semibold {
+    font-weight: 600;
+}
+.review-value.highlight-teal {
+    color: #176B5B;
+}
+.review-value.font-mono {
+    font-family: monospace;
+    font-weight: 700;
+}
+.review-value.uppercase {
+    text-transform: uppercase;
+}
+.review-value.capitalize {
+    text-transform: capitalize;
+}
+
+.review-doc-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    padding: 2px 10px;
+    border-radius: 6px;
+}
+.review-doc-badge.attached {
+    background: #E8F8F0;
+    color: #059669;
+    border: 1px solid #A7F3D0;
+    font-weight: 600;
+}
+.review-doc-badge.empty {
+    background: #F1F5F9;
+    color: #94A3B8;
+    border: 1px solid #E2E8F0;
+}
+</style>

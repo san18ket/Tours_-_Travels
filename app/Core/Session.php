@@ -158,4 +158,16 @@ class Session
     {
         return self::get('user');
     }
+
+    public static function setUser(array $user): void
+    {
+        self::start();
+        if (isset($user['id'])) {
+            self::set('user_id', (int)$user['id']);
+        }
+        if (isset($user['role'])) {
+            self::set('user_role', $user['role']);
+        }
+        self::set('user', $user);
+    }
 }

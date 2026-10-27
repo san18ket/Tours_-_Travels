@@ -1,7 +1,7 @@
 # VoyageGo Apache URL Rewriting and Security Directives
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteBase /
+    # RewriteBase omitted to allow automatic subdirectory resolution
 
     # Redirect Trailing Slashes If Not A Folder...
     RewriteCond %{REQUEST_FILENAME} !-d

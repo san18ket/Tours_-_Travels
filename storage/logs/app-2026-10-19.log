@@ -947,3 +947,48 @@
 [2026-10-19 21:54:47] [INFO] Database 'tours_travels_db' verified/created successfully. 
 [2026-10-19 21:54:49] [INFO] Database 'tours_travels_db' verified/created successfully. 
 [2026-10-19 21:54:59] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-10-19 22:08:49] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-10-19 22:08:50] [INFO] Duplicate booking request prevented by idempotency token: test_idemp_6ad6479a4a7c1 
+[2026-10-19 22:08:50] [INFO] Prevented duplicate payment via idempotency key: pay_idemp_6ad6479a56098 
+[2026-10-19 22:08:50] [INFO] Purged expired backup under retention policy: backup_voyagego_2026-10-19_21-00-53.sql 
+[2026-10-19 22:08:51] [INFO] User logged in successfully: owner (owner@voyagego.com) [Role: admin] 
+[2026-10-19 22:08:52] [INFO] User logged in successfully: admin (admin@voyagego.com) [Role: admin] 
+[2026-10-19 22:08:52] [INFO] User logged in successfully: admin (admin@voyagego.com) [Role: admin] 
+[2026-10-19 22:08:55] [INFO] DatabaseSeeder finished: only Owner account created, remaining tables kept blank. {"seeded_count":0}
+[2026-10-19 22:15:59] [INFO] Migration executed successfully: 019_create_system_settings_table.php (16ms) 
+[2026-10-19 22:15:59] [INFO] DatabaseSeeder finished: only Owner account created, remaining tables kept blank. {"seeded_count":0}
+[2026-10-19 22:28:58] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-10-19 22:28:59] [INFO] Duplicate booking request prevented by idempotency token: test_idemp_6ad64c53a018e 
+[2026-10-19 22:28:59] [INFO] Prevented duplicate payment via idempotency key: pay_idemp_6ad64c53a3691 
+[2026-10-19 22:28:59] [INFO] Purged expired backup under retention policy: backup_voyagego_2026-10-19_21-12-22.sql 
+[2026-10-19 22:29:01] [INFO] User logged in successfully: owner (owner@voyagego.com) [Role: admin] 
+[2026-10-19 22:29:01] [INFO] User logged in successfully: admin (admin@voyagego.com) [Role: admin] 
+[2026-10-19 22:29:01] [INFO] User logged in successfully: admin (admin@voyagego.com) [Role: admin] 
+[2026-10-19 22:29:03] [INFO] DatabaseSeeder finished: only Owner account created, remaining tables kept blank. {"seeded_count":0}
+[2026-10-19 22:39:08] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-10-19 22:39:09] [INFO] Duplicate booking request prevented by idempotency token: test_idemp_6ad64eb55a214 
+[2026-10-19 22:39:09] [INFO] Prevented duplicate payment via idempotency key: pay_idemp_6ad64eb563b70 
+[2026-10-19 22:39:09] [INFO] Purged expired backup under retention policy: backup_voyagego_2026-10-19_21-24-25.sql 
+[2026-10-19 22:39:10] [INFO] User logged in successfully: owner (owner@voyagego.com) [Role: admin] 
+[2026-10-19 22:39:11] [INFO] User logged in successfully: admin (admin@voyagego.com) [Role: admin] 
+[2026-10-19 22:39:11] [INFO] User logged in successfully: admin (admin@voyagego.com) [Role: admin] 
+[2026-10-19 22:39:13] [INFO] DatabaseSeeder finished: only Owner account created, remaining tables kept blank. {"seeded_count":0}
+[2026-10-19 22:42:14] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-10-19 22:42:15] [INFO] Duplicate booking request prevented by idempotency token: test_idemp_6ad64f6f86b25 
+[2026-10-19 22:42:15] [INFO] Prevented duplicate payment via idempotency key: pay_idemp_6ad64f6f8d48f 
+[2026-10-19 22:42:15] [INFO] Purged expired backup under retention policy: backup_voyagego_2026-10-19_21-28-06.sql 
+[2026-10-19 22:42:16] [INFO] User logged in successfully: owner (owner@voyagego.com) [Role: admin] 
+[2026-10-19 22:42:17] [INFO] User logged in successfully: admin (admin@voyagego.com) [Role: admin] 
+[2026-10-19 22:42:17] [INFO] User logged in successfully: admin (admin@voyagego.com) [Role: admin] 
+[2026-10-19 22:42:19] [INFO] DatabaseSeeder finished: only Owner account created, remaining tables kept blank. {"seeded_count":0}
+[2026-10-19 22:45:05] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-10-19 22:45:05] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-10-19 22:45:07] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-10-19 22:45:08] [INFO] User logged in successfully: owner (owner@voyagego.com) [Role: admin] 
+[2026-10-19 22:45:10] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-10-19 22:45:10] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-10-19 22:45:27] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-10-19 22:50:39] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-10-19 22:50:40] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-10-19 22:51:20] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-10-19 22:56:23] [INFO] Database 'tours_travels_db' verified/created successfully. 

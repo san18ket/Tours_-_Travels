@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="48" height="48">
+  <defs>
+    <linearGradient id="brandBusGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E7A68"/>
+      <stop offset="100%" stop-color="#124A3F"/>
+    </linearGradient>
+    <filter id="forestGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#176B5B" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <!-- Background badge -->
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#brandBusGrad)" filter="url(#forestGlow)"/>
+  <!-- Tour Bus Outline & Body in Warm White -->
+  <path d="M14 20 C14 17 17 15 21 15 L43 15 C47 15 50 17 50 20 L51 38 C51 40 49 42 47 42 L47 46 C47 47.5 45.5 48.5 44 48.5 C42.5 48.5 41 47.5 41 46 L41 42 L23 42 L23 46 C23 47.5 21.5 48.5 20 48.5 C18.5 48.5 17 47.5 17 46 L17 42 C15 42 13 40 13 38 Z" fill="#FFFFFF"/>
+  <!-- Front Windshield & Windows in Forest Teal -->
+  <path d="M16 21 C16 19 18 18 21 18 L43 18 C46 18 48 19 48 21 L48 29 L16 29 Z" fill="#176B5B"/>
+  <!-- Window Divider -->
+  <rect x="31" y="18" width="2" height="11" fill="#FFFFFF"/>
+  <!-- Bus Headlights in Champagne Sand / Gold -->
+  <circle cx="19" cy="35" r="2.5" fill="#D6B77A"/>
+  <circle cx="45" cy="35" r="2.5" fill="#D6B77A"/>
+  <!-- Bus Grill lines -->
+  <rect x="27" y="34" width="10" height="2" rx="1" fill="#176B5B"/>
+  <rect x="29" y="38" width="6" height="1.5" rx="0.75" fill="#176B5B"/>
+</svg>

@@ -69,11 +69,17 @@ class EmployeeController extends Controller
     public function create(Request $request): Response
     {
         $generatedCode = $this->employeeModel->generateEmployeeCode();
+
+        // Fetch actual roles from roles table (only real database roles, no dummy data)
+        $roleModel = new \App\Models\Role();
+        $roles = $roleModel->where("`status` = 'active'", [], 'is_system DESC, name ASC');
+
         // Unlinked staff users who can optionally be attached to an employee record
-        $unlinkedUsers = $this->userModel->where("`role` IN ('admin', 'dispatcher', 'driver') AND `status` = 'active'", [], 'name ASC');
+        $unlinkedUsers = $this->userModel->where("`status` = 'active'", [], 'name ASC');
 
         return $this->render('office/employees/create', [
             'employeeCode'  => $generatedCode,
+            'roles'         => $roles,
             'unlinkedUsers' => $unlinkedUsers,
             'errors'        => Session::getFlash('form_errors') ?? [],
             'old'           => Session::getFlash('form_old') ?? [],
@@ -89,19 +95,75 @@ class EmployeeController extends Controller
         try {
             $input = $request->all();
 
-            $data = $this->validate($input, [
+            if (empty($input['role'])) {
+                $input['role'] = 'driver';
+            }
+
+            $rules = [
                 'first_name'      => 'required|min:2|max:80',
                 'last_name'       => 'required|min:1|max:80',
                 'phone'           => 'required|min:8|max:30',
-                'department'      => 'required|in:operations,dispatch,fleet_chauffeur,management,administration,maintenance',
-                'designation'     => 'required|min:2|max:100',
+                'role'            => 'required',
                 'employment_type' => 'required|in:full_time,part_time,contract,probation',
                 'joining_date'    => 'required|date',
                 'status'          => 'required|in:active,on_leave,terminated',
-            ]);
+            ];
+
+            // If creating a new system account (strictly check toggle)
+            $createAccount = !empty($input['create_account']) && in_array((string)$input['create_account'], ['1', 'true', 'on'], true);
+            if ($createAccount) {
+                $rules['username'] = 'required|min:3|max:50';
+                $rules['password'] = 'required|min:6';
+            }
+
+            $data = $this->validate($input, $rules);
+
+            $roleSlug = strtolower(trim($data['role']));
+
+            // Resolve Role Name
+            $roleModel = new \App\Models\Role();
+            $roleObj = $roleModel->findBy('slug', $roleSlug);
+            $roleName = $roleObj['name'] ?? ucwords(str_replace(['_', '-'], ' ', $roleSlug));
+
+            $userId = !empty($input['user_id']) ? (int)$input['user_id'] : null;
+
+            // Check & create user account if requested
+            if ($createAccount) {
+                $username = strtolower(trim($input['username'] ?? ''));
+                if (!preg_match('/^[a-zA-Z0-9_.]+$/', $username)) {
+                    throw new ValidationException('Username can only contain letters, numbers, underscores, and periods.', ['username' => ['Username can only contain letters, numbers, underscores, and periods.']]);
+                }
+
+                $existingUser = $this->userModel->findBy('username', $username);
+                if ($existingUser) {
+                    throw new ValidationException("Username '{$username}' is already in use by another account.", ['username' => ['This username is already taken.']]);
+                }
+
+                $userEmail = !empty($input['email']) ? strtolower(trim($input['email'])) : ($username . '@voyagego.internal');
+                $existingEmail = $this->userModel->findBy('email', $userEmail);
+                if ($existingEmail) {
+                    throw new ValidationException("Email address '{$userEmail}' is already registered with another account.", ['email' => ['This email address is already in use.']]);
+                }
+
+                if (!empty($input['password_confirmation']) && $input['password'] !== $input['password_confirmation']) {
+                    throw new ValidationException('Passwords do not match.', ['password_confirmation' => ['Password confirmation does not match.']]);
+                }
+
+                $newUserId = $this->userModel->create([
+                    'name'       => trim($data['first_name'] . ' ' . $data['last_name']),
+                    'username'   => $username,
+                    'email'      => $userEmail,
+                    'phone'      => trim($data['phone']),
+                    'password'   => password_hash($input['password'], PASSWORD_BCRYPT, ['cost' => 12]),
+                    'role'       => $roleSlug,
+                    'status'     => 'active',
+                    'created_at' => date('Y-m-d H:i:s'),
+                    'updated_at' => date('Y-m-d H:i:s'),
+                ]);
+                $userId = $newUserId;
+            }
 
             $employeeCode = $this->employeeModel->generateEmployeeCode();
-            $userId = !empty($input['user_id']) ? (int)$input['user_id'] : null;
 
             $employeeId = $this->employeeModel->create([
                 'employee_code'     => $employeeCode,
@@ -111,8 +173,8 @@ class EmployeeController extends Controller
                 'phone'             => trim($data['phone']),
                 'alternate_phone'   => !empty($input['alternate_phone']) ? trim($input['alternate_phone']) : null,
                 'email'             => !empty($input['email']) ? strtolower(trim($input['email'])) : null,
-                'department'        => $data['department'],
-                'designation'       => trim($data['designation']),
+                'department'        => $roleSlug,
+                'designation'       => $roleName,
                 'employment_type'   => $data['employment_type'],
                 'joining_date'      => $data['joining_date'],
                 'status'            => $data['status'],
@@ -122,8 +184,9 @@ class EmployeeController extends Controller
                 'updated_at'        => date('Y-m-d H:i:s'),
             ]);
 
-            // If chauffeur, ensure driver_profile exists or create one if license provided
-            if ($data['department'] === 'fleet_chauffeur' && !empty($input['license_number']) && $userId) {
+            // If chauffeur/driver role or license number provided, ensure driver_profile exists
+            $isDriverRole = in_array($roleSlug, ['driver', 'chauffeur', 'fleet_chauffeur'], true) || !empty($input['license_number']);
+            if ($isDriverRole && !empty($input['license_number']) && $userId) {
                 $existingProfile = $this->driverModel->findBy('user_id', $userId);
                 if (!$existingProfile) {
                     $this->driverModel->create([
@@ -146,9 +209,9 @@ class EmployeeController extends Controller
                 $employeeId,
                 null,
                 [
-                    'code'       => $employeeCode,
-                    'name'       => $data['first_name'] . ' ' . $data['last_name'],
-                    'department' => $data['department'],
+                    'code' => $employeeCode,
+                    'name' => $data['first_name'] . ' ' . $data['last_name'],
+                    'role' => $roleSlug,
                 ],
                 Session::getUserId()
             );

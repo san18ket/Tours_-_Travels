@@ -1,22 +1,25 @@
+<?php
+$empFullName = e($employee['first_name'] . ' ' . $employee['last_name']);
+$headerActions = '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;">'
+    . '<a href="' . url('/office/employees') . '" class="btn btn-outline btn-sm">All Staff</a>';
+if (auth_role() === 'admin') {
+    $headerActions .= '<a href="' . url('/office/employees/' . $employee['id'] . '/edit') . '" class="btn btn-navy btn-sm">Edit Profile</a>';
+}
+$headerActions .= '</div>';
+?>
+<?= render_page_header([
+    'title'       => $empFullName,
+    'subtitle'    => e($employee['employee_code']) . ' • ' . e($employee['designation']) . ' (' . e(ucfirst(str_replace('_', ' ', $employee['department']))) . ')',
+    'breadcrumbs' => [
+        ['label' => 'Staff Directory', 'url' => url('/office/employees')],
+        ['label' => $empFullName, 'url' => ''],
+    ],
+    'actions'     => $headerActions,
+    'image'       => 'header-employees.jpg',
+    'badge'       => ucfirst($employee['status'] ?? 'active'),
+]) ?>
+
 <div style="max-width: 900px; margin: 0 auto;">
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-        <div>
-            <h1 style="font-size: 1.6rem; font-weight: 800; color: var(--vg-navy-900); letter-spacing: -0.02em; margin: 0 0 0.25rem 0;">
-                <?= e($employee['first_name'] . ' ' . $employee['last_name']) ?>
-            </h1>
-            <p style="color: var(--vg-text-secondary); font-size: 0.9rem; margin: 0;">
-                <span class="badge badge-navy"><?= e($employee['employee_code']) ?></span>
-                <span style="margin: 0 0.5rem; color: var(--vg-pearl-300);">•</span>
-                <?= e($employee['designation']) ?> (<?= e(ucfirst(str_replace('_', ' ', $employee['department']))) ?>)
-            </p>
-        </div>
-        <div style="display: flex; gap: 0.5rem;">
-            <a href="<?= url('/office/employees') ?>" class="btn btn-outline btn-sm">All Staff</a>
-            <?php if (auth_role() === 'admin'): ?>
-            <a href="<?= url('/office/employees/' . $employee['id'] . '/edit') ?>" class="btn btn-navy btn-sm">Edit Profile</a>
-            <?php endif; ?>
-        </div>
-    </div>
 
     <!-- Overview Card -->
     <div class="vg-card" style="margin-bottom: 1.5rem;">

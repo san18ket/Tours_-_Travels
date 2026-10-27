@@ -402,7 +402,6 @@ class PermissionRegistry
      */
     public static function getCatalogueWithPermissionIds(PDO $pdo): array
     {
-        self::ensureSeeded($pdo);
         $idMap = self::getPermissionNameToIdMap($pdo);
         $catalogue = self::getCatalogue();
 
@@ -425,5 +424,68 @@ class PermissionRegistry
         unset($category);
 
         return $catalogue;
+    }
+
+    /**
+     * Resolves an array of permission IDs and/or permission name keys into valid database IDs.
+     * Only inserts specific requested permissions on-demand if they are being assigned.
+     */
+    public static function resolvePermissionIds(PDO $pdo, array $inputs): array
+    {
+        if (empty($inputs)) {
+            return [];
+        }
+
+        $idMap = self::getPermissionNameToIdMap($pdo);
+        $resolvedIds = [];
+
+        // Preload flat permission definitions
+        $flatPerms = [];
+        foreach (self::getFlatPermissions() as $p) {
+            $flatPerms[$p['name']] = $p;
+        }
+
+        $insertStmt = null;
+
+        foreach ($inputs as $item) {
+            if (is_numeric($item) && (int)$item > 0) {
+                $id = (int)$item;
+                if (in_array($id, $idMap, true)) {
+                    $resolvedIds[] = $id;
+                    continue;
+                }
+            }
+
+            $name = trim((string)$item);
+            if (empty($name)) {
+                continue;
+            }
+
+            if (isset($idMap[$name])) {
+                $resolvedIds[] = $idMap[$name];
+            } elseif (isset($flatPerms[$name])) {
+                // Insert only this explicitly assigned permission
+                $def = $flatPerms[$name];
+                if ($insertStmt === null) {
+                    $insertStmt = $pdo->prepare("INSERT INTO `permissions` (`name`, `module`, `action`, `description`, `created_at`) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)");
+                }
+                try {
+                    $insertStmt->execute([$def['name'], $def['module'], $def['action'], $def['description']]);
+                    $newId = (int)$pdo->lastInsertId();
+                    $idMap[$name] = $newId;
+                    $resolvedIds[] = $newId;
+                } catch (\Throwable $e) {
+                    $check = $pdo->prepare("SELECT id FROM `permissions` WHERE name = ?");
+                    $check->execute([$name]);
+                    $existId = (int)$check->fetchColumn();
+                    if ($existId > 0) {
+                        $idMap[$name] = $existId;
+                        $resolvedIds[] = $existId;
+                    }
+                }
+            }
+        }
+
+        return array_values(array_unique(array_filter($resolvedIds, static fn(int $id) => $id > 0)));
     }
 }

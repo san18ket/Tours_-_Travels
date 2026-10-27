@@ -146,22 +146,25 @@ $totalPerms   = (int)($metrics['total_permissions'] ?? array_sum(array_column($r
 </style>
 
 <!-- HEADER -->
-<div class="rp-index-header">
-    <div class="rp-index-header-inner d-flex justify-content-between align-items-center flex-wrap gap-3">
-        <div>
-            <h1><i class="fa-solid fa-shield-halved me-2"></i>Role &amp; Permission Directory</h1>
-            <p>Review role authorizations, assigned user accounts, and granular permission matrices across all 8 business modules.</p>
-        </div>
-        <div class="d-flex align-items-center gap-2">
-            <a href="<?= url('/office/roles') ?>" class="btn btn-outline-light fw-bold px-3 py-2 rounded-3 text-nowrap">
-                <i class="fa-solid fa-list me-1.5"></i>Role List
-            </a>
-            <a href="<?= url('/office/role-permission/assign') ?>" class="btn btn-light fw-bold px-3.5 py-2 rounded-3 text-nowrap" style="color: var(--vg-navy-900);">
-                <i class="fa-solid fa-user-shield me-2 text-primary"></i>Assign Permissions
-            </a>
-        </div>
-    </div>
-</div>
+<?php
+$rpActions = '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">'
+    . '<a href="' . url('/office/roles') . '" class="btn btn-outline btn-sm">'
+    . '<i class="fa-solid fa-list me-1.5"></i>Role List</a>'
+    . '<a href="' . url('/office/role-permission/assign') . '" class="btn btn-primary btn-sm">'
+    . '<i class="fa-solid fa-user-shield me-2"></i>Assign Permissions</a>'
+    . '</div>';
+?>
+<?= render_page_header([
+    'title'       => 'Role & Permission Directory',
+    'subtitle'    => 'Review role authorizations, assigned user accounts, and granular permission matrices across all 8 business modules.',
+    'breadcrumbs' => [
+        ['label' => 'Access Control', 'url' => url('/office/roles')],
+        ['label' => 'Permissions Directory', 'url' => ''],
+    ],
+    'actions'     => $rpActions,
+    'image'       => 'header-roles.jpg',
+    'badge'       => $totalRoles . ' Defined Roles',
+]) ?>
 
 <!-- STAT CARDS -->
 <div class="rp-stats">
