@@ -1,143 +1,182 @@
-# VoyageGo — Tours & Travels Fleet Operations System
+# Tours & Travels Management System
 
-[![PHP 8.2+](https://img.shields.io/badge/PHP-8.2%2B-blue.svg)](https://php.net)
-[![Custom MVC Architecture](https://img.shields.io/badge/Architecture-Custom%20MVC%20%2B%20Services-0B192C.svg)](#architecture)
-[![Database](https://img.shields.io/badge/Database-MySQL%20%7C%20MariaDB%20%28PDO%29-008DDA.svg)](#automatic-database-initialization)
-[![Tests Passed](https://img.shields.io/badge/Tests-41%2F41%20Passing-10B981.svg)](#testing-gates)
-[![PWA Ready](https://img.shields.io/badge/PWA-Installable%20%26%20Offline%20Cache-1E3E62.svg)](#pwa--driver-mobile-console)
+A web-based Tours & Travels Management System built with PHP and MySQL to manage tour bookings, customers, vehicles, drivers, employees, trip assignments, invoices, and travel operations.
 
-VoyageGo is an enterprise-grade Tours & Travels Fleet Dispatch, Tour Package Booking, and Chauffeur Operations Management System built with **Core PHP**, a **Custom MVC Architecture**, **MySQL (PDO)**, **HTML5**, **Vanilla CSS**, and **Vanilla JavaScript** (strictly zero external heavy frontend frameworks).
+## 🚀 Features
 
----
+- **Dashboard:** View important business and travel management information.
+- **Tour Management:** Create, update, and manage tour packages.
+- **Booking Management:** Manage customer bookings and reservations.
+- **Customer Management:** Maintain customer profiles and documents.
+- **Fleet Management:** Manage vehicles and fleet information.
+- **Driver Management:** Manage drivers and driver profiles.
+- **Trip Dispatch:** Assign trips and manage trip operations.
+- **GPS Tracking:** Support for driver location tracking and GPS logs.
+- **Invoice Management:** Generate and manage invoices and payments.
+- **Employee Management:** Manage employee information.
+- **Role-Based Access Control:** Manage user roles and permissions.
+- **Multilingual Support:** English, Hindi, and Marathi.
+- **Mobile Driver App:** A React Native application for driver-related operations.
+- **Security:** Includes authentication, CSRF protection, request validation, and rate-limiting components.
 
-## 🌟 Key Functional Highlights
+## 🛠️ Technologies Used
 
-1. **Office Command Operations Dashboard**:
-   - Real-time KPI metrics: Active trips with live pulse radar, total bookings, available fleet vehicles, drivers on duty, and invoiced revenue.
-   - Live dispatch radar table and recent reservation feeds.
-   - Immutable security and operational audit stream.
+### Backend
+- PHP
+- MySQL
+- Custom MVC-style application architecture
 
-2. **Tour Packages Management**:
-   - Dynamic catalog supporting Heritage, Hill Station, Pilgrimage, Wildlife Safari, Beach, and Custom Corporate travel itineraries.
-   - Fixed fare structures, inclusion/exclusion specifications, and passenger capacity rules.
+### Frontend
+- HTML5
+- CSS3
+- JavaScript
 
-3. **Fleet & Chauffeur Roster**:
-   - Vehicle registration: commercial plate, make & model, capacity (Sedans, SUVs, Tempo Travellers, Luxury Coaches), odometer log, and roadworthiness status.
-   - Chauffeur profiles: commercial license verification, experience years, driver ratings, and duty toggling (`on_duty` / `off_duty`).
+### Mobile Application
+- React Native
+- JavaScript
+- Android
 
-4. **Dispatch Operations & Lifecycle Engine**:
-   - Multi-stage state machine: `assigned` → `driver_accepted` → `en_route_pickup` → `trip_started` → `completed`.
-   - Start and ending odometer verification (enforcing strictly non-decreasing mileage).
+### Development Tools
+- Visual Studio Code
+- XAMPP or another compatible PHP/MySQL environment
+- Git and GitHub
 
-5. **Tax Invoicing & Financial Ledger**:
-   - Itemized tax breakdown: Tour subtotal, promotional discounts, and Goods & Services Tax (GST 5%).
-   - **Issued-Invoice Integrity**: Once generated, tax invoices are marked `is_immutable = 1`. Core financials cannot be altered or deleted.
-   - **Idempotent Payment Allocation**: Prevents double-charging or duplicate submission via unique transaction tokens (`idempotency_key`).
-   - Printable official tax invoice with company GSTIN and payment allocation details.
+## 📋 Requirements
 
-6. **Driver Mobile Portal (PWA)**:
-   - Mobile-first chauffeur duty console with adaptive bottom navigation.
-   - Touch-friendly action triggers (minimum 44x44px touch targets).
-   - Live GPS telemetry reporting linked to authorized active trips.
-   - Offline fallback banner and background asset cache.
+Before installing the project, make sure you have:
 
----
+- PHP with the extensions required by the application
+- MySQL or a compatible database server
+- Apache or another compatible web server
+- Git
+- Node.js and npm for mobile application development
+- Android Studio for building and running the Android application
 
-## 🔒 Security Architecture
+## ⚙️ Installation and Setup
 
-- **Authentication & Sessions**:
-  - Passwords hashed using `PASSWORD_BCRYPT` with cost factor 12.
-  - Session fixation protection: `session_regenerate_id(true)` executed upon login.
-  - Cookie flags: `HttpOnly`, `SameSite=Lax`, strict mode enabled, and 30-minute idle session timeouts.
-- **CSRF Protection**:
-  - Cryptographically secure 64-character tokens (`random_bytes(32)`) required on every state-changing request (POST/PUT/DELETE). Timing-safe verification using `hash_equals`.
-- **SQL Injection Immunity**:
-  - 100% parameter-bound PDO prepared statements across all queries. Zero dynamic SQL string concatenation.
-- **XSS Defense**:
-  - Contextual output escaping with `e()` (`htmlspecialchars(..., ENT_QUOTES, 'UTF-8')`) in all views.
-- **Authorization & Ownership (IDOR Prevention)**:
-  - Role-based middleware (`admin`, `dispatcher`, `driver`, `customer`).
-  - Strict record-level ownership checks preventing guests or drivers from viewing or modifying records outside their authorized scope.
-- **Rate Limiting & Throttle**:
-  - Login lockout defense (maximum 5 failed attempts per 15 minutes per IP & user).
-  - API rate limits (120 req/min) and GPS submission rate limits.
-- **Service Worker Data Protection**:
-  - Service worker cache strategy strictly excludes private routes (`/office/invoices`, `/office/bookings`, `/private_uploads`, `/api/`).
-- **Telemetry Authorization**:
-  - Driver GPS coordinates are validated against active, authorized trip dispatches. Submissions from drivers without active duty or impossible coordinates are firmly rejected.
+### 1. Clone the Repository
 
----
+```bash
+git clone YOUR_GITHUB_REPOSITORY_URL
+```
 
-## 🗄️ Automatic Database Initialization & Migrations
+Replace `YOUR_GITHUB_REPOSITORY_URL` with your actual GitHub repository URL.
 
-VoyageGo features a zero-touch, resilient database migration system:
-1. **Connectivity Check**: Bootstrap verifies DB accessibility and schema version on application entry.
-2. **Advisory Locking**: Prevents race conditions during concurrent deployments using MySQL `GET_LOCK('voyagego_migration_lock', 20)`.
-3. **Versioned & Idempotent Migrations**: Located in `app/Migrations/`. Automatically creates missing tables, indexes, and foreign keys.
-4. **Migration History**: Maintained in `schema_migrations` tracking filename, batch, status, and duration in milliseconds.
-5. **No Data Loss Guarantee**: Migration files never drop tables, truncate records, or alter business data.
-6. **Installer Lockout**: Upon initial setup, `config/installed.lock` is written. Future access to `/setup` is blocked to prevent unauthorized re-installation.
-7. **Privileged vs. Runtime Accounts**: Supports distinct credentials in `config/database.php` for setup operations vs. daily runtime execution.
+### 2. Move into the Project Directory
 
----
+```bash
+cd Tours_travels
+```
 
-## 🚀 Quick Start Guide
+### 3. Set Up the Database
 
-### Prerequisites
-- PHP 8.2 or later with extensions: `pdo_mysql`, `openssl`, `mbstring`, `fileinfo`, `json`, `session`.
-- MySQL 8.0+ or MariaDB 10.4+.
-- Web server: Apache, Nginx, or PHP CLI built-in server.
+1. Start Apache and MySQL using XAMPP or your preferred environment.
+2. Create a new MySQL database.
+3. Configure the database connection using the application's configuration files.
+4. Run the application's setup process or database migrations as described in `DEPLOYMENT.md`.
 
-### Setup Steps
+**Important:** Never commit production database credentials or passwords to GitHub.
 
-1. **Configure Database Credentials**:
-   Edit [config/database.php](file:///e:/All-Projects/MY-PROJECTS/Tours_travels/config/database.php):
-   ```php
-   'default' => [
-       'host'     => '127.0.0.1',
-       'port'     => 3306,
-       'database' => 'tours_travels_db',
-       'username' => 'root',
-       'password' => '',
-   ]
-   ```
+### 4. Configure the Application
 
-2. **Initialize Database & Seed Data**:
-   Navigate to `http://127.0.0.1:8080/setup` in your browser, or run via CLI:
-   ```powershell
-   php tests/run_all.php
-   ```
+Review the files in the `config/` directory.
 
-3. **Start the Development Server**:
-   ```powershell
-   php -S 127.0.0.1:8080 -t public
-   ```
+Configure the database connection, application URL, security settings, and storage paths according to your local environment.
 
-4. **Access the Application**:
-   Open `http://127.0.0.1:8080/login`
+Use local configuration values and keep any sensitive credentials out of version control.
 
-### Default Demo Accounts
+### 5. Start the Application
 
-| Role | Email | Password | Primary Portal |
-| :--- | :--- | :--- | :--- |
-| **Administrator** | `admin@voyagego.com` | `Admin@12345` | `/office/dashboard` |
-| **Dispatcher** | `dispatcher@voyagego.com` | `Dispatcher@12345` | `/office/dispatch` |
-| **Chauffeur / Driver** | `rajesh.driver@voyagego.com` | `Driver@12345` | `/driver/duty` |
-| **Customer / Guest** | `arun.sharma@example.com` | `Customer@12345` | `/office/bookings` |
+Configure your Apache virtual host or document root according to the project's deployment instructions.
 
-*(Quick-click selector buttons are also available directly on the login form for rapid evaluation).*
+The application entry point is:
 
----
+```text
+index.php
+```
 
-## 🧪 Testing Gates & Verification
+Open the configured local application URL in your browser.
 
-Run the automated verification suite:
-```powershell
+For the exact server configuration and setup requirements, refer to `DEPLOYMENT.md`.
+
+## 📱 Mobile Driver Application
+
+The mobile application is located in:
+
+```text
+mobile-driver/
+```
+
+To install its JavaScript dependencies:
+
+```bash
+cd mobile-driver
+npm install
+```
+
+Configure the API base URL in the mobile application's configuration files before running it.
+
+You can then use the appropriate React Native and Android development tools to launch the application.
+
+## 🗂️ Project Structure
+
+```text
+Tours_travels/
+│
+├── app/
+│   ├── Controllers/     # Application controllers
+│   ├── Core/            # Core framework components
+│   ├── Languages/       # Language translations
+│   ├── Migrations/      # Database migrations
+│   ├── Models/          # Data models
+│   ├── Services/        # Business logic and services
+│   └── Views/           # Application pages and templates
+│
+├── config/              # Application configuration
+├── mobile-driver/       # Mobile driver application
+├── public/
+│   └── assets/          # CSS, images, icons, and other assets
+├── storage/             # Application storage
+├── tests/               # Application tests
+├── index.php            # Application entry point
+├── DEPLOYMENT.md        # Deployment instructions
+├── SECURITY.md          # Security documentation
+├── .gitignore           # Files excluded from Git
+└── README.md            # Project documentation
+```
+
+## 🧪 Testing
+
+The project includes PHP-based test scripts in the `tests/` directory.
+
+To run the test suite, configure the application and its required services first, then execute:
+
+```bash
 php tests/run_all.php
 ```
 
-### Verified Test Suites:
-- `Database Initialization & Versioned Migrations`: Connectivity, idempotent DDL, migration history, concurrent `GET_LOCK` locking, and installation lock integrity.
-- `Security, Authentication, XSS & SQLi Defense`: Bcrypt password verification, session fixation prevention, 64-char CSRF timing-safe comparison, output escaping, parameterized query SQLi immunity, rate limiter lockout.
-- `Business Rules, Pricing, Invoices & Idempotency`: Pricing formula (5% GST), duplicate booking prevention via idempotency token, invoice immutability enforcement, duplicate payment prevention, GPS coordinate validation.
-- `Database Backup, Integrity Checksum & Retention`: SQL dump export, SHA-256 checksum calculation, transactional restoration procedure, and 10-snapshot retention policy.
+## 🔐 Security Notes
+
+- Do not publish passwords, API keys, or other secrets.
+- Do not upload real customer identity documents or private customer information.
+- Do not commit database backups, session files, cookies, or application logs.
+- Configure secure session handling and access permissions before deployment.
+- Review `SECURITY.md` for additional security guidance.
+
+## 📌 Future Improvements
+
+- Enhanced booking and reservation workflows.
+- Online payment gateway integration.
+- Improved trip tracking and reporting.
+- Additional mobile application features.
+- Enhanced analytics and business reports.
+
+## 👨‍💻 Author
+
+**Your Name**
+
+Replace this with your name or GitHub profile.
+
+## 📄 License
+
+Choose and add an appropriate open-source license before distributing this project. If no license is provided, others do not automatically receive permission to reuse or redistribute the code.
