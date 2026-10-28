@@ -56,31 +56,35 @@ $totalBookingsCount = count($bookings);
 $completedTripsCount = count(array_filter($bookings, fn($b) => in_array($b['status'] ?? '', ['completed', 'confirmed'])));
 $totalSpentAmount = array_sum(array_column($bookings, 'total_amount'));
 
-// Fallback to match reference mockup stats when customer has no bookings yet
-$statTotalBookings = $hasRealBookings ? $totalBookingsCount : 8;
-$statBookingsTrend = $hasRealBookings ? ($totalBookingsCount > 0 ? "↑ {$totalBookingsCount}" : "0") : '↑ 2';
+// Statistics
+$statTotalBookings = $totalBookingsCount;
+$statBookingsTrend = $totalBookingsCount > 0 ? "↑ {$totalBookingsCount}" : "0";
 
-$statTotalTrips = $hasRealBookings ? $completedTripsCount : 6;
-$statTripsTrend = $hasRealBookings ? ($completedTripsCount > 0 ? "↑ {$completedTripsCount}" : "0") : '↑ 1';
+$statTotalTrips = $completedTripsCount;
+$statTripsTrend = $completedTripsCount > 0 ? "↑ {$completedTripsCount}" : "0";
 
-$statTotalSpent = $hasRealBookings ? $totalSpentAmount : 48750;
-$statSpentTrend = $hasRealBookings ? '↑ 100%' : '↑ 12%';
+$statTotalSpent = $totalSpentAmount;
+$statSpentTrend = $totalSpentAmount > 0 ? 'Active' : '—';
 
 if ($hasRealBookings && !empty($bookings[0]['start_date'])) {
     $statLastTripDate = format_date($bookings[0]['start_date']);
     $statLastTripTour = !empty($bookings[0]['tour_title']) ? $bookings[0]['tour_title'] : 'Custom Travel Package';
 } else {
-    $statLastTripDate = '12 Aug 2025';
-    $statLastTripTour = 'Manali Package';
+    $statLastTripDate = 'No trips yet';
+    $statLastTripTour = 'Ready to schedule';
 }
 
-// Destination packages matching view sm.jpeg
+// Destination packages for Recent Bookings list
 $recentBookingsList = [];
 if ($hasRealBookings) {
-    foreach ($bookings as $idx => $b) {
+    // Take up to 4 most recent bookings for the side card
+    $recentSubset = array_slice($bookings, 0, 4);
+    foreach ($recentSubset as $idx => $b) {
         $thumb = asset('images/destination-manali.jpg');
         $titleLower = strtolower($b['tour_title'] ?? '');
-        if (str_contains($titleLower, 'dubai')) {
+        if (!empty($b['tour_image'])) {
+            $thumb = str_starts_with($b['tour_image'], 'http') ? $b['tour_image'] : asset(ltrim($b['tour_image'], '/'));
+        } elseif (str_contains($titleLower, 'dubai')) {
             $thumb = asset('images/destination-dubai.jpg');
         } elseif (str_contains($titleLower, 'goa')) {
             $thumb = asset('images/destination-goa.jpg');
@@ -94,75 +98,40 @@ if ($hasRealBookings) {
             $thumb = asset('images/destination-goa.jpg');
         }
 
+        $pax = (int)($b['passenger_count'] ?? 1);
+        $dateText = format_date($b['start_date']);
+        if (!empty($b['end_date']) && $b['end_date'] !== $b['start_date']) {
+            $dateText .= ' – ' . format_date($b['end_date']);
+        }
+
+        $bookingTitle = !empty($b['tour_title']) 
+            ? $b['tour_title'] 
+            : (!empty($b['pickup_address']) && !empty($b['drop_address']) 
+                ? ($b['pickup_address'] . ' → ' . $b['drop_address']) 
+                : 'Custom Travel Journey');
+
+        $rawStatus = strtolower($b['status'] ?? 'pending');
+        $statusLabel = ucwords(str_replace('_', ' ', $rawStatus));
+
         $recentBookingsList[] = [
             'id' => $b['id'],
             'booking_code' => $b['booking_code'] ?? ('VG-BK-' . str_pad($b['id'], 4, '0', STR_PAD_LEFT)),
-            'title' => !empty($b['tour_title']) ? $b['tour_title'] : 'Custom Chauffeur Travel Package',
-            'date_range' => format_date($b['start_date']) . (!empty($b['end_date']) ? ' - ' . format_date($b['end_date']) : ''),
-            'passengers' => ((int)($b['passenger_count'] ?? 1)) . ' People',
-            'status' => ucfirst($b['status'] ?? 'completed'),
+            'title' => $bookingTitle,
+            'date_range' => $dateText,
+            'passengers' => $pax . ($pax === 1 ? ' Person' : ' Guests'),
+            'status' => $rawStatus,
+            'status_label' => $statusLabel,
             'amount' => format_currency((float)$b['total_amount']),
             'image' => $thumb,
-            'is_sample' => false,
+            'payment_status' => !empty($b['payment_status']) ? strtolower($b['payment_status']) : null,
         ];
     }
-} else {
-    // 3 Reference Bookings from view sm.jpeg
-    $recentBookingsList = [
-        [
-            'id' => 101,
-            'booking_code' => 'VG-BK-101',
-            'title' => 'Manali Package',
-            'date_range' => '12 Aug 2025 - 17 Aug 2025',
-            'passengers' => '2 People',
-            'status' => 'Completed',
-            'amount' => '₹ 24,000',
-            'image' => asset('images/destination-manali.jpg'),
-            'is_sample' => true,
-        ],
-        [
-            'id' => 102,
-            'booking_code' => 'VG-BK-102',
-            'title' => 'Dubai City Tour',
-            'date_range' => '10 Jan 2025 - 14 Jan 2025',
-            'passengers' => '2 People',
-            'status' => 'Completed',
-            'amount' => '₹ 52,000',
-            'image' => asset('images/destination-dubai.jpg'),
-            'is_sample' => true,
-        ],
-        [
-            'id' => 103,
-            'booking_code' => 'VG-BK-103',
-            'title' => 'Goa Adventure Trip',
-            'date_range' => '06 Jun 2024 - 10 Jun 2024',
-            'passengers' => '4 People',
-            'status' => 'Completed',
-            'amount' => '₹ 36,500',
-            'image' => asset('images/destination-goa.jpg'),
-            'is_sample' => true,
-        ],
-    ];
 }
 ?>
 
 <div class="customer-view-root">
-    <!-- Top App Bar / Header (Matches view sm.jpeg on mobile & desktop) -->
+    <!-- Top App Bar / Header Actions -->
     <div class="view-header-bar">
-        <div class="view-header-left">
-            <a href="<?= url('/office/customers') ?>" class="view-header-btn back-btn" title="Back to Customer Directory" aria-label="Back">
-                <i class="fa-solid fa-arrow-left"></i>
-            </a>
-            <div class="view-header-title-wrap">
-                <div class="view-header-breadcrumbs">
-                    <a href="<?= url('/office/customers') ?>">Customers</a>
-                    <i class="fa-solid fa-chevron-right"></i>
-                    <span><?= e($customer['name']) ?></span>
-                </div>
-                <h1 class="view-header-title">Customer Details</h1>
-                <p class="view-header-subtitle">Customer Information &amp; Travel History</p>
-            </div>
-        </div>
         <div class="view-header-right">
             <a href="<?= url('/office/customers/' . $customer['id'] . '/edit') ?>" class="view-header-btn edit-btn" title="Edit Profile" aria-label="Edit Profile">
                 <i class="fa-solid fa-pen"></i>
@@ -301,8 +270,12 @@ if ($hasRealBookings) {
                 <div class="kpi-icon-wrap blue">
                     <i class="fa-solid fa-suitcase-rolling"></i>
                 </div>
-                <div class="kpi-trend up">
-                    <i class="fa-solid fa-arrow-up"></i> <?= e($statBookingsTrend) ?>
+                <div class="kpi-trend <?= $totalBookingsCount > 0 ? 'up' : 'neutral' ?>">
+                    <?php if ($totalBookingsCount > 0): ?>
+                        <i class="fa-solid fa-arrow-up"></i> <?= e($statBookingsTrend) ?>
+                    <?php else: ?>
+                        <span>—</span>
+                    <?php endif; ?>
                 </div>
             </div>
             <div class="kpi-label">Total Bookings</div>
@@ -316,8 +289,12 @@ if ($hasRealBookings) {
                 <div class="kpi-icon-wrap blue">
                     <i class="fa-solid fa-user-group"></i>
                 </div>
-                <div class="kpi-trend up">
-                    <i class="fa-solid fa-arrow-up"></i> <?= e($statTripsTrend) ?>
+                <div class="kpi-trend <?= $completedTripsCount > 0 ? 'up' : 'neutral' ?>">
+                    <?php if ($completedTripsCount > 0): ?>
+                        <i class="fa-solid fa-arrow-up"></i> <?= e($statTripsTrend) ?>
+                    <?php else: ?>
+                        <span>—</span>
+                    <?php endif; ?>
                 </div>
             </div>
             <div class="kpi-label">Total Trips</div>
@@ -331,8 +308,12 @@ if ($hasRealBookings) {
                 <div class="kpi-icon-wrap amber">
                     <i class="fa-solid fa-indian-rupee-sign"></i>
                 </div>
-                <div class="kpi-trend up">
-                    <i class="fa-solid fa-arrow-up"></i> <?= e($statSpentTrend) ?>
+                <div class="kpi-trend <?= $totalSpentAmount > 0 ? 'up' : 'neutral' ?>">
+                    <?php if ($totalSpentAmount > 0): ?>
+                        <i class="fa-solid fa-arrow-up"></i> <?= e($statSpentTrend) ?>
+                    <?php else: ?>
+                        <span>—</span>
+                    <?php endif; ?>
                 </div>
             </div>
             <div class="kpi-label">Total Spent</div>
@@ -346,7 +327,7 @@ if ($hasRealBookings) {
                 <div class="kpi-icon-wrap blue">
                     <i class="fa-regular fa-calendar-days"></i>
                 </div>
-                <span class="kpi-tag-recent">Recent</span>
+                <span class="kpi-tag-recent <?= !$hasRealBookings ? 'empty' : '' ?>"><?= $hasRealBookings ? 'Recent' : 'Status' ?></span>
             </div>
             <div class="kpi-label">Last Trip</div>
             <div class="kpi-value text-compact"><?= e($statLastTripDate) ?></div>
@@ -590,7 +571,7 @@ if ($hasRealBookings) {
 
             <!-- Right Column: Recent Bookings & Quick Actions -->
             <div class="view-col-side">
-                <!-- Recent Bookings Section (Matching view sm.jpeg) -->
+                <!-- Recent Bookings Section -->
                 <div class="view-section-card">
                     <div class="section-card-header">
                         <div class="section-title-wrap">
@@ -598,39 +579,79 @@ if ($hasRealBookings) {
                                 <i class="fa-regular fa-calendar-check"></i>
                             </div>
                             <h3 class="section-title">Recent Bookings</h3>
+                            <span class="section-badge-counter <?= !$hasRealBookings ? 'zero' : '' ?>"><?= count($bookings) ?></span>
                         </div>
-                        <a href="javascript:void(0)" onclick="switchTab('bookings')" class="section-header-link">
-                            View All <i class="fa-solid fa-chevron-right"></i>
-                        </a>
+                        <?php if ($hasRealBookings): ?>
+                            <a href="javascript:void(0)" onclick="switchTab('bookings')" class="section-header-link">
+                                View All <i class="fa-solid fa-chevron-right"></i>
+                            </a>
+                        <?php endif; ?>
                     </div>
                     <div class="section-card-body p-0">
-                        <div class="recent-bookings-list">
-                            <?php foreach ($recentBookingsList as $rb): ?>
-                                <div class="recent-booking-card" onclick="location.href='<?= url('/office/bookings/' . ($rb['is_sample'] ? 'create?customer_id=' . $customer['id'] : $rb['id'])) ?>'">
-                                    <div class="booking-thumb-wrap">
-                                        <img src="<?= e($rb['image']) ?>" alt="<?= e($rb['title']) ?>" class="booking-thumb-img" onerror="this.src='<?= asset('images/destination-manali.jpg') ?>'">
-                                    </div>
-                                    <div class="booking-card-mid">
-                                        <h4 class="booking-card-title"><?= e($rb['title']) ?></h4>
-                                        <div class="booking-card-meta">
-                                            <span class="meta-date"><i class="fa-regular fa-calendar"></i> <?= e($rb['date_range']) ?></span>
-                                            <span class="meta-pax"><i class="fa-solid fa-user-group"></i> <?= e($rb['passengers']) ?></span>
+                        <?php if (!empty($recentBookingsList)): ?>
+                            <div class="recent-bookings-list">
+                                <?php foreach ($recentBookingsList as $rb): ?>
+                                    <div class="recent-booking-card" onclick="location.href='<?= url('/office/bookings/' . $rb['id']) ?>'" role="button" tabindex="0" title="View details for <?= e($rb['booking_code']) ?>">
+                                        <div class="booking-thumb-wrap">
+                                            <img src="<?= e($rb['image']) ?>" alt="<?= e($rb['title']) ?>" class="booking-thumb-img" onerror="this.src='<?= asset('images/destination-manali.jpg') ?>'">
+                                        </div>
+                                        <div class="booking-card-mid">
+                                            <div class="booking-card-header-mini">
+                                                <span class="booking-mini-code"><?= e($rb['booking_code']) ?></span>
+                                                <?php if (!empty($rb['payment_status'])): ?>
+                                                    <span class="booking-pay-status pay-<?= strtolower($rb['payment_status']) ?>">
+                                                        <?= ucfirst($rb['payment_status']) ?>
+                                                    </span>
+                                                <?php endif; ?>
+                                            </div>
+                                            <h4 class="booking-card-title" title="<?= e($rb['title']) ?>"><?= e($rb['title']) ?></h4>
+                                            <div class="booking-card-meta">
+                                                <span class="meta-date"><i class="fa-regular fa-calendar"></i> <?= e($rb['date_range']) ?></span>
+                                                <span class="meta-pax"><i class="fa-solid fa-user-group"></i> <?= e($rb['passengers']) ?></span>
+                                            </div>
+                                        </div>
+                                        <div class="booking-card-right">
+                                            <span class="booking-status-pill status-<?= strtolower(str_replace([' ', '_'], '-', $rb['status'])) ?>">
+                                                <?= e($rb['status_label']) ?>
+                                            </span>
+                                            <div class="booking-amount"><?= e($rb['amount']) ?></div>
+                                        </div>
+                                        <div class="booking-card-arrow">
+                                            <i class="fa-solid fa-chevron-right"></i>
                                         </div>
                                     </div>
-                                    <div class="booking-card-right">
-                                        <span class="booking-status-pill"><?= e($rb['status']) ?></span>
-                                        <div class="booking-amount"><?= e($rb['amount']) ?></div>
-                                    </div>
-                                    <div class="booking-card-arrow">
-                                        <i class="fa-solid fa-chevron-right"></i>
+                                <?php endforeach; ?>
+                            </div>
+                            <?php if (count($bookings) > count($recentBookingsList)): ?>
+                                <div class="recent-bookings-footer">
+                                    <a href="javascript:void(0)" onclick="switchTab('bookings')" class="recent-view-more-btn">
+                                        View All <?= count($bookings) ?> Bookings in Ledger <i class="fa-solid fa-arrow-right"></i>
+                                    </a>
+                                </div>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <!-- Professional Empty State for No Recent Bookings -->
+                            <div class="recent-bookings-empty-state">
+                                <div class="empty-state-icon-wrap">
+                                    <div class="empty-icon-glow"></div>
+                                    <div class="empty-icon-badge">
+                                        <i class="fa-regular fa-calendar-xmark"></i>
                                     </div>
                                 </div>
-                            <?php endforeach; ?>
-                        </div>
-
-                        <?php if (!$hasRealBookings): ?>
-                            <div class="sample-demo-notice">
-                                <i class="fa-solid fa-circle-info"></i> Displaying past travel journey packages from customer records.
+                                <h4 class="empty-state-heading">No Recent Bookings</h4>
+                                <p class="empty-state-desc">
+                                    There are currently no travel itineraries or booking records for this customer.
+                                </p>
+                                <div class="empty-state-actions">
+                                    <a href="<?= url('/office/bookings/create?customer_id=' . $customer['id']) ?>" class="btn-create-booking-primary">
+                                        <i class="fa-solid fa-calendar-plus"></i>
+                                        <span>Create First Booking</span>
+                                    </a>
+                                </div>
+                                <div class="empty-state-meta-hint">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                    <span>Profile verified &amp; ready for reservations</span>
+                                </div>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -973,84 +994,99 @@ if ($hasRealBookings) {
      DELETE MODAL COMPONENT (Matching delete.jpeg)
      ========================================================================= -->
 <div id="deleteModalBackdrop" class="vg-del-backdrop" style="display: none;" onclick="handleBackdropClick(event)">
-    <!-- Step 1: Initial Warning Dialog -->
-    <div id="deleteModalStep1" class="vg-del-card" role="dialog" aria-modal="true" aria-labelledby="delModalTitle1">
-        <div class="vg-del-header">
-            <div class="vg-del-icon-wrap" aria-hidden="true">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    <line x1="10" y1="11" x2="10" y2="17"></line>
-                    <line x1="14" y1="11" x2="14" y2="17"></line>
-                </svg>
-            </div>
-            <button type="button" class="vg-del-close-btn" onclick="closeDeleteModal()" aria-label="Close dialog">&times;</button>
-        </div>
+    <!-- MODAL 1: Initial Delete -->
+    <div class="vg-del-modal" id="deleteStep1Modal" role="dialog" aria-modal="true" aria-labelledby="delModalTitle1">
+        <button type="button" class="vg-del-close-btn" onclick="closeDeleteModal()" aria-label="Close dialog">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
 
         <div class="vg-del-body">
-            <h3 id="delModalTitle1" class="vg-del-title">Delete Customer Profile</h3>
-            <p class="vg-del-message">
-                You are about to delete customer <strong id="deleteCustomerName" style="color:#0F172A;"><?= e($customer['name']) ?></strong>. All associated records, uploaded avatar images, and identity verification documents will be deleted.
-            </p>
+            <div class="vg-del-icon-halo">
+                <div class="vg-del-icon-circle">
+                    <i class="fa-solid fa-trash-can"></i>
+                </div>
+            </div>
 
-            <div class="vg-del-checkbox-row">
-                <input type="checkbox" id="delConfirmCheck" class="vg-del-checkbox" onchange="toggleStep1DeleteBtn()">
-                <label for="delConfirmCheck" class="vg-del-checkbox-label">
-                    I understand that this action is irreversible and all customer files will be permanently purged.
-                </label>
+            <div class="vg-del-content">
+                <h3 class="vg-del-title" id="delModalTitle1">Delete</h3>
+                <p class="vg-del-desc" id="delModalDesc1">
+                    This item will be permanently deleted and cannot be recovered.
+                </p>
+
+                <div class="vg-del-checkbox-wrap" id="delCheckboxContainer">
+                    <label class="vg-del-checkbox-label">
+                        <input type="checkbox" id="deleteStep1Checkbox" class="vg-del-checkbox-input" onchange="toggleStep1DeleteBtn()">
+                        <span class="vg-del-checkbox-box">
+                            <i class="fa-solid fa-check"></i>
+                        </span>
+                        <span class="vg-del-checkbox-text">
+                            I understand this customer profile will be permanently deleted.
+                        </span>
+                    </label>
+                </div>
             </div>
         </div>
 
-        <div class="vg-del-footer">
+        <div class="vg-del-actions">
             <button type="button" class="vg-del-btn-cancel" onclick="closeDeleteModal()">Cancel</button>
-            <button type="button" id="btnStep1Delete" class="vg-del-btn-danger" disabled onclick="proceedToStep2()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                </svg>
-                Delete
+            <button type="button" class="vg-del-btn-delete disabled" id="deleteStep1Btn" onclick="goToStep2Modal()">
+                <i class="fa-solid fa-trash-can"></i>
+                <span>Delete</span>
             </button>
         </div>
     </div>
 
-    <!-- Step 2: Are You Sure Confirmation Dialog -->
-    <div id="deleteModalStep2" class="vg-del-card" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="delModalTitle2">
-        <div class="vg-del-header">
-            <div class="vg-del-icon-wrap" style="background: #FEF2F2; color: #DC2626;" aria-hidden="true">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                    <line x1="12" y1="9" x2="12" y2="13"></line>
-                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                </svg>
-            </div>
-            <button type="button" class="vg-del-close-btn" onclick="closeDeleteModal()" aria-label="Close dialog">&times;</button>
-        </div>
+    <!-- MODAL 2: Are you sure? Final Confirmation -->
+    <div class="vg-del-modal" id="deleteStep2Modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="delModalTitle2">
+        <button type="button" class="vg-del-close-btn" onclick="closeDeleteModal()" aria-label="Close dialog">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
 
         <div class="vg-del-body">
-            <h3 id="delModalTitle2" class="vg-del-title">Are you sure you want to delete?</h3>
-            <p class="vg-del-message">
-                This will immediately purge <strong id="deleteCustomerName2" style="color:#0F172A;"><?= e($customer['name']) ?></strong> from the system directory.
-            </p>
+            <div class="vg-del-icon-halo warning">
+                <div class="vg-del-warning-triangle">
+                    <svg viewBox="0 0 24 24" width="32" height="32" fill="none" class="vg-del-triangle-svg">
+                        <path d="M10.29 3.86L1.82 18.54A2 2 0 0 0 3.53 21.5h16.94a2 2 0 0 0 1.71-2.96L13.71 3.86a2 2 0 0 0-3.42 0z" fill="url(#vgDelTriangleGrad)"/>
+                        <line x1="12" y1="9" x2="12" y2="13.5" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round"/>
+                        <circle cx="12" cy="17.2" r="1.3" fill="#FFFFFF"/>
+                        <defs>
+                            <linearGradient id="vgDelTriangleGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#FF4D6D"/>
+                                <stop offset="1" stop-color="#EF233C"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+            </div>
 
-            <div class="vg-del-checkbox-row" style="background:#FFF1F2; border-color:#FECDD3;">
-                <input type="checkbox" id="delConfirmCheck2" class="vg-del-checkbox" onchange="toggleStep2DeleteBtn()">
-                <label for="delConfirmCheck2" class="vg-del-checkbox-label" style="color:#9F1239; font-weight:600;">
-                    Yes, I confirm this deletion. Permanently purge customer data.
-                </label>
+            <div class="vg-del-content">
+                <h3 class="vg-del-title" id="delModalTitle2">Are you sure?</h3>
+                <p class="vg-del-desc" id="delModalDesc2">
+                    You are about to delete this item. This action cannot be undone.
+                </p>
+
+                <div class="vg-del-checkbox-wrap" id="delCheckboxContainer2">
+                    <label class="vg-del-checkbox-label">
+                        <input type="checkbox" id="deleteStep2Checkbox" class="vg-del-checkbox-input" onchange="toggleStep2DeleteBtn()">
+                        <span class="vg-del-checkbox-box">
+                            <i class="fa-solid fa-check"></i>
+                        </span>
+                        <span class="vg-del-checkbox-text">
+                            Yes, I am completely sure and want to delete this customer.
+                        </span>
+                    </label>
+                </div>
             </div>
         </div>
 
-        <div class="vg-del-footer">
+        <div class="vg-del-actions">
             <button type="button" class="vg-del-btn-cancel" onclick="closeDeleteModal()">Cancel</button>
-            <form id="deleteCustomerForm" method="POST" action="<?= url('/office/customers/' . $customer['id'] . '/delete') ?>" style="display:inline-block; margin:0;">
+            <form id="deleteCustomerForm" method="POST" action="<?= url('/office/customers/' . $customer['id'] . '/delete') ?>" style="display:inline-block; margin:0;" onsubmit="return handleCustomerDeleteSubmit(event)">
                 <?= csrf_field() ?>
                 <input type="hidden" name="confirm_delete_related" value="1">
-                <button type="submit" id="btnStep2ConfirmDelete" class="vg-del-btn-danger" disabled>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;">
-                        <polyline points="3 6 5 6 21 6"></polyline>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    </svg>
-                    Confirm Delete
+                <button type="submit" class="vg-del-btn-delete disabled" id="deleteConfirmFinalBtn">
+                    <i class="fa-solid fa-trash-can"></i>
+                    <span id="deleteFinalBtnText">Delete</span>
                 </button>
             </form>
         </div>
@@ -1091,13 +1127,13 @@ if ($hasRealBookings) {
     -webkit-font-smoothing: antialiased;
 }
 
-/* 1. Header Bar (App Bar) */
+/* 1. Header Bar (App Bar Actions) */
 .view-header-bar {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
-    margin-bottom: 1.25rem;
-    gap: 1rem;
+    margin-bottom: 0.85rem;
+    gap: 0.65rem;
 }
 
 .view-header-left {
@@ -2213,7 +2249,33 @@ if ($hasRealBookings) {
     text-decoration: underline;
 }
 
-/* 8. Recent Bookings List (Matching view sm.jpeg) */
+/* 8. Recent Bookings List & Professional Dynamic States */
+.section-badge-counter {
+    background: #EFF6FF;
+    color: var(--cv-primary-blue);
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: var(--cv-radius-pill);
+    border: 1px solid #DBEAFE;
+    line-height: 1;
+}
+
+.section-badge-counter.zero {
+    background: #F1F5F9;
+    color: #94A3B8;
+    border-color: #E2E8F0;
+}
+
+.kpi-trend.neutral {
+    color: #94A3B8;
+}
+
+.kpi-tag-recent.empty {
+    color: #64748B;
+    background: #F1F5F9;
+}
+
 .recent-bookings-list {
     display: flex;
     flex-direction: column;
@@ -2226,7 +2288,7 @@ if ($hasRealBookings) {
     padding: 0.9rem 1.4rem;
     border-bottom: 1px solid #F1F5F9;
     cursor: pointer;
-    transition: background 0.15s ease;
+    transition: all 0.15s ease;
     text-decoration: none;
     color: inherit;
     -webkit-tap-highlight-color: transparent;
@@ -2251,6 +2313,7 @@ if ($hasRealBookings) {
     overflow: hidden;
     flex-shrink: 0;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    background: #F1F5F9;
 }
 
 .booking-thumb-img {
@@ -2265,11 +2328,55 @@ if ($hasRealBookings) {
     min-width: 0;
 }
 
+.booking-card-header-mini {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 2px;
+}
+
+.booking-mini-code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--cv-primary-blue);
+    background: #EFF6FF;
+    padding: 1px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.02em;
+}
+
+.booking-pay-status {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.booking-pay-status.pay-paid {
+    background: #DCFCE7;
+    color: #15803D;
+}
+
+.booking-pay-status.pay-partial,
+.booking-pay-status.pay-partially_paid {
+    background: #FEF3C7;
+    color: #B45309;
+}
+
+.booking-pay-status.pay-pending,
+.booking-pay-status.pay-unpaid {
+    background: #FEE2E2;
+    color: #B91C1C;
+}
+
 .booking-card-title {
     font-size: 0.92rem;
     font-weight: 800;
     color: var(--cv-navy-900);
-    margin: 0 0 2px 0;
+    margin: 0 0 3px 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -2303,6 +2410,31 @@ if ($hasRealBookings) {
     font-weight: 700;
     padding: 2px 8px;
     border-radius: var(--cv-radius-pill);
+    display: inline-block;
+}
+
+.booking-status-pill.status-confirmed,
+.booking-status-pill.status-completed {
+    background: #E8F7F0;
+    color: var(--cv-green-600);
+}
+
+.booking-status-pill.status-pending,
+.booking-status-pill.status-draft {
+    background: #FEF3C7;
+    color: #D97706;
+}
+
+.booking-status-pill.status-cancelled {
+    background: #FEE2E2;
+    color: #EF4444;
+}
+
+.booking-status-pill.status-on-trip,
+.booking-status-pill.status-trip-started,
+.booking-status-pill.status-in-progress {
+    background: #E0F2FE;
+    color: #0284C7;
 }
 
 .booking-amount {
@@ -2316,17 +2448,154 @@ if ($hasRealBookings) {
     font-size: 0.85rem;
     margin-left: 0.25rem;
     flex-shrink: 0;
+    transition: transform 0.15s ease;
 }
 
-.sample-demo-notice {
+.recent-booking-card:hover .booking-card-arrow {
+    transform: translateX(3px);
+    color: var(--cv-primary-blue);
+}
+
+.recent-bookings-footer {
     padding: 0.75rem 1.4rem;
     background: #F8FAFC;
     border-top: 1px solid #F1F5F9;
-    font-size: 0.74rem;
-    color: #64748B;
-    display: flex;
+    text-align: center;
+}
+
+.recent-view-more-btn {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--cv-primary-blue);
+    text-decoration: none;
+    display: inline-flex;
     align-items: center;
     gap: 6px;
+    transition: all 0.15s ease;
+}
+
+.recent-view-more-btn:hover {
+    color: var(--cv-primary-dark);
+    text-decoration: underline;
+    transform: translateX(2px);
+}
+
+/* =========================================================================
+   Professional Empty State for Recent Bookings
+   ========================================================================= */
+.recent-bookings-empty-state {
+    padding: 2.25rem 1.5rem 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.empty-state-icon-wrap {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.85rem;
+}
+
+.empty-icon-glow {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(37, 99, 235, 0.18) 0%, rgba(37, 99, 235, 0) 70%);
+    animation: emptyGlowPulse 3s ease-in-out infinite;
+}
+
+@keyframes emptyGlowPulse {
+    0%, 100% { transform: scale(1); opacity: 0.7; }
+    50% { transform: scale(1.15); opacity: 1; }
+}
+
+.empty-icon-badge {
+    position: relative;
+    width: 56px;
+    height: 56px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+    border: 1px solid #BFDBFE;
+    color: var(--cv-primary-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+}
+
+.empty-state-heading {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--cv-navy-900);
+    margin: 0 0 0.4rem 0;
+    letter-spacing: -0.01em;
+}
+
+.empty-state-desc {
+    font-size: 0.82rem;
+    color: #64748B;
+    margin: 0 0 1.25rem 0;
+    line-height: 1.55;
+    max-width: 290px;
+}
+
+.empty-state-actions {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.btn-create-booking-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+    color: #FFFFFF;
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 0.65rem 1.25rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+    text-decoration: none;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-create-booking-primary:hover {
+    color: #FFFFFF;
+    background: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
+}
+
+.btn-create-booking-primary:active {
+    transform: scale(0.97);
+}
+
+.empty-state-meta-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-top: 1.15rem;
+    padding: 0.35rem 0.85rem;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: var(--cv-radius-pill);
+    font-size: 0.72rem;
+    color: #64748B;
+    font-weight: 600;
+}
+
+.empty-state-meta-hint i {
+    color: var(--cv-green-600);
 }
 
 /* 9. Quick Actions 4-Tile Grid (Matching view sm.jpeg) */
@@ -2790,141 +3059,437 @@ if ($hasRealBookings) {
     border-radius: 8px;
 }
 
-/* 12. Delete Modal Styles */
+/* 12. Delete Modal Styles (Matches delete.jpeg) */
 .vg-del-backdrop {
     position: fixed;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.65);
-    backdrop-filter: blur(4px);
-    z-index: 10000;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 999999;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 1.25rem;
+    padding: 20px;
+    opacity: 0;
+    transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.vg-del-card {
-    background: #FFFFFF;
-    border-radius: 18px;
-    max-width: 460px;
+.vg-del-backdrop.active {
+    opacity: 1;
+}
+
+.vg-del-modal {
+    position: relative;
     width: 100%;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    max-width: 530px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.96) 65%, rgba(240, 247, 255, 0.94) 100%);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    border-radius: 26px;
+    border: 1.5px solid rgba(255, 255, 255, 0.95);
+    box-shadow: 
+        0 24px 50px -12px rgba(15, 23, 42, 0.24),
+        0 8px 18px -4px rgba(15, 23, 42, 0.12),
+        0 0 0 1px rgba(226, 232, 240, 0.6) inset;
+    padding: 34px 38px 30px 38px;
+    transform: scale(0.93) translateY(10px);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
     overflow: hidden;
-    animation: scaleInDel 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes scaleInDel {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
+.vg-del-modal::before {
+    content: '';
+    position: absolute;
+    bottom: -60px;
+    left: -40px;
+    width: 340px;
+    height: 180px;
+    background: radial-gradient(ellipse at center, rgba(186, 230, 253, 0.5) 0%, rgba(224, 242, 254, 0.25) 55%, transparent 75%);
+    pointer-events: none;
+    border-radius: 50%;
+    z-index: 0;
 }
 
-.vg-del-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: 1.25rem 1.25rem 0.5rem 1.25rem;
-}
-
-.vg-del-icon-wrap {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    background: #FEE2E2;
-    color: #DC2626;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.vg-del-backdrop.active .vg-del-modal {
+    transform: scale(1) translateY(0);
 }
 
 .vg-del-close-btn {
-    background: none;
+    position: absolute;
+    top: 20px;
+    right: 22px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
     border: none;
-    font-size: 1.5rem;
-    color: #94A3B8;
+    background: transparent;
+    color: #64748B;
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    line-height: 1;
+    transition: all 0.2s ease;
+    z-index: 3;
+}
+
+.vg-del-close-btn:hover {
+    background: #F1F5F9;
+    color: #0F172A;
 }
 
 .vg-del-body {
-    padding: 0.75rem 1.25rem 1.25rem 1.25rem;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: flex-start;
+    gap: 22px;
+}
+
+.vg-del-icon-halo {
+    position: relative;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(254, 205, 211, 0.95) 0%, rgba(255, 228, 230, 0.6) 55%, rgba(255, 241, 242, 0) 100%);
+    box-shadow: 0 0 26px rgba(244, 63, 94, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.vg-del-icon-halo.warning {
+    box-shadow: 0 0 28px rgba(244, 63, 94, 0.4);
+}
+
+.vg-del-icon-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #FF4D6D 0%, #EF233C 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFFFFF;
+    font-size: 1.3rem;
+    box-shadow: 0 6px 16px rgba(239, 35, 60, 0.42);
+}
+
+.vg-del-warning-triangle {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    filter: drop-shadow(0 6px 14px rgba(239, 35, 60, 0.45));
+}
+
+.vg-del-content {
+    flex: 1;
+    min-width: 0;
 }
 
 .vg-del-title {
-    font-size: 1.15rem;
-    font-weight: 800;
+    font-size: 1.62rem;
+    font-weight: 700;
     color: #0F172A;
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 6px 0;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
 }
 
-.vg-del-message {
-    font-size: 0.88rem;
-    color: #475569;
+.vg-del-desc {
+    font-size: 0.95rem;
+    color: #64748B;
     line-height: 1.5;
-    margin: 0 0 1rem 0;
+    margin: 0 0 16px 0;
 }
 
-.vg-del-checkbox-row {
+.vg-del-checkbox-wrap {
+    margin-top: 14px;
+    padding: 10px 14px;
     background: #F8FAFC;
     border: 1px solid #E2E8F0;
-    border-radius: 10px;
-    padding: 0.75rem;
-    display: flex;
-    align-items: flex-start;
-    gap: 0.65rem;
+    border-radius: 12px;
+    transition: all 0.2s ease;
 }
 
-.vg-del-checkbox {
-    margin-top: 3px;
-    width: 16px;
-    height: 16px;
-    accent-color: #DC2626;
-    cursor: pointer;
+.vg-del-checkbox-wrap:hover {
+    background: #F1F5F9;
+    border-color: #CBD5E1;
+}
+
+.vg-del-checkbox-wrap.shake-error {
+    border-color: #EF4444;
+    background: #FEF2F2;
+    animation: vgDelShake 0.4s ease;
+}
+
+@keyframes vgDelShake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
 }
 
 .vg-del-checkbox-label {
-    font-size: 0.82rem;
-    color: #334155;
-    line-height: 1.4;
+    display: flex;
+    align-items: center;
+    gap: 10px;
     cursor: pointer;
+    user-select: none;
+    margin: 0;
 }
 
-.vg-del-footer {
-    background: #F8FAFC;
-    padding: 0.9rem 1.25rem;
+.vg-del-checkbox-input {
+    display: none;
+}
+
+.vg-del-checkbox-box {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    border: 1.8px solid #94A3B8;
+    background: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFFFFF;
+    font-size: 0.72rem;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.vg-del-checkbox-input:checked + .vg-del-checkbox-box {
+    background: #EF4444;
+    border-color: #EF4444;
+}
+
+.vg-del-checkbox-text {
+    font-size: 0.88rem;
+    color: #334155;
+    font-weight: 500;
+}
+
+.vg-del-actions {
+    position: relative;
+    z-index: 1;
     display: flex;
     justify-content: flex-end;
-    gap: 0.65rem;
-    border-top: 1px solid #E2E8F0;
+    align-items: center;
+    gap: 14px;
+    margin-top: 26px;
 }
 
 .vg-del-btn-cancel {
+    border-radius: 9999px;
+    padding: 10px 26px;
+    border: 1.5px solid #CBD5E1;
     background: #FFFFFF;
-    border: 1px solid #CBD5E1;
-    color: #334155;
-    border-radius: 10px;
-    padding: 0.55rem 1.15rem;
-    font-size: 0.85rem;
-    font-weight: 700;
+    color: #475569;
+    font-weight: 600;
+    font-size: 0.95rem;
     cursor: pointer;
+    transition: all 0.2s ease;
 }
 
-.vg-del-btn-danger {
-    background: #DC2626;
+.vg-del-btn-cancel:hover {
+    background: #F8FAFC;
+    border-color: #94A3B8;
+    color: #0F172A;
+}
+
+.vg-del-btn-delete {
+    border-radius: 9999px;
+    padding: 10px 28px;
     border: none;
+    background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
     color: #FFFFFF;
-    border-radius: 10px;
-    padding: 0.55rem 1.15rem;
-    font-size: 0.85rem;
-    font-weight: 700;
+    font-weight: 600;
+    font-size: 0.95rem;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    transition: opacity 0.15s ease;
+    gap: 8px;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.42);
+    transition: all 0.2s ease;
 }
 
-.vg-del-btn-danger:disabled {
-    opacity: 0.45;
+.vg-del-btn-delete:hover:not(.disabled) {
+    background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.52);
+    transform: translateY(-1px);
+}
+
+.vg-del-btn-delete.disabled {
+    opacity: 0.5;
     cursor: not-allowed;
+    box-shadow: none;
+}
+
+@media (max-width: 640px) {
+    .vg-del-backdrop {
+        padding: 16px !important;
+        background: rgba(15, 23, 42, 0.55) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+    }
+    .vg-del-modal {
+        width: calc(100% - 24px) !important;
+        max-width: 370px !important;
+        margin: 0 auto !important;
+        padding: 24px 20px 20px 20px !important;
+        border-radius: 22px !important;
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.96) 0%, rgba(240, 247, 255, 0.92) 55%, rgba(224, 242, 254, 0.88) 100%) !important;
+        backdrop-filter: blur(24px) !important;
+        -webkit-backdrop-filter: blur(24px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.85) !important;
+        box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(255, 255, 255, 0.6) inset !important;
+        overflow: hidden !important;
+    }
+    .vg-del-modal::before {
+        content: '' !important;
+        position: absolute !important;
+        bottom: -35px !important;
+        left: -25px !important;
+        width: 220px !important;
+        height: 110px !important;
+        background: radial-gradient(ellipse at center, rgba(186, 230, 253, 0.65) 0%, rgba(219, 234, 254, 0.35) 50%, transparent 75%) !important;
+        border-radius: 50% !important;
+        pointer-events: none !important;
+        z-index: 0 !important;
+    }
+    .vg-del-close-btn {
+        top: 14px !important;
+        right: 14px !important;
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 0.95rem !important;
+        color: #64748B !important;
+    }
+    .vg-del-body {
+        gap: 14px !important;
+        align-items: flex-start !important;
+    }
+    .vg-del-icon-halo {
+        width: 54px !important;
+        height: 54px !important;
+        flex-shrink: 0 !important;
+        background: radial-gradient(circle, rgba(254, 205, 211, 0.95) 0%, rgba(255, 228, 230, 0.55) 60%, rgba(255, 241, 242, 0) 100%) !important;
+        box-shadow: 0 0 20px rgba(244, 63, 94, 0.3) !important;
+    }
+    .vg-del-icon-circle {
+        width: 42px !important;
+        height: 42px !important;
+        font-size: 1.15rem !important;
+        background: linear-gradient(145deg, #FF4D6D 0%, #EF233C 100%) !important;
+        box-shadow: 0 4px 12px rgba(239, 35, 60, 0.35) !important;
+    }
+    .vg-del-icon-halo.warning {
+        background: radial-gradient(circle, rgba(254, 205, 211, 0.9) 0%, rgba(255, 228, 230, 0.5) 60%, rgba(255, 241, 242, 0) 100%) !important;
+        box-shadow: 0 0 22px rgba(244, 63, 94, 0.35) !important;
+    }
+    .vg-del-warning-triangle {
+        width: 42px !important;
+        height: 42px !important;
+        filter: drop-shadow(0 4px 10px rgba(239, 35, 60, 0.4)) !important;
+    }
+    .vg-del-warning-triangle svg {
+        width: 28px !important;
+        height: 28px !important;
+    }
+    .vg-del-title {
+        font-size: 1.25rem !important;
+        font-weight: 700 !important;
+        color: #0F172A !important;
+        margin: 0 0 4px 0 !important;
+        line-height: 1.2 !important;
+    }
+    .vg-del-desc {
+        font-size: 0.85rem !important;
+        color: #475569 !important;
+        line-height: 1.35 !important;
+        margin: 0 !important;
+    }
+    /* Checkbox requirement styled compactly for mobile matching lg device */
+    .vg-del-checkbox-wrap {
+        display: block !important;
+        margin-top: 10px !important;
+        padding: 8px 10px !important;
+        background: rgba(248, 250, 252, 0.9) !important;
+        border: 1px solid #CBD5E1 !important;
+        border-radius: 10px !important;
+        transition: all 0.2s ease !important;
+    }
+    .vg-del-checkbox-wrap:hover {
+        background: #F1F5F9 !important;
+        border-color: #94A3B8 !important;
+    }
+    .vg-del-checkbox-wrap.shake-error {
+        border-color: #EF4444 !important;
+        background: #FEF2F2 !important;
+    }
+    .vg-del-checkbox-label {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        cursor: pointer !important;
+        margin: 0 !important;
+    }
+    .vg-del-checkbox-box {
+        width: 18px !important;
+        height: 18px !important;
+        border-radius: 5px !important;
+        font-size: 0.68rem !important;
+        flex-shrink: 0 !important;
+    }
+    .vg-del-checkbox-text {
+        font-size: 0.78rem !important;
+        color: #334155 !important;
+        line-height: 1.3 !important;
+        font-weight: 500 !important;
+    }
+    .vg-del-actions {
+        display: flex !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+        gap: 10px !important;
+        margin-top: 16px !important;
+    }
+    .vg-del-btn-cancel {
+        padding: 7px 20px !important;
+        font-size: 0.88rem !important;
+        border-radius: 9999px !important;
+        background: rgba(255, 255, 255, 0.8) !important;
+        border: 1.5px solid rgba(203, 213, 225, 0.8) !important;
+        color: #334155 !important;
+        font-weight: 600 !important;
+    }
+    .vg-del-btn-delete {
+        padding: 7px 20px !important;
+        font-size: 0.88rem !important;
+        border-radius: 9999px !important;
+        background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%) !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        font-weight: 600 !important;
+        box-shadow: 0 4px 14px rgba(239, 68, 68, 0.45) !important;
+        gap: 6px !important;
+        opacity: 1 !important;
+        cursor: pointer !important;
+    }
+    .vg-del-btn-delete i {
+        font-size: 0.82rem !important;
+    }
+    .vg-del-btn-delete.disabled {
+        opacity: 0.5 !important;
+        cursor: not-allowed !important;
+        box-shadow: none !important;
+    }
 }
 
 /* ==========================================================================
@@ -3523,32 +4088,41 @@ let deleteCustomerId = <?= (int)$customer['id'] ?>;
 
 function openDeleteModal(id, name) {
     deleteCustomerId = id;
-    const nameEl1 = document.getElementById('deleteCustomerName');
-    const nameEl2 = document.getElementById('deleteCustomerName2');
-    if (nameEl1) nameEl1.textContent = name;
-    if (nameEl2) nameEl2.textContent = name;
-
-    const check1 = document.getElementById('delConfirmCheck');
-    const check2 = document.getElementById('delConfirmCheck2');
-    if (check1) check1.checked = false;
-    if (check2) check2.checked = false;
-
-    toggleStep1DeleteBtn();
-    toggleStep2DeleteBtn();
-
-    const step1 = document.getElementById('deleteModalStep1');
-    const step2 = document.getElementById('deleteModalStep2');
+    const step1 = document.getElementById('deleteStep1Modal');
+    const step2 = document.getElementById('deleteStep2Modal');
     const backdrop = document.getElementById('deleteModalBackdrop');
+    const chk1 = document.getElementById('deleteStep1Checkbox');
+    const chk2 = document.getElementById('deleteStep2Checkbox');
+    const btn1 = document.getElementById('deleteStep1Btn');
+    const finalBtn = document.getElementById('deleteConfirmFinalBtn');
+
+    if (chk1) chk1.checked = false;
+    if (chk2) chk2.checked = false;
+
+    if (btn1) btn1.classList.add('disabled');
+    if (finalBtn) finalBtn.classList.add('disabled');
 
     if (step1) step1.style.display = 'block';
     if (step2) step2.style.display = 'none';
-    if (backdrop) backdrop.style.display = 'flex';
+    if (backdrop) {
+        backdrop.style.display = 'flex';
+        requestAnimationFrame(() => backdrop.classList.add('active'));
+    }
     document.body.style.overflow = 'hidden';
 }
 
 function closeDeleteModal() {
     const backdrop = document.getElementById('deleteModalBackdrop');
-    if (backdrop) backdrop.style.display = 'none';
+    if (backdrop) {
+        backdrop.classList.remove('active');
+        setTimeout(() => {
+            backdrop.style.display = 'none';
+            const step1 = document.getElementById('deleteStep1Modal');
+            const step2 = document.getElementById('deleteStep2Modal');
+            if (step1) step1.style.display = 'block';
+            if (step2) step2.style.display = 'none';
+        }, 220);
+    }
     document.body.style.overflow = '';
 }
 
@@ -3559,26 +4133,68 @@ function handleBackdropClick(e) {
 }
 
 function toggleStep1DeleteBtn() {
-    const check = document.getElementById('delConfirmCheck');
-    const btn = document.getElementById('btnStep1Delete');
+    const chk = document.getElementById('deleteStep1Checkbox');
+    const btn = document.getElementById('deleteStep1Btn');
     if (btn) {
-        btn.disabled = !(check && check.checked);
+        if (chk && chk.checked) {
+            btn.classList.remove('disabled');
+        } else {
+            btn.classList.add('disabled');
+        }
     }
 }
 
-function proceedToStep2() {
-    const step1 = document.getElementById('deleteModalStep1');
-    const step2 = document.getElementById('deleteModalStep2');
-    if (step1) step1.style.display = 'none';
-    if (step2) step2.style.display = 'block';
+function goToStep2Modal() {
+    const chk = document.getElementById('deleteStep1Checkbox');
+    if (!chk || !chk.checked) {
+        const wrap = document.getElementById('delCheckboxContainer');
+        if (wrap) {
+            wrap.classList.add('shake-error');
+            setTimeout(() => wrap.classList.remove('shake-error'), 500);
+        }
+        return;
+    }
+    const step1 = document.getElementById('deleteStep1Modal');
+    const step2 = document.getElementById('deleteStep2Modal');
+    const finalBtn = document.getElementById('deleteConfirmFinalBtn');
+    if (finalBtn) finalBtn.classList.add('disabled');
+    if (step1 && step2) {
+        step1.style.display = 'none';
+        step2.style.display = 'block';
+    }
 }
 
 function toggleStep2DeleteBtn() {
-    const check = document.getElementById('delConfirmCheck2');
-    const btn = document.getElementById('btnStep2ConfirmDelete');
-    if (btn) {
-        btn.disabled = !(check && check.checked);
+    const chk2 = document.getElementById('deleteStep2Checkbox');
+    const btn2 = document.getElementById('deleteConfirmFinalBtn');
+    if (btn2) {
+        if (chk2 && chk2.checked) {
+            btn2.classList.remove('disabled');
+        } else {
+            btn2.classList.add('disabled');
+        }
     }
+}
+
+function handleCustomerDeleteSubmit(e) {
+    const chk2 = document.getElementById('deleteStep2Checkbox');
+    if (!chk2 || !chk2.checked) {
+        if (e) e.preventDefault();
+        const wrap = document.getElementById('delCheckboxContainer2');
+        if (wrap) {
+            wrap.classList.add('shake-error');
+            setTimeout(() => wrap.classList.remove('shake-error'), 500);
+        }
+        return false;
+    }
+    const finalBtn = document.getElementById('deleteConfirmFinalBtn');
+    const btnText = document.getElementById('deleteFinalBtnText');
+    if (finalBtn) {
+        finalBtn.disabled = true;
+        finalBtn.style.opacity = '0.75';
+    }
+    if (btnText) btnText.textContent = 'Deleting...';
+    return true;
 }
 
 document.addEventListener('keydown', function(e) {

@@ -10,7 +10,7 @@ return new class {
         $sqlInvoices = "CREATE TABLE IF NOT EXISTS `invoices` (
             `id` INT AUTO_INCREMENT PRIMARY KEY,
             `invoice_number` VARCHAR(50) NOT NULL UNIQUE,
-            `booking_id` INT NOT NULL UNIQUE,
+            `booking_id` INT NULL UNIQUE,
             `customer_id` INT NOT NULL,
             `subtotal` DECIMAL(10, 2) NOT NULL,
             `tax_rate` DECIMAL(5, 2) NOT NULL DEFAULT 5.00,
@@ -25,7 +25,7 @@ return new class {
             `created_at` DATETIME NOT NULL,
             INDEX `idx_invoice_status` (`payment_status`),
             INDEX `idx_invoice_customer` (`customer_id`),
-            CONSTRAINT `fk_invoice_booking` FOREIGN KEY (`booking_id`) REFERENCES `bookings` (`id`) ON DELETE RESTRICT,
+            CONSTRAINT `fk_invoice_booking` FOREIGN KEY (`booking_id`) REFERENCES `bookings` (`id`) ON DELETE SET NULL,
             CONSTRAINT `fk_invoice_customer` FOREIGN KEY (`customer_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;";
         $pdo->exec($sqlInvoices);

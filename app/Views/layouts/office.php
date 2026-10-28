@@ -309,14 +309,6 @@
                     </div>
                 </div>
                 <?php endif; ?>
-
-                <!-- Bottom Travel Promo Card (Matches reference image) -->
-                <div class="sidebar-promo-card">
-                    <div class="sidebar-promo-content">
-                        <div class="sidebar-promo-title"><?= e(__('promo.explore_title', 'Explore The World')) ?></div>
-                        <div class="sidebar-promo-tagline"><?= e(__('promo.explore_subtitle', 'Comfortable Rides • Memorable Journeys')) ?></div>
-                    </div>
-                </div>
             </nav>
 
             <div class="sidebar-footer">
@@ -505,7 +497,7 @@
 
             <a href="<?= url('/office/dispatch') ?>" class="bottom-nav-item <?= (str_contains($uri, '/office/dispatch') || str_contains($uri, '/office/trips')) ? 'active' : '' ?>">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                <span><?= e(__('sidebar.trip_operations', 'Trips')) ?></span>
+                <span><?= e(__('sidebar.trips', 'Trips')) ?></span>
             </a>
             <a href="<?= url('/office/bookings') ?>" class="bottom-nav-item nav-notif-item">
                 <div style="position: relative; display: inline-flex;">

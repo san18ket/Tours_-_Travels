@@ -255,11 +255,12 @@ class RoleController extends Controller
     public function permissionIndex(Request $request): Response
     {
         $search = trim((string)$request->input('search', ''));
+        $type = trim((string)$request->input('type', ''));
         $page = max(1, (int)$request->input('page', 1));
-        $perPage = 10;
+        $perPage = in_array((int)$request->input('per_page'), [10, 25, 50], true) ? (int)$request->input('per_page') : 10;
 
-        $total = $this->roleModel->countFiltered($search);
-        $roles = $this->roleModel->getPaginated($search, null, $page, $perPage);
+        $total = $this->roleModel->countFiltered($search, null, $type);
+        $roles = $this->roleModel->getPaginated($search, null, $page, $perPage, $type);
         $metrics = $this->roleModel->getMetrics();
 
         return $this->render('office/role_permissions/index', [
@@ -268,6 +269,7 @@ class RoleController extends Controller
             'limit'        => $perPage,
             'page'         => $page,
             'search'       => $search,
+            'type'         => $type,
             'metrics'      => $metrics,
             'title'        => 'Role & Permission Directory',
         ], 'layouts/office');

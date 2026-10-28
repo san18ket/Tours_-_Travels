@@ -347,6 +347,9 @@ class UserController extends Controller
         $user = $this->userModel->find($id);
 
         if (!$user) {
+            if ($request->isAjax()) {
+                return $this->json(['success' => false, 'message' => 'Requested user not found.'], 404);
+            }
             return $this->redirect(url('/office/users'), 'danger', 'Requested user not found.');
         }
 
@@ -354,12 +357,20 @@ class UserController extends Controller
 
         // Prevent self-deactivation
         if ($id === $currentUserId) {
-            return $this->redirect(url('/office/users'), 'danger', 'You cannot deactivate your own logged-in account.');
+            $msg = 'You cannot deactivate your own logged-in account.';
+            if ($request->isAjax()) {
+                return $this->json(['success' => false, 'message' => $msg], 422);
+            }
+            return $this->redirect(url('/office/users'), 'danger', $msg);
         }
 
         // Prevent deactivating the last active admin
         if ($user['status'] === 'active' && $this->userModel->isLastActiveAdmin($id)) {
-            return $this->redirect(url('/office/users'), 'danger', 'Cannot deactivate the only remaining active administrator.');
+            $msg = 'Cannot deactivate the only remaining active administrator.';
+            if ($request->isAjax()) {
+                return $this->json(['success' => false, 'message' => $msg], 422);
+            }
+            return $this->redirect(url('/office/users'), 'danger', $msg);
         }
 
         try {
@@ -375,8 +386,30 @@ class UserController extends Controller
             );
 
             $actionWord = ($newStatus === 'active') ? 'activated' : 'deactivated';
-            return $this->redirect(url('/office/users'), 'success', "User '{$user['username']}' has been {$actionWord}.");
+            $msg = "User '{$user['username']}' has been {$actionWord}.";
+
+            if ($request->isAjax()) {
+                $isActive = ($newStatus === 'active');
+                return $this->json([
+                    'success'   => true,
+                    'status'    => $newStatus,
+                    'is_active' => $isActive,
+                    'label'     => ucfirst($newStatus),
+                    'message'   => $msg,
+                    'metrics'   => [
+                        'total'       => $this->userModel->count(),
+                        'admins'      => $this->userModel->countActiveAdmins(),
+                        'dispatchers' => $this->userModel->count("`role` = 'dispatcher' AND `status` = 'active'"),
+                        'drivers'     => $this->userModel->count("`role` = 'driver' AND `status` = 'active'"),
+                    ],
+                ]);
+            }
+
+            return $this->redirect(url('/office/users'), 'success', $msg);
         } catch (Throwable $e) {
+            if ($request->isAjax()) {
+                return $this->json(['success' => false, 'message' => $e->getMessage()], 400);
+            }
             return $this->redirect(url('/office/users'), 'danger', $e->getMessage());
         }
     }

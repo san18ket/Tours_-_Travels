@@ -9,9 +9,9 @@ $total   = (int)($total ?? 0);
 $metrics = $metrics ?? [];
 
 $totalRoles   = (int)($metrics['total_roles'] ?? count($roles ?? []));
-$systemRoles  = count(array_filter($roles ?? [], fn($r) => (int)($r['is_system'] ?? 0) === 1));
-$customRoles  = (int)($metrics['custom_roles'] ?? ($totalRoles - $systemRoles));
-$totalPerms   = (int)($metrics['total_permissions'] ?? array_sum(array_column($roles ?? [], 'permission_count')));
+$customRoles  = (int)($metrics['custom_roles'] ?? 0);
+$systemRoles  = max(0, $totalRoles - $customRoles);
+$totalPerms   = (int)($metrics['total_permissions'] ?? 0);
 ?>
 <style>
 .rp-index-header {
@@ -167,44 +167,67 @@ $rpActions = '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:cen
 ]) ?>
 
 <!-- STAT CARDS -->
-<div class="rp-stats">
-    <div class="rp-stat">
+<div class="rp-stats" id="rolePermsKpiGrid">
+    <div class="rp-stat <?= empty($type) ? 'is-selected' : '' ?>" data-type="" role="button" tabindex="0" title="Click to view all roles">
         <div class="rp-stat-icon" style="background: linear-gradient(135deg, #0284c7, #0369a1);"><i class="fa-solid fa-shield-halved"></i></div>
-        <div class="rp-stat-info"><h3><?= $totalRoles ?></h3><p>Total Roles</p></div>
+        <div class="rp-stat-info"><h3 data-count="<?= $totalRoles ?>"><?= number_format($totalRoles) ?></h3><p>Total Roles</p></div>
+        <span class="kpi-filter-tag"><i class="fa-solid fa-arrow-right"></i></span>
     </div>
-    <div class="rp-stat">
+    <div class="rp-stat <?= ($type ?? '') === 'system' ? 'is-selected' : '' ?>" data-type="system" role="button" tabindex="0" title="Click to filter system roles">
         <div class="rp-stat-icon" style="background: linear-gradient(135deg, #10b981, #059669);"><i class="fa-solid fa-shield-check"></i></div>
-        <div class="rp-stat-info"><h3><?= $systemRoles ?></h3><p>System Roles</p></div>
+        <div class="rp-stat-info"><h3 data-count="<?= $systemRoles ?>"><?= number_format($systemRoles) ?></h3><p>System Roles</p></div>
+        <span class="kpi-filter-tag"><i class="fa-solid fa-arrow-right"></i></span>
     </div>
-    <div class="rp-stat">
+    <div class="rp-stat <?= ($type ?? '') === 'custom' ? 'is-selected' : '' ?>" data-type="custom" role="button" tabindex="0" title="Click to filter custom roles">
         <div class="rp-stat-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);"><i class="fa-solid fa-sliders"></i></div>
-        <div class="rp-stat-info"><h3><?= $customRoles ?></h3><p>Custom Roles</p></div>
+        <div class="rp-stat-info"><h3 data-count="<?= $customRoles ?>"><?= number_format($customRoles) ?></h3><p>Custom Roles</p></div>
+        <span class="kpi-filter-tag"><i class="fa-solid fa-arrow-right"></i></span>
     </div>
-    <div class="rp-stat">
+    <div class="rp-stat" data-type="" role="button" tabindex="0" title="Total granted permission relationships">
         <div class="rp-stat-icon" style="background: linear-gradient(135deg, #6366f1, #4f46e5);"><i class="fa-solid fa-key"></i></div>
-        <div class="rp-stat-info"><h3><?= $totalPerms ?></h3><p>Permissions Assigned</p></div>
+        <div class="rp-stat-info"><h3 data-count="<?= $totalPerms ?>"><?= number_format($totalPerms) ?></h3><p>Permissions Assigned</p></div>
+        <span class="kpi-filter-tag"><i class="fa-solid fa-arrow-right"></i></span>
     </div>
 </div>
 
 <!-- FILTER -->
 <div class="rp-filter-card p-3 mb-4">
     <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-end justify-content-between gap-3">
-        <form method="GET" action="<?= url('/office/role-permission') ?>" class="row g-2 align-items-end flex-grow-1 mb-0">
-            <div class="col-sm-8 col-lg-7">
+        <form method="GET" action="<?= url('/office/role-permission') ?>" class="row g-2 align-items-end flex-grow-1 mb-0" id="rolePermFilterForm" data-no-ajax="true" onsubmit="event.preventDefault(); return false;">
+            <div class="col-sm-6 col-lg-5">
                 <label class="form-label small fw-bold text-muted mb-1">Search Roles</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
-                    <input type="search" name="search" value="<?= e($search ?? '') ?>" class="form-control border-start-0" placeholder="Search by role name or description...">
+                <div class="input-group position-relative">
+                    <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-magnifying-glass text-muted" id="rpSearchIcon"></i></span>
+                    <input type="text" name="search" id="rpSearchInput" value="<?= e($search ?? '') ?>" class="form-control border-start-0" placeholder="Search by role name or description..." autocomplete="off">
+                    <button type="button" class="fbc-search-clear" id="rpSearchClearBtn" style="<?= empty($search) ? 'display:none;' : '' ?>" title="Clear search">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
                 </div>
             </div>
+            <div class="col-sm-3 col-lg-3">
+                <label class="form-label small fw-bold text-muted mb-1">Role Type</label>
+                <select name="type" id="rpTypeSelect" class="form-select">
+                    <option value="">All Types</option>
+                    <option value="system" <?= ($type ?? '') === 'system' ? 'selected' : '' ?>>System Roles</option>
+                    <option value="custom" <?= ($type ?? '') === 'custom' ? 'selected' : '' ?>>Custom Roles</option>
+                </select>
+            </div>
+            <div class="col-sm-3 col-lg-2">
+                <label class="form-label small fw-bold text-muted mb-1">Per Page</label>
+                <select name="per_page" id="rpPerPageSelect" class="form-select">
+                    <?php foreach ([10, 25, 50] as $opt): ?>
+                        <option value="<?= $opt ?>" <?= ($limit ?? 10) == $opt ? 'selected' : '' ?>><?= $opt ?> per page</option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
             <div class="col-sm-auto d-flex gap-2">
-                <button type="submit" class="btn btn-primary fw-bold px-3 py-2 rounded-3 shadow-sm d-inline-flex align-items-center gap-1.5">
+                <button type="button" class="btn btn-primary fw-bold px-3 py-2 rounded-3 shadow-sm d-inline-flex align-items-center gap-1.5" id="rpFilterApplyBtn">
                     <i class="fa-solid fa-filter"></i>
                     <span>Filter</span>
                 </button>
-                <a href="<?= url('/office/role-permission') ?>" class="btn btn-light border text-muted fw-semibold py-2 px-3 rounded-3" title="Reset Filters">
+                <button type="button" class="btn btn-light border text-muted fw-semibold py-2 px-3 rounded-3" id="rpResetBtn" title="Reset Filters" data-no-ajax="true">
                     <i class="fa-solid fa-rotate-left"></i>
-                </a>
+                </button>
             </div>
         </form>
         <div class="d-flex align-items-center">
@@ -217,7 +240,7 @@ $rpActions = '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:cen
 </div>
 
 <!-- TABLE -->
-<div class="rp-table-card overflow-hidden">
+<div class="rp-table-card overflow-hidden" id="rolePermsSection">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0 rp-tbl">
             <thead>
@@ -341,25 +364,325 @@ $rpActions = '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:cen
     </div>
 
     <!-- Legend & Pagination -->
-    <div class="p-3 border-top bg-light d-flex flex-wrap align-items-center justify-content-between gap-3">
+    <div class="p-3 border-top bg-light d-flex flex-wrap align-items-center justify-content-between gap-3" id="rolePermsPaginationWrapper">
         <div class="d-flex flex-wrap gap-3 small text-muted">
             <span><i class="fa-solid fa-key text-success me-1"></i>Configure Permissions</span>
             <span><i class="fa-solid fa-eye text-primary me-1"></i>Inspect Matrix</span>
             <span><i class="fa-solid fa-trash-can text-danger me-1"></i>Delete Custom Role</span>
             <span><i class="fa-solid fa-shield text-secondary me-1"></i>Protected Core Role</span>
         </div>
+        <div class="pagination-sub-wrap">
         <?php if ($total > $limit): ?>
-            <div class="d-flex gap-1">
+            <div class="d-flex gap-1 pagination">
                 <?php
                 $totalPages = (int)ceil($total / $limit);
                 for ($p = 1; $p <= $totalPages; $p++):
                 ?>
-                    <a href="<?= url('/office/role-permission?page=' . $p . (!empty($search) ? '&search=' . urlencode($search) : '')) ?>" 
+                    <a href="<?= url('/office/role-permission?page=' . $p . (!empty($search) ? '&search=' . urlencode($search) : '') . (!empty($type) ? '&type=' . urlencode($type) : '') . ($limit != 10 ? '&per_page=' . $limit : '')) ?>" 
+                       data-page="<?= $p ?>"
                        class="btn btn-sm <?= $p === $page ? 'btn-primary' : 'btn-outline-secondary' ?>" style="min-width: 32px;">
                         <?= $p ?>
                     </a>
                 <?php endfor; ?>
             </div>
         <?php endif; ?>
+        </div>
     </div>
 </div>
+
+<script>
+    /* ========================================================================= */
+    /* Role Permissions Live AJAX Filter Engine (Matches Customers Standard)     */
+    /* ========================================================================= */
+    (function initRolePermissionAjaxFilter() {
+        let abortCtrl = null;
+        let searchTimer = null;
+
+        const baseUrl = '<?= url('/office/role-permission') ?>';
+
+        function getParams(page = 1) {
+            const searchInput = document.getElementById('rpSearchInput');
+            const typeSelect = document.getElementById('rpTypeSelect');
+            const perPageSelect = document.getElementById('rpPerPageSelect');
+
+            const sVal = searchInput ? searchInput.value.trim() : '';
+            const tVal = typeSelect ? typeSelect.value : '';
+            const ppVal = perPageSelect ? perPageSelect.value : '10';
+
+            const p = new URLSearchParams();
+            if (sVal) p.set('search', sVal);
+            if (tVal) p.set('type', tVal);
+            if (ppVal && ppVal !== '10') p.set('per_page', ppVal);
+            if (page && page > 1) p.set('page', page);
+
+            return { params: p, searchVal: sVal, typeVal: tVal, perPageVal: ppVal, pageNum: page };
+        }
+
+        function filterRolePermsAjax(page = 1, options = {}) {
+            const { params, searchVal, typeVal, perPageVal, pageNum } = getParams(page);
+            const queryStr = params.toString();
+            const targetUrl = queryStr ? `${baseUrl}?${queryStr}` : baseUrl;
+
+            if (abortCtrl) abortCtrl.abort();
+            abortCtrl = new AbortController();
+
+            const section = document.getElementById('rolePermsSection');
+            const searchIcon = document.getElementById('rpSearchIcon');
+            const searchClearBtn = document.getElementById('rpSearchClearBtn');
+
+            if (section) section.classList.add('is-filtering');
+            if (searchIcon) searchIcon.className = 'fa-solid fa-spinner fa-spin text-muted';
+            if (searchClearBtn) searchClearBtn.style.display = searchVal ? 'inline-flex' : 'none';
+
+            fetch(targetUrl, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'text/html,application/xhtml+xml'
+                },
+                signal: abortCtrl.signal
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.text();
+            })
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                const newSection = doc.getElementById('rolePermsSection');
+                const currSection = document.getElementById('rolePermsSection');
+                if (newSection && currSection) {
+                    currSection.innerHTML = newSection.innerHTML;
+                }
+
+                const newKpi = doc.getElementById('rolePermsKpiGrid');
+                const currKpi = document.getElementById('rolePermsKpiGrid');
+                if (newKpi && currKpi) {
+                    currKpi.innerHTML = newKpi.innerHTML;
+                    animateKpiNumbers(currKpi);
+                }
+
+                const sInput = document.getElementById('rpSearchInput');
+                if (sInput && sInput.value !== searchVal) sInput.value = searchVal;
+
+                const tSelect = document.getElementById('rpTypeSelect');
+                if (tSelect && tSelect.value !== typeVal) tSelect.value = typeVal;
+
+                const ppSelect = document.getElementById('rpPerPageSelect');
+                if (ppSelect && ppSelect.value !== perPageVal) ppSelect.value = perPageVal;
+
+                if (!options.skipPushState) {
+                    if (options.isTyping) {
+                        window.history.replaceState({ searchVal, typeVal, perPageVal, pageNum }, '', targetUrl);
+                    } else {
+                        window.history.pushState({ searchVal, typeVal, perPageVal, pageNum }, '', targetUrl);
+                    }
+                }
+            })
+            .catch(err => {
+                if (err.name !== 'AbortError') {
+                    console.error('Role Permission Filter AJAX Error:', err);
+                }
+            })
+            .finally(() => {
+                if (section) section.classList.remove('is-filtering');
+                if (searchIcon) searchIcon.className = 'fa-solid fa-magnifying-glass text-muted';
+            });
+        }
+
+        function animateKpiNumbers(container) {
+            const vals = container.querySelectorAll('h3[data-count]');
+            vals.forEach(el => {
+                const target = parseInt(el.getAttribute('data-count'), 10) || 0;
+                let current = 0;
+                const duration = 400;
+                const stepTime = 20;
+                const steps = duration / stepTime;
+                const increment = Math.ceil(target / steps) || 1;
+
+                if (target === 0) {
+                    el.textContent = '0';
+                    return;
+                }
+
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= target) {
+                        current = target;
+                        clearInterval(timer);
+                    }
+                    el.textContent = current.toLocaleString();
+                }, stepTime);
+            });
+        }
+
+        // Search inputs debouncing (280ms)
+        const sInput = document.getElementById('rpSearchInput');
+        if (sInput) {
+            sInput.addEventListener('input', function(e) {
+                const val = e.target.value;
+                const clearBtn = document.getElementById('rpSearchClearBtn');
+                if (clearBtn) clearBtn.style.display = val.trim() ? 'inline-flex' : 'none';
+
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(() => {
+                    filterRolePermsAjax(1, { isTyping: true });
+                }, 280);
+            });
+        }
+
+        const tSelect = document.getElementById('rpTypeSelect');
+        if (tSelect) {
+            tSelect.addEventListener('change', () => filterRolePermsAjax(1));
+        }
+
+        const ppSelect = document.getElementById('rpPerPageSelect');
+        if (ppSelect) {
+            ppSelect.addEventListener('change', () => filterRolePermsAjax(1));
+        }
+
+        const applyBtn = document.getElementById('rpFilterApplyBtn');
+        if (applyBtn) {
+            applyBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                filterRolePermsAjax(1);
+            });
+        }
+
+        // Document-level event delegation
+        document.addEventListener('click', function(e) {
+            // 1. KPI Card click
+            const statCard = e.target.closest('#rolePermsKpiGrid .rp-stat');
+            if (statCard) {
+                e.preventDefault();
+                const t = statCard.getAttribute('data-type');
+                const wasSelected = statCard.classList.contains('is-selected');
+
+                const tSelect = document.getElementById('rpTypeSelect');
+                if (tSelect) {
+                    if (wasSelected && t) {
+                        tSelect.value = '';
+                    } else {
+                        tSelect.value = (t !== null) ? t : '';
+                    }
+                }
+                filterRolePermsAjax(1);
+                return;
+            }
+
+            // 2. Pagination link click
+            const pageLink = e.target.closest('#rolePermsPaginationWrapper a[data-page]');
+            if (pageLink) {
+                e.preventDefault();
+                const pageNum = parseInt(pageLink.getAttribute('data-page'), 10) || 1;
+                filterRolePermsAjax(pageNum);
+                return;
+            }
+
+            // 3. Search Clear button
+            if (e.target.closest('#rpSearchClearBtn')) {
+                e.preventDefault();
+                const s = document.getElementById('rpSearchInput');
+                if (s) s.value = '';
+                const btn = document.getElementById('rpSearchClearBtn');
+                if (btn) btn.style.display = 'none';
+                filterRolePermsAjax(1);
+                return;
+            }
+
+            // 4. Reset Filters button
+            if (e.target.closest('#rpResetBtn')) {
+                e.preventDefault();
+                const s = document.getElementById('rpSearchInput');
+                const t = document.getElementById('rpTypeSelect');
+                const pp = document.getElementById('rpPerPageSelect');
+                if (s) s.value = '';
+                if (t) t.value = '';
+                if (pp) pp.value = '10';
+                filterRolePermsAjax(1);
+                return;
+            }
+        });
+
+        // Browser history popstate
+        window.addEventListener('popstate', function(e) {
+            if (e.state) {
+                const { searchVal, typeVal, perPageVal, pageNum } = e.state;
+                const s = document.getElementById('rpSearchInput');
+                const t = document.getElementById('rpTypeSelect');
+                const pp = document.getElementById('rpPerPageSelect');
+                if (s) s.value = searchVal || '';
+                if (t) t.value = typeVal || '';
+                if (pp) pp.value = perPageVal || '10';
+                filterRolePermsAjax(pageNum || 1, { skipPushState: true });
+            } else {
+                location.reload();
+            }
+        });
+    })();
+</script>
+
+<style>
+/* Stat Cards Interactive & Selected State */
+#rolePermsKpiGrid .rp-stat {
+    cursor: pointer;
+    position: relative;
+    user-select: none;
+    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease, border-color 0.18s ease;
+    border: 1.5px solid transparent;
+}
+#rolePermsKpiGrid .rp-stat:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(2, 132, 199, 0.12);
+    border-color: rgba(2, 132, 199, 0.35);
+}
+#rolePermsKpiGrid .rp-stat.is-selected {
+    border-color: #0284c7 !important;
+    background: linear-gradient(180deg, #F0F9FF 0%, #FFFFFF 100%) !important;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15), 0 8px 20px rgba(2, 132, 199, 0.08) !important;
+}
+#rolePermsKpiGrid .rp-stat.is-selected .kpi-filter-tag {
+    opacity: 1;
+    transform: translateX(0);
+    color: #0284c7;
+}
+#rolePermsKpiGrid .kpi-filter-tag {
+    font-size: 11px;
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    margin-left: auto;
+}
+#rolePermsKpiGrid .rp-stat:hover .kpi-filter-tag {
+    opacity: 0.7;
+    transform: translateX(0);
+}
+
+#rolePermsSection.is-filtering {
+    opacity: 0.55;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+}
+
+.fbc-search-clear {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 4px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    z-index: 5;
+    transition: color 0.15s ease;
+}
+.fbc-search-clear:hover {
+    color: #1e293b;
+}
+</style>

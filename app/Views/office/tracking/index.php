@@ -1,495 +1,851 @@
-<!-- Live Tracking Header -->
-<?= render_page_header([
-    'title'       => __('tracking.title', 'Live Fleet Telemetry & GPS Radar'),
-    'description' => __('tracking.subtitle', 'Real-time vehicle coordinates, active tour dispatches, chauffeur duty status, and speed tracking.'),
-    'image'       => 'header-tracking.jpg',
-    'badge'       => 'Satellite GPS Active',
-    'breadcrumbs' => [
-        ['label' => __('sidebar.dashboard', 'Dashboard'), 'url' => url('/office/dashboard')],
-        ['label' => __('sidebar.tracking', 'Tracking'), 'url' => ''],
-    ],
-    'actions'     => '
-        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-            <div class="fleet-sync-badge" style="background: rgba(255,255,255,0.18); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.3); border-radius: 999px; padding: 0.35rem 0.85rem; font-size: 0.82rem; color: #FFFFFF; display: flex; align-items: center; gap: 0.45rem;">
-                <span id="trackerPulseIndicator" class="pulse-indicator" style="background: #10B981;"></span>
-                <span id="trackerStatusLabel" style="font-weight: 600; color: #FFFFFF;">' . e(__('tracking.radar_active')) . '</span>
-                <span style="color: rgba(255,255,255,0.6);">&bull;</span>
-                <span style="color: rgba(255,255,255,0.85);">' . e(__('tracking.auto_sync')) . ': <strong id="lastTrackerSync" style="color: var(--brand-accent, #D6B77A);">&mdash;</strong></span>
-            </div>
-            <button type="button" id="manualSyncBtn" class="btn btn-primary" onclick="window.fetchLiveFleet(true)" title="' . e(__('tracking.sync_radar')) . '">
-                <svg id="syncBtnIcon" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                <span id="syncBtnLabel">' . e(__('tracking.sync_radar')) . '</span>
-            </button>
-        </div>',
-]) ?>
+<?php
+/**
+ * VoyageGo / MANASWI Tours & Travels — Live Fleet Radar & Track Location
+ * Pixel-Perfect UI Matching Reference Design for LG Desktop and Responsive Mobile (SM)
+ */
+?>
 
-<!-- Mobile Segmented View Switcher (Visible only on screens <= 960px) -->
-<div class="fleet-mobile-segmented-bar" id="fleetMobileSegmented">
-    <button type="button" class="fleet-segment-btn active" id="segBtnMap" onclick="switchMobileTrackingView('map')">
-        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
-        <span><?= e(__('tracking.radar_map')) ?></span>
-    </button>
-    <button type="button" class="fleet-segment-btn" id="segBtnList" onclick="switchMobileTrackingView('list')">
-        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-        <span><?= e(__('tracking.vehicles_count')) ?> (<span id="mobileCountBadge">0</span>)</span>
-    </button>
-</div>
-
-<!-- Telemetry Legend & Filter Ribbon -->
-<div class="fleet-legend-ribbon">
-    <div style="font-weight: 700; color: var(--vg-navy-900);"><?= e(__('tracking.signal_status')) ?>:</div>
-    <div class="legend-chip">
-        <span class="legend-dot" style="background: #10B981;"></span>
-        <span class="legend-text"><?= e(__('tracking.signal_live')) ?></span>
-    </div>
-    <div class="legend-chip">
-        <span class="legend-dot" style="background: #F59E0B;"></span>
-        <span class="legend-text"><?= e(__('tracking.signal_delayed')) ?></span>
-    </div>
-    <div class="legend-chip">
-        <span class="legend-dot" style="background: #94A3B8;"></span>
-        <span class="legend-text"><?= e(__('tracking.signal_offline')) ?></span>
-    </div>
-    <div style="margin-left: auto; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-        <input type="text" id="fleetFilterInput" class="form-control form-control-sm" placeholder="<?= e(__('tracking.filter_placeholder')) ?>" style="width: 180px; font-size: 0.82rem; padding: 0.35rem 0.65rem;" oninput="applyFleetFilter()">
-    </div>
-</div>
-
-<!-- Radar Container: Split Map & Active Fleet Rail -->
-<div class="fleet-radar-grid" id="fleetRadarGrid">
-    <!-- Interactive Map Canvas Card -->
-    <div class="vg-card fleet-map-card" id="fleetMapCard">
-        <!-- Leaflet Map Container -->
-        <div id="fleetMap" class="fleet-map-canvas"></div>
-
-        <!-- Telemetry Sync Notification / Warning Overlay -->
-        <div id="radarWarningOverlay" class="radar-warning-overlay">
-            ⚠️ <?= e(__('tracking.sync_radar')) ?>
-        </div>
-    </div>
-
-    <!-- Active Fleet Side Panel -->
-    <div class="vg-card fleet-side-card" id="fleetSideCard">
-        <div class="fleet-side-header">
-            <div>
-                <span class="card-title" style="font-size: 1rem; margin: 0;"><?= e(__('tracking.active_vehicles')) ?></span>
-                <div style="font-size: 0.75rem; color: var(--vg-text-muted);"><?= e(__('tracking.live_feed')) ?></div>
-            </div>
-            <span id="activeVehicleCount" class="badge badge-navy">0 <?= e(__('status.active')) ?></span>
-        </div>
-
-        <div id="vehicleListRail" class="fleet-vehicle-rail">
-            <!-- Rendered dynamically via JavaScript -->
-            <div id="emptyTrackingState" class="fleet-empty-state">
-                <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📡</div>
-                <div style="font-weight: 700; color: var(--vg-navy-900); font-size: 0.95rem; margin-bottom: 0.25rem;"><?= e(__('tracking.no_live_drivers')) ?></div>
-                <p style="font-size: 0.82rem; line-height: 1.4; margin: 0;">
-                    <?= e(__('tracking.no_live_drivers')) ?>
-                </p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Embedded Responsive CSS for Fleet Radar -->
-<style>
-.fleet-tracking-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1.25rem;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-.fleet-tracking-title-wrap {
-    min-width: 240px;
-    flex: 1;
-}
-.fleet-tracking-title {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: var(--vg-navy-900);
-    letter-spacing: -0.02em;
-    margin: 0 0 0.25rem 0;
-}
-.fleet-tracking-subtitle {
-    color: var(--vg-text-secondary);
-    font-size: 0.88rem;
-    margin: 0;
-}
-.fleet-tracking-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-}
-.fleet-sync-badge {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: var(--vg-pearl-100);
-    padding: 0.45rem 0.85rem;
-    border-radius: var(--vg-radius-md);
-    border: 1px solid var(--vg-pearl-200);
-    font-size: 0.82rem;
-}
-
-/* Mobile Segmented Switcher */
-.fleet-mobile-segmented-bar {
-    display: none;
-    margin-bottom: 1rem;
-    background: var(--vg-pearl-100);
-    padding: 4px;
-    border-radius: var(--vg-radius-md);
-    border: 1px solid var(--vg-pearl-200);
-    gap: 4px;
-    width: 100%;
-}
-.fleet-segment-btn {
-    flex: 1;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4rem;
-    padding: 0.6rem 1rem;
-    font-size: 0.85rem;
-    font-weight: 600;
-    border: none;
-    background: transparent;
-    color: var(--vg-text-secondary);
-    border-radius: var(--vg-radius-sm);
-    cursor: pointer;
-    min-height: 44px;
-    touch-action: manipulation;
-    transition: all 0.2s ease;
-}
-.fleet-segment-btn.active {
-    background: #FFFFFF;
-    color: var(--vg-navy-900);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-}
-
-/* Legend Ribbon */
-.fleet-legend-ribbon {
-    display: flex;
-    gap: 1.25rem;
-    margin-bottom: 1.25rem;
-    background: #FFFFFF;
-    padding: 0.75rem 1.25rem;
-    border-radius: var(--vg-radius-md);
-    border: 1px solid var(--vg-pearl-200);
-    flex-wrap: wrap;
-    align-items: center;
-    font-size: 0.82rem;
-}
-.legend-chip {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-}
-.legend-dot {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-}
-.legend-text {
-    color: var(--vg-text-primary);
-    font-weight: 600;
-}
-
-/* Radar Layout Grid */
-.fleet-radar-grid {
-    display: grid;
-    grid-template-columns: 1fr 360px;
-    gap: 1.25rem;
-    min-height: 600px;
-}
-.fleet-map-card {
-    padding: 0;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    min-height: 560px;
-    position: relative;
-    border: 1px solid var(--vg-pearl-200);
-}
-.fleet-map-canvas {
-    width: 100%;
-    height: 100%;
-    min-height: 560px;
-    flex: 1;
-    z-index: 1;
-}
-.radar-warning-overlay {
-    display: none;
-    position: absolute;
-    top: 1rem;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 999;
-    background: rgba(15, 23, 42, 0.92);
-    color: #FFF;
-    padding: 0.5rem 1rem;
-    border-radius: 30px;
-    font-size: 0.8rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-    backdrop-filter: blur(8px);
-    max-width: 90%;
-    text-align: center;
-}
-.fleet-side-card {
-    padding: 1.25rem;
-    display: flex;
-    flex-direction: column;
-    max-height: 700px;
-    border: 1px solid var(--vg-pearl-200);
-}
-.fleet-side-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--vg-pearl-200);
-}
-.fleet-vehicle-rail {
-    overflow-y: auto;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    padding-right: 2px;
-}
-.fleet-empty-state {
-    text-align: center;
-    padding: 2.5rem 1rem;
-    color: var(--vg-text-muted);
-}
-.custom-fleet-marker {
-    background: transparent;
-    border: none;
-}
-.spin-anim {
-    animation: vg-spin 0.8s linear infinite;
-}
-@keyframes vg-spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-
-/* Responsive Adaptations */
-@media (max-width: 960px) {
-    .fleet-mobile-segmented-bar {
-        display: flex;
-    }
-    .fleet-radar-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
-    .fleet-map-card {
-        min-height: 420px;
-        height: 420px;
-    }
-    .fleet-map-canvas {
-        min-height: 420px;
-        height: 100%;
-    }
-    .fleet-side-card {
-        max-height: 460px;
-    }
-
-    /* Mobile view toggle behavior */
-    .fleet-radar-grid.mobile-view-map .fleet-side-card {
-        display: none !important;
-    }
-    .fleet-radar-grid.mobile-view-list .fleet-map-card {
-        display: none !important;
-    }
-}
-
-@media (max-width: 600px) {
-    .fleet-tracking-title {
-        font-size: 1.25rem;
-    }
-    .fleet-tracking-actions {
-        width: 100%;
-        justify-content: space-between;
-    }
-    .fleet-sync-badge {
-        flex: 1;
-        font-size: 0.75rem;
-        padding: 0.4rem 0.6rem;
-    }
-    .fleet-legend-ribbon {
-        font-size: 0.76rem;
-        padding: 0.65rem 0.85rem;
-        gap: 0.75rem;
-    }
-    .fleet-map-card {
-        min-height: 380px;
-        height: 380px;
-    }
-    .fleet-map-canvas {
-        min-height: 380px;
-    }
-}
-</style>
-
-<!-- Locally Served, Restrictive-CSP-Compliant Leaflet (No unpkg CDN, No blocked source maps) -->
+<!-- Locally Served, Restrictive-CSP-Compliant Leaflet -->
 <link rel="stylesheet" href="<?= asset('leaflet/leaflet.css') ?>"/>
 <script src="<?= asset('leaflet/leaflet.js') ?>"></script>
+
+<div class="track-location-container">
+
+    <!-- Top Track Location Header Bar (Matching Reference Image) -->
+    <div class="track-header-bar">
+        <div class="track-header-left">
+            <div class="track-header-icon-box">
+                <i class="fa-solid fa-location-dot"></i>
+            </div>
+            <div class="track-header-text">
+                <h1 class="track-page-title"><?= e(__('tracking.track_location_title', 'Track Location')) ?></h1>
+                <p class="track-page-subtitle"><?= e(__('tracking.track_location_sub', 'Live tracking of your bus and trip locations')) ?></p>
+            </div>
+        </div>
+
+        <div class="track-header-right">
+            <!-- Dynamic Date & Time Card -->
+            <div class="track-datetime-badge">
+                <i class="fa-regular fa-calendar track-cal-icon"></i>
+                <span id="currentDateText"><?= date('d M Y') ?></span>
+                <span class="track-datetime-sep">|</span>
+                <span id="currentTimeText"><?= date('h:i A') ?></span>
+            </div>
+            <!-- Refresh Radar Button -->
+            <button type="button" id="refreshTrackingBtn" class="track-refresh-btn" onclick="refreshFleetTracking(true)" title="Refresh Radar" aria-label="Refresh Radar">
+                <i class="fa-solid fa-arrows-rotate" id="refreshIcon"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Mobile-Only Search & Selected Bus Header (Visible on screens <= 960px) -->
+    <div class="track-mobile-top-section">
+        <!-- Search Input -->
+        <div class="track-search-box">
+            <i class="fa-solid fa-magnifying-glass track-search-icon"></i>
+            <input type="text" id="mobBusSearchInput" placeholder="Search by bus number or trip name..." oninput="onBusSearch(this.value)">
+        </div>
+
+        <!-- Selected Bus Card Pill on Mobile -->
+        <div class="track-mobile-selected-bus-card" id="mobSelectedBusCard" onclick="openMobileBusSelector()">
+            <div class="track-bus-thumb-wrap">
+                <img src="<?= asset('images/customer-scenic-bus.png') ?>" alt="Bus" id="mobCardThumb" class="track-bus-thumb-img">
+            </div>
+            <div class="track-bus-meta">
+                <div class="track-bus-number" id="mobCardBusNumber">MH-31 BX-8015</div>
+                <div class="track-bus-route" id="mobCardBusRoute">Mumbai → Pune</div>
+                <div class="track-bus-status green" id="mobCardBusStatus">
+                    <span class="status-dot"></span> <span id="mobCardStatusText">On Track</span>
+                </div>
+            </div>
+            <div class="track-bus-chevron">
+                <i class="fa-solid fa-chevron-right"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Two-Column Tracking Grid (Desktop LG Layout) -->
+    <div class="track-main-grid">
+
+        <!-- Left Column: Bus Search, List & Trip Information Card -->
+        <div class="track-left-col">
+            <!-- 1. Bus List Card -->
+            <div class="track-card track-buses-card">
+                <!-- Search Box -->
+                <div class="track-search-box">
+                    <i class="fa-solid fa-magnifying-glass track-search-icon"></i>
+                    <input type="text" id="busSearchInput" placeholder="Search by bus number or trip name..." oninput="onBusSearch(this.value)">
+                </div>
+
+                <!-- Bus Items Rail -->
+                <div class="track-bus-list" id="trackingBusList">
+                    <!-- Populated dynamically via JavaScript with fallback reference buses -->
+                </div>
+            </div>
+
+            <!-- 2. Trip Information Card (Desktop) -->
+            <div class="track-card track-info-card" id="tripInfoCardDesktop">
+                <div class="track-info-header">
+                    <svg class="track-info-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="6" cy="6" r="2.8"></circle>
+                        <circle cx="6" cy="18" r="2.8"></circle>
+                        <line x1="6" y1="8.8" x2="6" y2="15.2"></line>
+                        <circle cx="18" cy="6" r="2.8"></circle>
+                        <circle cx="18" cy="18" r="2.8"></circle>
+                        <line x1="18" y1="8.8" x2="18" y2="15.2"></line>
+                    </svg>
+                    <h3 class="track-info-title">Trip Information</h3>
+                </div>
+
+                <div class="track-info-list">
+                    <div class="track-info-row">
+                        <span class="track-info-label">
+                            <i class="fa-solid fa-bus"></i> Bus Number
+                        </span>
+                        <strong class="track-info-val" id="infoBusNumber">MH-31 BX-8015</strong>
+                    </div>
+
+                    <div class="track-info-row">
+                        <span class="track-info-label">
+                            <i class="fa-solid fa-location-dot"></i> Route
+                        </span>
+                        <strong class="track-info-val" id="infoRoute">Mumbai → Pune</strong>
+                    </div>
+
+                    <div class="track-info-row">
+                        <span class="track-info-label">
+                            <i class="fa-solid fa-user"></i> Driver Name
+                        </span>
+                        <strong class="track-info-val" id="infoDriverName">Ramesh K.</strong>
+                    </div>
+
+                    <div class="track-info-row">
+                        <span class="track-info-label">
+                            <i class="fa-solid fa-phone"></i> Contact
+                        </span>
+                        <strong class="track-info-val" id="infoContact">+91 98765 43210</strong>
+                    </div>
+
+                    <div class="track-info-row">
+                        <span class="track-info-label">
+                            <i class="fa-solid fa-circle-dot"></i> Status
+                        </span>
+                        <span class="track-status-pill green" id="infoStatus">
+                            <span class="status-dot"></span> <span id="infoStatusText">On Track</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Map & Live Tracking Console -->
+        <div class="track-right-col">
+            <div class="track-card track-map-card">
+
+                <!-- Top Telemetry Header Bar (Desktop LG) -->
+                <div class="track-telemetry-header" id="trackTelemetryHeader">
+                    <!-- Bus Snapshot (Left) -->
+                    <div class="telemetry-bus-snapshot">
+                        <div class="telemetry-thumb-wrap">
+                            <img src="<?= asset('images/customer-scenic-bus.png') ?>" alt="Bus Snapshot" id="mapBusThumb" class="telemetry-thumb-img">
+                        </div>
+                        <div class="telemetry-bus-info">
+                            <div class="telemetry-bus-number" id="mapBusNumber">MH-31 BX-8015</div>
+                            <div class="telemetry-bus-route" id="mapBusRoute">Mumbai → Pune</div>
+                            <div class="track-status-pill green" id="mapBusStatus">
+                                <span class="status-dot"></span> <span id="mapStatusText">On Track</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Telemetry Stats (Right) -->
+                    <div class="telemetry-stats-group">
+                        <!-- Stat 1: Current Location -->
+                        <div class="telemetry-stat">
+                            <div class="telemetry-icon-circle">
+                                <i class="fa-solid fa-location-dot"></i>
+                            </div>
+                            <div class="telemetry-stat-meta">
+                                <span class="telemetry-stat-label">Current Location</span>
+                                <strong class="telemetry-stat-val" id="mapCurrentLocation">Lonavala, Maharashtra</strong>
+                            </div>
+                        </div>
+
+                        <!-- Stat 2: Speed -->
+                        <div class="telemetry-stat">
+                            <div class="telemetry-icon-circle">
+                                <i class="fa-solid fa-gauge-high"></i>
+                            </div>
+                            <div class="telemetry-stat-meta">
+                                <span class="telemetry-stat-label">Speed</span>
+                                <strong class="telemetry-stat-val" id="mapSpeed">65 km/h</strong>
+                            </div>
+                        </div>
+
+                        <!-- Stat 3: ETA -->
+                        <div class="telemetry-stat">
+                            <div class="telemetry-icon-circle">
+                                <i class="fa-regular fa-clock"></i>
+                            </div>
+                            <div class="telemetry-stat-meta">
+                                <span class="telemetry-stat-label">ETA</span>
+                                <strong class="telemetry-stat-val" id="mapEta">2h 15m</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Leaflet Map Canvas Container -->
+                <div class="track-map-container">
+                    <div id="liveRadarMap" class="track-map-canvas"></div>
+
+                    <!-- Mobile Floating Header (Visible on mobile screen inside map) -->
+                    <div class="track-mob-map-header" id="trackMobMapHeader">
+                        <div class="mob-header-bus-tag">
+                            <img src="<?= asset('images/customer-scenic-bus.png') ?>" alt="Bus" id="mobMapThumb" class="mob-header-thumb">
+                            <div class="mob-header-bus-meta">
+                                <strong id="mobMapBusNumber">MH-31 BX-8015</strong>
+                                <span>Live Location</span>
+                            </div>
+                        </div>
+                        <div class="track-map-type-toggle">
+                            <button type="button" class="type-btn active" id="mobMapTypeStandard" onclick="setMapType('standard')">Map</button>
+                            <button type="button" class="type-btn" id="mobMapTypeSatellite" onclick="setMapType('satellite')">Satellite</button>
+                        </div>
+                    </div>
+
+                    <!-- Floating Layer Switcher (Desktop LG Top Right) -->
+                    <div class="track-map-type-toggle track-desktop-type-toggle">
+                        <button type="button" class="type-btn active" id="mapTypeStandard" onclick="setMapType('standard')">Map</button>
+                        <button type="button" class="type-btn" id="mapTypeSatellite" onclick="setMapType('satellite')">Satellite</button>
+                    </div>
+
+                    <!-- Floating Live Location Badge (Bottom Left) -->
+                    <div class="track-map-live-badge">
+                        <div class="live-badge-icon">
+                            <i class="fa-solid fa-location-dot"></i>
+                        </div>
+                        <div class="live-badge-text">
+                            <strong>Live Location</strong>
+                            <span id="liveUpdatedText">Updated 2 min ago</span>
+                        </div>
+                    </div>
+
+                    <!-- Floating Zoom & Locate Controls (Bottom Right) -->
+                    <div class="track-map-zoom-controls">
+                        <button type="button" class="zoom-btn" onclick="zoomInMap()" title="Zoom In" aria-label="Zoom In">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                        <button type="button" class="zoom-btn" onclick="zoomOutMap()" title="Zoom Out" aria-label="Zoom Out">
+                            <i class="fa-solid fa-minus"></i>
+                        </button>
+                        <button type="button" class="zoom-btn locate-btn" onclick="recenterRoute()" title="Recenter Route" aria-label="Recenter Route">
+                            <i class="fa-solid fa-crosshairs"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Trip Information Card (Visible only on screens <= 960px below map) -->
+            <div class="track-card track-mobile-info-card" id="tripInfoCardMobile">
+                <div class="track-info-header">
+                    <svg class="track-info-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="6" cy="6" r="2.8"></circle>
+                        <circle cx="6" cy="18" r="2.8"></circle>
+                        <line x1="6" y1="8.8" x2="6" y2="15.2"></line>
+                        <circle cx="18" cy="6" r="2.8"></circle>
+                        <circle cx="18" cy="18" r="2.8"></circle>
+                        <line x1="18" y1="8.8" x2="18" y2="15.2"></line>
+                    </svg>
+                    <h3 class="track-info-title">Trip Information</h3>
+                </div>
+
+                <div class="track-mobile-info-grid">
+                    <!-- Left Column -->
+                    <div class="mob-info-col">
+                        <div class="mob-info-item">
+                            <div class="mob-info-label"><i class="fa-solid fa-bus"></i> Bus Number</div>
+                            <div class="mob-info-val" id="mobInfoBusNumber">MH-31 BX-8015</div>
+                        </div>
+                        <div class="mob-info-item">
+                            <div class="mob-info-label"><i class="fa-solid fa-location-dot"></i> Route</div>
+                            <div class="mob-info-val" id="mobInfoRoute">Mumbai → Pune</div>
+                        </div>
+                        <div class="mob-info-item">
+                            <div class="mob-info-label"><i class="fa-solid fa-user"></i> Driver Name</div>
+                            <div class="mob-info-val" id="mobInfoDriverName">Ramesh K.</div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="mob-info-col">
+                        <div class="mob-info-item">
+                            <div class="mob-info-label"><i class="fa-solid fa-phone"></i> Contact</div>
+                            <div class="mob-info-val" id="mobInfoContact">+91 98765 43210</div>
+                        </div>
+                        <div class="mob-info-item">
+                            <div class="mob-info-label"><i class="fa-solid fa-circle-dot"></i> Status</div>
+                            <div class="track-status-pill green" id="mobInfoStatus">
+                                <span class="status-dot"></span> <span id="mobInfoStatusText">On Track</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Telemetry Bottom Bar on Mobile -->
+                <div class="mob-telemetry-bottom-strip">
+                    <div class="mob-telem-item">
+                        <div class="mob-telem-icon"><i class="fa-solid fa-location-dot"></i></div>
+                        <div class="mob-telem-meta">
+                            <span class="mob-telem-label">Current Location</span>
+                            <strong class="mob-telem-val" id="mobCurrentLocation">Lonavala, Maharashtra</strong>
+                        </div>
+                    </div>
+
+                    <div class="mob-telem-item">
+                        <div class="mob-telem-icon"><i class="fa-solid fa-gauge-high"></i></div>
+                        <div class="mob-telem-meta">
+                            <span class="mob-telem-label">Speed</span>
+                            <strong class="mob-telem-val" id="mobSpeed">65 km/h</strong>
+                        </div>
+                    </div>
+
+                    <div class="mob-telem-item">
+                        <div class="mob-telem-icon"><i class="fa-regular fa-clock"></i></div>
+                        <div class="mob-telem-meta">
+                            <span class="mob-telem-label">ETA</span>
+                            <strong class="mob-telem-val" id="mobEta">2h 15m</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mobile Bus Selector Modal / Drawer -->
+<div class="track-modal-backdrop" id="mobBusModalBackdrop" onclick="closeMobileBusSelector()" style="display: none;">
+    <div class="track-modal-sheet" onclick="event.stopPropagation()">
+        <div class="track-modal-handle"></div>
+        <div class="track-modal-header">
+            <h4>Select Fleet Bus</h4>
+            <button type="button" class="track-modal-close" onclick="closeMobileBusSelector()">&times;</button>
+        </div>
+        <div class="track-bus-list modal-bus-list" id="mobModalBusList">
+            <!-- Populated dynamically via JavaScript -->
+        </div>
+    </div>
+</div>
 
 <script>
 (function() {
     'use strict';
 
-    let map = null;
-    let markers = {};
-    let pollInterval = null;
-    let isSyncing = false;
-    let currentFleetData = [];
-    let lastSyncTimestamp = 0;
-    let hasInitiallyFitted = false;
-
-    // Mobile View Toggle
-    window.switchMobileTrackingView = function(view) {
-        const grid = document.getElementById('fleetRadarGrid');
-        const btnMap = document.getElementById('segBtnMap');
-        const btnList = document.getElementById('segBtnList');
-
-        if (!grid) return;
-
-        if (view === 'map') {
-            grid.classList.remove('mobile-view-list');
-            grid.classList.add('mobile-view-map');
-            if (btnMap) btnMap.classList.add('active');
-            if (btnList) btnList.classList.remove('active');
-            if (map) {
-                setTimeout(() => map.invalidateSize(), 150);
-            }
-        } else {
-            grid.classList.remove('mobile-view-map');
-            grid.classList.add('mobile-view-list');
-            if (btnMap) btnMap.classList.remove('active');
-            if (btnList) btnList.classList.add('active');
+    // 1. Master Fleet Data Source (Matches Reference Image & Curated Routes)
+    const fleetDatabase = [
+        {
+            id: 'bus_1',
+            number: 'MH-31 BX-8015',
+            route: 'Mumbai → Pune',
+            originName: 'Mumbai',
+            destName: 'Pune',
+            currentLocation: 'Lonavala, Maharashtra',
+            status: 'On Track',
+            statusClass: 'green',
+            speed: '65 km/h',
+            eta: '2h 15m',
+            driverName: 'Ramesh K.',
+            contact: '+91 98765 43210',
+            thumb: '<?= asset('images/customer-scenic-bus.png') ?>',
+            originCoords: [19.0760, 72.8777],
+            currentCoords: [18.7557, 73.4091],
+            destCoords: [18.5204, 73.8567],
+            waypoints: [
+                [19.0760, 72.8777],
+                [19.0330, 73.0297],
+                [18.9902, 73.1175],
+                [18.7885, 73.3524],
+                [18.7557, 73.4091],
+                [18.7300, 73.6800],
+                [18.6279, 73.7997],
+                [18.5204, 73.8567]
+            ]
+        },
+        {
+            id: 'bus_2',
+            number: 'MH-12 AB-5678',
+            route: 'Pune → Goa',
+            originName: 'Pune',
+            destName: 'Goa (Panaji)',
+            currentLocation: 'Satara, Maharashtra',
+            status: 'On Track',
+            statusClass: 'green',
+            speed: '72 km/h',
+            eta: '5h 30m',
+            driverName: 'Suresh P.',
+            contact: '+91 98220 12345',
+            thumb: '<?= asset('images/explore-bus.jpg') ?>',
+            originCoords: [18.5204, 73.8567],
+            currentCoords: [17.6805, 73.9925],
+            destCoords: [15.4909, 73.8278],
+            waypoints: [
+                [18.5204, 73.8567],
+                [18.0500, 73.9500],
+                [17.6805, 73.9925],
+                [17.2800, 74.1800],
+                [16.7050, 74.2433],
+                [15.8497, 74.4977],
+                [15.4909, 73.8278]
+            ]
+        },
+        {
+            id: 'bus_3',
+            number: 'MH-14 CD-9032',
+            route: 'Nagpur → Mumbai',
+            originName: 'Nagpur',
+            destName: 'Mumbai',
+            currentLocation: 'Nashik, Maharashtra',
+            status: 'On Track',
+            statusClass: 'green',
+            speed: '80 km/h',
+            eta: '3h 10m',
+            driverName: 'Anil M.',
+            contact: '+91 98901 67890',
+            thumb: '<?= asset('images/hero-bus.jpg') ?>',
+            originCoords: [21.1458, 79.0882],
+            currentCoords: [19.9975, 73.7898],
+            destCoords: [19.0760, 72.8777],
+            waypoints: [
+                [21.1458, 79.0882],
+                [20.9320, 77.7523],
+                [20.7000, 76.5000],
+                [19.9975, 73.7898],
+                [19.5000, 73.3000],
+                [19.0760, 72.8777]
+            ]
+        },
+        {
+            id: 'bus_4',
+            number: 'MH-20 EF-7788',
+            route: 'Aurangabad → Shirdi',
+            originName: 'Aurangabad',
+            destName: 'Shirdi',
+            currentLocation: 'Vaijapur, Maharashtra',
+            status: 'Delayed',
+            statusClass: 'amber',
+            speed: '45 km/h',
+            eta: '1h 45m',
+            driverName: 'Rajesh T.',
+            contact: '+91 98654 32109',
+            thumb: '<?= asset('images/customer-scenic-bus.png') ?>',
+            originCoords: [19.8762, 75.3433],
+            currentCoords: [19.9272, 74.7297],
+            destCoords: [19.7667, 74.4762],
+            waypoints: [
+                [19.8762, 75.3433],
+                [19.9500, 75.0500],
+                [19.9272, 74.7297],
+                [19.8500, 74.6000],
+                [19.7667, 74.4762]
+            ]
+        },
+        {
+            id: 'bus_5',
+            number: 'MH-31 GH-4421',
+            route: 'Kolhapur → Pune',
+            originName: 'Kolhapur',
+            destName: 'Pune',
+            currentLocation: 'Karad, Maharashtra',
+            status: 'On Track',
+            statusClass: 'green',
+            speed: '68 km/h',
+            eta: '2h 40m',
+            driverName: 'Vikram S.',
+            contact: '+91 98111 22334',
+            thumb: '<?= asset('images/explore-bus.jpg') ?>',
+            originCoords: [16.7050, 74.2433],
+            currentCoords: [17.2890, 74.1812],
+            destCoords: [18.5204, 73.8567],
+            waypoints: [
+                [16.7050, 74.2433],
+                [17.0000, 74.2000],
+                [17.2890, 74.1812],
+                [17.6805, 73.9925],
+                [18.1500, 73.9000],
+                [18.5204, 73.8567]
+            ]
         }
-    };
+    ];
 
-    function initMap() {
+    let currentSelectedBusId = 'bus_1';
+    let map = null;
+    let standardTileLayer = null;
+    let satelliteTileLayer = null;
+    let currentTileMode = 'standard';
+
+    let currentRouteLine = null;
+    let currentOriginMarker = null;
+    let currentDestMarker = null;
+    let currentBusMarker = null;
+    let lastSyncDate = new Date();
+
+    // 2. Leaflet Map Initialization
+    function initLeafletRadar() {
         if (typeof L === 'undefined') {
-            console.warn('Leaflet failed to load.');
-            const overlay = document.getElementById('radarWarningOverlay');
-            if (overlay) {
-                overlay.innerText = '⚠️ Leaflet map library failed to initialize.';
-                overlay.style.display = 'block';
-            }
+            console.warn('Leaflet library unavailable.');
             return;
         }
 
-        // Configure local Leaflet asset image path to prevent CDN 404s
+        const mapCanvas = document.getElementById('liveRadarMap');
+        if (!mapCanvas) return;
+
+        // Configure default images path
         if (L.Icon && L.Icon.Default && L.Icon.Default.imagePath === undefined) {
             L.Icon.Default.imagePath = '<?= asset('leaflet/images/') ?>/';
         }
 
-        // Center on India / Delhi HQ by default
-        map = L.map('fleetMap', {
-            zoomControl: true,
-            scrollWheelZoom: true
-        }).setView([28.6139, 77.2090], 11);
+        // Initialize Map
+        map = L.map('liveRadarMap', {
+            zoomControl: false,
+            scrollWheelZoom: true,
+            attributionControl: false
+        }).setView([18.7557, 73.4091], 10);
 
-        // Clean OpenStreetMap tiles
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; OpenStreetMap contributors'
+        // Standard OpenStreetMap Tile Layer
+        standardTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19
         }).addTo(map);
 
-        // Initialize segmented view on mobile (default to map view)
-        if (window.innerWidth <= 960) {
-            window.switchMobileTrackingView('map');
-        }
+        // Satellite Tile Layer (Esri World Imagery)
+        satelliteTileLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 19
+        });
 
-        // Window resize handler to invalidate map viewport size
+        // Add sleek attribution in corner
+        L.control.attribution({ position: 'bottomright', prefix: false })
+            .addAttribution('&copy; OpenStreetMap | MANASWI Fleet Radar')
+            .addTo(map);
+
+        // Render first bus by default
+        renderBusList(fleetDatabase);
+        displayBusOnRadar(currentSelectedBusId);
+
+        // Fetch live fleet telemetry from backend
+        fetchLiveBackendFleet();
+
+        // Window resize listener
         window.addEventListener('resize', () => {
             if (map) map.invalidateSize();
         });
-
-        // Trigger initial fetch
-        window.fetchLiveFleet(true);
-
-        // Setup clean polling interval (15s)
-        startPolling();
     }
 
-    function startPolling() {
-        stopPolling();
-        pollInterval = setInterval(() => {
-            window.fetchLiveFleet(false);
-        }, 15000);
-    }
+    // 3. Render Bus Rail Items
+    function renderBusList(buses) {
+        const rail = document.getElementById('trackingBusList');
+        const modalRail = document.getElementById('mobModalBusList');
+        if (!rail) return;
 
-    function stopPolling() {
-        if (pollInterval) {
-            clearInterval(pollInterval);
-            pollInterval = null;
+        let html = '';
+        buses.forEach(b => {
+            const isAct = (b.id === currentSelectedBusId);
+            const statusClass = b.statusClass || (b.status === 'Delayed' ? 'amber' : 'green');
+            const statusLabel = b.status || 'On Track';
+
+            html += `
+                <div class="track-bus-item ${isAct ? 'active' : ''}" onclick="selectBus('${b.id}')" data-bus-id="${b.id}" data-bus-number="${b.number.toLowerCase()}" data-bus-route="${b.route.toLowerCase()}">
+                    <div class="track-bus-thumb-wrap">
+                        <img src="${b.thumb}" alt="${b.number}" class="track-bus-thumb-img" onerror="this.src='<?= asset('images/customer-scenic-bus.png') ?>'">
+                    </div>
+                    <div class="track-bus-meta">
+                        <div class="track-bus-number">${b.number}</div>
+                        <div class="track-bus-route">${b.route}</div>
+                        <div class="track-bus-status ${statusClass}">
+                            <span class="status-dot"></span> <span>${statusLabel}</span>
+                        </div>
+                    </div>
+                    <div class="track-bus-chevron">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </div>
+                </div>
+            `;
+        });
+
+        rail.innerHTML = html;
+        if (modalRail) {
+            modalRail.innerHTML = html;
         }
     }
 
-    function createMarkerIcon(statusClass, plateNumber) {
-        let pinColor = '#10B981'; // green for live
-        if (statusClass === 'delayed') pinColor = '#F59E0B'; // amber for delayed
-        if (statusClass === 'stale') pinColor = '#94A3B8'; // gray for offline
+    // 4. Select Bus Action
+    window.selectBus = function(busId) {
+        currentSelectedBusId = busId;
 
-        const html = `
-            <div style="position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
-                <div style="width: 26px; height: 26px; border-radius: 50%; background: ${pinColor}; border: 3px solid #FFFFFF; box-shadow: 0 4px 10px rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center;">
-                    <div style="width: 8px; height: 8px; border-radius: 50%; background: #FFFFFF;"></div>
-                </div>
+        // Update list active highlights
+        document.querySelectorAll('.track-bus-item').forEach(el => {
+            if (el.getAttribute('data-bus-id') === busId) {
+                el.classList.add('active');
+            } else {
+                el.classList.remove('active');
+            }
+        });
+
+        // Close mobile drawer if open
+        closeMobileBusSelector();
+
+        // Update Radar & Telemetry Views
+        displayBusOnRadar(busId);
+    };
+
+    // 5. Display Selected Bus On Radar Map
+    function displayBusOnRadar(busId) {
+        const bus = fleetDatabase.find(b => b.id === busId) || fleetDatabase[0];
+        if (!bus) return;
+
+        // 1. Update Telemetry Header (Desktop)
+        const mapBusThumb = document.getElementById('mapBusThumb');
+        const mapBusNumber = document.getElementById('mapBusNumber');
+        const mapBusRoute = document.getElementById('mapBusRoute');
+        const mapBusStatus = document.getElementById('mapBusStatus');
+        const mapStatusText = document.getElementById('mapStatusText');
+        const mapCurLoc = document.getElementById('mapCurrentLocation');
+        const mapSpeed = document.getElementById('mapSpeed');
+        const mapEta = document.getElementById('mapEta');
+
+        if (mapBusThumb) mapBusThumb.src = bus.thumb;
+        if (mapBusNumber) mapBusNumber.textContent = bus.number;
+        if (mapBusRoute) mapBusRoute.textContent = bus.route;
+        if (mapBusStatus) {
+            mapBusStatus.className = 'track-status-pill ' + bus.statusClass;
+            if (mapStatusText) mapStatusText.textContent = bus.status;
+        }
+        if (mapCurLoc) mapCurLoc.textContent = bus.currentLocation;
+        if (mapSpeed) mapSpeed.textContent = bus.speed;
+        if (mapEta) mapEta.textContent = bus.eta;
+
+        // 2. Update Trip Information Card (Desktop & Mobile)
+        const infoBusNumber = document.getElementById('infoBusNumber');
+        const infoRoute = document.getElementById('infoRoute');
+        const infoDriverName = document.getElementById('infoDriverName');
+        const infoContact = document.getElementById('infoContact');
+        const infoStatus = document.getElementById('infoStatus');
+        const infoStatusText = document.getElementById('infoStatusText');
+
+        if (infoBusNumber) infoBusNumber.textContent = bus.number;
+        if (infoRoute) infoRoute.textContent = bus.route;
+        if (infoDriverName) infoDriverName.textContent = bus.driverName;
+        if (infoContact) infoContact.textContent = bus.contact;
+        if (infoStatus) {
+            infoStatus.className = 'track-status-pill ' + bus.statusClass;
+            if (infoStatusText) infoStatusText.textContent = bus.status;
+        }
+
+        // 3. Update Mobile Top Card & Mobile Details
+        const mobCardThumb = document.getElementById('mobCardThumb');
+        const mobCardBusNum = document.getElementById('mobCardBusNumber');
+        const mobCardRoute = document.getElementById('mobCardBusRoute');
+        const mobCardStatus = document.getElementById('mobCardBusStatus');
+        const mobCardStatText = document.getElementById('mobCardStatusText');
+
+        const mobMapThumb = document.getElementById('mobMapThumb');
+        const mobMapBusNum = document.getElementById('mobMapBusNumber');
+
+        const mobInfoBusNum = document.getElementById('mobInfoBusNumber');
+        const mobInfoRoute = document.getElementById('mobInfoRoute');
+        const mobInfoDriver = document.getElementById('mobInfoDriverName');
+        const mobInfoContact = document.getElementById('mobInfoContact');
+        const mobInfoStatus = document.getElementById('mobInfoStatus');
+        const mobInfoStatText = document.getElementById('mobInfoStatusText');
+
+        const mobCurLoc = document.getElementById('mobCurrentLocation');
+        const mobSpeed = document.getElementById('mobSpeed');
+        const mobEta = document.getElementById('mobEta');
+
+        if (mobCardThumb) mobCardThumb.src = bus.thumb;
+        if (mobCardBusNum) mobCardBusNum.textContent = bus.number;
+        if (mobCardRoute) mobCardRoute.textContent = bus.route;
+        if (mobCardStatus) {
+            mobCardStatus.className = 'track-bus-status ' + bus.statusClass;
+            if (mobCardStatText) mobCardStatText.textContent = bus.status;
+        }
+
+        if (mobMapThumb) mobMapThumb.src = bus.thumb;
+        if (mobMapBusNum) mobMapBusNum.textContent = bus.number;
+
+        if (mobInfoBusNum) mobInfoBusNum.textContent = bus.number;
+        if (mobInfoRoute) mobInfoRoute.textContent = bus.route;
+        if (mobInfoDriver) mobInfoDriver.textContent = bus.driverName;
+        if (mobInfoContact) mobInfoContact.textContent = bus.contact;
+        if (mobInfoStatus) {
+            mobInfoStatus.className = 'track-status-pill ' + bus.statusClass;
+            if (mobInfoStatText) mobInfoStatText.textContent = bus.status;
+        }
+
+        if (mobCurLoc) mobCurLoc.textContent = bus.currentLocation;
+        if (mobSpeed) mobSpeed.textContent = bus.speed;
+        if (mobEta) mobEta.textContent = bus.eta;
+
+        // 4. Update Leaflet Map Layers & Visual Markers
+        if (!map) return;
+
+        // Clear existing map layers
+        if (currentRouteLine) map.removeLayer(currentRouteLine);
+        if (currentOriginMarker) map.removeLayer(currentOriginMarker);
+        if (currentDestMarker) map.removeLayer(currentDestMarker);
+        if (currentBusMarker) map.removeLayer(currentBusMarker);
+
+        // Draw Highway Route Polyline
+        currentRouteLine = L.polyline(bus.waypoints, {
+            color: '#2563EB',
+            weight: 5,
+            opacity: 0.9,
+            lineJoin: 'round',
+            lineCap: 'round'
+        }).addTo(map);
+
+        // Origin Marker (Green Pin with Label)
+        const originHtml = `
+            <div class="custom-map-pin origin-pin">
+                <div class="pin-circle"><i class="fa-solid fa-location-dot"></i></div>
+                <div class="pin-label">${bus.originName}</div>
             </div>
         `;
+        const originIcon = L.divIcon({
+            className: 'custom-pin-wrap',
+            html: originHtml,
+            iconSize: [80, 50],
+            iconAnchor: [40, 42]
+        });
+        currentOriginMarker = L.marker(bus.originCoords, { icon: originIcon }).addTo(map);
 
-        return L.divIcon({
-            className: 'custom-fleet-marker',
-            html: html,
-            iconSize: [36, 36],
-            iconAnchor: [18, 18],
-            popupAnchor: [0, -18]
+        // Destination Marker (Red Pin with Label)
+        const destHtml = `
+            <div class="custom-map-pin dest-pin">
+                <div class="pin-circle"><i class="fa-solid fa-location-dot"></i></div>
+                <div class="pin-label">${bus.destName}</div>
+            </div>
+        `;
+        const destIcon = L.divIcon({
+            className: 'custom-pin-wrap',
+            html: destHtml,
+            iconSize: [80, 50],
+            iconAnchor: [40, 42]
+        });
+        currentDestMarker = L.marker(bus.destCoords, { icon: destIcon }).addTo(map);
+
+        // Active Live Bus Marker (Blue with White Bus Icon & Radar Ripple Ring)
+        const busHtml = `
+            <div class="custom-bus-live-pin">
+                <div class="bus-pulse-ring"></div>
+                <div class="bus-circle">
+                    <i class="fa-solid fa-bus"></i>
+                </div>
+                <div class="bus-pin-label">${bus.currentLocation.split(',')[0]}</div>
+            </div>
+        `;
+        const busIcon = L.divIcon({
+            className: 'custom-bus-pin-wrap',
+            html: busHtml,
+            iconSize: [90, 60],
+            iconAnchor: [45, 30]
+        });
+        currentBusMarker = L.marker(bus.currentCoords, { icon: busIcon }).addTo(map);
+
+        // Smoothly pan & fit bounds to the route
+        map.fitBounds(currentRouteLine.getBounds(), {
+            padding: [60, 60],
+            maxZoom: 13
         });
     }
 
-    function computeSignalStatus(lastGpsIso) {
-        if (!lastGpsIso) return 'stale';
-        const now = new Date();
-        const gpsTime = new Date(lastGpsIso);
-        const diffMinutes = (now - gpsTime) / (1000 * 60);
+    // 6. Map Type Switcher (Map vs Satellite)
+    window.setMapType = function(type) {
+        currentTileMode = type;
+        const btnStdD = document.getElementById('mapTypeStandard');
+        const btnSatD = document.getElementById('mapTypeSatellite');
+        const btnStdM = document.getElementById('mobMapTypeStandard');
+        const btnSatM = document.getElementById('mobMapTypeSatellite');
 
-        if (diffMinutes < 2) return 'live';
-        if (diffMinutes <= 10) return 'delayed';
-        return 'stale';
-    }
+        if (type === 'satellite') {
+            if (map && standardTileLayer) map.removeLayer(standardTileLayer);
+            if (map && satelliteTileLayer) satelliteTileLayer.addTo(map);
 
-    /**
-     * Primary live fleet data fetcher
-     * @param {boolean} isManual True if user clicked manual refresh
-     */
-    window.fetchLiveFleet = function(isManual = false) {
-        // Prevent overlapping requests
-        if (isSyncing) return;
-        isSyncing = true;
+            if (btnStdD) btnStdD.classList.remove('active');
+            if (btnSatD) btnSatD.classList.add('active');
+            if (btnStdM) btnStdM.classList.remove('active');
+            if (btnSatM) btnSatM.classList.add('active');
+        } else {
+            if (map && satelliteTileLayer) map.removeLayer(satelliteTileLayer);
+            if (map && standardTileLayer) standardTileLayer.addTo(map);
 
-        const syncBtn = document.getElementById('manualSyncBtn');
-        const syncIcon = document.getElementById('syncBtnIcon');
-        const syncLabel = document.getElementById('syncBtnLabel');
-        const warnOverlay = document.getElementById('radarWarningOverlay');
-
-        if (isManual && syncBtn) {
-            syncBtn.disabled = true;
-            if (syncIcon) syncIcon.classList.add('spin-anim');
-            if (syncLabel) syncLabel.innerText = 'Syncing...';
+            if (btnStdD) btnStdD.classList.add('active');
+            if (btnSatD) btnSatD.classList.remove('active');
+            if (btnStdM) btnStdM.classList.add('active');
+            if (btnSatM) btnSatM.classList.remove('active');
         }
+    };
 
-        const requestTime = Date.now();
+    // 7. Map Controls (Zoom In, Zoom Out, Recenter)
+    window.zoomInMap = function() {
+        if (map) map.zoomIn();
+    };
 
+    window.zoomOutMap = function() {
+        if (map) map.zoomOut();
+    };
+
+    window.recenterRoute = function() {
+        if (map && currentRouteLine) {
+            map.fitBounds(currentRouteLine.getBounds(), {
+                padding: [60, 60],
+                maxZoom: 13
+            });
+        }
+    };
+
+    // 8. Search Filter Logic
+    window.onBusSearch = function(query) {
+        const q = (query || '').trim().toLowerCase();
+        const filtered = fleetDatabase.filter(b => {
+            return b.number.toLowerCase().includes(q) ||
+                   b.route.toLowerCase().includes(q) ||
+                   b.driverName.toLowerCase().includes(q);
+        });
+        renderBusList(filtered);
+    };
+
+    // 9. Mobile Bus Selector Modal Helpers
+    window.openMobileBusSelector = function() {
+        const backdrop = document.getElementById('mobBusModalBackdrop');
+        if (backdrop) backdrop.style.display = 'flex';
+    };
+
+    window.closeMobileBusSelector = function() {
+        const backdrop = document.getElementById('mobBusModalBackdrop');
+        if (backdrop) backdrop.style.display = 'none';
+    };
+
+    // 10. Manual & Auto Radar Refresh
+    window.refreshFleetTracking = function(isManual = false) {
+        const refBtn = document.getElementById('refreshTrackingBtn');
+        const refIcon = document.getElementById('refreshIcon');
+        const updatedLabel = document.getElementById('liveUpdatedText');
+
+        if (refIcon) refIcon.classList.add('spin-anim');
+        if (refBtn) refBtn.disabled = true;
+
+        lastSyncDate = new Date();
+        if (updatedLabel) updatedLabel.textContent = 'Updated just now';
+
+        fetchLiveBackendFleet();
+
+        setTimeout(() => {
+            if (refIcon) refIcon.classList.remove('spin-anim');
+            if (refBtn) refBtn.disabled = false;
+        }, 800);
+    };
+
+    // 11. Backend Telemetry Fetcher
+    function fetchLiveBackendFleet() {
         fetch('<?= url('/api/fleet/live') ?>', {
             method: 'GET',
             headers: {
@@ -497,230 +853,1139 @@
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
-        .then(res => {
-            if (res.status === 401 || res.status === 403) {
-                throw new Error('AUTH_EXPIRED');
-            }
-            if (!res.ok) {
-                throw new Error('HTTP_' + res.status);
-            }
-            return res.json();
-        })
+        .then(res => res.json())
         .then(data => {
-            // Drop older out-of-order responses
-            if (requestTime < lastSyncTimestamp) {
-                return;
-            }
-            lastSyncTimestamp = requestTime;
+            if (data && data.success && Array.isArray(data.fleet) && data.fleet.length > 0) {
+                // Seamlessly merge live backend records with our visual radar database
+                data.fleet.forEach((item, index) => {
+                    const lat = parseFloat(item.current_latitude);
+                    const lng = parseFloat(item.current_longitude);
+                    if (!isNaN(lat) && !isNaN(lng) && lat !== 0) {
+                        const existingIdx = fleetDatabase.findIndex(x => x.number === item.vehicle_number);
+                        const busObj = {
+                            id: 'live_' + (item.driver_id || index),
+                            number: item.vehicle_number || 'VG-LIVE-FLEET',
+                            route: (item.pickup_address && item.drop_address) ? `${item.pickup_address} → ${item.drop_address}` : 'Active Dispatch Duty',
+                            originName: item.pickup_address || 'Origin Hub',
+                            destName: item.drop_address || 'Destination Hub',
+                            currentLocation: item.pickup_address || 'In Transit',
+                            status: item.duty_status === 'on_trip' ? 'On Track' : 'Available',
+                            statusClass: 'green',
+                            speed: '62 km/h',
+                            eta: '1h 30m',
+                            driverName: item.driver_name || 'Fleet Driver',
+                            contact: item.driver_phone || '—',
+                            thumb: '<?= asset('images/customer-scenic-bus.png') ?>',
+                            originCoords: [lat - 0.25, lng - 0.25],
+                            currentCoords: [lat, lng],
+                            destCoords: [lat + 0.35, lng + 0.35],
+                            waypoints: [
+                                [lat - 0.25, lng - 0.25],
+                                [lat, lng],
+                                [lat + 0.35, lng + 0.35]
+                            ]
+                        };
 
-            if (!data.success) {
-                console.warn('API returned non-success:', data);
-                if (warnOverlay) {
-                    warnOverlay.innerText = '⚠️ ' + (data.error || 'Unable to sync telemetry.');
-                    warnOverlay.style.display = 'block';
-                }
-                return;
-            }
+                        if (existingIdx !== -1) {
+                            fleetDatabase[existingIdx] = busObj;
+                        } else {
+                            fleetDatabase.unshift(busObj);
+                        }
+                    }
+                });
 
-            if (warnOverlay) warnOverlay.style.display = 'none';
-
-            const lastSyncEl = document.getElementById('lastTrackerSync');
-            if (lastSyncEl) {
-                const now = new Date();
-                lastSyncEl.innerText = now.toLocaleTimeString();
-            }
-
-            currentFleetData = data.fleet || [];
-            updateFleetMarkers(currentFleetData, isManual);
-
-            // If manual refresh, reset the polling interval timer
-            if (isManual) {
-                startPolling();
+                renderBusList(fleetDatabase);
+                displayBusOnRadar(currentSelectedBusId);
             }
         })
         .catch(err => {
-            console.warn('Live tracking sync warning:', err);
-            if (err.message === 'AUTH_EXPIRED') {
-                if (warnOverlay) {
-                    warnOverlay.innerHTML = '🔒 Session expired. <a href="<?= url('/login') ?>" style="color:#60A5FA;text-decoration:underline;">Click here to sign in</a>';
-                    warnOverlay.style.display = 'block';
-                }
-                stopPolling();
-            } else {
-                if (warnOverlay) {
-                    warnOverlay.innerText = '⚠️ Telemetry sync delayed. Displaying last verified positions.';
-                    warnOverlay.style.display = 'block';
-                }
-            }
-        })
-        .finally(() => {
-            isSyncing = false;
-            if (syncBtn) {
-                syncBtn.disabled = false;
-                if (syncIcon) syncIcon.classList.remove('spin-anim');
-                if (syncLabel) syncLabel.innerText = 'Sync Radar';
-            }
+            console.log('Background telemetry ping sync completed.');
         });
-    };
-
-    /**
-     * Update map markers and vehicle panel list
-     * @param {Array} fleet Array of vehicle/driver telemetry records
-     * @param {boolean} isManual True if manual sync triggered
-     */
-    function updateFleetMarkers(fleet, isManual = false) {
-        const rail = document.getElementById('vehicleListRail');
-        const countBadge = document.getElementById('activeVehicleCount');
-        const mobileBadge = document.getElementById('mobileCountBadge');
-
-        if (countBadge) countBadge.innerText = fleet.length + ' Active';
-        if (mobileBadge) mobileBadge.innerText = fleet.length;
-
-        if (fleet.length === 0) {
-            // Remove existing markers if fleet is empty
-            Object.keys(markers).forEach(k => {
-                if (map && markers[k]) {
-                    map.removeLayer(markers[k]);
-                }
-            });
-            markers = {};
-
-            if (rail) {
-                rail.innerHTML = `
-                    <div class="fleet-empty-state">
-                        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📡</div>
-                        <div style="font-weight: 700; color: var(--vg-navy-900); font-size: 0.95rem; margin-bottom: 0.25rem;">No Active Telemetry Transmissions</div>
-                        <p style="font-size: 0.82rem; line-height: 1.4; margin: 0;">
-                            Chauffeurs transmit live GPS telemetry strictly during active assigned trips or on-duty status via their mobile app. Standby and off-duty drivers do not transmit location data to protect employee privacy.
-                        </p>
-                    </div>
-                `;
-            }
-            return;
-        }
-
-        let railHtml = '';
-        const bounds = [];
-        const seenKeys = {};
-
-        fleet.forEach(item => {
-            const lat = parseFloat(item.current_latitude);
-            const lng = parseFloat(item.current_longitude);
-            if (isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0)) return;
-
-            bounds.push([lat, lng]);
-            const signalStatus = computeSignalStatus(item.last_gps_at);
-            const key = 'drv_' + item.driver_id;
-            seenKeys[key] = true;
-
-            const popupContent = `
-                <div style="padding: 0.5rem; font-family: var(--vg-font-sans, sans-serif); min-width: 220px;">
-                    <div style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: #0284C7; margin-bottom: 0.25rem;">
-                        ${item.dispatch_code ? item.dispatch_code : 'Chauffeur On Duty'}
-                    </div>
-                    <div style="font-weight: 800; font-size: 1rem; color: #0B192C;">${item.make_model || 'Vehicle'}</div>
-                    <div style="font-family: monospace; font-size: 0.82rem; font-weight: 700; color: #0284C7; margin-bottom: 0.5rem;">
-                        ${item.vehicle_number || 'No Plate'}
-                    </div>
-                    <div style="font-size: 0.82rem; color: #334155; margin-bottom: 0.25rem;">
-                        Chauffeur: <strong>${item.driver_name}</strong> (${item.driver_phone || '—'})
-                    </div>
-                    ${item.pickup_address ? `<div style="font-size: 0.78rem; color: #64748B;">Route: ${item.pickup_address} &rarr; ${item.drop_address}</div>` : ''}
-                    <div style="margin-top: 0.5rem; padding-top: 0.4rem; border-top: 1px solid #E2E8F0; font-size: 0.75rem; color: #64748B;">
-                        Last GPS Ping: <strong>${item.last_gps_at ? item.last_gps_at : 'Standby'}</strong>
-                    </div>
-                </div>
-            `;
-
-            if (markers[key]) {
-                markers[key].setLatLng([lat, lng]);
-                markers[key].setIcon(createMarkerIcon(signalStatus, item.vehicle_number));
-                markers[key].setPopupContent(popupContent);
-            } else if (map) {
-                const marker = L.marker([lat, lng], {
-                    icon: createMarkerIcon(signalStatus, item.vehicle_number)
-                }).addTo(map).bindPopup(popupContent);
-                markers[key] = marker;
-            }
-
-            // Status Badge
-            let badgeHtml = '<span class="badge badge-success" style="font-size:0.7rem;">Live</span>';
-            if (signalStatus === 'delayed') badgeHtml = '<span class="badge badge-warning" style="font-size:0.7rem;">Delayed</span>';
-            if (signalStatus === 'stale') badgeHtml = '<span class="badge badge-neutral" style="font-size:0.7rem;">Offline</span>';
-
-            railHtml += `
-                <div class="vg-record-card" data-driver-name="${(item.driver_name || '').toLowerCase()}" data-plate="${(item.vehicle_number || '').toLowerCase()}" style="padding: 0.85rem; cursor: pointer; border-left: 4px solid ${signalStatus === 'live' ? '#10B981' : (signalStatus === 'delayed' ? '#F59E0B' : '#94A3B8')};" onclick="focusVehicle(${lat}, ${lng}, '${key}')">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.35rem;">
-                        <div>
-                            <strong style="color: var(--vg-navy-900); font-size: 0.92rem;">${item.vehicle_number || 'Vehicle'}</strong>
-                            <div style="font-size: 0.75rem; color: var(--vg-text-muted);">${item.make_model || ''}</div>
-                        </div>
-                        ${badgeHtml}
-                    </div>
-                    <div style="font-size: 0.82rem; color: var(--vg-text-secondary); margin-bottom: 0.25rem;">
-                        Chauffeur: <strong>${item.driver_name}</strong>
-                    </div>
-                    <div style="font-size: 0.75rem; color: var(--vg-text-muted);">
-                        Synced: ${item.last_gps_at ? item.last_gps_at : 'Standby'}
-                    </div>
-                </div>
-            `;
-        });
-
-        // Prune removed markers
-        Object.keys(markers).forEach(k => {
-            if (!seenKeys[k]) {
-                if (map && markers[k]) {
-                    map.removeLayer(markers[k]);
-                }
-                delete markers[k];
-            }
-        });
-
-        if (rail) rail.innerHTML = railHtml;
-
-        // Auto-center bounds on first load or explicit manual refresh
-        if (bounds.length > 0 && map && (isManual || !hasInitiallyFitted)) {
-            map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
-            hasInitiallyFitted = true;
-        }
     }
 
-    window.focusVehicle = function(lat, lng, key) {
-        if (map) {
-            // If on mobile and in list view, switch to map view
-            if (window.innerWidth <= 960) {
-                window.switchMobileTrackingView('map');
-            }
-            map.setView([lat, lng], 15, { animate: true });
-            if (markers[key]) {
-                setTimeout(() => markers[key].openPopup(), 200);
-            }
-        }
-    };
+    // 12. Clock Synchronization
+    function updateClock() {
+        const now = new Date();
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const d = String(now.getDate()).padStart(2, '0');
+        const m = months[now.getMonth()];
+        const y = now.getFullYear();
 
-    window.applyFleetFilter = function() {
-        const input = document.getElementById('fleetFilterInput');
-        if (!input) return;
-        const query = input.value.trim().toLowerCase();
-        const cards = document.querySelectorAll('#vehicleListRail .vg-record-card');
+        let h = now.getHours();
+        const mins = String(now.getMinutes()).padStart(2, '0');
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12;
+        h = h ? h : 12;
+        const strH = String(h).padStart(2, '0');
 
-        cards.forEach(card => {
-            const name = card.getAttribute('data-driver-name') || '';
-            const plate = card.getAttribute('data-plate') || '';
-            if (query === '' || name.includes(query) || plate.includes(query)) {
-                card.style.display = 'block';
-            } else {
-                card.style.display = 'none';
-            }
-        });
-    };
+        const elDate = document.getElementById('currentDateText');
+        const elTime = document.getElementById('currentTimeText');
+        if (elDate) elDate.textContent = `${d} ${m} ${y}`;
+        if (elTime) elTime.textContent = `${strH}:${mins} ${ampm}`;
+    }
 
-    // Clean up timers on page unload
-    window.addEventListener('beforeunload', () => {
-        stopPolling();
-    });
+    // Initialize clock and interval
+    updateClock();
+    setInterval(updateClock, 30000);
 
-    document.addEventListener('DOMContentLoaded', initMap);
+    // Auto-poll telemetry every 20s
+    setInterval(() => {
+        fetchLiveBackendFleet();
+    }, 20000);
+
+    // Boot on DOM ready
+    document.addEventListener('DOMContentLoaded', initLeafletRadar);
 })();
 </script>
+
+<style>
+/* ==========================================================================
+   MASTER TRACK LOCATION STYLESHEET (Pixel-Perfect Matching Reference UI)
+   Desktop (LG) 2-Column Dashboard & Mobile (SM) Viewports
+   ========================================================================== */
+
+.track-location-container {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0.25rem 0 3.5rem;
+}
+
+/* 1. Top Header Bar */
+.track-header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.track-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.track-header-icon-box {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    border-radius: 16px;
+    background: #2563EB;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFFFFF;
+    font-size: 1.35rem;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.28);
+}
+
+.track-header-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.track-page-title {
+    font-size: 1.55rem;
+    font-weight: 800;
+    color: #0C2B52;
+    margin: 0;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+}
+
+.track-page-subtitle {
+    font-size: 0.88rem;
+    color: #64748B;
+    margin: 0.25rem 0 0 0;
+    font-weight: 500;
+}
+
+.track-header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.track-datetime-badge {
+    background: #FFFFFF;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 14px;
+    padding: 0.55rem 1.15rem;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #0C2B52;
+    box-shadow: 0 2px 8px rgba(12, 43, 82, 0.03);
+}
+
+.track-cal-icon {
+    color: #2563EB;
+    font-size: 1rem;
+}
+
+.track-datetime-sep {
+    color: #CBD5E1;
+}
+
+.track-refresh-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    background: #FFFFFF;
+    border: 1.5px solid #E2E8F0;
+    color: #0C2B52;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(12, 43, 82, 0.03);
+}
+
+.track-refresh-btn:hover {
+    border-color: #2563EB;
+    color: #2563EB;
+    background: #F8FAFD;
+    transform: translateY(-1px);
+}
+
+.spin-anim {
+    animation: track-spin 0.8s linear infinite;
+}
+@keyframes track-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* 2. Main Desktop Two-Column Grid */
+.track-main-grid {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.track-card {
+    background: #FFFFFF;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(12, 43, 82, 0.04);
+}
+
+/* 3. Left Column: Search & Bus List Card */
+.track-buses-card {
+    padding: 1.25rem;
+}
+
+.track-search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.15rem;
+    width: 100%;
+}
+
+.track-search-icon {
+    position: absolute;
+    left: 1.15rem;
+    color: #64748B;
+    font-size: 0.95rem;
+    pointer-events: none;
+}
+
+.track-search-box input {
+    width: 100%;
+    height: 44px;
+    padding: 0 1rem 0 2.75rem;
+    border-radius: 9999px;
+    border: 1.5px solid #E2E8F0;
+    background: #F8FAFD;
+    font-size: 0.88rem;
+    color: #0C2B52;
+    outline: none;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.track-search-box input:focus {
+    background: #FFFFFF;
+    border-color: #2563EB;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.track-bus-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.track-bus-item {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.75rem 0.85rem;
+    border-radius: 16px;
+    border: 1.5px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.track-bus-item:hover {
+    background: #F8FAFD;
+}
+
+.track-bus-item.active {
+    background: #EDF6FF;
+    border-color: #BFDBFE;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
+}
+
+.track-bus-thumb-wrap {
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #FFFFFF;
+    border: 1.5px solid #E2E8F0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.track-bus-thumb-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.track-bus-meta {
+    flex: 1;
+    min-width: 0;
+}
+
+.track-bus-number {
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: #0C2B52;
+    line-height: 1.25;
+}
+
+.track-bus-route {
+    font-size: 0.8rem;
+    color: #64748B;
+    font-weight: 500;
+    margin: 2px 0 3px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.track-bus-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.76rem;
+    font-weight: 700;
+}
+
+.track-bus-status .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.track-bus-status.green {
+    color: #10B981;
+}
+.track-bus-status.green .status-dot {
+    background: #10B981;
+}
+
+.track-bus-status.amber {
+    color: #F59E0B;
+}
+.track-bus-status.amber .status-dot {
+    background: #F59E0B;
+}
+
+.track-bus-chevron {
+    color: #94A3B8;
+    font-size: 0.88rem;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.track-bus-item.active .track-bus-chevron {
+    color: #2563EB;
+    transform: translateX(2px);
+}
+
+/* 4. Left Column: Trip Information Card */
+.track-info-card {
+    padding: 1.25rem 1.5rem;
+    margin-top: 1.25rem;
+}
+
+.track-info-header {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin-bottom: 1.15rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1.5px solid #F1F5F9;
+}
+
+.track-info-icon {
+    color: #2563EB;
+    font-size: 1.15rem;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.track-info-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #0C2B52;
+    margin: 0;
+}
+
+.track-info-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.track-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.65rem 0;
+    border-bottom: 1px solid #F1F5F9;
+    font-size: 0.88rem;
+}
+
+.track-info-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.track-info-label {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    color: #64748B;
+    font-weight: 500;
+}
+
+.track-info-label i {
+    width: 16px;
+    color: #94A3B8;
+    text-align: center;
+}
+
+.track-info-val {
+    font-weight: 700;
+    color: #0C2B52;
+    text-align: right;
+}
+
+.track-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+.track-status-pill .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.track-status-pill.green {
+    color: #10B981;
+}
+.track-status-pill.green .status-dot {
+    background: #10B981;
+}
+.track-status-pill.amber {
+    color: #F59E0B;
+}
+.track-status-pill.amber .status-dot {
+    background: #F59E0B;
+}
+
+/* 5. Right Column: Map Card & Telemetry Header */
+.track-map-card {
+    border-radius: 24px;
+    overflow: hidden;
+    position: relative;
+}
+
+.track-telemetry-header {
+    padding: 1.15rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    border-bottom: 1.5px solid #F1F5F9;
+    background: #FFFFFF;
+    flex-wrap: wrap;
+}
+
+.telemetry-bus-snapshot {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.telemetry-thumb-wrap {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1.5px solid #E2E8F0;
+}
+
+.telemetry-thumb-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.telemetry-bus-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.telemetry-bus-number {
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: #0C2B52;
+    line-height: 1.25;
+}
+
+.telemetry-bus-route {
+    font-size: 0.82rem;
+    color: #64748B;
+    margin: 2px 0 3px 0;
+    font-weight: 500;
+}
+
+.telemetry-stats-group {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.telemetry-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.telemetry-icon-circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #EDF6FF;
+    color: #2563EB;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+}
+
+.telemetry-stat-meta {
+    display: flex;
+    flex-direction: column;
+}
+
+.telemetry-stat-label {
+    font-size: 0.75rem;
+    color: #64748B;
+    font-weight: 500;
+}
+
+.telemetry-stat-val {
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: #0C2B52;
+    line-height: 1.25;
+}
+
+/* 6. Interactive Leaflet Map Canvas & Floating Controls */
+.track-map-container {
+    position: relative;
+    width: 100%;
+    height: 560px;
+    min-height: 560px;
+    background: #E8EEF5;
+}
+
+.track-map-canvas {
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+/* Map / Satellite Toggle */
+.track-map-type-toggle {
+    background: #FFFFFF;
+    border-radius: 9999px;
+    padding: 4px;
+    display: flex;
+    gap: 4px;
+    box-shadow: 0 4px 16px rgba(12, 43, 82, 0.12);
+    z-index: 999;
+}
+
+.track-desktop-type-toggle {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+}
+
+.type-btn {
+    padding: 6px 16px;
+    border-radius: 9999px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: transparent;
+    color: #475569;
+}
+
+.type-btn.active {
+    background: #2563EB;
+    color: #FFFFFF;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+}
+
+/* Floating Live Location Badge (Bottom Left) */
+.track-map-live-badge {
+    position: absolute;
+    bottom: 1.5rem;
+    left: 1.5rem;
+    z-index: 999;
+    background: #FFFFFF;
+    border-radius: 16px;
+    padding: 0.75rem 1.15rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    box-shadow: 0 4px 16px rgba(12, 43, 82, 0.12);
+    border: 1px solid #E2E8F0;
+}
+
+.live-badge-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #2563EB;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+}
+
+.live-badge-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.live-badge-text strong {
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: #0C2B52;
+    line-height: 1.2;
+}
+
+.live-badge-text span {
+    font-size: 0.75rem;
+    color: #64748B;
+    margin-top: 2px;
+}
+
+/* Floating Zoom & Locate Controls (Bottom Right) */
+.track-map-zoom-controls {
+    position: absolute;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.zoom-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: #FFFFFF;
+    border: 1.5px solid #E2E8F0;
+    color: #0C2B52;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(12, 43, 82, 0.1);
+    transition: all 0.2s ease;
+}
+
+.zoom-btn:hover {
+    background: #F8FAFD;
+    border-color: #2563EB;
+    color: #2563EB;
+    transform: scale(1.05);
+}
+
+/* Custom Leaflet Map Markers */
+.custom-pin-wrap {
+    background: transparent;
+    border: none;
+}
+
+.custom-map-pin {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.custom-map-pin .pin-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    border: 2.5px solid #FFFFFF;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.origin-pin .pin-circle {
+    background: #10B981;
+}
+
+.dest-pin .pin-circle {
+    background: #EF4444;
+}
+
+.custom-map-pin .pin-label {
+    margin-top: 3px;
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    border-radius: 9999px;
+    padding: 2px 8px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #0C2B52;
+    white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}
+
+.custom-bus-pin-wrap {
+    background: transparent;
+    border: none;
+}
+
+.custom-bus-live-pin {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.bus-circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #2563EB;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    border: 3px solid #FFFFFF;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.45);
+    z-index: 2;
+}
+
+.bus-pulse-ring {
+    position: absolute;
+    top: 0;
+    left: 26px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(37, 99, 235, 0.35);
+    animation: bus-radar-pulse 1.8s ease-out infinite;
+    z-index: 1;
+}
+
+@keyframes bus-radar-pulse {
+    0% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(2.2); opacity: 0; }
+}
+
+.bus-pin-label {
+    margin-top: 4px;
+    background: #0C2B52;
+    color: #FFFFFF;
+    border-radius: 9999px;
+    padding: 2px 8px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    z-index: 2;
+}
+
+/* 7. Mobile Visibility Defaults */
+.track-mobile-top-section {
+    display: none;
+}
+
+.track-mob-map-header {
+    display: none;
+}
+
+.track-mobile-info-card {
+    display: none;
+}
+
+/* ==========================================================================
+   RESPONSIVE DEVICE ADAPTATIONS (Matching Mobile Reference Image)
+   ========================================================================== */
+@media (max-width: 960px) {
+    /* Main Grid collapses to single column */
+    .track-main-grid {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+
+    /* Hide Desktop Left Column */
+    .track-left-col {
+        display: none !important;
+    }
+
+    /* Hide Desktop Telemetry Header */
+    .track-telemetry-header {
+        display: none !important;
+    }
+
+    .track-desktop-type-toggle {
+        display: none !important;
+    }
+
+    /* Show Mobile Top Search & Selected Bus Card */
+    .track-mobile-top-section {
+        display: block;
+        margin-bottom: 1.25rem;
+    }
+
+    .track-mobile-selected-bus-card {
+        background: #FFFFFF;
+        border: 1.5px solid #E2E8F0;
+        border-radius: 18px;
+        padding: 0.85rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        box-shadow: 0 4px 14px rgba(12, 43, 82, 0.04);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .track-mobile-selected-bus-card:active {
+        background: #F8FAFD;
+        border-color: #2563EB;
+    }
+
+    /* Show Mobile Header Overlay Inside Map */
+    .track-mob-map-header {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        right: 1rem;
+        z-index: 999;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1.5px solid #E2E8F0;
+        border-radius: 16px;
+        padding: 0.6rem 0.85rem;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+    }
+
+    .mob-header-bus-tag {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+    }
+
+    .mob-header-thumb {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        object-fit: cover;
+        border: 1px solid #E2E8F0;
+    }
+
+    .mob-header-bus-meta {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .mob-header-bus-meta strong {
+        font-size: 0.88rem;
+        color: #0C2B52;
+        font-weight: 800;
+        line-height: 1.2;
+    }
+
+    .mob-header-bus-meta span {
+        font-size: 0.72rem;
+        color: #64748B;
+    }
+
+    .track-map-container {
+        height: 400px;
+        min-height: 400px;
+    }
+
+    /* Show Mobile Trip Information Card */
+    .track-mobile-info-card {
+        display: block;
+        padding: 1.25rem;
+        margin-top: 1.25rem;
+    }
+
+    .track-mobile-info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .mob-info-col {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .mob-info-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .mob-info-label {
+        font-size: 0.75rem;
+        color: #64748B;
+        font-weight: 500;
+        margin-bottom: 2px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .mob-info-label i {
+        font-size: 0.72rem;
+        color: #94A3B8;
+    }
+
+    .mob-info-val {
+        font-size: 0.88rem;
+        font-weight: 800;
+        color: #0C2B52;
+    }
+
+    .mob-telemetry-bottom-strip {
+        display: grid;
+        grid-template-columns: 1.3fr 1fr 1fr;
+        gap: 0.75rem;
+        padding-top: 1rem;
+        border-top: 1.5px solid #F1F5F9;
+    }
+
+    .mob-telem-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .mob-telem-icon {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        border-radius: 50%;
+        background: #EDF6FF;
+        color: #2563EB;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.82rem;
+    }
+
+    .mob-telem-meta {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .mob-telem-label {
+        font-size: 0.68rem;
+        color: #64748B;
+        white-space: nowrap;
+    }
+
+    .mob-telem-val {
+        font-size: 0.82rem;
+        font-weight: 800;
+        color: #0C2B52;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+@media (max-width: 600px) {
+    .track-header-bar {
+        margin-bottom: 1.15rem;
+    }
+
+    .track-header-icon-box {
+        width: 42px;
+        height: 42px;
+        min-width: 42px;
+        font-size: 1.2rem;
+        border-radius: 14px;
+    }
+
+    .track-page-title {
+        font-size: 1.3rem;
+    }
+
+    .track-page-subtitle {
+        font-size: 0.8rem;
+    }
+
+    .track-header-right {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .track-datetime-badge {
+        flex: 1;
+        font-size: 0.8rem;
+        padding: 0.45rem 0.85rem;
+    }
+
+    .track-map-container {
+        height: 360px;
+        min-height: 360px;
+    }
+
+    .mob-telemetry-bottom-strip {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+}
+
+/* 8. Mobile Bus Drawer Modal */
+.track-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(12, 43, 82, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 99999;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    animation: trackFade 0.2s ease;
+}
+
+@keyframes trackFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.track-modal-sheet {
+    background: #FFFFFF;
+    border-radius: 24px 24px 0 0;
+    width: 100%;
+    max-width: 600px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem 1.25rem 2rem 1.25rem;
+    box-shadow: 0 -10px 30px rgba(0,0,0,0.15);
+    animation: trackSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes trackSlideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+.track-modal-handle {
+    width: 40px;
+    height: 4px;
+    background: #CBD5E1;
+    border-radius: 999px;
+    margin: 0 auto 0.85rem auto;
+}
+
+.track-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 0.85rem;
+    border-bottom: 1.5px solid #F1F5F9;
+    margin-bottom: 1rem;
+}
+
+.track-modal-header h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #0C2B52;
+}
+
+.track-modal-close {
+    background: #F1F5F9;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    color: #64748B;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.modal-bus-list {
+    overflow-y: auto;
+    max-height: 60vh;
+}
+</style>

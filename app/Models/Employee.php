@@ -9,6 +9,25 @@ class Employee extends Model
 {
     protected string $table = 'employees';
 
+    protected array $fillable = [
+        'employee_code',
+        'user_id',
+        'first_name',
+        'last_name',
+        'phone',
+        'alternate_phone',
+        'email',
+        'department',
+        'designation',
+        'employment_type',
+        'joining_date',
+        'status',
+        'emergency_contact',
+        'address',
+        'created_at',
+        'updated_at',
+    ];
+
     /**
      * Generate luxury formatted unique employee code (VG-EMP-XXXX)
      */
@@ -107,10 +126,15 @@ class Employee extends Model
     {
         $pdo = Database::getConnection();
         $sql = "SELECT e.*, u.username as linked_username, u.role as linked_role, u.status as linked_user_status,
-                       dp.id as driver_profile_id, dp.license_number, dp.license_expiry, dp.experience_years, dp.duty_status, dp.rating
+                       dp.id as driver_profile_id, 
+                       dp.license_number,
+                       dp.license_expiry,
+                       COALESCE(dp.experience_years, 1) as experience_years,
+                       COALESCE(dp.duty_status, 'off_duty') as duty_status,
+                       COALESCE(dp.rating, 5.0) as rating
                 FROM `employees` e
                 LEFT JOIN `users` u ON e.user_id = u.id
-                LEFT JOIN `driver_profiles` dp ON dp.employee_id = e.id
+                LEFT JOIN `driver_profiles` dp ON (dp.employee_id = e.id OR (e.user_id IS NOT NULL AND dp.user_id = e.user_id))
                 WHERE e.id = ? LIMIT 1";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$id]);

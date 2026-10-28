@@ -449,19 +449,19 @@ $amtInWords = convertAmountToWordsINR($totalAmt);
             <div>
                 <div class="info-row">
                     <span class="info-label">Booking Ref:</span>
-                    <span class="info-val"><?= e($invoice['booking_code']) ?></span>
+                    <span class="info-val"><?= e($invoice['booking_code'] ?? '—') ?></span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Journey From:</span>
-                    <span class="info-val"><?= e($invoice['pickup_address']) ?></span>
+                    <span class="info-val"><?= e($invoice['pickup_address'] ?? '—') ?></span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Journey To:</span>
-                    <span class="info-val"><?= e($invoice['drop_address']) ?></span>
+                    <span class="info-val"><?= e($invoice['drop_address'] ?? '—') ?></span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Travel Dates:</span>
-                    <span class="info-val"><?= format_date($invoice['start_date']) ?> to <?= format_date($invoice['end_date']) ?></span>
+                    <span class="info-val"><?= !empty($invoice['start_date']) ? format_date($invoice['start_date']) . ' to ' . format_date($invoice['end_date']) : '—' ?></span>
                 </div>
             </div>
         </div>

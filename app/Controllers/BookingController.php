@@ -34,19 +34,26 @@ class BookingController extends Controller
 
     public function index(Request $request): Response
     {
-        $status = $request->input('status');
-        $search = $request->input('q');
+        $status = trim((string)$request->input('status', ''));
+        $search = trim((string)($request->input('search') ?? $request->input('q') ?? ''));
 
         $conditions = [];
         $params = [];
 
-        if ($status) {
-            $conditions[] = "b.status = ?";
-            $params[] = $status;
+        if (!empty($status)) {
+            if ($status === 'active') {
+                $conditions[] = "b.status IN ('confirmed', 'assigned', 'in_progress')";
+            } else {
+                $conditions[] = "b.status = ?";
+                $params[] = $status;
+            }
         }
 
-        if ($search) {
-            $conditions[] = "(b.booking_code LIKE ? OR u.name LIKE ? OR u.phone LIKE ?)";
+        if (!empty($search)) {
+            $conditions[] = "(b.booking_code LIKE ? OR c.name LIKE ? OR u.name LIKE ? OR c.phone LIKE ? OR u.phone LIKE ? OR t.title LIKE ?)";
+            $params[] = "%{$search}%";
+            $params[] = "%{$search}%";
+            $params[] = "%{$search}%";
             $params[] = "%{$search}%";
             $params[] = "%{$search}%";
             $params[] = "%{$search}%";
@@ -214,5 +221,155 @@ class BookingController extends Controller
         }
 
         return $this->redirect(url("/office/bookings/{$id}"));
+    }
+
+    /**
+     * AJAX Toggle booking status (pending <-> confirmed)
+     */
+    public function toggleStatus(Request $request, array $params): Response
+    {
+        $id = (int)($params['id'] ?? 0);
+        $booking = $this->bookingModel->find($id);
+
+        if (!$booking) {
+            if ($request->isAjax()) {
+                return $this->json(['success' => false, 'message' => 'Booking not found.'], 404);
+            }
+            Session::setFlash('danger', 'Booking not found.');
+            return $this->redirect(url('/office/bookings'));
+        }
+
+        try {
+            $currentStatus = $booking['status'];
+            $targetStatus = ($currentStatus === 'confirmed' || $currentStatus === 'assigned' || $currentStatus === 'in_progress')
+                ? 'pending'
+                : 'confirmed';
+
+            $this->bookingService->updateStatus($id, $targetStatus, 'Status toggled via office switch button');
+            $msg = "Booking #{$booking['booking_code']} status changed to " . ucfirst($targetStatus) . ".";
+
+            if ($request->isAjax()) {
+                $isConfirmed = ($targetStatus === 'confirmed');
+                $customerId = (Session::getUserRole() === 'customer') ? Session::getUserId() : null;
+                $stats = $this->bookingModel->getBookingStatistics($customerId);
+                return $this->json([
+                    'success'   => true,
+                    'status'    => $targetStatus,
+                    'is_active' => $isConfirmed,
+                    'label'     => ucfirst(str_replace('_', ' ', $targetStatus)),
+                    'message'   => $msg,
+                    'metrics'   => [
+                        'total'       => (int)($stats['total'] ?? 0),
+                        'active'      => (int)($stats['active'] ?? 0),
+                        'confirmed'   => (int)($stats['active'] ?? 0),
+                        'pending'     => (int)($stats['pending'] ?? 0),
+                        'completed'   => (int)($stats['completed'] ?? 0),
+                        'cancelled'   => (int)($stats['cancelled'] ?? 0),
+                        'revenue'     => (float)($stats['revenue'] ?? 0),
+                    ],
+                ]);
+            }
+
+            Session::setFlash('success', $msg);
+            return $this->redirect(url('/office/bookings'));
+        } catch (\Throwable $e) {
+            if ($request->isAjax()) {
+                return $this->json(['success' => false, 'message' => $e->getMessage()], 400);
+            }
+            Session::setFlash('danger', $e->getMessage());
+            return $this->redirect(url('/office/bookings'));
+        }
+    }
+
+    /**
+     * Delete a booking manifest, linked dispatch assignments, and dissociate invoices
+     */
+    public function delete(Request $request, array|int|string $params): Response
+    {
+        $id = is_array($params) ? (int)($params['id'] ?? 0) : (int)$params;
+        $booking = $this->bookingModel->find($id);
+
+        if (!$booking) {
+            if ($request->isAjax()) {
+                return $this->json(['success' => false, 'message' => 'Booking manifest not found.'], 404);
+            }
+            Session::setFlash('danger', 'Booking manifest not found.');
+            return $this->redirect(url('/office/bookings'));
+        }
+
+        try {
+            $pdo = \App\Core\Database::getConnection();
+            $pdo->beginTransaction();
+
+            // 1. Delete linked dispatches
+            $stmtDisp = $pdo->prepare("DELETE FROM `dispatches` WHERE `booking_id` = ?");
+            $stmtDisp->execute([$id]);
+
+            // 2. Dissociate linked invoices
+            $stmtInv = $pdo->prepare("UPDATE `invoices` SET `booking_id` = NULL WHERE `booking_id` = ?");
+            $stmtInv->execute([$id]);
+
+            // 3. Delete the booking record
+            $this->bookingModel->delete($id);
+
+            $pdo->commit();
+
+            // 4. Record audit log
+            try {
+                $audit = new \App\Models\AuditLog();
+                $audit->record(
+                    'booking_deleted',
+                    'bookings',
+                    $id,
+                    [
+                        'booking_code' => $booking['booking_code'] ?? null,
+                        'customer_id'  => $booking['customer_id'] ?? null,
+                        'total_amount' => $booking['total_amount'] ?? null,
+                        'deleted_by'   => Session::getUserId(),
+                    ],
+                    null
+                );
+            } catch (\Throwable $ae) {
+                // Ignore audit logging failure
+            }
+
+            $bookingCode = $booking['booking_code'] ?? "#{$id}";
+            $msg = "Booking manifest '{$bookingCode}' and linked operations records were successfully deleted.";
+            Session::setFlash('success', $msg);
+
+            $customerId = (Session::getUserRole() === 'customer') ? Session::getUserId() : null;
+            $stats = $this->bookingModel->getBookingStatistics($customerId);
+            $metrics = [
+                'total'       => (int)($stats['total'] ?? 0),
+                'active'      => (int)($stats['active'] ?? 0),
+                'confirmed'   => (int)($stats['active'] ?? 0),
+                'pending'     => (int)($stats['pending'] ?? 0),
+                'completed'   => (int)($stats['completed'] ?? 0),
+                'cancelled'   => (int)($stats['cancelled'] ?? 0),
+                'revenue'     => (float)($stats['revenue'] ?? 0),
+            ];
+
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success'  => true,
+                    'message'  => $msg,
+                    'metrics'  => $metrics,
+                    'redirect' => url('/office/bookings'),
+                ]);
+            }
+
+            return $this->redirect(url('/office/bookings'));
+        } catch (\Throwable $e) {
+            if (isset($pdo) && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            \App\Core\Logger::error('Booking delete error: ' . $e->getMessage(), ['booking_id' => $id]);
+            $errMsg = 'Failed to delete booking manifest: ' . $e->getMessage();
+            if ($request->isAjax()) {
+                return $this->json(['success' => false, 'message' => $errMsg], 500);
+            }
+            Session::setFlash('danger', $errMsg);
+            return $this->redirect(url('/office/bookings'));
+        }
     }
 }

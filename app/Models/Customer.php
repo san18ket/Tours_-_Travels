@@ -130,9 +130,9 @@ class Customer extends Model
      */
     public function getBookingHistory(int $customerId): array
     {
-        $sql = "SELECT b.id, b.booking_code, b.start_date, b.end_date, b.passenger_count, 
+        $sql = "SELECT b.id, b.booking_code, b.pickup_address, b.drop_address, b.start_date, b.end_date, b.passenger_count, 
                        b.total_amount, b.status, b.created_at,
-                       t.title as tour_title,
+                       t.title as tour_title, t.image_url as tour_image,
                        inv.invoice_number, inv.payment_status
                 FROM `bookings` b
                 LEFT JOIN `tours` t ON b.tour_id = t.id

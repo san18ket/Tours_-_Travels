@@ -56,7 +56,7 @@ class Role extends Model
     /**
      * Count filtered roles
      */
-    public function countFiltered(?string $search = null, ?string $status = null): int
+    public function countFiltered(?string $search = null, ?string $status = null, ?string $type = null): int
     {
         $pdo = Database::getConnection();
         $conditions = ["1=1"];
@@ -71,6 +71,12 @@ class Role extends Model
         if (!empty($status) && in_array($status, ['active', 'inactive'], true)) {
             $conditions[] = "r.status = ?";
             $params[] = $status;
+        }
+
+        if ($type === 'system') {
+            $conditions[] = "r.is_system = 1";
+        } elseif ($type === 'custom') {
+            $conditions[] = "r.is_system = 0";
         }
 
         $sql = "SELECT COUNT(*) FROM `roles` r WHERE " . implode(' AND ', $conditions);
@@ -82,7 +88,7 @@ class Role extends Model
     /**
      * Retrieve paginated roles with assigned user count and permissions count
      */
-    public function getPaginated(?string $search = null, ?string $status = null, int $page = 1, int $perPage = 10): array
+    public function getPaginated(?string $search = null, ?string $status = null, int $page = 1, int $perPage = 10, ?string $type = null): array
     {
         $pdo = Database::getConnection();
         $conditions = ["1=1"];
@@ -97,6 +103,12 @@ class Role extends Model
         if (!empty($status) && in_array($status, ['active', 'inactive'], true)) {
             $conditions[] = "r.status = ?";
             $params[] = $status;
+        }
+
+        if ($type === 'system') {
+            $conditions[] = "r.is_system = 1";
+        } elseif ($type === 'custom') {
+            $conditions[] = "r.is_system = 0";
         }
 
         $offset = ($page - 1) * $perPage;

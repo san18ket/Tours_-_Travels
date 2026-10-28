@@ -7,19 +7,8 @@
 
 <div class="modern-form-wrapper">
 
-    <!-- Top Header: Back Button, Title, Subtitle, and 3-Step Stepper -->
-    <div class="modern-form-header-bar">
-        <div class="modern-header-left">
-            <a href="<?= url('/office/users') ?>" class="modern-back-btn" title="Back to User Management" aria-label="Back">
-                <i class="fa-solid fa-arrow-left"></i>
-            </a>
-            <div class="modern-header-meta">
-                <h1 class="modern-form-title"><?= e(__('user_form.create_title', [], 'Create System Account')) ?></h1>
-                <p class="modern-form-subtitle"><?= e(__('user_form.create_subtitle', [], 'Provision portal credentials, role authorization, and access controls.')) ?></p>
-            </div>
-        </div>
-
-        <!-- 3-Step Stepper Track -->
+    <!-- Centered Professional 3-Step Stepper Header -->
+    <div class="modern-stepper-header-centered">
         <div class="modern-stepper-container">
             <div class="modern-stepper-track">
                 <!-- Step 1 -->
@@ -73,20 +62,14 @@
         <input type="text" name="fake_username_remembered" tabindex="-1" style="position: absolute; top: -9999px; left: -9999px; opacity: 0; width: 0; height: 0; pointer-events: none;" autocomplete="off">
         <input type="password" name="fake_password_remembered" tabindex="-1" style="position: absolute; top: -9999px; left: -9999px; opacity: 0; width: 0; height: 0; pointer-events: none;" autocomplete="new-password">
 
-        <!-- ========================================================================= -->
-        <!-- STEP 1: Identity & Staff Profile Linkage                                  -->
-        <!-- ========================================================================= -->
-        <div class="modern-step-panel" id="wizardStepPanel1">
-            <div class="modern-form-card">
-                <div class="modern-section-header">
-                    <div class="modern-section-badge">
-                        <i class="fa-solid fa-user-plus"></i>
-                    </div>
-                    <div class="modern-section-meta" style="flex: 1;">
-                        <h2 class="modern-section-title"><?= __('user_form.step1_heading', [], 'Identity & Staff Linkage') ?></h2>
-                        <p class="modern-section-sub"><?= __('user_form.step1_subheading', [], 'Attach account to an existing roster employee or provision an independent profile.') ?></p>
-                    </div>
+        <div class="modern-form-card">
 
+            <!-- ========================================================================= -->
+            <!-- STEP 1: Identity & Staff Profile Linkage                                  -->
+            <!-- ========================================================================= -->
+            <div class="modern-step-panel" id="wizardStepPanel1">
+
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 1.25rem;">
                     <!-- Custom Profile Toggle Switch -->
                     <label for="is_custom_user" style="display: inline-flex; align-items: center; gap: 0.6rem; cursor: pointer; padding: 8px 16px; border-radius: 50px; background: #E8F4F0; border: 1px solid #B2D8CF; font-size: 0.86rem; font-weight: 700; color: #176B5B; margin: 0;">
                         <input type="checkbox" id="is_custom_user" name="is_custom_user" value="1" <?= (!empty($old['is_custom_user']) || (!empty($old['name']) && empty($old['employee_id']))) ? 'checked' : '' ?> onchange="toggleUserSource(this)" style="width: 17px; height: 17px; accent-color: #176B5B; cursor: pointer;">
@@ -195,22 +178,11 @@
                     </button>
                 </div>
             </div>
-        </div>
 
-        <!-- ========================================================================= -->
-        <!-- STEP 2: Role & Operational Privileges                                     -->
-        <!-- ========================================================================= -->
-        <div class="modern-step-panel" id="wizardStepPanel2" style="display: none;">
-            <div class="modern-form-card">
-                <div class="modern-section-header">
-                    <div class="modern-section-badge">
-                        <i class="fa-solid fa-shield-halved"></i>
-                    </div>
-                    <div class="modern-section-meta">
-                        <h2 class="modern-section-title"><?= __('user_form.step2_heading', [], 'System Role & Access Privileges') ?></h2>
-                        <p class="modern-section-sub"><?= __('user_form.step2_subheading', [], 'Assign access tier, operational boundaries, and system permissions.') ?></p>
-                    </div>
-                </div>
+            <!-- ========================================================================= -->
+            <!-- STEP 2: Role & Operational Privileges                                     -->
+            <!-- ========================================================================= -->
+            <div class="modern-step-panel" id="wizardStepPanel2" style="display: none;">
 
                 <!-- Role Selector -->
                 <div class="modern-form-group" style="margin-bottom: 1.75rem;">
@@ -273,24 +245,15 @@
                     </button>
                 </div>
             </div>
-        </div>
 
-        <!-- ========================================================================= -->
-        <!-- STEP 3: Account Security, Username & Credentials                          -->
-        <!-- ========================================================================= -->
-        <div class="modern-step-panel" id="wizardStepPanel3" style="display: none;">
-            <div class="modern-form-card">
-                <div class="modern-section-header">
-                    <div class="modern-section-badge">
-                        <i class="fa-solid fa-key"></i>
-                    </div>
-                    <div class="modern-section-meta" style="flex: 1;">
-                        <h2 class="modern-section-title"><?= __('user_form.step3_heading', [], 'Account Security & Credentials') ?></h2>
-                        <p class="modern-section-sub"><?= __('user_form.step3_subheading', [], 'Configure unique login username, security password, and preferred system language.') ?></p>
-                    </div>
+            <!-- ========================================================================= -->
+            <!-- STEP 3: Account Security, Username & Credentials                          -->
+            <!-- ========================================================================= -->
+            <div class="modern-step-panel" id="wizardStepPanel3" style="display: none;">
 
-                    <button type="button" class="modern-btn-prev" onclick="generateUserCredentials()" style="height: 40px; padding: 0 16px; font-size: 0.82rem;">
-                        <span>⚡ <?= __('user_form.generate_password', [], 'Auto-Generate') ?></span>
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 1.25rem;">
+                    <button type="button" class="modern-btn-prev" onclick="generateUserCredentials()" style="height: 38px; padding: 0 16px; font-size: 0.82rem; border-radius: 50px;">
+                        <span>⚡ <?= __('user_form.generate_password', [], 'Auto-Generate Password') ?></span>
                     </button>
                 </div>
 
@@ -631,3 +594,172 @@ document.addEventListener('DOMContentLoaded', () => {
     wizardGoToStep(1);
 });
 </script>
+
+<style>
+/* Modern Form Full Width Wrapper & Card */
+.modern-form-wrapper {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0.25rem 0 3.5rem;
+}
+.modern-form-card {
+    width: 100%;
+    max-width: 100%;
+}
+
+/* Centered Stepper Header */
+.modern-stepper-header-centered {
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    width: 100%;
+}
+.modern-stepper-container {
+    width: 100%;
+    max-width: 100%;
+    background: #FFFFFF;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 20px;
+    padding: 1.1rem 2rem;
+    box-shadow: 0 4px 20px rgba(12, 43, 82, 0.04);
+}
+.modern-stepper-track {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    width: 100%;
+    max-width: 960px;
+    margin: 0 auto;
+}
+.modern-step-item {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    background: transparent !important;
+    border: none !important;
+    cursor: pointer;
+    padding: 0.35rem 0.6rem !important;
+    border-radius: 12px !important;
+    transition: all 0.2s ease !important;
+    z-index: 2;
+    color: #64748B !important;
+    outline: none !important;
+    text-decoration: none !important;
+}
+.modern-step-item:hover {
+    color: #0C2B52 !important;
+    transform: translateY(-1px);
+}
+.modern-step-circle {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    border-radius: 50% !important;
+    background: #FFFFFF !important;
+    color: #64748B !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    border: 2px solid #CBD5E1 !important;
+    margin-bottom: 0.45rem !important;
+    transition: all 0.25s ease !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+}
+.modern-step-label {
+    font-size: 0.82rem !important;
+    font-weight: 600 !important;
+    color: #64748B !important;
+    margin-top: 0 !important;
+    white-space: nowrap !important;
+    transition: color 0.2s ease !important;
+}
+.modern-step-item.active .modern-step-circle {
+    background: #176B5B !important;
+    border-color: #176B5B !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 0 0 4px rgba(23, 107, 91, 0.18), 0 4px 12px rgba(23, 107, 91, 0.25) !important;
+    transform: scale(1.08) !important;
+}
+.modern-step-item.active .modern-step-label {
+    color: #176B5B !important;
+    font-weight: 700 !important;
+}
+.modern-step-item.completed .modern-step-circle {
+    background: #10B981 !important;
+    border-color: #10B981 !important;
+    color: #FFFFFF !important;
+}
+.modern-step-item.completed .modern-step-label {
+    color: #10B981 !important;
+}
+.modern-step-connector {
+    flex: 1 !important;
+    height: 3px !important;
+    background: #E2E8F0 !important;
+    margin: -1.2rem 0.5rem 0 0.5rem !important;
+    transition: background 0.3s ease !important;
+    border-radius: 4px !important;
+}
+.modern-step-connector.completed {
+    background: #10B981 !important;
+}
+
+@media (max-width: 768px) {
+    .modern-form-wrapper {
+        padding: 0 0 2rem;
+    }
+    .modern-stepper-header-centered {
+        margin-bottom: 1.5rem;
+    }
+    .modern-stepper-container {
+        padding: 0.85rem 1rem;
+        border-radius: 18px;
+    }
+    .modern-step-circle {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        font-size: 0.88rem !important;
+        margin-bottom: 0.35rem !important;
+    }
+    .modern-step-label {
+        font-size: 0.76rem !important;
+    }
+    .modern-step-connector {
+        margin: -1.1rem 0.35rem 0 0.35rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .modern-stepper-container {
+        padding: 0.75rem 0.65rem;
+        border-radius: 16px;
+    }
+    .modern-step-item {
+        padding: 0.2rem 0.35rem !important;
+    }
+    .modern-step-circle {
+        width: 30px !important;
+        height: 30px !important;
+        min-width: 30px !important;
+        font-size: 0.82rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+    .modern-step-connector {
+        margin: -0.95rem 0.25rem 0 0.25rem !important;
+    }
+    .modern-step-item:not(.active) .modern-step-label {
+        display: none !important;
+    }
+    .modern-step-item.active .modern-step-label {
+        display: inline-block !important;
+        font-size: 0.72rem !important;
+    }
+}
+</style>

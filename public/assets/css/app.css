@@ -6391,9 +6391,10 @@ body.auth-body {
    ========================================================================== */
 
 .modern-form-wrapper {
-    max-width: 1180px;
-    margin: 0 auto;
-    padding: 0.5rem 0.5rem 3.5rem;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0.25rem 0 3.5rem;
 }
 
 /* Header Bar: Back Button, Titles, Stepper */
@@ -6549,6 +6550,8 @@ body.auth-body {
 
 /* Master Form Card */
 .modern-form-card {
+    width: 100%;
+    max-width: 100%;
     background: #FFFFFF;
     border-radius: 24px;
     border: 1.5px solid #E6EEF8;
@@ -6866,7 +6869,9 @@ body.auth-body {
    ========================================================================== */
 @media (max-width: 991px) {
     .modern-form-wrapper {
-        padding: 0.75rem 0.5rem 2.5rem;
+        width: 100%;
+        max-width: 100%;
+        padding: 0.5rem 0 2.5rem;
     }
 
     .modern-form-header-bar {
@@ -7293,7 +7298,9 @@ body.auth-body {
 
     /* Form wrappers */
     .modern-form-wrapper {
-        padding: 0 0.5rem 2rem;
+        width: 100%;
+        max-width: 100%;
+        padding: 0 0 2rem;
     }
 
     /* Grid layout in booking create */
@@ -7481,6 +7488,8 @@ body.auth-body {
     }
 
     .modern-form-wrapper {
+        width: 100%;
+        max-width: 100%;
         padding: 0 !important;
     }
 
@@ -7881,30 +7890,36 @@ h4, h5, h6 {
 
 .vg-floating-container {
     position: fixed;
-    top: 24px;
-    right: 24px;
+    top: max(20px, env(safe-area-inset-top, 20px));
+    right: max(20px, env(safe-area-inset-right, 20px));
     z-index: 99999999;
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    max-width: 460px;
-    width: 100%;
+    align-items: flex-end; /* Auto-sizes card width naturally to content */
+    gap: 12px;
+    max-width: min(520px, calc(100vw - 32px));
     pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .vg-floating-msg {
     position: relative;
-    background: rgba(11, 25, 44, 0.95); /* Fallback baseline */
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-radius: 20px;
-    border: 1.5px solid rgba(255, 255, 255, 0.92);
+    width: fit-content;
+    min-width: min(300px, calc(100vw - 32px));
+    max-width: min(500px, calc(100vw - 32px));
+    background: #FFFFFF;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 18px;
+    border: 1.5px solid rgba(226, 232, 240, 0.95);
     overflow: hidden;
     pointer-events: auto;
-    transform: translateX(120%) scale(0.95);
+    transform: translateX(110%) scale(0.96);
     opacity: 0;
-    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s ease;
-    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.04);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s ease, box-shadow 0.2s ease;
+    box-shadow: 0 16px 40px -8px rgba(15, 23, 42, 0.14), 0 4px 14px rgba(0, 0, 0, 0.04);
+    user-select: none;
+    touch-action: pan-y;
 }
 
 .vg-floating-msg.is-active {
@@ -7913,29 +7928,29 @@ h4, h5, h6 {
 }
 
 .vg-floating-msg.is-dismissing {
-    transform: translateX(40px) scale(0.92);
+    transform: translateX(36px) scale(0.92);
     opacity: 0;
-    transition: transform 0.25s ease-in, opacity 0.2s ease-in;
+    transition: transform 0.22s ease-in, opacity 0.18s ease-in;
 }
 
-/* Reference Image msg.jpeg: Curved Left Edge Accent Tab */
+/* Curved Left Edge Accent Tab */
 .vg-floating-msg::before {
     content: '';
     position: absolute;
     left: 0;
     top: 0;
     bottom: 0;
-    width: 10px;
-    border-top-left-radius: 20px;
-    border-bottom-left-radius: 20px;
+    width: 8px;
+    border-top-left-radius: 18px;
+    border-bottom-left-radius: 18px;
     z-index: 2;
 }
 
 /* Success Card Theme (#10B981) */
 .vg-floating-msg.is-success {
-    background: linear-gradient(135deg, rgba(236, 253, 245, 0.94) 0%, rgba(255, 255, 255, 0.98) 100%) !important;
-    border-color: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 20px 48px rgba(16, 185, 129, 0.16), 0 4px 16px rgba(0, 0, 0, 0.04);
+    background: linear-gradient(135deg, rgba(236, 253, 245, 0.98) 0%, rgba(255, 255, 255, 0.99) 100%) !important;
+    border-color: rgba(16, 185, 129, 0.32);
+    box-shadow: 0 16px 36px -6px rgba(16, 185, 129, 0.20), 0 4px 12px rgba(0, 0, 0, 0.03);
 }
 .vg-floating-msg.is-success::before {
     background: #10B981;
@@ -7943,9 +7958,9 @@ h4, h5, h6 {
 
 /* Warning Card Theme (#F59E0B) */
 .vg-floating-msg.is-warning {
-    background: linear-gradient(135deg, rgba(254, 249, 195, 0.94) 0%, rgba(255, 255, 255, 0.98) 100%) !important;
-    border-color: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 20px 48px rgba(245, 158, 11, 0.16), 0 4px 16px rgba(0, 0, 0, 0.04);
+    background: linear-gradient(135deg, rgba(254, 249, 195, 0.98) 0%, rgba(255, 255, 255, 0.99) 100%) !important;
+    border-color: rgba(245, 158, 11, 0.35);
+    box-shadow: 0 16px 36px -6px rgba(245, 158, 11, 0.20), 0 4px 12px rgba(0, 0, 0, 0.03);
 }
 .vg-floating-msg.is-warning::before {
     background: #F59E0B;
@@ -7953,9 +7968,9 @@ h4, h5, h6 {
 
 /* Error Card Theme (#EF4444) */
 .vg-floating-msg.is-error {
-    background: linear-gradient(135deg, rgba(254, 226, 226, 0.94) 0%, rgba(255, 255, 255, 0.98) 100%) !important;
-    border-color: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 20px 48px rgba(239, 68, 68, 0.16), 0 4px 16px rgba(0, 0, 0, 0.04);
+    background: linear-gradient(135deg, rgba(254, 242, 242, 0.98) 0%, rgba(255, 255, 255, 0.99) 100%) !important;
+    border-color: rgba(239, 68, 68, 0.35);
+    box-shadow: 0 16px 36px -6px rgba(239, 68, 68, 0.20), 0 4px 12px rgba(0, 0, 0, 0.03);
 }
 .vg-floating-msg.is-error::before {
     background: #EF4444;
@@ -7963,9 +7978,9 @@ h4, h5, h6 {
 
 /* Notice / Info Card Theme (#0284C7) */
 .vg-floating-msg.is-info {
-    background: linear-gradient(135deg, rgba(224, 242, 254, 0.94) 0%, rgba(255, 255, 255, 0.98) 100%) !important;
-    border-color: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 20px 48px rgba(2, 132, 199, 0.16), 0 4px 16px rgba(0, 0, 0, 0.04);
+    background: linear-gradient(135deg, rgba(238, 246, 255, 0.98) 0%, rgba(255, 255, 255, 0.99) 100%) !important;
+    border-color: rgba(37, 99, 235, 0.35);
+    box-shadow: 0 16px 36px -6px rgba(37, 99, 235, 0.20), 0 4px 12px rgba(0, 0, 0, 0.03);
 }
 .vg-floating-msg.is-info::before {
     background: #0284C7;
@@ -7975,17 +7990,17 @@ h4, h5, h6 {
 .vg-floating-msg-header {
     display: flex;
     align-items: center;
-    gap: 1.15rem;
-    padding: 1.15rem 1.35rem 1.15rem 1.55rem;
+    gap: 1.05rem;
+    padding: 1rem 1.25rem 1rem 1.4rem;
     position: relative;
     z-index: 1;
 }
 
 /* Concentric Halo Icon: Outer Soft Halo Ring */
 .vg-floating-msg-icon-badge {
-    width: 52px;
-    height: 52px;
-    min-width: 52px;
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -7994,50 +8009,50 @@ h4, h5, h6 {
     transition: transform 0.25s ease;
 }
 .vg-floating-msg.is-success .vg-floating-msg-icon-badge {
-    background: rgba(16, 185, 129, 0.18);
+    background: rgba(16, 185, 129, 0.16);
 }
 .vg-floating-msg.is-warning .vg-floating-msg-icon-badge {
-    background: rgba(245, 158, 11, 0.2);
+    background: rgba(245, 158, 11, 0.18);
 }
 .vg-floating-msg.is-error .vg-floating-msg-icon-badge {
-    background: rgba(239, 68, 68, 0.18);
+    background: rgba(239, 68, 68, 0.16);
 }
 .vg-floating-msg.is-info .vg-floating-msg-icon-badge {
-    background: rgba(2, 132, 199, 0.18);
+    background: rgba(2, 132, 199, 0.16);
 }
 
 /* Concentric Halo Icon: Inner Gradient Circle with SVG */
 .vg-floating-msg-icon-badge svg {
-    width: 38px;
-    height: 38px;
-    min-width: 38px;
-    padding: 8px;
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    padding: 7px;
     border-radius: 50%;
     color: #FFFFFF;
     stroke: #FFFFFF;
-    stroke-width: 2.75px;
+    stroke-width: 2.6px;
     box-sizing: border-box;
 }
 .vg-floating-msg.is-success .vg-floating-msg-icon-badge svg {
-    background: linear-gradient(135deg, #34D399 0%, #10B981 100%);
-    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+    background: linear-gradient(135deg, #34D399 0%, #059669 100%);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.38);
 }
 .vg-floating-msg.is-warning .vg-floating-msg-icon-badge svg {
-    background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);
-    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
+    background: linear-gradient(135deg, #FBBF24 0%, #D97706 100%);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.38);
 }
 .vg-floating-msg.is-error .vg-floating-msg-icon-badge svg {
-    background: linear-gradient(135deg, #F87171 0%, #EF4444 100%);
-    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+    background: linear-gradient(135deg, #F87171 0%, #DC2626 100%);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.38);
 }
 .vg-floating-msg.is-info .vg-floating-msg-icon-badge svg {
     background: linear-gradient(135deg, #38BDF8 0%, #0284C7 100%);
-    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.38);
 }
 
 /* Message Text Block */
 .vg-floating-msg-title-wrap {
-    flex: 1;
+    flex: 1 1 auto;
     min-width: 0;
     padding-right: 0.35rem;
 }
@@ -8045,7 +8060,7 @@ h4, h5, h6 {
 /* Title Label: Matches reference image "Success!", "Warning!", "Error!" */
 .vg-floating-msg-tag {
     display: block;
-    font-size: 1.05rem;
+    font-size: 0.98rem;
     font-weight: 800;
     line-height: 1.25;
     margin-bottom: 2px;
@@ -8079,11 +8094,12 @@ h4, h5, h6 {
 
 /* Descriptive Message */
 .vg-floating-msg-text {
-    color: #475569;
-    font-size: 0.88rem;
+    color: #334155;
+    font-size: 0.86rem;
     font-weight: 500;
-    line-height: 1.44;
+    line-height: 1.45;
     word-break: break-word;
+    overflow-wrap: anywhere;
 }
 
 /* Top Right Close Button */
@@ -8091,7 +8107,7 @@ h4, h5, h6 {
     background: transparent;
     border: none;
     color: #64748B;
-    font-size: 1.4rem;
+    font-size: 1.35rem;
     line-height: 1;
     cursor: pointer;
     padding: 0;
@@ -8106,6 +8122,7 @@ h4, h5, h6 {
     align-self: flex-start;
     margin-top: -2px;
     margin-right: -4px;
+    flex-shrink: 0;
 }
 .vg-floating-msg-close:hover {
     opacity: 1;
@@ -8118,7 +8135,7 @@ h4, h5, h6 {
 .vg-floating-msg-progress {
     position: absolute;
     bottom: 0;
-    left: 10px;
+    left: 8px;
     right: 0;
     height: 3px;
     background: rgba(0, 0, 0, 0.04);
@@ -8146,34 +8163,694 @@ h4, h5, h6 {
     /* Paused interactively via JS on hover */
 }
 
-/* Mobile Responsiveness */
+/* Tablet & Intermediate Viewports (601px to 860px) */
+@media (max-width: 860px) {
+    .vg-floating-container {
+        top: max(16px, env(safe-area-inset-top, 16px));
+        right: max(16px, env(safe-area-inset-right, 16px));
+        max-width: min(460px, calc(100vw - 32px));
+    }
+    .vg-floating-msg {
+        min-width: min(280px, calc(100vw - 32px));
+        max-width: min(460px, calc(100vw - 32px));
+    }
+}
+
+/* Mobile Responsiveness (<= 600px) */
 @media (max-width: 600px) {
     .vg-floating-container {
-        top: 16px;
-        left: 14px;
-        right: 14px;
+        top: max(12px, env(safe-area-inset-top, 12px));
+        left: max(12px, env(safe-area-inset-left, 12px));
+        right: max(12px, env(safe-area-inset-right, 12px));
+        align-items: center; /* Horizontally centered on mobile */
+        justify-content: flex-start;
         max-width: none;
         width: auto !important;
     }
+
+    .vg-floating-msg {
+        width: fit-content;
+        min-width: min(270px, calc(100vw - 24px));
+        max-width: min(420px, calc(100vw - 24px));
+        margin: 0 auto;
+        border-radius: 16px;
+        box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.16), 0 3px 8px rgba(0, 0, 0, 0.05);
+        /* Mobile-friendly slide from top rather than horizontal overflow */
+        transform: translateY(-24px) scale(0.96);
+    }
+
+    .vg-floating-msg.is-active {
+        transform: translateY(0) scale(1);
+    }
+
+    .vg-floating-msg.is-dismissing {
+        transform: translateY(-20px) scale(0.94);
+        opacity: 0;
+        transition: transform 0.22s ease-in, opacity 0.18s ease-in;
+    }
+
+    .vg-floating-msg::before {
+        width: 7px;
+        border-top-left-radius: 16px;
+        border-bottom-left-radius: 16px;
+    }
+
     .vg-floating-msg-header {
-        padding: 1rem 1.15rem 1rem 1.35rem;
-        gap: 0.85rem;
+        padding: 0.85rem 1rem 0.85rem 1.15rem;
+        gap: 0.8rem;
     }
+
     .vg-floating-msg-icon-badge {
-        width: 44px;
-        height: 44px;
-        min-width: 44px;
+        width: 42px;
+        height: 42px;
+        min-width: 42px;
     }
+
     .vg-floating-msg-icon-badge svg {
-        width: 32px;
-        height: 32px;
-        min-width: 32px;
-        padding: 7px;
+        width: 30px;
+        height: 30px;
+        min-width: 30px;
+        padding: 6.5px;
+        stroke-width: 2.5px;
     }
+
     .vg-floating-msg-tag {
-        font-size: 0.98rem;
+        font-size: 0.94rem;
     }
+
     .vg-floating-msg-text {
+        font-size: 0.83rem;
+        line-height: 1.4;
+    }
+
+    .vg-floating-msg-close {
+        width: 26px;
+        height: 26px;
+        font-size: 1.25rem;
+        margin-top: -1px;
+        margin-right: -2px;
+    }
+
+    .vg-floating-msg-progress {
+        left: 7px;
+    }
+}
+
+/* Ultra-Compact / Narrow Mobile Devices (<= 380px) */
+@media (max-width: 380px) {
+    .vg-floating-container {
+        top: max(8px, env(safe-area-inset-top, 8px));
+        left: max(8px, env(safe-area-inset-left, 8px));
+        right: max(8px, env(safe-area-inset-right, 8px));
+    }
+
+    .vg-floating-msg {
+        width: calc(100vw - 16px);
+        min-width: calc(100vw - 16px);
+        max-width: calc(100vw - 16px);
+        border-radius: 14px;
+    }
+
+    .vg-floating-msg::before {
+        width: 6px;
+        border-top-left-radius: 14px;
+        border-bottom-left-radius: 14px;
+    }
+
+    .vg-floating-msg-header {
+        padding: 0.75rem 0.85rem 0.75rem 0.95rem;
+        gap: 0.65rem;
+    }
+
+    .vg-floating-msg-icon-badge {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+    }
+
+    .vg-floating-msg-icon-badge svg {
+        width: 26px;
+        height: 26px;
+        min-width: 26px;
+        padding: 5px;
+    }
+
+    .vg-floating-msg-tag {
+        font-size: 0.88rem;
+    }
+
+    .vg-floating-msg-text {
+        font-size: 0.78rem;
+    }
+
+    .vg-floating-msg-close {
+        width: 22px;
+        height: 22px;
+        font-size: 1.15rem;
+    }
+
+    .vg-floating-msg-progress {
+        left: 6px;
+    }
+}
+
+/* ========================================================================= */
+/* Shared Inline Responsive Message Boxes (Success, Warning, Danger, Info)    */
+/* ========================================================================= */
+.alert {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 13px 18px;
+    margin-bottom: 1.25rem;
+    border-radius: 14px;
+    font-size: 0.88rem;
+    line-height: 1.45;
+    border: 1.5px solid transparent;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+    transition: all 0.2s ease;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, rgba(236, 253, 245, 0.98) 0%, rgba(255, 255, 255, 0.98) 100%);
+    border-color: rgba(16, 185, 129, 0.35);
+    color: #065F46;
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, rgba(254, 249, 195, 0.98) 0%, rgba(255, 255, 255, 0.98) 100%);
+    border-color: rgba(245, 158, 11, 0.35);
+    color: #92400E;
+}
+
+.alert-danger,
+.alert-error {
+    background: linear-gradient(135deg, rgba(254, 242, 242, 0.98) 0%, rgba(255, 255, 255, 0.98) 100%);
+    border-color: rgba(239, 68, 68, 0.35);
+    color: #991B1B;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, rgba(238, 246, 255, 0.98) 0%, rgba(255, 255, 255, 0.98) 100%);
+    border-color: rgba(37, 99, 235, 0.35);
+    color: #1E40AF;
+}
+
+.alert-with-icon,
+.alert-flex {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.alert-with-icon > i,
+.alert-flex > i {
+    flex-shrink: 0;
+    margin-top: 2px;
+    font-size: 1.15rem;
+}
+
+.alert-with-icon .alert-content,
+.alert-flex .alert-content {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+@media (max-width: 600px) {
+    .alert {
+        padding: 11px 14px;
         font-size: 0.84rem;
+        border-radius: 12px;
+        gap: 10px;
+        margin-bottom: 1rem;
+    }
+
+    .alert-dismissible {
+        padding-right: 2.5rem;
+    }
+}
+
+/* =========================================================================
+   Executive Two-Step Delete Modal Box (Matches Reference Image media_1793202884388_df335f9b.jpg)
+   ========================================================================= */
+.vg-del-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.vg-del-backdrop.active {
+    opacity: 1;
+}
+
+.vg-del-modal {
+    position: relative;
+    width: 100%;
+    max-width: 530px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.96) 65%, rgba(240, 247, 255, 0.94) 100%);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    border-radius: 26px;
+    border: 1.5px solid rgba(255, 255, 255, 0.95);
+    box-shadow: 
+        0 24px 50px -12px rgba(15, 23, 42, 0.24),
+        0 8px 18px -4px rgba(15, 23, 42, 0.12),
+        0 0 0 1px rgba(226, 232, 240, 0.6) inset;
+    padding: 34px 38px 30px 38px;
+    transform: scale(0.93) translateY(10px);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
+    overflow: hidden;
+}
+
+.vg-del-modal::before {
+    content: '';
+    position: absolute;
+    bottom: -60px;
+    left: -40px;
+    width: 340px;
+    height: 180px;
+    background: radial-gradient(ellipse at center, rgba(186, 230, 253, 0.5) 0%, rgba(224, 242, 254, 0.25) 55%, transparent 75%);
+    pointer-events: none;
+    border-radius: 50%;
+    z-index: 0;
+}
+
+.vg-del-backdrop.active .vg-del-modal {
+    transform: scale(1) translateY(0);
+}
+
+.vg-del-close-btn {
+    position: absolute;
+    top: 20px;
+    right: 22px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: #64748B;
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 3;
+}
+
+.vg-del-close-btn:hover {
+    background: #F1F5F9;
+    color: #0F172A;
+}
+
+.vg-del-body {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: flex-start;
+    gap: 22px;
+}
+
+.vg-del-icon-halo {
+    position: relative;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(254, 205, 211, 0.95) 0%, rgba(255, 228, 230, 0.6) 55%, rgba(255, 241, 242, 0) 100%);
+    box-shadow: 0 0 26px rgba(244, 63, 94, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.vg-del-icon-halo.warning {
+    box-shadow: 0 0 28px rgba(244, 63, 94, 0.4);
+}
+
+.vg-del-icon-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #FF4D6D 0%, #EF233C 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFFFFF;
+    font-size: 1.3rem;
+    box-shadow: 0 6px 16px rgba(239, 35, 60, 0.42);
+}
+
+.vg-del-warning-triangle {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    filter: drop-shadow(0 6px 14px rgba(239, 35, 60, 0.45));
+}
+
+.vg-del-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.vg-del-title {
+    font-size: 1.62rem;
+    font-weight: 700;
+    color: #0F172A;
+    margin: 0 0 6px 0;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+}
+
+.vg-del-desc {
+    font-size: 0.95rem;
+    color: #64748B;
+    line-height: 1.5;
+    margin: 0 0 16px 0;
+}
+
+.vg-del-checkbox-wrap {
+    margin-top: 14px;
+    padding: 10px 14px;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+}
+
+.vg-del-checkbox-wrap:hover {
+    background: #F1F5F9;
+    border-color: #CBD5E1;
+}
+
+.vg-del-checkbox-wrap.shake-error {
+    border-color: #EF4444;
+    background: #FEF2F2;
+    animation: vgDelShake 0.4s ease;
+}
+
+@keyframes vgDelShake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+}
+
+.vg-del-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+    margin: 0;
+}
+
+.vg-del-checkbox-input {
+    display: none;
+}
+
+.vg-del-checkbox-box {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    border: 1.8px solid #94A3B8;
+    background: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFFFFF;
+    font-size: 0.72rem;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.vg-del-checkbox-input:checked + .vg-del-checkbox-box {
+    background: #EF4444;
+    border-color: #EF4444;
+}
+
+.vg-del-checkbox-text {
+    font-size: 0.88rem;
+    color: #334155;
+    font-weight: 500;
+}
+
+.vg-del-actions {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 14px;
+    margin-top: 26px;
+}
+
+.vg-del-btn-cancel {
+    border-radius: 9999px;
+    padding: 10px 26px;
+    border: 1.5px solid #CBD5E1;
+    background: #FFFFFF;
+    color: #475569;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.vg-del-btn-cancel:hover {
+    background: #F8FAFC;
+    border-color: #94A3B8;
+    color: #0F172A;
+}
+
+.vg-del-btn-delete {
+    border-radius: 9999px;
+    padding: 10px 28px;
+    border: none;
+    background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+    color: #FFFFFF;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.42);
+    transition: all 0.2s ease;
+}
+
+.vg-del-btn-delete:hover:not(.disabled) {
+    background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.52);
+    transform: translateY(-1px);
+}
+
+.vg-del-btn-delete.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* =========================================================================
+   Mobile Delete Modal Viewport Optimization (Exact Match: media_1793202884388_df335f9b.jpg)
+   ========================================================================= */
+@media (max-width: 640px) {
+    .vg-del-backdrop {
+        padding: 16px !important;
+        background: rgba(15, 23, 42, 0.55) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+    }
+
+    .vg-del-modal {
+        width: calc(100% - 24px) !important;
+        max-width: 370px !important;
+        margin: 0 auto !important;
+        padding: 24px 20px 20px 20px !important;
+        border-radius: 22px !important;
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.96) 0%, rgba(240, 247, 255, 0.92) 55%, rgba(224, 242, 254, 0.88) 100%) !important;
+        backdrop-filter: blur(24px) !important;
+        -webkit-backdrop-filter: blur(24px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.85) !important;
+        box-shadow: 
+            0 20px 40px -10px rgba(15, 23, 42, 0.22),
+            0 0 0 1px rgba(255, 255, 255, 0.6) inset !important;
+        overflow: hidden !important;
+    }
+
+    .vg-del-modal::before {
+        content: '' !important;
+        position: absolute !important;
+        bottom: -35px !important;
+        left: -25px !important;
+        width: 220px !important;
+        height: 110px !important;
+        background: radial-gradient(ellipse at center, rgba(186, 230, 253, 0.65) 0%, rgba(219, 234, 254, 0.35) 50%, transparent 75%) !important;
+        border-radius: 50% !important;
+        pointer-events: none !important;
+        z-index: 0 !important;
+    }
+
+    .vg-del-close-btn {
+        top: 14px !important;
+        right: 14px !important;
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 0.95rem !important;
+        color: #64748B !important;
+    }
+
+    .vg-del-body {
+        gap: 14px !important;
+        align-items: flex-start !important;
+    }
+
+    .vg-del-icon-halo {
+        width: 54px !important;
+        height: 54px !important;
+        flex-shrink: 0 !important;
+        background: radial-gradient(circle, rgba(254, 205, 211, 0.95) 0%, rgba(255, 228, 230, 0.55) 60%, rgba(255, 241, 242, 0) 100%) !important;
+        box-shadow: 0 0 20px rgba(244, 63, 94, 0.3) !important;
+    }
+
+    .vg-del-icon-circle {
+        width: 42px !important;
+        height: 42px !important;
+        font-size: 1.15rem !important;
+        background: linear-gradient(145deg, #FF4D6D 0%, #EF233C 100%) !important;
+        box-shadow: 0 4px 12px rgba(239, 35, 60, 0.35) !important;
+    }
+
+    .vg-del-icon-halo.warning {
+        background: radial-gradient(circle, rgba(254, 205, 211, 0.9) 0%, rgba(255, 228, 230, 0.5) 60%, rgba(255, 241, 242, 0) 100%) !important;
+        box-shadow: 0 0 22px rgba(244, 63, 94, 0.35) !important;
+    }
+
+    .vg-del-warning-triangle {
+        width: 42px !important;
+        height: 42px !important;
+        filter: drop-shadow(0 4px 10px rgba(239, 35, 60, 0.4)) !important;
+    }
+
+    .vg-del-warning-triangle svg {
+        width: 28px !important;
+        height: 28px !important;
+    }
+
+    .vg-del-title {
+        font-size: 1.25rem !important;
+        font-weight: 700 !important;
+        color: #0F172A !important;
+        margin: 0 0 4px 0 !important;
+        line-height: 1.2 !important;
+    }
+
+    .vg-del-desc {
+        font-size: 0.85rem !important;
+        color: #475569 !important;
+        line-height: 1.35 !important;
+        margin: 0 !important;
+    }
+
+    /* Checkbox requirement styled compactly for mobile matching lg device */
+    .vg-del-checkbox-wrap {
+        display: block !important;
+        margin-top: 10px !important;
+        padding: 8px 10px !important;
+        background: rgba(248, 250, 252, 0.9) !important;
+        border: 1px solid #CBD5E1 !important;
+        border-radius: 10px !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .vg-del-checkbox-wrap:hover {
+        background: #F1F5F9 !important;
+        border-color: #94A3B8 !important;
+    }
+
+    .vg-del-checkbox-wrap.shake-error {
+        border-color: #EF4444 !important;
+        background: #FEF2F2 !important;
+    }
+
+    .vg-del-checkbox-label {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        cursor: pointer !important;
+        margin: 0 !important;
+    }
+
+    .vg-del-checkbox-box {
+        width: 18px !important;
+        height: 18px !important;
+        border-radius: 5px !important;
+        font-size: 0.68rem !important;
+        flex-shrink: 0 !important;
+    }
+
+    .vg-del-checkbox-text {
+        font-size: 0.78rem !important;
+        color: #334155 !important;
+        line-height: 1.3 !important;
+        font-weight: 500 !important;
+    }
+
+    .vg-del-actions {
+        display: flex !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+        gap: 10px !important;
+        margin-top: 16px !important;
+    }
+
+    .vg-del-btn-cancel {
+        padding: 7px 20px !important;
+        font-size: 0.88rem !important;
+        border-radius: 9999px !important;
+        background: rgba(255, 255, 255, 0.8) !important;
+        border: 1.5px solid rgba(203, 213, 225, 0.8) !important;
+        color: #334155 !important;
+        font-weight: 600 !important;
+    }
+
+    .vg-del-btn-delete {
+        padding: 7px 20px !important;
+        font-size: 0.88rem !important;
+        border-radius: 9999px !important;
+        background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%) !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        font-weight: 600 !important;
+        box-shadow: 0 4px 14px rgba(239, 68, 68, 0.45) !important;
+        gap: 6px !important;
+        opacity: 1 !important;
+        cursor: pointer !important;
+    }
+
+    .vg-del-btn-delete i {
+        font-size: 0.82rem !important;
+    }
+
+    .vg-del-btn-delete.disabled {
+        opacity: 0.5 !important;
+        cursor: not-allowed !important;
+        box-shadow: none !important;
     }
 }

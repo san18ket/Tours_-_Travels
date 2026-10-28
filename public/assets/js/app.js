@@ -182,7 +182,7 @@
                 (position) => {
                     this.lastCoords = position.coords;
                     this.notifyRawFix(position.coords);
-                    this.sendLocation(position.coords).catch(() => {});
+                    this.sendLocation(position.coords).catch(() => { });
                 },
                 (error) => {
                     this.handleGeoError(error, options);
@@ -884,24 +884,24 @@
                     'Accept': 'text/html,application/xhtml+xml,application/json'
                 }
             })
-            .then(async (response) => {
-                const contentType = response.headers.get('content-type') || '';
-                if (contentType.includes('application/json')) {
-                    const data = await response.json();
-                    this.handleJsonResult(data, form, response);
-                } else {
-                    const htmlText = await response.text();
-                    this.applyHtml(htmlText, response.url || action, true);
-                }
-            })
-            .catch((err) => {
-                console.error('VoyageGo Form AJAX error:', err);
-                this.toast('Request failed. Please check network connection.', 'error');
-            })
-            .finally(() => {
-                this.setButtonLoading(btn, false);
-                this.finishProgress();
-            });
+                .then(async (response) => {
+                    const contentType = response.headers.get('content-type') || '';
+                    if (contentType.includes('application/json')) {
+                        const data = await response.json();
+                        this.handleJsonResult(data, form, response);
+                    } else {
+                        const htmlText = await response.text();
+                        this.applyHtml(htmlText, response.url || action, true);
+                    }
+                })
+                .catch((err) => {
+                    console.error('VoyageGo Form AJAX error:', err);
+                    this.toast('Request failed. Please check network connection.', 'error');
+                })
+                .finally(() => {
+                    this.setButtonLoading(btn, false);
+                    this.finishProgress();
+                });
         },
 
         handleJsonResult: function (data, form, response) {
@@ -1012,24 +1012,24 @@
                         'Accept': 'text/html,application/xhtml+xml,application/json'
                     }
                 })
-                .then(async (response) => {
-                    const contentType = response.headers.get('content-type') || '';
-                    if (contentType.includes('application/json')) {
-                        const data = await response.json();
-                        this.handleJsonResult(data, null, response);
-                    } else {
-                        const htmlText = await response.text();
-                        this.applyHtml(htmlText, response.url || window.location.href, true);
-                    }
-                })
-                .catch((err) => {
-                    console.error('VoyageGo Action AJAX error:', err);
-                    this.toast('Action could not be completed.', 'error');
-                })
-                .finally(() => {
-                    this.setButtonLoading(actionBtn, false);
-                    this.finishProgress();
-                });
+                    .then(async (response) => {
+                        const contentType = response.headers.get('content-type') || '';
+                        if (contentType.includes('application/json')) {
+                            const data = await response.json();
+                            this.handleJsonResult(data, null, response);
+                        } else {
+                            const htmlText = await response.text();
+                            this.applyHtml(htmlText, response.url || window.location.href, true);
+                        }
+                    })
+                    .catch((err) => {
+                        console.error('VoyageGo Action AJAX error:', err);
+                        this.toast('Action could not be completed.', 'error');
+                    })
+                    .finally(() => {
+                        this.setButtonLoading(actionBtn, false);
+                        this.finishProgress();
+                    });
             });
         },
 
@@ -1049,26 +1049,26 @@
                     'X-Requested-With': 'XMLHttpRequest'
                 }
             })
-            .then(async (res) => {
-                if (!res.ok && res.status >= 500) {
-                    throw new Error(`Server returned HTTP ${res.status}`);
-                }
-                const finalUrl = res.url || url;
-                const htmlText = await res.text();
-                this.applyHtml(htmlText, finalUrl, options.pushState !== false);
-            })
-            .catch((err) => {
-                console.error('VoyageGo Navigation Error:', err);
-                this.toast('Failed to load page. Please try again.', 'error');
-            })
-            .finally(() => {
-                this.isNavigating = false;
-                if (options.submitterBtn) {
-                    this.setButtonLoading(options.submitterBtn, false);
-                }
-                this.finishProgress();
-                fadeTargets.forEach(el => el.classList.remove('vg-page-fading'));
-            });
+                .then(async (res) => {
+                    if (!res.ok && res.status >= 500) {
+                        throw new Error(`Server returned HTTP ${res.status}`);
+                    }
+                    const finalUrl = res.url || url;
+                    const htmlText = await res.text();
+                    this.applyHtml(htmlText, finalUrl, options.pushState !== false);
+                })
+                .catch((err) => {
+                    console.error('VoyageGo Navigation Error:', err);
+                    this.toast('Failed to load page. Please try again.', 'error');
+                })
+                .finally(() => {
+                    this.isNavigating = false;
+                    if (options.submitterBtn) {
+                        this.setButtonLoading(options.submitterBtn, false);
+                    }
+                    this.finishProgress();
+                    fadeTargets.forEach(el => el.classList.remove('vg-page-fading'));
+                });
         },
 
         // 8. Live DOM Swap & Script Execution
@@ -1143,7 +1143,7 @@
                         if (m && m[1]) {
                             window.VoyageTranslations = JSON.parse(m[1]);
                         }
-                    } catch (e) {}
+                    } catch (e) { }
                 }
             });
 
@@ -1166,7 +1166,7 @@
             // Broadcast page load event
             try {
                 window.dispatchEvent(new CustomEvent('voyagego:pageLoaded', { detail: { url } }));
-            } catch (e) {}
+            } catch (e) { }
         },
 
         // Helper: Execute inline scripts in newly swapped DOM containers
@@ -1280,8 +1280,12 @@
         const progressBar = card.querySelector('.vg-floating-msg-progress-bar');
         const closeBtn = card.querySelector('.vg-floating-msg-close');
 
+        // Dynamic reading time: auto-adjust duration proportionally for longer messages
+        const textLen = String(message).length;
+        const autoDuration = (duration === 3000 && textLen > 50) ? Math.min(6500, Math.max(3000, textLen * 48)) : duration;
+
         let dismissTimer = null;
-        let remainingTime = duration;
+        let remainingTime = autoDuration;
         let startTime = null;
 
         const dismiss = () => {
@@ -1311,7 +1315,7 @@
             card._dismissTimer = null;
             const elapsed = Date.now() - startTime;
             remainingTime = Math.max(200, remainingTime - elapsed);
-            const computedWidth = (remainingTime / duration) * 100;
+            const computedWidth = (remainingTime / autoDuration) * 100;
             progressBar.style.transition = 'none';
             progressBar.style.width = `${computedWidth}%`;
         };
@@ -1328,6 +1332,44 @@
 
         card.addEventListener('mouseenter', pauseTimer);
         card.addEventListener('mouseleave', resumeTimer);
+
+        // Mobile touch swipe-to-dismiss (swipe up or right to dismiss)
+        let touchStartY = 0;
+        let touchCurrentY = 0;
+        let isSwiping = false;
+
+        card.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                touchStartY = e.touches[0].clientY;
+                touchCurrentY = touchStartY;
+                isSwiping = true;
+                pauseTimer();
+            }
+        }, { passive: true });
+
+        card.addEventListener('touchmove', (e) => {
+            if (!isSwiping) return;
+            touchCurrentY = e.touches[0].clientY;
+            const diffY = touchCurrentY - touchStartY;
+            if (diffY < 0) {
+                // Dragging upwards
+                card.style.transform = `translateY(${diffY}px) scale(${Math.max(0.92, 1 + diffY / 300)})`;
+                card.style.opacity = Math.max(0.2, 1 + diffY / 140);
+            }
+        }, { passive: true });
+
+        card.addEventListener('touchend', () => {
+            if (!isSwiping) return;
+            isSwiping = false;
+            const diffY = touchCurrentY - touchStartY;
+            if (diffY < -35) {
+                dismiss();
+            } else {
+                card.style.transform = '';
+                card.style.opacity = '';
+                resumeTimer();
+            }
+        });
 
         container.appendChild(card);
 
@@ -1346,13 +1388,13 @@
     // Live removal of red border as soon as user enters/selects value
     // =========================================================================
     const VoyageValidation = {
-        markError: function(input) {
+        markError: function (input) {
             if (!input) return;
             input.classList.add('is-invalid', 'vg-input-error');
             input.setAttribute('aria-invalid', 'true');
             input.style.borderColor = '#EF4444';
             input.style.boxShadow = '0 0 0 3.5px rgba(239, 68, 68, 0.16)';
-            
+
             // Subtle tactile shake animation
             input.classList.remove('vg-input-shake');
             void input.offsetWidth; // trigger reflow
@@ -1362,7 +1404,7 @@
             this.bindClearListener(input);
         },
 
-        clearError: function(input) {
+        clearError: function (input) {
             if (!input) return;
             input.classList.remove('is-invalid', 'vg-input-error', 'vg-input-shake');
             input.removeAttribute('aria-invalid');
@@ -1370,7 +1412,7 @@
             input.style.boxShadow = '';
         },
 
-        isInputFilled: function(input) {
+        isInputFilled: function (input) {
             if (!input) return false;
             if (input.type === 'checkbox' || input.type === 'radio') {
                 if (input.name) {
@@ -1389,7 +1431,7 @@
             return input.value.trim().length > 0;
         },
 
-        bindClearListener: function(input) {
+        bindClearListener: function (input) {
             if (input._hasClearValidationListener) return;
             input._hasClearValidationListener = true;
 
@@ -1405,7 +1447,7 @@
             input.addEventListener('paste', () => setTimeout(handleInput, 10));
         },
 
-        validateContainer: function(container) {
+        validateContainer: function (container) {
             if (!container) return true;
             const requiredFields = container.querySelectorAll('input[required], select[required], textarea[required], [data-required="true"]');
             let isValid = true;
@@ -1435,12 +1477,12 @@
             return true;
         },
 
-        validateForm: function(form) {
+        validateForm: function (form) {
             if (!form) return true;
             return this.validateContainer(form);
         },
 
-        init: function() {
+        init: function () {
             // Apply novalidate to all forms to suppress browser popup alerts
             document.querySelectorAll('form').forEach(form => {
                 form.setAttribute('novalidate', 'true');
@@ -1470,7 +1512,7 @@
                 const form = e.target;
                 if (!form || form.tagName !== 'FORM') return;
                 if (form.hasAttribute('data-no-validate') || form.dataset.noValidate === 'true') return;
-                
+
                 if (!this.validateForm(form)) {
                     e.preventDefault();
                     e.stopPropagation();
