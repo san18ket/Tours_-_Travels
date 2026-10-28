@@ -7,21 +7,7 @@
 
 <div class="modern-form-wrapper">
 
-    <!-- Top Action Breadcrumbs & Direct Admin Panel Navigation -->
-    <div class="customer-create-top-bar">
-        <div class="create-topbar-left">
-            <a href="<?= url('/office/customers') ?>" class="create-topbar-back-btn" title="Back to Customer Directory">
-                <i class="fa-solid fa-arrow-left"></i> <span>Customer Directory</span>
-            </a>
-        </div>
-        <div class="create-topbar-right">
-            <a href="<?= url('/office/dashboard') ?>" class="create-topbar-admin-btn" title="Open Admin Panel">
-                <i class="fa-solid fa-gauge-high"></i> <span>Admin Panel</span>
-            </a>
-        </div>
-    </div>
-
-    <!-- Centered Professional Stepper Header -->
+    <!-- Centered Professional 4-Step Stepper Header -->
     <div class="modern-stepper-header-centered">
         <div class="modern-stepper-container">
             <div class="modern-stepper-track">
@@ -89,21 +75,12 @@
         <?= csrf_field() ?>
         <input type="hidden" name="target_entity" value="customer">
 
-        <!-- ========================================================================= -->
-        <!-- STEP 1: Personal Details & Profile Photo                                 -->
-        <!-- ========================================================================= -->
-        <div class="modern-step-panel" id="wizardPanel1">
-            <div class="modern-form-card">
-                <!-- Section Header -->
-                <div class="modern-section-header">
-                    <div class="modern-section-badge">
-                        <i class="fa-solid fa-user"></i>
-                    </div>
-                    <div class="modern-section-meta">
-                        <h2 class="modern-section-title">Personal Details</h2>
-                        <p class="modern-section-sub">Basic customer identity, profile photo, and personal information.</p>
-                    </div>
-                </div>
+        <div class="modern-form-card">
+
+            <!-- ========================================================================= -->
+            <!-- STEP 1: Personal Details & Profile Photo                                 -->
+            <!-- ========================================================================= -->
+            <div class="modern-step-panel" id="wizardPanel1">
 
                 <!-- Professional Profile Photo Upload Component -->
                 <div class="customer-avatar-upload-card">
@@ -318,23 +295,11 @@
                     </button>
                 </div>
             </div>
-        </div>
 
-        <!-- ========================================================================= -->
-        <!-- STEP 2: Contact Details                                                   -->
-        <!-- ========================================================================= -->
-        <div class="modern-step-panel" id="wizardPanel2" style="display: none;">
-            <div class="modern-form-card">
-                <div class="modern-section-header">
-                    <div class="modern-section-badge">
-                        <i class="fa-solid fa-address-book"></i>
-                    </div>
-                    <div class="modern-section-meta">
-                        <h2 class="modern-section-title">Contact Details</h2>
-                        <p class="modern-section-sub">Alternate phone and emergency contact details for tour safety.</p>
-                    </div>
-                </div>
-
+            <!-- ========================================================================= -->
+            <!-- STEP 2: Contact Details                                                   -->
+            <!-- ========================================================================= -->
+            <div class="modern-step-panel" id="wizardPanel2" style="display: none;">
                 <div class="modern-form-grid-3">
                     <div class="modern-form-group">
                         <label class="modern-form-label" for="alternate_phone">Alternate Phone</label>
@@ -370,23 +335,11 @@
                     </button>
                 </div>
             </div>
-        </div>
 
-        <!-- ========================================================================= -->
-        <!-- STEP 3: Identification & Documents                                        -->
-        <!-- ========================================================================= -->
-        <div class="modern-step-panel" id="wizardPanel3" style="display: none;">
-            <div class="modern-form-card">
-                <div class="modern-section-header">
-                    <div class="modern-section-badge">
-                        <i class="fa-solid fa-file-lines"></i>
-                    </div>
-                    <div class="modern-section-meta">
-                        <h2 class="modern-section-title">Identification & Documents</h2>
-                        <p class="modern-section-sub">Government-issued ID details, document scans, and record verification notes.</p>
-                    </div>
-                </div>
-
+            <!-- ========================================================================= -->
+            <!-- STEP 3: Identification & Documents                                        -->
+            <!-- ========================================================================= -->
+            <div class="modern-step-panel" id="wizardPanel3" style="display: none;">
                 <div class="modern-form-grid-3">
                     <div class="modern-form-group">
                         <label class="modern-form-label" for="id_type">ID Document Type</label>
@@ -500,23 +453,11 @@
                     </button>
                 </div>
             </div>
-        </div>
 
-        <!-- ========================================================================= -->
-        <!-- STEP 4: Review & Save                                                     -->
-        <!-- ========================================================================= -->
-        <div class="modern-step-panel" id="wizardPanel4" style="display: none;">
-            <div class="modern-form-card">
-                <div class="modern-section-header">
-                    <div class="modern-section-badge" style="background: #E8F8F0; color: #10B981;">
-                        <i class="fa-solid fa-clipboard-check"></i>
-                    </div>
-                    <div class="modern-section-meta">
-                        <h2 class="modern-section-title">Review &amp; Save</h2>
-                        <p class="modern-section-sub">Comprehensive profile verification prior to saving customer record.</p>
-                    </div>
-                </div>
-
+            <!-- ========================================================================= -->
+            <!-- STEP 4: Review & Save                                                     -->
+            <!-- ========================================================================= -->
+            <div class="modern-step-panel" id="wizardPanel4" style="display: none;">
                 <!-- Live Executive Dossier Container -->
                 <div class="review-dossier-wrapper">
 
@@ -1951,35 +1892,179 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 /* ========================================================================= */
-/* 5. Centered Stepper Header & Executive Stepper Presentation               */
+/* 5. Centered Professional Stepper Header & Form Wrapper                    */
 /* ========================================================================= */
+.modern-form-wrapper {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0.25rem 0 3.5rem;
+}
+
 .modern-stepper-header-centered {
     display: flex;
     justify-content: center;
     align-items: center;
+    margin-bottom: 2rem;
+    padding: 0;
     width: 100%;
-    margin-bottom: 2.25rem;
-    padding: 0.25rem 0;
 }
-.modern-stepper-header-centered .modern-stepper-container {
+
+.modern-stepper-container {
+    width: 100%;
+    max-width: 100%;
     background: #FFFFFF;
     border: 1.5px solid #E2E8F0;
-    border-radius: 60px;
-    padding: 0.85rem 2.5rem;
-    box-shadow: 0 4px 20px rgba(12, 43, 82, 0.05);
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    border-radius: 20px;
+    padding: 1.1rem 2rem;
+    box-shadow: 0 4px 20px rgba(12, 43, 82, 0.04);
 }
+
+.modern-stepper-track {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    width: 100%;
+    max-width: 960px;
+    margin: 0 auto;
+}
+
+.modern-step-item {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    background: transparent !important;
+    border: none !important;
+    cursor: pointer;
+    padding: 0.35rem 0.6rem !important;
+    border-radius: 12px !important;
+    transition: all 0.2s ease !important;
+    z-index: 2;
+    color: #64748B !important;
+    outline: none !important;
+    text-decoration: none !important;
+}
+
+.modern-step-item:hover {
+    color: #0C2B52 !important;
+    transform: translateY(-1px);
+}
+
+.modern-step-circle {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    border-radius: 50% !important;
+    background: #FFFFFF !important;
+    color: #64748B !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    border: 2px solid #CBD5E1 !important;
+    margin-bottom: 0.45rem !important;
+    transition: all 0.25s ease !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+}
+
+.modern-step-label {
+    font-size: 0.82rem !important;
+    font-weight: 600 !important;
+    color: #64748B !important;
+    margin-top: 0 !important;
+    white-space: nowrap !important;
+    transition: color 0.2s ease !important;
+}
+
+.modern-step-item.active .modern-step-circle {
+    background: #176B5B !important;
+    border-color: #176B5B !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 0 0 4px rgba(23, 107, 91, 0.18), 0 4px 12px rgba(23, 107, 91, 0.25) !important;
+    transform: scale(1.08) !important;
+}
+
+.modern-step-item.active .modern-step-label {
+    color: #176B5B !important;
+    font-weight: 700 !important;
+}
+
+.modern-step-item.completed .modern-step-circle {
+    background: #10B981 !important;
+    border-color: #10B981 !important;
+    color: #FFFFFF !important;
+}
+
+.modern-step-item.completed .modern-step-label {
+    color: #10B981 !important;
+}
+
+.modern-step-connector {
+    flex: 1 !important;
+    height: 3px !important;
+    background: #E2E8F0 !important;
+    margin: -1.2rem 0.5rem 0 0.5rem !important;
+    transition: background 0.3s ease !important;
+    border-radius: 4px !important;
+}
+
+.modern-step-connector.completed {
+    background: #10B981 !important;
+}
+
+/* Responsive adjustments across devices */
 @media (max-width: 768px) {
+    .modern-form-wrapper {
+        padding: 0 0 2rem;
+    }
     .modern-stepper-header-centered {
         margin-bottom: 1.5rem;
     }
-    .modern-stepper-header-centered .modern-stepper-container {
-        border-radius: 20px;
-        padding: 0.75rem 0.85rem;
-        width: 100%;
-        overflow-x: auto;
+    .modern-stepper-container {
+        padding: 0.85rem 1rem;
+        border-radius: 18px;
+    }
+    .modern-step-circle {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        font-size: 0.88rem !important;
+        margin-bottom: 0.35rem !important;
+    }
+    .modern-step-label {
+        font-size: 0.76rem !important;
+    }
+    .modern-step-connector {
+        margin: -1.1rem 0.35rem 0 0.35rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .modern-stepper-container {
+        padding: 0.75rem 0.65rem;
+        border-radius: 16px;
+    }
+    .modern-step-item {
+        padding: 0.2rem 0.35rem !important;
+    }
+    .modern-step-circle {
+        width: 30px !important;
+        height: 30px !important;
+        min-width: 30px !important;
+        font-size: 0.82rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+    .modern-step-connector {
+        margin: -0.95rem 0.25rem 0 0.25rem !important;
+    }
+    .modern-step-item:not(.active) .modern-step-label {
+        display: none !important;
+    }
+    .modern-step-item.active .modern-step-label {
+        display: inline-block !important;
+        font-size: 0.72rem !important;
     }
 }
 

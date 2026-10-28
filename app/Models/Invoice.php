@@ -27,7 +27,7 @@ class Invoice extends Model
                        COALESCE(c.customer_code, CONCAT('LEGACY-', u.id)) as customer_code,
                        t.title as tour_title
                 FROM `invoices` inv
-                JOIN `bookings` b ON inv.booking_id = b.id
+                LEFT JOIN `bookings` b ON inv.booking_id = b.id
                 LEFT JOIN `customers` c ON inv.customer_profile_id = c.id
                 LEFT JOIN `users` u ON inv.customer_id = u.id
                 LEFT JOIN `tours` t ON b.tour_id = t.id
@@ -45,7 +45,7 @@ class Invoice extends Model
                        COALESCE(c.name, u.name) as customer_name,
                        COALESCE(c.email, u.email) as customer_email
                 FROM `invoices` inv
-                JOIN `bookings` b ON inv.booking_id = b.id
+                LEFT JOIN `bookings` b ON inv.booking_id = b.id
                 LEFT JOIN `customers` c ON inv.customer_profile_id = c.id
                 LEFT JOIN `users` u ON inv.customer_id = u.id
                 ORDER BY inv.id DESC";

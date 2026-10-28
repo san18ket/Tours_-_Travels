@@ -102,6 +102,8 @@ $router->get('/office/bookings/create', [BookingController::class, 'create'], ['
 $router->post('/office/bookings', [BookingController::class, 'store'], ['auth', 'role:admin,dispatcher', 'csrf']);
 $router->get('/office/bookings/{id}', [BookingController::class, 'show'], ['auth', 'role:admin,dispatcher']);
 $router->post('/office/bookings/{id}/status', [BookingController::class, 'updateStatus'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->post('/office/bookings/{id}/toggle-status', [BookingController::class, 'toggleStatus'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->post('/office/bookings/{id}/delete', [BookingController::class, 'delete'], ['auth', 'role:admin,dispatcher', 'csrf']);
 
 // -----------------------------------------------------------------------------
 // MODULE 4: Employees — Add Employee and Employee List (Admin Only)
@@ -113,6 +115,8 @@ $router->post('/office/employees', [EmployeeController::class, 'store'], ['auth'
 $router->get('/office/employees/{id}', [EmployeeController::class, 'show'], ['auth', 'role:admin']);
 $router->get('/office/employees/{id}/edit', [EmployeeController::class, 'edit'], ['auth', 'role:admin']);
 $router->post('/office/employees/{id}', [EmployeeController::class, 'update'], ['auth', 'role:admin', 'csrf']);
+$router->post('/office/employees/{id}/toggle-status', [EmployeeController::class, 'toggleStatus'], ['auth', 'role:admin', 'csrf']);
+$router->post('/office/employees/{id}/delete', [EmployeeController::class, 'delete'], ['auth', 'role:admin', 'csrf']);
 
 // -----------------------------------------------------------------------------
 // MODULE 5: Vehicles — Add Vehicle and Vehicle List (Admin & Dispatcher)
@@ -121,6 +125,8 @@ $router->get('/office/vehicles', [VehicleController::class, 'index'], ['auth', '
 $router->get('/office/vehicles/create', [VehicleController::class, 'create'], ['auth', 'role:admin']);
 $router->post('/office/vehicles', [VehicleController::class, 'store'], ['auth', 'role:admin', 'csrf']);
 $router->post('/office/vehicles/{id}/status', [VehicleController::class, 'updateStatus'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->post('/office/vehicles/{id}/toggle-status', [VehicleController::class, 'toggleStatus'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->post('/office/vehicles/{id}/delete', [VehicleController::class, 'delete'], ['auth', 'role:admin,dispatcher', 'csrf']);
 
 // -----------------------------------------------------------------------------
 // MODULE 6: Access Control — Add User, User List, Roles & Permissions (Admin Only)
@@ -152,6 +158,7 @@ $router->get('/office/trips/assign', [DispatchController::class, 'createAssign']
 $router->post('/office/trips/assign', [DispatchController::class, 'assign'], ['auth', 'role:admin,dispatcher', 'csrf']);
 $router->get('/office/trips/history', [DispatchController::class, 'history'], ['auth', 'role:admin,dispatcher']);
 $router->post('/office/trips/{id}/cancel', [DispatchController::class, 'cancel'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->post('/office/trips/{id}/toggle-status', [DispatchController::class, 'toggleStatus'], ['auth', 'role:admin,dispatcher', 'csrf']);
 
 // -----------------------------------------------------------------------------
 // MODULE 8: Live Tracking — Real-Time Fleet Map (Admin & Dispatcher)

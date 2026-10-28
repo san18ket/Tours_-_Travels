@@ -108,6 +108,7 @@ class DispatchController extends Controller
         $totalPages = max(1, (int)ceil($totalRecords / $perPage));
 
         // Metric summaries
+        $totalAll = $this->dispatchModel->count();
         $totalActive = $this->dispatchModel->count("`status` IN ('assigned', 'driver_accepted', 'en_route_pickup', 'trip_started')");
         $totalCompleted = $this->dispatchModel->count("`status` = 'completed'");
         $totalCancelled = $this->dispatchModel->count("`status` = 'cancelled'");
@@ -115,6 +116,7 @@ class DispatchController extends Controller
         return $this->render('office/trips/history', [
             'trips'          => $trips,
             'totalRecords'   => $totalRecords,
+            'totalAll'       => $totalAll,
             'totalActive'    => $totalActive,
             'totalCompleted' => $totalCompleted,
             'totalCancelled' => $totalCancelled,
@@ -157,5 +159,65 @@ class DispatchController extends Controller
         return $this->render('office/tracking/index', [
             'title' => 'Live Fleet Radar & GPS Tracking',
         ], 'layouts/office');
+    }
+
+    /**
+     * AJAX Toggle trip execution status (Active -> Aborted/Cancelled)
+     */
+    public function toggleStatus(Request $request, array $params): Response
+    {
+        $id = (int)($params['id'] ?? 0);
+        $dispatch = $this->dispatchModel->find($id);
+
+        if (!$dispatch) {
+            if ($request->isAjax()) {
+                return $this->json(['success' => false, 'message' => 'Trip assignment not found.'], 404);
+            }
+            Session::setFlash('danger', 'Trip assignment not found.');
+            return $this->redirect(url('/office/trips/history'));
+        }
+
+        try {
+            $currentStatus = $dispatch['status'];
+            $cancelledBy = Session::getUserId();
+
+            if (in_array($currentStatus, ['assigned', 'driver_accepted', 'en_route_pickup', 'trip_started'], true)) {
+                $this->dispatchService->cancelTrip($id, $cancelledBy, 'Aborted via office dispatch console switch');
+                $newStatus = 'cancelled';
+                $msg = "Trip #{$id} aborted and returned vehicle & chauffeur to available pool.";
+
+                if ($request->isAjax()) {
+                    return $this->json([
+                        'success'   => true,
+                        'status'    => $newStatus,
+                        'is_active' => false,
+                        'label'     => 'Cancelled',
+                        'message'   => $msg,
+                        'metrics'   => [
+                            'total'     => $this->dispatchModel->count(),
+                            'active'    => $this->dispatchModel->count("`status` IN ('assigned', 'driver_accepted', 'en_route_pickup', 'trip_started')"),
+                            'completed' => $this->dispatchModel->count("`status` = 'completed'"),
+                            'cancelled' => $this->dispatchModel->count("`status` = 'cancelled'"),
+                        ],
+                    ]);
+                }
+
+                Session::setFlash('success', $msg);
+                return $this->redirect(url('/office/trips/history'));
+            } else {
+                $msg = "Trip #{$id} is already {$currentStatus} and cannot be toggled.";
+                if ($request->isAjax()) {
+                    return $this->json(['success' => false, 'message' => $msg], 422);
+                }
+                Session::setFlash('warning', $msg);
+                return $this->redirect(url('/office/trips/history'));
+            }
+        } catch (\Throwable $e) {
+            if ($request->isAjax()) {
+                return $this->json(['success' => false, 'message' => $e->getMessage()], 400);
+            }
+            Session::setFlash('danger', $e->getMessage());
+            return $this->redirect(url('/office/trips/history'));
+        }
     }
 }

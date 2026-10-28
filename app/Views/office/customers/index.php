@@ -1305,14 +1305,24 @@
         const finalBtnText = document.getElementById('deleteFinalBtnText');
 
         if (chk) chk.checked = false;
-        if (btn1) btn1.classList.add('disabled');
+        if (btn1) {
+            if (window.innerWidth <= 640) {
+                btn1.classList.remove('disabled');
+            } else {
+                btn1.classList.add('disabled');
+            }
+        }
         if (chkWrap) chkWrap.classList.remove('shake-error');
         if (chk2) chk2.checked = false;
         if (chkWrap2) chkWrap2.classList.remove('shake-error');
         if (finalBtn) {
             finalBtn.disabled = false;
-            finalBtn.classList.add('disabled');
             finalBtn.style.opacity = '';
+            if (window.innerWidth <= 640) {
+                finalBtn.classList.remove('disabled');
+            } else {
+                finalBtn.classList.add('disabled');
+            }
         }
         if (finalBtnText) finalBtnText.textContent = 'Delete';
 
@@ -1418,7 +1428,7 @@
         const chk2 = document.getElementById('deleteStep2Checkbox');
         const chkWrap2 = document.getElementById('delCheckboxContainer2');
 
-        if (chk2 && !chk2.checked) {
+        if (!chk2 || !chk2.checked) {
             if (chkWrap2) {
                 chkWrap2.classList.add('shake-error');
                 setTimeout(() => chkWrap2.classList.remove('shake-error'), 450);
@@ -2380,5 +2390,166 @@
     opacity: 0.5;
     cursor: not-allowed;
     box-shadow: none;
+}
+
+@media (max-width: 640px) {
+    .vg-del-backdrop {
+        padding: 16px !important;
+        background: rgba(15, 23, 42, 0.55) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+    }
+    .vg-del-modal {
+        width: calc(100% - 24px) !important;
+        max-width: 370px !important;
+        margin: 0 auto !important;
+        padding: 24px 20px 20px 20px !important;
+        border-radius: 22px !important;
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.96) 0%, rgba(240, 247, 255, 0.92) 55%, rgba(224, 242, 254, 0.88) 100%) !important;
+        backdrop-filter: blur(24px) !important;
+        -webkit-backdrop-filter: blur(24px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.85) !important;
+        box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(255, 255, 255, 0.6) inset !important;
+        overflow: hidden !important;
+    }
+    .vg-del-modal::before {
+        content: '' !important;
+        position: absolute !important;
+        bottom: -35px !important;
+        left: -25px !important;
+        width: 220px !important;
+        height: 110px !important;
+        background: radial-gradient(ellipse at center, rgba(186, 230, 253, 0.65) 0%, rgba(219, 234, 254, 0.35) 50%, transparent 75%) !important;
+        border-radius: 50% !important;
+        pointer-events: none !important;
+        z-index: 0 !important;
+    }
+    .vg-del-close-btn {
+        top: 14px !important;
+        right: 14px !important;
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 0.95rem !important;
+        color: #64748B !important;
+    }
+    .vg-del-body {
+        gap: 14px !important;
+        align-items: flex-start !important;
+    }
+    .vg-del-icon-halo {
+        width: 54px !important;
+        height: 54px !important;
+        flex-shrink: 0 !important;
+        background: radial-gradient(circle, rgba(254, 205, 211, 0.95) 0%, rgba(255, 228, 230, 0.55) 60%, rgba(255, 241, 242, 0) 100%) !important;
+        box-shadow: 0 0 20px rgba(244, 63, 94, 0.3) !important;
+    }
+    .vg-del-icon-circle {
+        width: 42px !important;
+        height: 42px !important;
+        font-size: 1.15rem !important;
+        background: linear-gradient(145deg, #FF4D6D 0%, #EF233C 100%) !important;
+        box-shadow: 0 4px 12px rgba(239, 35, 60, 0.35) !important;
+    }
+    .vg-del-icon-halo.warning {
+        background: radial-gradient(circle, rgba(254, 205, 211, 0.9) 0%, rgba(255, 228, 230, 0.5) 60%, rgba(255, 241, 242, 0) 100%) !important;
+        box-shadow: 0 0 22px rgba(244, 63, 94, 0.35) !important;
+    }
+    .vg-del-warning-triangle {
+        width: 42px !important;
+        height: 42px !important;
+        filter: drop-shadow(0 4px 10px rgba(239, 35, 60, 0.4)) !important;
+    }
+    .vg-del-warning-triangle svg {
+        width: 28px !important;
+        height: 28px !important;
+    }
+    .vg-del-title {
+        font-size: 1.25rem !important;
+        font-weight: 700 !important;
+        color: #0F172A !important;
+        margin: 0 0 4px 0 !important;
+        line-height: 1.2 !important;
+    }
+    .vg-del-desc {
+        font-size: 0.85rem !important;
+        color: #475569 !important;
+        line-height: 1.35 !important;
+        margin: 0 !important;
+    }
+    /* Checkbox requirement styled compactly for mobile matching lg device */
+    .vg-del-checkbox-wrap {
+        display: block !important;
+        margin-top: 10px !important;
+        padding: 8px 10px !important;
+        background: rgba(248, 250, 252, 0.9) !important;
+        border: 1px solid #CBD5E1 !important;
+        border-radius: 10px !important;
+        transition: all 0.2s ease !important;
+    }
+    .vg-del-checkbox-wrap:hover {
+        background: #F1F5F9 !important;
+        border-color: #94A3B8 !important;
+    }
+    .vg-del-checkbox-wrap.shake-error {
+        border-color: #EF4444 !important;
+        background: #FEF2F2 !important;
+    }
+    .vg-del-checkbox-label {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        cursor: pointer !important;
+        margin: 0 !important;
+    }
+    .vg-del-checkbox-box {
+        width: 18px !important;
+        height: 18px !important;
+        border-radius: 5px !important;
+        font-size: 0.68rem !important;
+        flex-shrink: 0 !important;
+    }
+    .vg-del-checkbox-text {
+        font-size: 0.78rem !important;
+        color: #334155 !important;
+        line-height: 1.3 !important;
+        font-weight: 500 !important;
+    }
+    .vg-del-actions {
+        display: flex !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+        gap: 10px !important;
+        margin-top: 16px !important;
+    }
+    .vg-del-btn-cancel {
+        padding: 7px 20px !important;
+        font-size: 0.88rem !important;
+        border-radius: 9999px !important;
+        background: rgba(255, 255, 255, 0.8) !important;
+        border: 1.5px solid rgba(203, 213, 225, 0.8) !important;
+        color: #334155 !important;
+        font-weight: 600 !important;
+    }
+    .vg-del-btn-delete {
+        padding: 7px 20px !important;
+        font-size: 0.88rem !important;
+        border-radius: 9999px !important;
+        background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%) !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        font-weight: 600 !important;
+        box-shadow: 0 4px 14px rgba(239, 68, 68, 0.45) !important;
+        gap: 6px !important;
+        opacity: 1 !important;
+        cursor: pointer !important;
+    }
+    .vg-del-btn-delete i {
+        font-size: 0.82rem !important;
+    }
+    .vg-del-btn-delete.disabled {
+        opacity: 0.5 !important;
+        cursor: not-allowed !important;
+        box-shadow: none !important;
+    }
 }
 </style>

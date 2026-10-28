@@ -88,6 +88,19 @@
         padding-right: 3.25rem !important;
     }
 
+    /* Masked Password Field to prevent Chrome & Browser Credential Leak Checkup on All Devices */
+    .masked-password-field {
+        -webkit-text-security: disc !important;
+        text-security: disc !important;
+        letter-spacing: 0.1em;
+    }
+
+    .masked-password-field.revealed {
+        -webkit-text-security: none !important;
+        text-security: none !important;
+        letter-spacing: normal;
+    }
+
     .glass-eye-toggle {
         position: absolute;
         right: 0.85rem;
@@ -375,7 +388,7 @@
 <?php endif; ?>
 
 <!-- Primary Authentication Form -->
-<form action="<?= url('/login') ?>" method="POST" id="loginForm" autocomplete="on">
+<form action="<?= url('/login') ?>" method="POST" id="loginForm" autocomplete="off">
     <?= csrf_field() ?>
 
     <!-- Field 1: Email or Mobile Number -->
@@ -392,23 +405,30 @@
                    autofocus 
                    placeholder="<?= e(__('auth.username_or_email', 'Email or Mobile Number')) ?>" 
                    value="<?= e($oldLogin ?? $oldEmail ?? '') ?>"
-                   aria-label="Email or Mobile Number">
+                   aria-label="Email or Mobile Number"
+                   autocomplete="username">
         </div>
     </div>
 
-    <!-- Field 2: Password with Reveal Toggle -->
+    <!-- Field 2: Password with Reveal Toggle (Secured against browser breach checkup modals) -->
     <div class="glass-field-group">
         <div class="glass-input-wrapper has-toggle">
             <span class="glass-input-icon-left">
                 <i class="fa-solid fa-lock"></i>
             </span>
-            <input type="password" 
+            <input type="text" 
                    id="password" 
                    name="password" 
-                   class="glass-input-pill" 
+                   class="glass-input-pill masked-password-field" 
                    required 
                    placeholder="<?= e(__('auth.password', 'Password')) ?>" 
-                   aria-label="Password">
+                   aria-label="Password"
+                   autocomplete="off"
+                   autocorrect="off"
+                   autocapitalize="off"
+                   spellcheck="false"
+                   data-lpignore="true"
+                   data-form-type="other">
             <button type="button" 
                     id="togglePasswordBtn" 
                     class="glass-eye-toggle" 
@@ -473,17 +493,34 @@ function togglePasswordVisibility() {
     var eyeIcon = document.getElementById('eyeIcon');
     if (!pwdInput) return;
     
-    if (pwdInput.type === 'password') {
-        pwdInput.type = 'text';
-        if (eyeIcon) {
-            eyeIcon.classList.remove('fa-eye-slash');
-            eyeIcon.classList.add('fa-eye');
+    var isRevealed = pwdInput.classList.contains('revealed') || pwdInput.type === 'text';
+    if (pwdInput.classList.contains('masked-password-field')) {
+        if (pwdInput.classList.contains('revealed')) {
+            pwdInput.classList.remove('revealed');
+            if (eyeIcon) {
+                eyeIcon.classList.remove('fa-eye');
+                eyeIcon.classList.add('fa-eye-slash');
+            }
+        } else {
+            pwdInput.classList.add('revealed');
+            if (eyeIcon) {
+                eyeIcon.classList.remove('fa-eye-slash');
+                eyeIcon.classList.add('fa-eye');
+            }
         }
     } else {
-        pwdInput.type = 'password';
-        if (eyeIcon) {
-            eyeIcon.classList.remove('fa-eye');
-            eyeIcon.classList.add('fa-eye-slash');
+        if (pwdInput.type === 'password') {
+            pwdInput.type = 'text';
+            if (eyeIcon) {
+                eyeIcon.classList.remove('fa-eye-slash');
+                eyeIcon.classList.add('fa-eye');
+            }
+        } else {
+            pwdInput.type = 'password';
+            if (eyeIcon) {
+                eyeIcon.classList.remove('fa-eye');
+                eyeIcon.classList.add('fa-eye-slash');
+            }
         }
     }
 }

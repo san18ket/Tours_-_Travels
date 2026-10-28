@@ -48,10 +48,16 @@ $invoiceActions = '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-item
                     <div>
                         <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--vg-text-muted);">Reservation Associated</div>
                         <div style="font-size: 1.05rem; font-weight: 700; color: var(--vg-blue-500);">
-                            <a href="<?= url('/office/bookings/' . $invoice['booking_id']) ?>"><?= e($invoice['booking_code']) ?></a>
+                            <?php if (!empty($invoice['booking_id']) && !empty($invoice['booking_code'])): ?>
+                                <a href="<?= url('/office/bookings/' . $invoice['booking_id']) ?>"><?= e($invoice['booking_code']) ?></a>
+                            <?php else: ?>
+                                <span class="text-muted" style="color:var(--vg-text-muted);">Unlinked Manifest</span>
+                            <?php endif; ?>
                         </div>
                         <div style="font-size: 0.88rem; color: var(--vg-navy-900); font-weight: 600;"><?= e($invoice['tour_title'] ?? 'Custom Fleet Chauffeur Service') ?></div>
+                        <?php if (!empty($invoice['start_date']) && !empty($invoice['end_date'])): ?>
                         <div style="font-size: 0.82rem; color: var(--vg-text-muted);"><?= format_date($invoice['start_date']) ?> to <?= format_date($invoice['end_date']) ?></div>
+                        <?php endif; ?>
                     </div>
                 </div>
 

@@ -13,11 +13,13 @@ $dashLangs = [
     'hi' => ['native' => 'हिन्दी', 'name' => 'Hindi', 'flag' => '🇮🇳'],
     'mr' => ['native' => 'मराठी', 'name' => 'Marathi', 'flag' => '🚩'],
 ];
-$curReturnUrl = $_SERVER['REQUEST_URI'] ?? url('/office/dashboard');
+$homeUrl = (auth_role() === 'driver') ? url('/driver/dashboard') : url('/office/dashboard');
+$profileUrl = (auth_role() === 'driver') ? url('/driver/profile') : url('/office/users');
+$curReturnUrl = $_SERVER['REQUEST_URI'] ?? $homeUrl;
 ?>
 <!-- Mobile Top Navbar (Matches Dashboard Home Page on Responsive Devices) -->
 <header class="mv-dash-topbar" id="mvDashTopbar">
-    <a href="<?= url('/office/dashboard') ?>" class="mv-dash-logo" title="MANASWI <?= e(__('app.tours_travels', 'Tours & Travels')) ?> - <?= e(__('sidebar.dashboard', 'Home')) ?>">
+    <a href="<?= $homeUrl ?>" class="mv-dash-logo" title="MANASWI <?= e(__('app.tours_travels', 'Tours & Travels')) ?> - <?= e(__('sidebar.dashboard', 'Home')) ?>">
         <img src="<?= asset('images/brand-teal-bus.svg') ?>" class="mv-logo-bus-img" alt="Bus">
         <div class="mv-logo-text">
             <span class="mv-brand-title">MANASWI</span>
@@ -73,7 +75,7 @@ $curReturnUrl = $_SERVER['REQUEST_URI'] ?? url('/office/dashboard');
                     </div>
                 </div>
                 <div class="mv-menu-divider"></div>
-                <a href="<?= url('/office/users') ?>" class="mv-menu-item">
+                <a href="<?= $profileUrl ?>" class="mv-menu-item">
                     <div class="mv-menu-item-icon" style="background: rgba(23, 107, 91, 0.1); color: #176B5B;">
                         <i class="fa-solid fa-user-circle"></i>
                     </div>

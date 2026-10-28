@@ -67,11 +67,13 @@ class InvoiceController extends Controller
         $totalPaid = 0.0;
         $paidCount = 0;
         $unpaidCount = 0;
+        $partialCount = 0;
         foreach ($allInvoices as $inv) {
             $totalInvoiced += (float)($inv['total_amount'] ?? 0);
             $totalPaid += (float)($inv['paid_amount'] ?? 0);
             $st = strtolower($inv['payment_status'] ?? 'unpaid');
             if ($st === 'paid') $paidCount++;
+            elseif ($st === 'partial') $partialCount++;
             else $unpaidCount++;
         }
         $totalOutstanding = max(0.0, $totalInvoiced - $totalPaid);
@@ -85,6 +87,7 @@ class InvoiceController extends Controller
             'totalOutstanding' => $totalOutstanding,
             'paidCount'        => $paidCount,
             'unpaidCount'      => $unpaidCount,
+            'partialCount'     => $partialCount,
             'currentPage'      => $page,
             'totalPages'       => $totalPages,
             'perPage'          => $perPage,

@@ -10,7 +10,8 @@ class Vehicle extends Model
     protected string $table = 'vehicles';
     protected array $fillable = [
         'vehicle_number', 'make_model', 'vehicle_type', 'seating_capacity',
-        'fuel_type', 'status', 'odometer_km', 'registration_expiry', 'insurance_expiry'
+        'fuel_type', 'status', 'odometer_km', 'registration_expiry', 'insurance_expiry',
+        'vehicle_photo', 'rc_document_file', 'document_type'
     ];
 
     public function getAvailable(): array

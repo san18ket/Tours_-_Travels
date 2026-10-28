@@ -37,14 +37,15 @@
         <!-- Luxury Dedicated Driver Navigation Sidebar -->
         <aside class="sidebar" id="sidebar" aria-label="<?= e(__('sidebar.menu')) ?>">
             <div class="sidebar-header">
-                <a href="<?= url('/driver/dashboard') ?>" class="brand-logo" title="VoyageGo Chauffeur Console">
-                    <div class="brand-icon">VG</div>
+                <a href="<?= url('/driver/dashboard') ?>" class="brand-logo" title="MANASWI Tours & Travels - Chauffeur Console">
+                    <img src="<?= asset('images/manaswi-logo.svg') ?>" alt="Manaswi Logo" class="brand-logo-img">
                     <div class="brand-name">
-                        <span class="brand-title">VoyageGo</span>
-                        <span class="brand-subtitle" style="color: var(--vg-gold-400); font-weight: 700; letter-spacing: 0.05em; font-size: 0.7rem;"><?= e(__('driver.portal_subtitle')) ?></span>
+                        <span class="brand-title">MANASWI</span>
+                        <span class="brand-subtitle-main"><?= e(__('app.tours_travels', 'Tours & Travels')) ?></span>
+                        <span class="brand-tagline"><?= e(__('app.safe_journey_tagline', 'Safe Journey • Happy Memories')) ?></span>
                     </div>
                 </a>
-                <button type="button" class="sidebar-close-btn" onclick="closeSidebar()" aria-label="<?= e(__('sidebar.close_navigation')) ?>">&times;</button>
+                <button type="button" class="sidebar-close-btn" onclick="closeSidebar()" aria-label="<?= e(__('sidebar.close_navigation', 'Close Navigation')) ?>">&times;</button>
             </div>
 
             <nav class="sidebar-nav">
@@ -183,10 +184,13 @@
 
         <!-- Main Content Area -->
         <div class="main-wrapper">
-            <!-- Dedicated Driver Navbar -->
+            <!-- Mobile Top Navbar (Matches mobile_dashbord.jpeg in LG Screen Forest Teal theme - across all pages) -->
+            <?php require dirname(__DIR__) . '/components/mobile_topbar.php'; ?>
+
+            <!-- Frosted Glass Topbar (Exact UI like Owner Dashboard) -->
             <header class="topbar">
-                <div class="topbar-left" style="display:flex; align-items:center; gap:0.75rem;">
-                    <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="toggleSidebarCollapse()" aria-label="<?= e(__('btn.toggle_sidebar')) ?>" title="<?= e(__('btn.toggle_sidebar')) ?>">
+                <div class="topbar-left">
+                    <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="toggleSidebarCollapse()" aria-label="<?= e(__('btn.toggle_sidebar', 'Toggle Navigation')) ?>" title="<?= e(__('btn.toggle_sidebar', 'Toggle Navigation')) ?>">
                         <svg class="toggle-icon-sidebar" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <path class="toggle-arrow" d="M15 19l-7-7 7-7"></path>
                         </svg>
@@ -196,58 +200,44 @@
                             <line x1="3" y1="18" x2="21" y2="18"></line>
                         </svg>
                     </button>
-                    <div class="topbar-title" style="font-weight:700; font-size:1.15rem; color: var(--vg-navy-950);">
-                        <?= e($title ?? __('driver.console_title')) ?>
-                    </div>
+
+                    <!-- Omnisearch Bar (Matches Reference Image & Owner Dashboard) -->
+                    <form action="<?= url('/driver/trips') ?>" method="GET" class="topbar-search-form">
+                        <svg class="topbar-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        <input type="text" name="q" class="topbar-search-input" placeholder="<?= e(__('topbar.search_driver_placeholder', 'Search trips, routes, or anything...')) ?>" autocomplete="off">
+                    </form>
                 </div>
 
-                <div class="topbar-actions" style="display:flex; align-items:center; gap:0.75rem;">
-                    <!-- Language Selector Dropdown -->
+                <div class="topbar-actions">
+                    <!-- Change Language Icon Dropdown (Professional Multi-Language Switcher) -->
                     <?php require dirname(__DIR__) . '/components/language_switcher.php'; ?>
 
-                    <!-- Duty Status Indicator & Quick Toggle -->
-                    <?php
-                        $dutyStatus = $driver['duty_status'] ?? 'off_duty';
-                        $dutyBadgeClass = match($dutyStatus) {
-                            'on_duty'   => 'badge-success',
-                            'on_trip'   => 'badge-primary',
-                            'off_duty'  => 'badge-warning',
-                            default     => 'badge-secondary'
-                        };
-                        $dutyLabel = match($dutyStatus) {
-                            'on_duty'   => __('status.on_duty'),
-                            'on_trip'   => __('status.on_trip'),
-                            'off_duty'  => __('status.off_duty'),
-                            default     => ucfirst($dutyStatus)
-                        };
-                    ?>
-                    <span class="badge <?= $dutyBadgeClass ?>" style="padding: 0.4rem 0.75rem; font-size:0.8rem; display:inline-flex; align-items:center; gap:0.4rem;">
-                        <span class="pulse-indicator" style="<?= $dutyStatus === 'off_duty' ? 'animation:none; background:#94A3B8;' : '' ?>"></span>
-                        <?= e($dutyLabel) ?>
-                    </span>
+                    <!-- Fullscreen Toggle Button -->
+                    <button type="button" class="topbar-icon-btn" title="<?= e(__('topbar.fullscreen', 'Toggle Fullscreen')) ?>" aria-label="<?= e(__('topbar.fullscreen', 'Toggle Fullscreen')) ?>" onclick="toggleAppFullscreen()">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                        </svg>
+                    </button>
 
-                    <?php if ($dutyStatus !== 'on_trip'): ?>
-                    <form action="<?= url('/driver/duty/toggle') ?>" method="POST" style="margin:0; display:inline;">
-                        <?= csrf_field() ?>
-                        <button type="submit" class="btn btn-sm <?= $dutyStatus === 'on_duty' ? 'btn-outline' : 'btn-success' ?>" style="font-size:0.75rem; padding:0.35rem 0.65rem;" title="<?= e(__('btn.go_on_duty')) ?>">
-                            <?= e($dutyStatus === 'on_duty' ? __('btn.go_off_duty') : __('btn.go_on_duty')) ?>
-                        </button>
-                    </form>
-                    <?php endif; ?>
-
-                    <!-- Telemetry Live Pulse Indicator -->
-                    <span id="gpsRadarIndicator" class="badge badge-info" style="display:none; font-size:0.75rem;">
-                        <i class="fa-solid fa-satellite-dish fa-spin" style="margin-right:4px;"></i> <?= e(__('status.gps_live')) ?>
-                    </span>
+                    <!-- Notifications Button with Badge 3 (Matches both Reference Image and Owner UI) -->
+                    <a href="<?= url('/driver/dashboard') ?>#notifications" class="topbar-icon-btn" title="<?= e(__('nav.notifications', 'Notifications')) ?>" aria-label="<?= e(__('nav.notifications', 'Notifications')) ?>" style="position: relative; text-decoration: none;">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                        </svg>
+                        <span class="nav-badge-pill" style="position: absolute; top: -4px; right: -4px; background: #ef4444; color: #fff; font-size: 0.65rem; font-weight: 700; min-width: 16px; height: 16px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; padding: 0 4px; box-shadow: 0 0 0 2px #fff;">3</span>
+                    </a>
 
                     <!-- Driver Profile Chip with Dropdown -->
-                    <div class="topbar-user-profile" id="topbarUserProfile" onclick="toggleUserDropdown(event)" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false" aria-label="Driver Profile Menu">
-                        <div class="topbar-avatar" style="background: linear-gradient(135deg, var(--vg-blue-500), var(--vg-navy-800)); color:#FFF;">
-                            <?= strtoupper(substr($user['name'] ?? 'D', 0, 1)) ?>
+                    <div class="topbar-user-profile" id="topbarUserProfile" onclick="toggleUserDropdown(event)" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false" aria-label="<?= e(__('topbar.view_profile', 'Driver Profile Menu')) ?>">
+                        <div class="topbar-avatar-wrap">
+                            <img src="<?= asset('images/admin_avatar.jpg') ?>" class="topbar-avatar-img" alt="<?= e($user['name'] ?? 'Driver') ?>" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+                            <div class="topbar-avatar" style="display:none;"><?= strtoupper(substr($user['name'] ?? 'D', 0, 1)) ?></div>
                         </div>
                         <div class="topbar-user-meta">
-                            <span class="topbar-user-name"><?= e(explode(' ', $user['name'] ?? 'Driver')[0]) ?></span>
-                            <span class="topbar-user-role"><?= e(__('role.licensed_chauffeur')) ?></span>
+                            <span class="topbar-user-name"><?= e($user['name'] ?? 'Driver') ?></span>
+                            <span class="topbar-user-role"><?= e(__('role.driver', 'Driver')) ?></span>
                         </div>
                         <svg class="topbar-user-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M19 9l-7 7-7-7"></path>
@@ -256,13 +246,14 @@
                         <!-- Driver Profile Dropdown Menu -->
                         <div class="topbar-user-menu" id="topbarUserMenu" role="menu" aria-labelledby="topbarUserProfile" onclick="event.stopPropagation()">
                             <div class="topbar-menu-user-head">
-                                <div class="topbar-avatar" style="width:42px; height:42px; font-size:1.1rem; background: linear-gradient(135deg, var(--vg-blue-500), var(--vg-navy-800)); color:#FFF;">
-                                    <?= strtoupper(substr($user['name'] ?? 'D', 0, 1)) ?>
+                                <div class="topbar-menu-head-avatar">
+                                    <img src="<?= asset('images/admin_avatar.jpg') ?>" alt="<?= e($user['name'] ?? 'Driver') ?>" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+                                    <div class="topbar-avatar" style="display:none;"><?= strtoupper(substr($user['name'] ?? 'D', 0, 1)) ?></div>
                                 </div>
                                 <div class="topbar-menu-head-meta">
                                     <strong class="topbar-menu-name"><?= e($user['name'] ?? 'Driver') ?></strong>
-                                    <span class="topbar-menu-role-pill"><?= e(__('role.licensed_chauffeur')) ?></span>
-                                    <span class="topbar-menu-email"><?= e($user['phone'] ?? $user['username'] ?? 'Chauffeur Console') ?></span>
+                                    <span class="topbar-menu-role-pill"><?= e(__('role.driver', 'Driver')) ?></span>
+                                    <span class="topbar-menu-email"><?= e($user['phone'] ?? $user['email'] ?? $user['username'] ?? 'driver@manaswi.com') ?></span>
                                 </div>
                             </div>
                             <div class="topbar-menu-divider"></div>
@@ -271,21 +262,21 @@
                                     <i class="fa-solid fa-user-circle"></i>
                                 </div>
                                 <div class="topbar-menu-text">
-                                    <span class="topbar-menu-title"><?= e(__('sidebar.my_profile')) ?></span>
-                                    <span class="topbar-menu-sub">Chauffeur details &amp; vehicle</span>
+                                    <span class="topbar-menu-title"><?= e(__('topbar.view_profile', 'View Profile')) ?></span>
+                                    <span class="topbar-menu-sub"><?= e(__('topbar.driver_profile_sub', 'Chauffeur details & vehicle')) ?></span>
                                 </div>
                                 <i class="fa-solid fa-chevron-right topbar-menu-arrow"></i>
                             </a>
                             <div class="topbar-menu-divider"></div>
-                            <form action="<?= url('/logout') ?>" method="POST" data-no-ajax="true" style="margin:0; width:100%;" onsubmit="var b = this.querySelector('button'); if(b){ b.disabled = true; b.style.opacity = '0.7'; var t = b.querySelector('.topbar-menu-title'); if(t) t.textContent = 'Signing out...'; }">
+                            <form action="<?= url('/logout') ?>" method="POST" data-no-ajax="true" style="margin:0; width:100%;" onsubmit="var b = this.querySelector('button'); if(b){ b.disabled = true; b.style.opacity = '0.7'; var t = b.querySelector('.topbar-menu-title'); if(t) t.textContent = '<?= e(__('topbar.sign_out_desc', 'Signing out...')) ?>'; }">
                                 <?= csrf_field() ?>
                                 <button type="submit" class="topbar-menu-item topbar-logout-item" role="menuitem">
                                     <div class="topbar-menu-icon" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">
                                         <i class="fa-solid fa-arrow-right-from-bracket"></i>
                                     </div>
                                     <div class="topbar-menu-text">
-                                        <span class="topbar-menu-title" style="color: #ef4444;"><?= e(__('sidebar.logout')) ?></span>
-                                        <span class="topbar-menu-sub">End driving shift session</span>
+                                        <span class="topbar-menu-title" style="color: #ef4444;"><?= e(__('sidebar.logout', 'Logout')) ?></span>
+                                        <span class="topbar-menu-sub"><?= e(__('topbar.sign_out_driver_desc', 'End driving shift session')) ?></span>
                                     </div>
                                 </button>
                             </form>
@@ -321,36 +312,64 @@
 
                 <?= $content ?>
             </main>
+
+            <!-- Branded Clean Light Footer -->
+            <footer class="app-footer">
+                <div>
+                    &copy; <?= date('Y') ?> <strong>MANASWI <?= e(__('app.tours_travels', 'Tours & Travels')) ?></strong>. <?= e(__('footer.all_rights_reserved', 'All rights reserved.')) ?>
+                </div>
+                <div>
+                    <a href="#privacy"><?= e(__('footer.privacy', 'Privacy Policy')) ?></a>
+                    <a href="#terms"><?= e(__('footer.terms', 'Terms & Conditions')) ?></a>
+                    <a href="#help"><?= e(__('footer.help', 'Help & Support')) ?></a>
+                </div>
+            </footer>
         </div>
     </div>
 
-    <!-- Mobile Adaptive Bottom Navigation (Chauffeur Quick Dock) -->
-    <nav class="bottom-nav" aria-label="Driver Mobile Navigation">
+    <!-- Mobile Adaptive Bottom Navigation (Curved Notch Design matching Owner Dashboard) -->
+    <nav class="bottom-nav notched-bottom-nav" aria-label="<?= e(__('sidebar.driver_mobile_menu', 'Driver Mobile Navigation')) ?>">
+        <div class="notched-nav-bg" aria-hidden="true">
+            <svg viewBox="0 0 375 64" preserveAspectRatio="none">
+                <path d="M 0,0 L 142,0 C 153,0 159,8 165,19 C 172,32 179,35 187.5,35 C 196,35 203,32 210,19 C 216,8 222,0 233,0 L 375,0 L 375,64 L 0,64 Z" fill="#ffffff" />
+            </svg>
+        </div>
+
+        <!-- Center Elevated Notch FAB Button (Positioned at exact 50% mathematical center) -->
+        <button type="button" class="bottom-nav-fab-btn" onclick="toggleSidebar()" aria-label="<?= e(__('sidebar.menu', 'Open Navigation Menu')) ?>" title="<?= e(__('sidebar.menu', 'Open Navigation Menu')) ?>">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="22" height="22">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+        </button>
+
         <div class="bottom-nav-inner">
             <a href="<?= url('/driver/dashboard') ?>" class="bottom-nav-item <?= $isDashboardActive ? 'active' : '' ?>">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                <span><?= e(__('sidebar.dashboard')) ?></span>
+                <svg fill="currentColor" viewBox="0 0 24 24" width="20" height="20"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                <span><?= e(__('sidebar.dashboard', 'Home')) ?></span>
             </a>
             <a href="<?= url('/driver/trips') ?>" class="bottom-nav-item <?= $isTripsActive ? 'active' : '' ?>">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-                <span><?= e(__('nav.my_trips')) ?></span>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <span><?= e(__('sidebar.trips', 'Trips')) ?></span>
             </a>
-            <a href="<?= url('/driver/vehicle') ?>" class="bottom-nav-item <?= $isVehicleActive ? 'active' : '' ?>">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                <span><?= e(__('sidebar.my_vehicle')) ?></span>
-            </a>
+
+            <!-- Center slot spacer (Ensures left 2 items and right 2 items are 100% symmetric) -->
+            <div class="bottom-nav-center-slot" aria-hidden="true"></div>
+
             <a href="<?= url('/driver/location') ?>" class="bottom-nav-item <?= $isLocationActive ? 'active' : '' ?>">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                <span><?= e(__('sidebar.live_location')) ?></span>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <span><?= e(__('sidebar.live_location', 'Tracking')) ?></span>
             </a>
-            <button type="button" class="bottom-nav-item" onclick="toggleSidebar()" style="background:none;border:none;cursor:pointer;">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                <span><?= e(__('sidebar.menu')) ?></span>
-            </button>
+            <a href="<?= url('/driver/dashboard') ?>#notifications" class="bottom-nav-item nav-notif-item">
+                <div style="position: relative; display: inline-flex;">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                    <span class="nav-badge-pill">3</span>
+                </div>
+                <span><?= e(__('nav.notifications', 'Notifications')) ?></span>
+            </a>
         </div>
     </nav>
 
-    <script src="<?= asset('js/app.js') ?>?v=2.2"></script>
+    <script src="<?= asset('js/app.js') ?>?v=3.0"></script>
     <script>
         function toggleUserDropdown(e) {
             if (e) {
@@ -399,6 +418,38 @@
                     if (langBtn) langBtn.setAttribute('aria-expanded', 'false');
                 }
             }
+        });
+
+        function toggleAppFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(function(err) {});
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+
+        // Mobile Topbar Dropdown Toggles (Active Across All Pages)
+        function toggleMvLang(e) {
+            if (e) e.stopPropagation();
+            var pDrop = document.getElementById('mvProfileDropdown');
+            var lDrop = document.getElementById('mvLangDropdown');
+            if (pDrop) pDrop.classList.remove('is-open');
+            if (lDrop) lDrop.classList.toggle('is-open');
+        }
+
+        function toggleMvProfile(e) {
+            if (e) e.stopPropagation();
+            var lDrop = document.getElementById('mvLangDropdown');
+            var pDrop = document.getElementById('mvProfileDropdown');
+            if (lDrop) lDrop.classList.remove('is-open');
+            if (pDrop) pDrop.classList.toggle('is-open');
+        }
+
+        document.addEventListener('click', function(e) {
+            var lDrop = document.getElementById('mvLangDropdown');
+            var pDrop = document.getElementById('mvProfileDropdown');
+            if (lDrop && !lDrop.contains(e.target)) lDrop.classList.remove('is-open');
+            if (pDrop && !pDrop.contains(e.target)) pDrop.classList.remove('is-open');
         });
     </script>
 </body>
