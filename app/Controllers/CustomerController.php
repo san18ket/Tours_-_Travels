@@ -37,16 +37,15 @@ class CustomerController extends Controller
         $totalPages = max(1, (int)ceil($totalCustomers / $perPage));
 
         // Metric summaries
-        $totalActive = $this->customerModel->count("`status` = 'active'");
-        $totalInactive = $this->customerModel->count("`status` = 'inactive'");
-        $totalWithBookings = $this->customerModel->count("EXISTS (SELECT 1 FROM `bookings` WHERE `bookings`.`customer_id` = `customers`.`id`)");
+        $metrics = $this->getCustomerMetrics();
 
         return $this->render('office/customers/index', [
             'customers'          => $customers,
             'totalCustomers'     => $totalCustomers,
-            'totalActive'        => $totalActive,
-            'totalInactive'      => $totalInactive,
-            'totalWithBookings'  => $totalWithBookings,
+            'totalAll'           => $metrics['total'],
+            'totalActive'        => $metrics['active'],
+            'totalInactive'      => $metrics['inactive'],
+            'totalWithBookings'  => $metrics['with_bookings'],
             'currentPage'        => $page,
             'totalPages'         => $totalPages,
             'perPage'            => $perPage,
@@ -90,6 +89,7 @@ class CustomerController extends Controller
 
             // 1. Server-side validation
             $rules = [
+                'title'  => 'required|in:Mr,Mrs,Ms,Dr,Prof',
                 'name'   => 'required|min:2|max:150',
                 'phone'  => 'required|min:8|max:25',
                 'status' => 'required|in:active,inactive',
@@ -392,6 +392,200 @@ class CustomerController extends Controller
             Logger::error('Customer update error: ' . $e->getMessage());
             Session::setFlash('error', 'Failed to update customer profile.');
             return $this->redirect(url('/office/customers/' . $id . '/edit'));
+        }
+    }
+
+    /**
+     * Delete customer profile and all related physical assets & data
+     */
+    public function delete(Request $request, array|int|string $params): Response
+    {
+        $id = is_array($params) ? (int)($params['id'] ?? 0) : (int)$params;
+        $customer = $this->customerModel->find($id);
+
+        if (!$customer) {
+            if ($request->isAjax()) {
+                return $this->json(['success' => false, 'message' => 'Customer profile not found.'], 404);
+            }
+            Session::setFlash('error', 'Customer profile not found.');
+            return $this->redirect(url('/office/customers'));
+        }
+
+        try {
+            // 1. Physically delete customer image (profile photo / avatar) and identity documents
+            $this->deleteCustomerAssociatedFiles($customer);
+
+            // 2. Dissociate and clean any linked booking manifests and invoice ledgers
+            $pdo = \App\Core\Database::getConnection();
+            $pdo->prepare("UPDATE `bookings` SET `customer_profile_id` = NULL WHERE `customer_profile_id` = ?")->execute([$id]);
+            $pdo->prepare("UPDATE `invoices` SET `customer_profile_id` = NULL WHERE `customer_profile_id` = ?")->execute([$id]);
+
+            // 3. If customer has a linked user login account, clean orphan references and delete account
+            if (!empty($customer['user_id'])) {
+                $userId = (int)$customer['user_id'];
+                $pdo->prepare("UPDATE `bookings` SET `customer_id` = NULL WHERE `customer_id` = ?")->execute([$userId]);
+                $pdo->prepare("UPDATE `invoices` SET `customer_id` = NULL WHERE `customer_id` = ?")->execute([$userId]);
+                $pdo->prepare("DELETE FROM `users` WHERE `id` = ? AND `role` = 'customer'")->execute([$userId]);
+            }
+
+            // 4. Delete the primary customer database record
+            $this->customerModel->delete($id);
+
+            // 5. Audit Logging
+            $this->auditLog->record(
+                'customer_deleted',
+                'customers',
+                $id,
+                [
+                    'customer_code'     => $customer['customer_code'] ?? null,
+                    'name'              => $customer['name'] ?? null,
+                    'profile_photo'     => $customer['profile_photo'] ?? null,
+                    'id_document_file'  => $customer['id_document_file'] ?? null,
+                    'user_id'           => $customer['user_id'] ?? null,
+                    'deleted_by'        => Session::getUserId(),
+                ],
+                null
+            );
+
+            $msg = "Customer '" . ($customer['name'] ?? 'Record') . "' and all related assets deleted successfully.";
+            Session::setFlash('success', $msg);
+
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success'  => true,
+                    'message'  => $msg,
+                    'redirect' => url('/office/customers')
+                ]);
+            }
+
+            return $this->redirect(url('/office/customers'));
+        } catch (Throwable $e) {
+            Logger::error('Customer delete error: ' . $e->getMessage(), [
+                'customer_id' => $id,
+                'file'        => $e->getFile(),
+                'line'        => $e->getLine(),
+            ]);
+            $errMsg = 'Failed to delete customer profile. Please try again.';
+            if ($request->isAjax()) {
+                return $this->json(['success' => false, 'message' => $errMsg], 500);
+            }
+            Session::setFlash('error', $errMsg);
+            return $this->redirect(url('/office/customers'));
+        }
+    }
+
+    /**
+     * Toggle customer active / inactive status
+     */
+    public function toggleStatus(Request $request, array|int|string $params): Response
+    {
+        $id = is_array($params) ? (int)($params['id'] ?? 0) : (int)$params;
+        $customer = $this->customerModel->find($id);
+
+        if (!$customer) {
+            if ($request->isAjax()) {
+                return $this->json(['success' => false, 'message' => 'Customer profile not found.'], 404);
+            }
+            Session::setFlash('error', 'Customer profile not found.');
+            return $this->redirect(url('/office/customers'));
+        }
+
+        try {
+            $inputStatus = (string)($request->input('status') ?? '');
+            $desiredStatus = in_array($inputStatus, ['active', 'inactive'], true) ? $inputStatus : null;
+
+            $newStatus = $this->customerModel->toggleStatus($id, $desiredStatus);
+
+            $this->auditLog->record(
+                'customer_status_toggled',
+                'customers',
+                $id,
+                ['old_status' => $customer['status']],
+                ['new_status' => $newStatus, 'updated_by' => Session::getUserId()]
+            );
+
+            $actionWord = ($newStatus === 'active') ? 'activated' : 'deactivated';
+            $msg = "Customer '{$customer['name']}' has been {$actionWord} successfully.";
+            Session::setFlash('success', $msg);
+
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success'    => true,
+                    'status'     => $newStatus,
+                    'is_active'  => ($newStatus === 'active'),
+                    'label'      => ucfirst($newStatus),
+                    'message'    => $msg,
+                    'metrics'    => $this->getCustomerMetrics(),
+                ]);
+            }
+
+            $referer = $_SERVER['HTTP_REFERER'] ?? url('/office/customers');
+            return $this->redirect($referer);
+
+        } catch (Throwable $e) {
+            Logger::error('Customer status toggle error: ' . $e->getMessage(), ['customer_id' => $id]);
+            $errMsg = 'Failed to update customer status: ' . $e->getMessage();
+            if ($request->isAjax()) {
+                return $this->json(['success' => false, 'message' => $errMsg], 500);
+            }
+            Session::setFlash('error', $errMsg);
+            return $this->redirect(url('/office/customers/' . $id));
+        }
+    }
+
+    /**
+     * Get aggregate KPI customer metrics for top cards and mobile pills
+     */
+    private function getCustomerMetrics(): array
+    {
+        return [
+            'total'         => $this->customerModel->count(),
+            'active'        => $this->customerModel->count("`status` = 'active'"),
+            'inactive'      => $this->customerModel->count("`status` = 'inactive'"),
+            'with_bookings' => $this->customerModel->count("EXISTS (SELECT 1 FROM `bookings` b WHERE b.customer_profile_id = `customers`.`id` OR (b.customer_profile_id IS NULL AND b.customer_id = `customers`.`user_id`))"),
+        ];
+    }
+
+    /**
+
+     * Delete physical files (profile pictures, scans, document attachments) from disk
+     */
+    private function deleteCustomerAssociatedFiles(array $customer): void
+    {
+        $projectRoot = dirname(__DIR__, 2);
+        $fileKeys = ['profile_photo', 'avatar', 'id_document_file'];
+
+        foreach ($fileKeys as $key) {
+            $pathVal = $customer[$key] ?? null;
+            if (empty($pathVal) || !is_string($pathVal)) {
+                continue;
+            }
+
+            $cleaned = str_replace('\\', '/', $pathVal);
+            $cleaned = preg_replace('#^(\.\./|/)+#', '', $cleaned);
+            $cleaned = preg_replace('#^(assets/uploads/|storage/private_uploads/|storage/|public/storage/|public/assets/uploads/)#', '', $cleaned);
+
+            $candidateLocations = [
+                $projectRoot . '/storage/private_uploads/' . $cleaned,
+                $projectRoot . '/public/assets/uploads/' . $cleaned,
+                $projectRoot . '/public/storage/' . $cleaned,
+                $projectRoot . '/storage/uploads/' . $cleaned,
+                $projectRoot . '/public/' . ltrim($cleaned, '/'),
+            ];
+
+            if (file_exists($pathVal) && is_file($pathVal)) {
+                $candidateLocations[] = $pathVal;
+            }
+
+            foreach ($candidateLocations as $filePath) {
+                if (!empty($filePath) && file_exists($filePath) && is_file($filePath)) {
+                    try {
+                        @unlink($filePath);
+                    } catch (\Throwable $e) {
+                        Logger::warning("Could not unlink customer file [{$filePath}]: " . $e->getMessage());
+                    }
+                }
+            }
         }
     }
 

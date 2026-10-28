@@ -24,11 +24,32 @@ class User extends Model
     public function findByUsernameOrEmail(string $identifier): ?array
     {
         $identifier = trim($identifier);
-        $sql = "SELECT * FROM `users` WHERE `username` = ? OR `email` = ? LIMIT 1";
+        if ($identifier === '') {
+            return null;
+        }
+
+        // 1. Direct match on username or email or exact phone
+        $sql = "SELECT * FROM `users` WHERE `username` = ? OR `email` = ? OR `phone` = ? LIMIT 1";
         $stmt = $this->getPdo()->prepare($sql);
-        $stmt->execute([$identifier, $identifier]);
+        $stmt->execute([$identifier, $identifier, $identifier]);
         $res = $stmt->fetch();
-        return $res ?: null;
+        if ($res) {
+            return $res;
+        }
+
+        // 2. Match normalized phone (digits only)
+        $cleanPhone = preg_replace('/[^\d]/', '', $identifier);
+        if (strlen($cleanPhone) >= 7) {
+            $sqlPhone = "SELECT * FROM `users` WHERE REPLACE(REPLACE(REPLACE(`phone`, ' ', ''), '+', ''), '-', '') LIKE ? LIMIT 1";
+            $stmtPhone = $this->getPdo()->prepare($sqlPhone);
+            $stmtPhone->execute(['%' . $cleanPhone]);
+            $resPhone = $stmtPhone->fetch();
+            if ($resPhone) {
+                return $resPhone;
+            }
+        }
+
+        return null;
     }
 
     public function getDrivers(): array

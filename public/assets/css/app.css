@@ -7843,7 +7843,41 @@ h4, h5, h6 {
    MODERN LUXURY FLOATING TOAST / MESSAGE SYSTEM
    Matches reference image msg.jpeg: Frosted glassmorphism, concentric halo
    icon, curved side accent pill, and 3-second auto-dismiss with hover pause.
-   ========================================================================== */
+/* Top Progress Bar & Button Spinners */
+#vg-top-progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    background: #0284c7;
+    z-index: 999999999;
+    opacity: 0;
+    width: 0;
+    transition: width 0.2s ease-out, opacity 0.2s ease;
+}
+.vg-btn-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+}
+.is-loading {
+    pointer-events: none;
+    opacity: 0.75;
+}
+.vg-page-fading {
+    opacity: 0.7;
+    transition: opacity 0.15s ease;
+}
+.vg-toast-container {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 99999999;
+}
+.vg-toast {
+    position: relative;
+}
 
 .vg-floating-container {
     position: fixed;

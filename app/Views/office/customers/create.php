@@ -7,19 +7,22 @@
 
 <div class="modern-form-wrapper">
 
-    <!-- Top Header: Back Button, Title, Subtitle, and 4-Step Stepper -->
-    <div class="modern-form-header-bar">
-        <div class="modern-header-left">
-            <a href="<?= url('/office/customers') ?>" class="modern-back-btn" title="<?= e(__('customer_form.back_to_customers', [], 'Back to Customers')) ?>" aria-label="Back">
-                <i class="fa-solid fa-arrow-left"></i>
+    <!-- Top Action Breadcrumbs & Direct Admin Panel Navigation -->
+    <div class="customer-create-top-bar">
+        <div class="create-topbar-left">
+            <a href="<?= url('/office/customers') ?>" class="create-topbar-back-btn" title="Back to Customer Directory">
+                <i class="fa-solid fa-arrow-left"></i> <span>Customer Directory</span>
             </a>
-            <div class="modern-header-meta">
-                <h1 class="modern-form-title"><?= e(__('customer_form.register_title', [], 'Register Customer Profile')) ?></h1>
-                <p class="modern-form-subtitle"><?= e(__('customer_form.register_subtitle', [], 'Create a verified guest profile for reservations.')) ?></p>
-            </div>
         </div>
+        <div class="create-topbar-right">
+            <a href="<?= url('/office/dashboard') ?>" class="create-topbar-admin-btn" title="Open Admin Panel">
+                <i class="fa-solid fa-gauge-high"></i> <span>Admin Panel</span>
+            </a>
+        </div>
+    </div>
 
-        <!-- 4-Step Stepper Track -->
+    <!-- Centered Professional Stepper Header -->
+    <div class="modern-stepper-header-centered">
         <div class="modern-stepper-container">
             <div class="modern-stepper-track">
                 <!-- Step 1 -->
@@ -137,12 +140,12 @@
                     <!-- Honorific Salutation (Positioned before Full Name) -->
                     <div class="modern-form-group salutation-group">
                         <label class="modern-form-label" for="title">
-                            <?= e(__('customer_form.salutation', [], 'Honorific Salutation')) ?>
+                            <?= e(__('customer_form.salutation', [], 'Honorific Salutation')) ?> <span class="req">*</span>
                         </label>
                         <div class="modern-input-wrapper">
                             <span class="modern-input-icon"><i class="fa-solid fa-signature"></i></span>
-                            <select id="title" name="title" class="modern-select-pill">
-                                <option value="" <?= empty($old['title']) ? 'selected' : '' ?>><?= e(__('customer_form.salutation_none', [], 'Select')) ?></option>
+                            <select id="title" name="title" class="modern-select-pill" required>
+                                <option value="" <?= empty($old['title']) ? 'selected' : '' ?> disabled><?= e(__('customer_form.salutation_none', [], 'Select *')) ?></option>
                                 <option value="Mr" <?= ($old['title'] ?? '') === 'Mr' ? 'selected' : '' ?>><?= e(__('customer_form.title_mr', [], 'Mr.')) ?></option>
                                 <option value="Mrs" <?= ($old['title'] ?? '') === 'Mrs' ? 'selected' : '' ?>><?= e(__('customer_form.title_mrs', [], 'Mrs.')) ?></option>
                                 <option value="Ms" <?= ($old['title'] ?? '') === 'Ms' ? 'selected' : '' ?>><?= e(__('customer_form.title_ms', [], 'Ms.')) ?></option>
@@ -150,6 +153,9 @@
                                 <option value="Prof" <?= ($old['title'] ?? '') === 'Prof' ? 'selected' : '' ?>><?= e(__('customer_form.title_prof', [], 'Prof.')) ?></option>
                             </select>
                         </div>
+                        <?php if (!empty($errors['title'])): ?>
+                            <div class="modern-field-error"><i class="fa-solid fa-circle-exclamation"></i> <?= e($errors['title'][0]) ?></div>
+                        <?php endif; ?>
                     </div>
 
                     <!-- Full Name -->
@@ -447,11 +453,12 @@
                         <!-- Populated / Preview State Inside Dropzone -->
                         <div id="dropzonePreviewState" style="display: none;">
                             <div class="doc-preview-wrapper" onclick="event.stopPropagation()">
-                                <div class="doc-preview-thumb-box">
+                                <div class="doc-preview-thumb-box" onclick="openDocPreviewModal()" style="cursor: pointer;" title="Click to view full preview">
                                     <img id="docPreviewImage" src="" alt="Document preview" style="display: none; width: 100%; height: 100%; object-fit: cover; border-radius: 10px;">
                                     <div id="docPreviewPdfIcon" style="display: none; font-size: 2.2rem; color: #EF4444;">
                                         <i class="fa-solid fa-file-pdf"></i>
                                     </div>
+                                    <div class="doc-thumb-hover-overlay"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
                                 </div>
                                 <div class="doc-preview-meta">
                                     <div class="doc-preview-name" id="docPreviewName">document_scan.jpg</div>
@@ -461,6 +468,9 @@
                                     </div>
                                 </div>
                                 <div class="doc-preview-actions">
+                                    <button type="button" class="btn btn-sm btn-doc-view-preview" onclick="openDocPreviewModal()">
+                                        <i class="fa-solid fa-eye"></i> Preview
+                                    </button>
                                     <button type="button" class="btn btn-sm" style="background: #E8F4F0; color: #176B5B; border: 1px solid #B2D8CF; font-weight: 700; border-radius: 8px; padding: 0.35rem 0.85rem;" onclick="document.getElementById('id_document_file').click()">
                                         <i class="fa-solid fa-arrows-rotate"></i> Change
                                     </button>
@@ -555,10 +565,6 @@
                                     <span class="review-value font-bold" id="sumCardName">—</span>
                                 </div>
                                 <div class="review-info-row">
-                                    <span class="review-label">Salutation</span>
-                                    <span class="review-value" id="sumCardSalutation">—</span>
-                                </div>
-                                <div class="review-info-row">
                                     <span class="review-label">Date of Birth &amp; Age</span>
                                     <span class="review-value" id="sumCardDob">—</span>
                                 </div>
@@ -647,11 +653,11 @@
                                     <span class="review-label">Document Expiry</span>
                                     <span class="review-value" id="sumCardDocExpiry">Lifetime / No Expiry</span>
                                 </div>
-                                <div class="review-info-row">
-                                    <span class="review-label">Attached Scan</span>
-                                    <span class="review-value" id="sumCardDocFile">
-                                        <span class="review-doc-badge empty"><i class="fa-solid fa-circle-xmark"></i> Not attached</span>
-                                    </span>
+                                <div class="review-info-row review-doc-row" style="flex-direction: column; align-items: stretch; gap: 0.45rem;">
+                                    <span class="review-label">Attached Document Preview</span>
+                                    <div id="sumCardDocFile" style="width: 100%;">
+                                        <span class="review-doc-badge empty"><i class="fa-solid fa-circle-xmark"></i> Not attached (Optional)</span>
+                                    </div>
                                 </div>
                                 <div class="review-info-row">
                                     <span class="review-label">Internal Notes</span>
@@ -673,13 +679,49 @@
                         <i class="fa-solid fa-arrow-left"></i> Previous
                     </button>
                     <button type="submit" class="modern-btn-submit" id="btnSubmitCustomer">
-                        <i class="fa-solid fa-check"></i> Create Customer Profile
+                        <i class="fa-solid fa-check"></i> <span id="btnSubmitCustomerText">Create Customer Profile</span>
                     </button>
                 </div>
             </div>
         </div>
 
     </form>
+
+    <!-- Professional Document Lightbox Preview Modal -->
+    <div id="docPreviewModal" class="doc-lightbox-backdrop" style="display: none;" onclick="closeDocPreviewModal(event)">
+        <div class="doc-lightbox-container" onclick="event.stopPropagation()">
+            <div class="doc-lightbox-header">
+                <div class="doc-lightbox-title-box">
+                    <i class="fa-solid fa-file-shield doc-lightbox-icon"></i>
+                    <div>
+                        <h3 class="doc-lightbox-title" id="docLightboxTitle">Document Preview</h3>
+                        <p class="doc-lightbox-subtitle" id="docLightboxSubtitle">Identity Verification Attachment</p>
+                    </div>
+                </div>
+                <div class="doc-lightbox-actions">
+                    <a id="docLightboxDownloadBtn" href="#" download class="doc-lightbox-btn-action" title="Download Document">
+                        <i class="fa-solid fa-download"></i>
+                    </a>
+                    <button type="button" class="doc-lightbox-close" onclick="closeDocPreviewModal()" aria-label="Close Preview">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="doc-lightbox-body" id="docLightboxBody">
+                <img id="docLightboxImg" src="" alt="Full document preview" style="display: none; max-width: 100%; max-height: 72vh; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); object-fit: contain;">
+                <div id="docLightboxPdf" style="display: none; width: 100%; min-height: 280px; flex-direction: column; align-items: center; justify-content: center; background: #FFFFFF; border-radius: 12px; border: 1.5px dashed #CBD5E1; padding: 2.5rem 1.5rem; text-align: center;">
+                    <i class="fa-solid fa-file-pdf" style="font-size: 3.5rem; color: #EF4444; margin-bottom: 1rem;"></i>
+                    <h4 style="font-size: 1.15rem; font-weight: 700; color: #0C2B52; margin-bottom: 0.35rem;" id="docLightboxPdfName">document.pdf</h4>
+                    <p style="color: #64748B; font-size: 0.88rem; margin-bottom: 1.25rem;">PDF Document attached and verified for official profile verification.</p>
+                    <div style="display: flex; gap: 0.75rem; justify-content: center;">
+                        <a id="docLightboxPdfOpenBtn" href="#" target="_blank" class="btn" style="background: #176B5B; color: #FFFFFF; font-weight: 700; border-radius: 8px; padding: 0.55rem 1.25rem; display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Open in New Tab
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -688,6 +730,7 @@ let currentStep = 1;
 const totalSteps = 4;
 let avatarDataUrl = null;
 let uploadedDocumentMeta = null;
+let uploadedDocumentDataUrl = null;
 
 function updateStepperUI(activeStep) {
     currentStep = activeStep;
@@ -900,7 +943,8 @@ function populateSummaryDossier() {
     // 1. Gather all inputs
     const title = document.getElementById('title')?.value || '';
     const rawName = document.getElementById('name')?.value || '';
-    const fullName = title ? (title + '. ' + rawName) : (rawName || '—');
+    const titlePrefix = title ? (title.endsWith('.') ? title : title + '.') : '';
+    const fullName = (titlePrefix ? (titlePrefix + ' ' + rawName) : rawName) || '—';
     const email = document.getElementById('email')?.value || '—';
     const phone = document.getElementById('phone')?.value || '—';
     const altPhone = document.getElementById('alternate_phone')?.value || '—';
@@ -963,13 +1007,11 @@ function populateSummaryDossier() {
 
     // Card 1: Personal Identity
     const sumCardName = document.getElementById('sumCardName');
-    const sumCardSalutation = document.getElementById('sumCardSalutation');
     const sumCardDob = document.getElementById('sumCardDob');
     const sumCardGender = document.getElementById('sumCardGender');
     const sumCardNationality = document.getElementById('sumCardNationality');
 
     if (sumCardName) sumCardName.textContent = fullName;
-    if (sumCardSalutation) sumCardSalutation.textContent = title ? (title + '.') : 'None';
     if (sumCardDob) sumCardDob.textContent = dobWithAge;
     if (sumCardGender) sumCardGender.textContent = gender;
     if (sumCardNationality) sumCardNationality.textContent = nationality;
@@ -1009,17 +1051,30 @@ function populateSummaryDossier() {
     if (sumCardNotes) sumCardNotes.textContent = notes;
 
     if (sumCardDocFile) {
-        if (uploadedDocumentMeta) {
+        if (uploadedDocumentMeta && (uploadedDocumentDataUrl || uploadedDocumentMeta.name)) {
+            const isImg = uploadedDocumentMeta.type && uploadedDocumentMeta.type.startsWith('image/');
             sumCardDocFile.innerHTML = `
-                <span class="review-doc-badge attached">
-                    <i class="fa-solid fa-file-circle-check"></i>
-                    <strong>${uploadedDocumentMeta.name}</strong> (${uploadedDocumentMeta.size})
-                </span>
+                <div class="step4-doc-preview-card">
+                    <div class="step4-doc-thumb-wrap" onclick="openDocPreviewModal()" title="Click to view full preview">
+                        ${isImg && uploadedDocumentDataUrl
+                            ? `<img src="${uploadedDocumentDataUrl}" alt="Document scan" class="step4-doc-thumb-img">`
+                            : `<div class="step4-doc-pdf-icon"><i class="fa-solid fa-file-pdf"></i></div>`
+                        }
+                        <div class="step4-doc-thumb-overlay"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
+                    </div>
+                    <div class="step4-doc-details">
+                        <div class="step4-doc-filename" title="${uploadedDocumentMeta.name}">${uploadedDocumentMeta.name}</div>
+                        <div class="step4-doc-sub">${uploadedDocumentMeta.size} • <span style="color: #059669; font-weight: 700;"><i class="fa-solid fa-circle-check"></i> Attached &amp; Ready</span></div>
+                        <button type="button" class="btn-step4-preview" onclick="openDocPreviewModal()">
+                            <i class="fa-solid fa-eye"></i> Preview Document
+                        </button>
+                    </div>
+                </div>
             `;
         } else {
             sumCardDocFile.innerHTML = `
                 <span class="review-doc-badge empty">
-                    <i class="fa-solid fa-circle-xmark"></i> Not attached (optional)
+                    <i class="fa-solid fa-circle-info"></i> Not attached (Optional)
                 </span>
             `;
         }
@@ -1120,9 +1175,10 @@ function handleDocumentFileChange(input) {
     if (nameEl) nameEl.textContent = file.name;
     if (sizeEl) sizeEl.textContent = sizeStr;
 
-    // Read file as Base64 for guaranteed submission
+    // Read file as Base64 for guaranteed submission & instant preview
     const reader = new FileReader();
     reader.onload = function(e) {
+        uploadedDocumentDataUrl = e.target.result;
         const b64Input = document.getElementById('id_document_file_base64');
         if (b64Input) b64Input.value = e.target.result;
         const nameInput = document.getElementById('id_document_file_name');
@@ -1153,6 +1209,7 @@ function clearDocumentUpload() {
     const nameInput = document.getElementById('id_document_file_name');
     if (nameInput) nameInput.value = '';
     uploadedDocumentMeta = null;
+    uploadedDocumentDataUrl = null;
 
     const emptyState = document.getElementById('dropzoneEmptyState');
     const previewState = document.getElementById('dropzonePreviewState');
@@ -1162,6 +1219,65 @@ function clearDocumentUpload() {
     if (emptyState) emptyState.style.display = 'block';
     if (previewState) previewState.style.display = 'none';
 }
+
+function openDocPreviewModal() {
+    if (!uploadedDocumentDataUrl && !uploadedDocumentMeta) {
+        if (typeof window.vgNotify === 'function') {
+            window.vgNotify('No document uploaded to preview', 'info');
+        }
+        return;
+    }
+    const modal = document.getElementById('docPreviewModal');
+    const imgEl = document.getElementById('docLightboxImg');
+    const pdfEl = document.getElementById('docLightboxPdf');
+    const titleEl = document.getElementById('docLightboxTitle');
+    const subEl = document.getElementById('docLightboxSubtitle');
+    const dlBtn = document.getElementById('docLightboxDownloadBtn');
+    const pdfOpenBtn = document.getElementById('docLightboxPdfOpenBtn');
+    const pdfNameEl = document.getElementById('docLightboxPdfName');
+
+    const fileName = uploadedDocumentMeta ? uploadedDocumentMeta.name : 'document_preview';
+    const fileSize = uploadedDocumentMeta ? uploadedDocumentMeta.size : '';
+    const fileType = uploadedDocumentMeta ? uploadedDocumentMeta.type : '';
+
+    if (titleEl) titleEl.textContent = fileName;
+    if (subEl) subEl.textContent = (fileSize ? fileSize + ' • ' : '') + 'Verified Identity Attachment';
+    if (dlBtn) {
+        dlBtn.href = uploadedDocumentDataUrl || '#';
+        dlBtn.download = fileName;
+    }
+
+    if (fileType && fileType.startsWith('image/')) {
+        if (imgEl) {
+            imgEl.src = uploadedDocumentDataUrl;
+            imgEl.style.display = 'block';
+        }
+        if (pdfEl) pdfEl.style.display = 'none';
+    } else {
+        if (imgEl) imgEl.style.display = 'none';
+        if (pdfEl) pdfEl.style.display = 'flex';
+        if (pdfNameEl) pdfNameEl.textContent = fileName;
+        if (pdfOpenBtn) pdfOpenBtn.href = uploadedDocumentDataUrl || '#';
+    }
+
+    if (modal) modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeDocPreviewModal(e) {
+    if (e && e.target && e.target !== e.currentTarget && !e.target.closest('.doc-lightbox-close')) {
+        return;
+    }
+    const modal = document.getElementById('docPreviewModal');
+    if (modal) modal.style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeDocPreviewModal();
+    }
+});
 
 // Drag & drop event registration and initializers
 document.addEventListener('DOMContentLoaded', function() {
@@ -1233,10 +1349,81 @@ document.addEventListener('DOMContentLoaded', function() {
     if (initialDocType) {
         onDocumentTypeChange(initialDocType.value);
     }
+
+    // Customer form submission feedback
+    const custForm = document.getElementById('createCustomerForm');
+    const submitBtn = document.getElementById('btnSubmitCustomer');
+    if (custForm && submitBtn) {
+        custForm.addEventListener('submit', function() {
+            submitBtn.style.pointerEvents = 'none';
+            submitBtn.style.opacity = '0.85';
+            submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Saving Customer Profile...</span>';
+        });
+    }
 });
 </script>
 
 <style>
+/* Top Utility Bar */
+.customer-create-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    padding: 0 0.5rem;
+}
+.create-topbar-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #FFFFFF;
+    border: 1.5px solid #CBD5E1;
+    color: #475569;
+    padding: 8px 18px;
+    border-radius: 9999px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+.create-topbar-back-btn:hover {
+    background: #F8FAFC;
+    color: #176B5B;
+    border-color: #176B5B;
+    transform: translateX(-2px);
+}
+.create-topbar-admin-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #176B5B 0%, #0F493E 100%);
+    color: #FFFFFF;
+    padding: 8px 18px;
+    border-radius: 9999px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(23, 107, 91, 0.25);
+}
+.create-topbar-admin-btn:hover {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    color: #FFFFFF;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+}
+@media (max-width: 768px) {
+    .customer-create-top-bar {
+        margin-bottom: 0.85rem;
+        gap: 0.5rem;
+    }
+    .create-topbar-back-btn, .create-topbar-admin-btn {
+        padding: 6px 14px;
+        font-size: 0.8rem;
+    }
+}
+
 /* ========================================================================= */
 /* 1. Profile Photo Upload Component (Step 1)                                */
 /* ========================================================================= */
@@ -1761,5 +1948,300 @@ document.addEventListener('DOMContentLoaded', function() {
     background: #F1F5F9;
     color: #94A3B8;
     border: 1px solid #E2E8F0;
+}
+
+/* ========================================================================= */
+/* 5. Centered Stepper Header & Executive Stepper Presentation               */
+/* ========================================================================= */
+.modern-stepper-header-centered {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 2.25rem;
+    padding: 0.25rem 0;
+}
+.modern-stepper-header-centered .modern-stepper-container {
+    background: #FFFFFF;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 60px;
+    padding: 0.85rem 2.5rem;
+    box-shadow: 0 4px 20px rgba(12, 43, 82, 0.05);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+@media (max-width: 768px) {
+    .modern-stepper-header-centered {
+        margin-bottom: 1.5rem;
+    }
+    .modern-stepper-header-centered .modern-stepper-container {
+        border-radius: 20px;
+        padding: 0.75rem 0.85rem;
+        width: 100%;
+        overflow-x: auto;
+    }
+}
+
+/* ========================================================================= */
+/* 6. Professional Document Preview & Lightbox Modal                         */
+/* ========================================================================= */
+.doc-preview-thumb-box {
+    position: relative;
+}
+.doc-thumb-hover-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(12, 43, 82, 0.55);
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    border-radius: 10px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+.doc-preview-thumb-box:hover .doc-thumb-hover-overlay {
+    opacity: 1;
+}
+
+.btn-doc-view-preview {
+    background: #176B5B;
+    color: #FFFFFF;
+    border: none;
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 0.38rem 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.btn-doc-view-preview:hover {
+    background: #125246;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(23, 107, 91, 0.25);
+}
+
+/* Step 4 Review Document Card */
+.step4-doc-preview-card {
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+    background: #F8FAFD;
+    border: 1.5px solid #B2D8CF;
+    border-radius: 12px;
+    padding: 0.85rem 1.15rem;
+    margin-top: 0.35rem;
+    box-shadow: 0 3px 12px rgba(23, 107, 91, 0.06);
+    text-align: left;
+    transition: all 0.2s ease;
+}
+.step4-doc-preview-card:hover {
+    border-color: #176B5B;
+    box-shadow: 0 5px 16px rgba(23, 107, 91, 0.12);
+}
+.step4-doc-thumb-wrap {
+    width: 62px;
+    height: 62px;
+    border-radius: 10px;
+    border: 1.5px solid #CBD5E1;
+    overflow: hidden;
+    background: #FFFFFF;
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.step4-doc-thumb-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.25s ease;
+}
+.step4-doc-thumb-wrap:hover .step4-doc-thumb-img {
+    transform: scale(1.08);
+}
+.step4-doc-pdf-icon {
+    font-size: 2.1rem;
+    color: #EF4444;
+}
+.step4-doc-thumb-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(12, 43, 82, 0.5);
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    border-radius: 8px;
+}
+.step4-doc-thumb-wrap:hover .step4-doc-thumb-overlay {
+    opacity: 1;
+}
+.step4-doc-details {
+    flex: 1;
+    min-width: 0;
+}
+.step4-doc-filename {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #0C2B52;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.step4-doc-sub {
+    font-size: 0.78rem;
+    color: #64748B;
+    margin: 2px 0 6px 0;
+}
+.btn-step4-preview {
+    background: #E8F4F0;
+    color: #176B5B;
+    border: 1px solid #B2D8CF;
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s ease;
+}
+.btn-step4-preview:hover {
+    background: #176B5B;
+    color: #FFFFFF;
+}
+
+/* Lightbox Modal */
+.doc-lightbox-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(12, 43, 82, 0.65);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    animation: docFadeIn 0.2s ease-out;
+}
+@keyframes docFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.doc-lightbox-container {
+    background: #FFFFFF;
+    border-radius: 18px;
+    box-shadow: 0 25px 50px -12px rgba(12, 43, 82, 0.35);
+    max-width: 820px;
+    width: 100%;
+    max-height: 92vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1.5px solid #E2E8F0;
+    animation: docZoomIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes docZoomIn {
+    from { transform: scale(0.92); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+.doc-lightbox-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.15rem 1.5rem;
+    border-bottom: 1.5px solid #F1F5F9;
+    background: #F8FAFD;
+}
+.doc-lightbox-title-box {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+.doc-lightbox-icon {
+    font-size: 1.5rem;
+    color: #176B5B;
+}
+.doc-lightbox-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #0C2B52;
+    margin: 0;
+    max-width: 480px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.doc-lightbox-subtitle {
+    font-size: 0.8rem;
+    color: #64748B;
+    margin: 2px 0 0 0;
+}
+.doc-lightbox-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.doc-lightbox-btn-action {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    color: #176B5B;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    cursor: pointer;
+}
+.doc-lightbox-btn-action:hover {
+    background: #E8F4F0;
+    border-color: #176B5B;
+    color: #176B5B;
+}
+.doc-lightbox-close {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    color: #64748B;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.doc-lightbox-close:hover {
+    background: #FEE2E2;
+    border-color: #FECACA;
+    color: #B91C1C;
+    transform: rotate(90deg);
+}
+.doc-lightbox-body {
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-y: auto;
+    background: #F1F5F9;
+    min-height: 300px;
 }
 </style>
