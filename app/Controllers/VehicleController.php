@@ -456,31 +456,15 @@ class VehicleController extends Controller
                                 $filename = $prefix . bin2hex(random_bytes(16)) . '.' . $ext;
                                 $savedRelPath = trim($subDir, '/') . '/' . $filename;
 
-                                $privDir = $projectRoot . '/storage/private_uploads/' . trim($subDir, '/');
-                                if (!is_dir($privDir)) @mkdir($privDir, 0777, true);
-                                file_put_contents($privDir . '/' . $filename, $binary);
+                                $targetDir = $projectRoot . '/public/storage/' . trim($subDir, '/');
+                                if (!is_dir($targetDir)) @mkdir($targetDir, 0777, true);
+                                file_put_contents($targetDir . '/' . $filename, $binary);
                             }
                         }
                     }
                 }
             } catch (\Throwable $e) {
                 // Ignore fallback failure
-            }
-        }
-
-        // 3. Mirror saved file to public/assets/uploads and public/storage for direct Apache delivery
-        if ($savedRelPath) {
-            $source = $projectRoot . '/storage/private_uploads/' . $savedRelPath;
-            if (file_exists($source)) {
-                $pubUploadsFile = $projectRoot . '/public/assets/uploads/' . $savedRelPath;
-                $pubUploadsDir = dirname($pubUploadsFile);
-                if (!is_dir($pubUploadsDir)) @mkdir($pubUploadsDir, 0777, true);
-                @copy($source, $pubUploadsFile);
-
-                $pubStorageFile = $projectRoot . '/public/storage/' . $savedRelPath;
-                $pubStorageDir = dirname($pubStorageFile);
-                if (!is_dir($pubStorageDir)) @mkdir($pubStorageDir, 0777, true);
-                @copy($source, $pubStorageFile);
             }
         }
 

@@ -37,16 +37,19 @@ $badgeText = is_array($badge ?? null) ? ($badge['text'] ?? '') : ($badge ?? null
 
     <!-- Text details & Actions -->
     <div class="db-hero-left">
-        <?php if (!empty($breadcrumbs)): ?>
+        <?php if (!empty($breadcrumbs)): 
+            $homeUrl = !empty($breadcrumbs[0]['url']) ? $breadcrumbs[0]['url'] : url('/office/dashboard');
+            $homeLabel = !empty($breadcrumbs[0]['label']) ? $breadcrumbs[0]['label'] : __('sidebar.dashboard', 'Dashboard');
+        ?>
         <nav class="travel-header-breadcrumbs" aria-label="Breadcrumb">
-            <a href="<?= url('/office/dashboard') ?>" class="travel-header-breadcrumb-link" title="<?= e(__('sidebar.dashboard', 'Dashboard')) ?>">
+            <a href="<?= e($homeUrl) ?>" class="travel-header-breadcrumb-link" title="<?= e($homeLabel) ?>">
                 <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="vertical-align: -2px; margin-right: 2px;">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                 </svg>
-                <span><?= e(__('sidebar.dashboard', 'Dashboard')) ?></span>
+                <span><?= e($homeLabel) ?></span>
             </a>
             <?php foreach ($breadcrumbs as $i => $crumb): ?>
-                <?php if ($crumb['url'] === url('/office/dashboard') && $i === 0) continue; ?>
+                <?php if ($i === 0) continue; ?>
                 <span class="travel-header-breadcrumb-sep" aria-hidden="true">&rsaquo;</span>
                 <?php if (!empty($crumb['url'])): ?>
                     <a href="<?= e($crumb['url']) ?>" class="travel-header-breadcrumb-link"><?= e($crumb['label']) ?></a>

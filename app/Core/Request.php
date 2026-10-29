@@ -197,9 +197,9 @@ class Request
         $extension = $allowedMimes[$mime];
         $filename = bin2hex(random_bytes(16)) . '.' . $extension;
 
-        $basePrivateDir = Config::get('paths.private_uploads')
-            ?: (Config::get('app.paths.private_uploads') ?: (dirname(__DIR__, 2) . '/storage/private_uploads'));
-        $targetDir = rtrim(str_replace('\\', '/', $basePrivateDir), '/') . '/' . trim($subDirectory, '/');
+        $baseUploadDir = Config::get('paths.uploads')
+            ?: (Config::get('app.paths.uploads') ?: (dirname(__DIR__, 2) . '/public/storage'));
+        $targetDir = rtrim(str_replace('\\', '/', $baseUploadDir), '/') . '/' . trim($subDirectory, '/');
         if (!is_dir($targetDir)) {
             @mkdir($targetDir, 0777, true);
         }

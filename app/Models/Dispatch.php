@@ -358,6 +358,9 @@ class Dispatch extends Model
         $sql = "SELECT d.*, b.booking_code, b.pickup_address, b.drop_address, b.start_date, b.end_date,
                        b.pickup_time, b.passenger_count,
                        COALESCE(c_cust.name, u_cust.name) as customer_name,
+                       COALESCE(c_cust.phone, u_cust.phone) as customer_phone,
+                       COALESCE(c_cust.email, u_cust.email) as customer_email,
+                       c_cust.profile_photo as customer_avatar,
                        v.vehicle_number, v.make_model
                 FROM `dispatches` d
                 JOIN `bookings` b ON d.booking_id = b.id

@@ -32,7 +32,8 @@ return [
         'storage' => dirname(__DIR__) . '/storage',
         'logs' => dirname(__DIR__) . '/storage/logs',
         'backups' => dirname(__DIR__) . '/storage/backups',
-        'private_uploads' => dirname(__DIR__) . '/storage/private_uploads',
+        'uploads' => dirname(__DIR__) . '/public/storage',
+        'private_uploads' => dirname(__DIR__) . '/public/storage',
         'public' => dirname(__DIR__) . '/public',
     ]
 ];

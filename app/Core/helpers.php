@@ -371,11 +371,11 @@ if (!function_exists('render_page_header')) {
     }
 }
 
-if (!function_exists('customer_avatar_url')) {
+if (!function_exists('storage_url')) {
     /**
-     * Resolve public URL for customer profile avatar
+     * Resolve public web URL for uploaded media or document stored in public/storage
      */
-    function customer_avatar_url(?string $path): ?string
+    function storage_url(?string $path): ?string
     {
         if (empty($path)) {
             return null;
@@ -383,58 +383,31 @@ if (!function_exists('customer_avatar_url')) {
         if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://') || str_starts_with($path, 'data:')) {
             return $path;
         }
+
         $clean = ltrim(str_replace('\\', '/', $path), '/');
-        $projectRoot = dirname(__DIR__, 2);
+        $clean = preg_replace('#^(public/storage/|storage/|public/assets/uploads/|assets/uploads/)#', '', $clean);
 
-        if (file_exists($projectRoot . '/public/assets/uploads/' . $clean)) {
-            return asset('uploads/' . $clean);
-        }
-        if (file_exists($projectRoot . '/public/storage/' . $clean)) {
-            return url('/storage/' . $clean);
-        }
-        if (file_exists($projectRoot . '/public/assets/' . $clean)) {
-            return asset($clean);
-        }
-        if (file_exists($projectRoot . '/storage/private_uploads/' . $clean)) {
-            $dest = $projectRoot . '/public/assets/uploads/' . $clean;
-            if (!is_dir(dirname($dest))) @mkdir(dirname($dest), 0777, true);
-            @copy($projectRoot . '/storage/private_uploads/' . $clean, $dest);
-            return asset('uploads/' . $clean);
-        }
+        return url('/storage/' . $clean);
+    }
+}
 
-        return asset('uploads/' . $clean);
+if (!function_exists('customer_avatar_url')) {
+    /**
+     * Resolve public URL for customer or employee profile avatar
+     */
+    function customer_avatar_url(?string $path): ?string
+    {
+        return storage_url($path);
     }
 }
 
 if (!function_exists('customer_document_url')) {
     /**
-     * Resolve public URL for customer verification document
+     * Resolve public URL for customer, employee, or vehicle verification document
      */
     function customer_document_url(?string $path): ?string
     {
-        if (empty($path)) {
-            return null;
-        }
-        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
-            return $path;
-        }
-        $clean = ltrim(str_replace('\\', '/', $path), '/');
-        $projectRoot = dirname(__DIR__, 2);
-
-        if (file_exists($projectRoot . '/public/assets/uploads/' . $clean)) {
-            return asset('uploads/' . $clean);
-        }
-        if (file_exists($projectRoot . '/public/storage/' . $clean)) {
-            return url('/storage/' . $clean);
-        }
-        if (file_exists($projectRoot . '/storage/private_uploads/' . $clean)) {
-            $dest = $projectRoot . '/public/assets/uploads/' . $clean;
-            if (!is_dir(dirname($dest))) @mkdir(dirname($dest), 0777, true);
-            @copy($projectRoot . '/storage/private_uploads/' . $clean, $dest);
-            return asset('uploads/' . $clean);
-        }
-
-        return asset('uploads/' . $clean);
+        return storage_url($path);
     }
 }
 

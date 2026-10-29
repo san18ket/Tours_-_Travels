@@ -32,6 +32,8 @@ desktop.ini
 # User uploads and private documents
 /public/assets/uploads/
 /public/storage/
+/storage/private_uploads/
+/storage/rate_limits/
 
 # Database backups and dumps
 *.sql.bak

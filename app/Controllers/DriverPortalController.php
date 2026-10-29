@@ -115,12 +115,19 @@ class DriverPortalController extends Controller
             $status = trim((string)$request->query('status', ''));
             $date   = trim((string)$request->query('date', ''));
             $page   = max(1, (int)$request->query('page', 1));
-            $perPage = 10;
+            $perPage = max(5, min(100, (int)$request->query('per_page', 10)));
 
             $allowedStatuses = ['assigned', 'driver_accepted', 'en_route_pickup', 'trip_started'];
             if (!empty($status) && !in_array($status, $allowedStatuses, true)) {
                 $status = null;
             }
+
+            // Executive KPI breakdown metrics for driver trips
+            $totalAll      = $this->dispatchModel->countDriverAssignedTrips($driverProfileId, null, null, null);
+            $totalAssigned = $this->dispatchModel->countDriverAssignedTrips($driverProfileId, null, 'assigned', null);
+            $totalAccepted = $this->dispatchModel->countDriverAssignedTrips($driverProfileId, null, 'driver_accepted', null);
+            $totalStarted  = $this->dispatchModel->countDriverAssignedTrips($driverProfileId, null, 'trip_started', null)
+                           + $this->dispatchModel->countDriverAssignedTrips($driverProfileId, null, 'en_route_pickup', null);
 
             $total = $this->dispatchModel->countDriverAssignedTrips($driverProfileId, $search ?: null, $status ?: null, $date ?: null);
             $trips = $this->dispatchModel->getDriverAssignedTrips($driverProfileId, $search ?: null, $status ?: null, $date ?: null, $page, $perPage);
@@ -128,15 +135,20 @@ class DriverPortalController extends Controller
             $totalPages = max(1, (int)ceil($total / $perPage));
 
             return $this->render('driver/trips', [
-                'driver'      => $driver,
-                'trips'       => $trips,
-                'total'       => $total,
-                'page'        => $page,
-                'totalPages'  => $totalPages,
-                'search'      => $search,
-                'status'      => $status,
-                'date'        => $date,
-                'title'       => 'My Assigned Trips',
+                'driver'         => $driver,
+                'trips'          => $trips,
+                'total'          => $total,
+                'totalAll'       => $totalAll,
+                'totalAssigned'  => $totalAssigned,
+                'totalAccepted'  => $totalAccepted,
+                'totalStarted'   => $totalStarted,
+                'page'           => $page,
+                'perPage'        => $perPage,
+                'totalPages'     => $totalPages,
+                'search'         => $search,
+                'status'         => $status,
+                'date'           => $date,
+                'title'          => 'My Assigned Trips',
             ], 'layouts/driver');
         } catch (Throwable $e) {
             Session::setFlash('danger', $e->getMessage());
@@ -259,12 +271,23 @@ class DriverPortalController extends Controller
             $fromDate = trim((string)$request->query('from_date', ''));
             $toDate   = trim((string)$request->query('to_date', ''));
             $page     = max(1, (int)$request->query('page', 1));
-            $perPage  = 10;
+            $perPage  = max(5, min(100, (int)$request->query('per_page', 10)));
 
             // Only allow valid history statuses
             if (!empty($status) && !in_array($status, ['completed', 'cancelled'], true)) {
                 $status = null;
             }
+
+            // Executive KPI breakdown metrics for driver history
+            $totalHistoryAll = $this->dispatchModel->countDriverHistoryScoped($driverProfileId, null, null, null, null);
+            $totalCompleted  = $this->dispatchModel->countDriverHistoryScoped($driverProfileId, null, 'completed', null, null);
+            $totalCancelled  = $this->dispatchModel->countDriverHistoryScoped($driverProfileId, null, 'cancelled', null, null);
+
+            // Total verified distance driven across completed missions
+            $pdo = \App\Core\Database::getConnection();
+            $stmtDist = $pdo->prepare("SELECT COALESCE(SUM(CASE WHEN end_odometer > start_odometer THEN end_odometer - start_odometer ELSE 0 END), 0) FROM `dispatches` WHERE driver_id = ? AND status = 'completed'");
+            $stmtDist->execute([$driverProfileId]);
+            $totalDistanceKm = (int)$stmtDist->fetchColumn();
 
             $total = $this->dispatchModel->countDriverHistoryScoped($driverProfileId, $search ?: null, $status ?: null, $fromDate ?: null, $toDate ?: null);
             $history = $this->dispatchModel->getDriverHistoryPaginatedScoped($driverProfileId, $search ?: null, $status ?: null, $fromDate ?: null, $toDate ?: null, $page, $perPage);
@@ -272,16 +295,21 @@ class DriverPortalController extends Controller
             $totalPages = max(1, (int)ceil($total / $perPage));
 
             return $this->render('driver/history', [
-                'driver'     => $driver,
-                'history'    => $history,
-                'total'      => $total,
-                'page'       => $page,
-                'totalPages' => $totalPages,
-                'search'     => $search,
-                'status'     => $status,
-                'fromDate'   => $fromDate,
-                'toDate'     => $toDate,
-                'title'      => 'Trip History & Archive',
+                'driver'          => $driver,
+                'history'         => $history,
+                'total'           => $total,
+                'totalHistoryAll' => $totalHistoryAll,
+                'totalCompleted'  => $totalCompleted,
+                'totalCancelled'  => $totalCancelled,
+                'totalDistanceKm' => $totalDistanceKm,
+                'page'            => $page,
+                'perPage'         => $perPage,
+                'totalPages'      => $totalPages,
+                'search'          => $search,
+                'status'          => $status,
+                'fromDate'        => $fromDate,
+                'toDate'          => $toDate,
+                'title'           => 'Trip History & Archive',
             ], 'layouts/driver');
         } catch (Throwable $e) {
             Session::setFlash('danger', $e->getMessage());
