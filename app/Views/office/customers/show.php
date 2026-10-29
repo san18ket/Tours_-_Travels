@@ -428,7 +428,7 @@ if ($hasRealBookings) {
                             <div class="view-kv-item">
                                 <span class="view-kv-label">Address</span>
                                 <span class="view-kv-value address-val">
-                                    <i class="fa-solid fa-location-dot" style="color: #2563EB;"></i>
+                                    <i class="fa-solid fa-location-dot" style="color: #176B5B;"></i>
                                     <span><?= e($locationDisplay) ?></span>
                                 </span>
                             </div>
@@ -1099,14 +1099,14 @@ if ($hasRealBookings) {
 <style>
 /* CSS Variables & Tokens for Customer Profile Page */
 :root {
-    --cv-bg-start: #EBF4FC;
+    --cv-bg-start: #E8F7F0;
     --cv-bg-end: #F8FAFC;
     --cv-card-bg: #FFFFFF;
     --cv-card-border: rgba(226, 232, 240, 0.90);
-    --cv-shadow: 0 4px 20px rgba(37, 99, 235, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
-    --cv-shadow-hover: 0 10px 25px rgba(37, 99, 235, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
-    --cv-primary-blue: #2563EB;
-    --cv-primary-dark: #1D4ED8;
+    --cv-shadow: 0 4px 20px rgba(23, 107, 91, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
+    --cv-shadow-hover: 0 10px 25px rgba(23, 107, 91, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
+    --cv-primary-blue: #176B5B;
+    --cv-primary-dark: #16443B;
     --cv-teal: #176B5B;
     --cv-navy-900: #0F172A;
     --cv-slate-800: #1E293B;
@@ -1164,8 +1164,8 @@ if ($hasRealBookings) {
 
 .view-header-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.16);
-    border-color: #BFDBFE;
+    box-shadow: 0 6px 16px rgba(23, 107, 91, 0.16);
+    border-color: rgba(23, 107, 91, 0.25);
     color: var(--cv-primary-dark);
 }
 
@@ -1285,7 +1285,7 @@ if ($hasRealBookings) {
     background: #FFFFFF;
     border-radius: var(--cv-radius-card);
     border: 1px solid var(--cv-card-border);
-    box-shadow: 0 8px 30px -8px rgba(37, 99, 235, 0.08), 0 2px 6px rgba(0, 0, 0, 0.02);
+    box-shadow: 0 8px 30px -8px rgba(23, 107, 91, 0.08), 0 2px 6px rgba(0, 0, 0, 0.02);
     position: relative;
     overflow: hidden;
     padding: 1.5rem;
@@ -1346,7 +1346,7 @@ if ($hasRealBookings) {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+    background: linear-gradient(135deg, #176B5B 0%, #16443B 100%);
     color: #FFFFFF;
     font-size: 2.1rem;
     font-weight: 800;
@@ -1530,14 +1530,14 @@ if ($hasRealBookings) {
 }
 
 .view-hero-code-pill {
-    background: #EFF6FF;
+    background: #E8F7F0;
     color: var(--cv-primary-blue);
     font-family: monospace;
     font-size: 0.74rem;
     font-weight: 700;
     padding: 2px 8px;
     border-radius: 6px;
-    border: 1px solid #BFDBFE;
+    border: 1px solid rgba(23, 107, 91, 0.25);
 }
 
 .status-pulse-dot {
@@ -1666,9 +1666,9 @@ if ($hasRealBookings) {
 }
 
 .hero-qa-pill.qa-call {
-    background: #EFF6FF;
-    color: #1D4ED8;
-    border-color: #BFDBFE;
+    background: #E8F7F0;
+    color: #16443B;
+    border-color: rgba(23, 107, 91, 0.25);
 }
 
 .hero-qa-pill.qa-wa {
@@ -1684,9 +1684,9 @@ if ($hasRealBookings) {
 }
 
 .hero-qa-pill.qa-book {
-    background: #2563EB;
+    background: #176B5B;
     color: #FFFFFF;
-    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+    box-shadow: 0 2px 8px rgba(23, 107, 91, 0.25);
 }
 
 /* 3. KPI Metric Cards Grid (Matching view sm.jpeg) */
@@ -1716,7 +1716,7 @@ if ($hasRealBookings) {
 .view-kpi-card:hover {
     transform: translateY(-2px);
     box-shadow: var(--cv-shadow-hover);
-    border-color: #BFDBFE;
+    border-color: rgba(23, 107, 91, 0.25);
 }
 
 .view-kpi-card:active {
@@ -1742,7 +1742,7 @@ if ($hasRealBookings) {
 }
 
 .kpi-icon-wrap.blue {
-    background: #EFF6FF;
+    background: #E8F7F0;
     color: var(--cv-primary-blue);
 }
 
@@ -1790,7 +1790,7 @@ if ($hasRealBookings) {
     font-size: 0.68rem;
     font-weight: 700;
     color: var(--cv-primary-blue);
-    background: #EFF6FF;
+    background: #E8F7F0;
     padding: 1px 6px;
     border-radius: 6px;
 }
@@ -1860,7 +1860,7 @@ if ($hasRealBookings) {
     background: var(--cv-primary-blue);
     color: #FFFFFF;
     font-weight: 700;
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.32);
+    box-shadow: 0 4px 14px rgba(23, 107, 91, 0.32);
 }
 
 .pill-count {
@@ -1950,7 +1950,7 @@ if ($hasRealBookings) {
 }
 
 .section-icon-badge.blue {
-    background: #EFF6FF;
+    background: #E8F7F0;
     color: var(--cv-primary-blue);
 }
 
@@ -1982,7 +1982,7 @@ if ($hasRealBookings) {
     font-size: 0.82rem;
     font-weight: 700;
     color: var(--cv-primary-blue);
-    background: #EFF6FF;
+    background: #E8F7F0;
     padding: 0.35rem 0.75rem;
     border-radius: 8px;
     text-decoration: none;
@@ -1993,7 +1993,7 @@ if ($hasRealBookings) {
 }
 
 .section-header-link-btn:hover {
-    background: #DBEAFE;
+    background: #D1EFE2;
     color: var(--cv-primary-dark);
 }
 
@@ -2210,12 +2210,12 @@ if ($hasRealBookings) {
 }
 
 .btn-doc-action.preview {
-    background: #EFF6FF;
+    background: #E8F7F0;
     color: var(--cv-primary-blue);
 }
 
 .btn-doc-action.preview:hover {
-    background: #DBEAFE;
+    background: #D1EFE2;
 }
 
 .btn-doc-action.download {
@@ -2251,13 +2251,13 @@ if ($hasRealBookings) {
 
 /* 8. Recent Bookings List & Professional Dynamic States */
 .section-badge-counter {
-    background: #EFF6FF;
+    background: #E8F7F0;
     color: var(--cv-primary-blue);
     font-size: 0.72rem;
     font-weight: 700;
     padding: 2px 8px;
     border-radius: var(--cv-radius-pill);
-    border: 1px solid #DBEAFE;
+    border: 1px solid #D1EFE2;
     line-height: 1;
 }
 
@@ -2340,7 +2340,7 @@ if ($hasRealBookings) {
     font-size: 0.7rem;
     font-weight: 700;
     color: var(--cv-primary-blue);
-    background: #EFF6FF;
+    background: #E8F7F0;
     padding: 1px 6px;
     border-radius: 4px;
     letter-spacing: 0.02em;
@@ -2506,7 +2506,7 @@ if ($hasRealBookings) {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(37, 99, 235, 0.18) 0%, rgba(37, 99, 235, 0) 70%);
+    background: radial-gradient(circle, rgba(23, 107, 91, 0.18) 0%, rgba(23, 107, 91, 0) 70%);
     animation: emptyGlowPulse 3s ease-in-out infinite;
 }
 
@@ -2520,14 +2520,14 @@ if ($hasRealBookings) {
     width: 56px;
     height: 56px;
     border-radius: 18px;
-    background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
-    border: 1px solid #BFDBFE;
+    background: linear-gradient(135deg, #E8F7F0 0%, #D1EFE2 100%);
+    border: 1px solid rgba(23, 107, 91, 0.25);
     color: var(--cv-primary-blue);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.5rem;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+    box-shadow: 0 4px 12px rgba(23, 107, 91, 0.08);
 }
 
 .empty-state-heading {
@@ -2557,13 +2557,13 @@ if ($hasRealBookings) {
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+    background: linear-gradient(135deg, #176B5B 0%, #16443B 100%);
     color: #FFFFFF;
     font-size: 0.82rem;
     font-weight: 700;
     padding: 0.65rem 1.25rem;
     border-radius: 12px;
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+    box-shadow: 0 4px 14px rgba(23, 107, 91, 0.25);
     text-decoration: none;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     -webkit-tap-highlight-color: transparent;
@@ -2571,9 +2571,9 @@ if ($hasRealBookings) {
 
 .btn-create-booking-primary:hover {
     color: #FFFFFF;
-    background: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%);
+    background: linear-gradient(135deg, #16443B 0%, #0F2D27 100%);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
+    box-shadow: 0 6px 20px rgba(23, 107, 91, 0.35);
 }
 
 .btn-create-booking-primary:active {
@@ -2632,9 +2632,9 @@ if ($hasRealBookings) {
 
 .quick-action-tile:hover {
     background: #FFFFFF;
-    border-color: #BFDBFE;
+    border-color: rgba(23, 107, 91, 0.25);
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+    box-shadow: 0 4px 12px rgba(23, 107, 91, 0.1);
 }
 
 .quick-action-tile:active {
@@ -2652,7 +2652,7 @@ if ($hasRealBookings) {
 }
 
 .qa-icon-wrap.blue {
-    background: #EFF6FF;
+    background: #E8F7F0;
     color: var(--cv-primary-blue);
 }
 
@@ -2879,7 +2879,7 @@ if ($hasRealBookings) {
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background: #EFF6FF;
+    background: #E8F7F0;
     color: var(--cv-primary-blue);
     display: flex;
     align-items: center;
@@ -2978,7 +2978,7 @@ if ($hasRealBookings) {
     width: 38px;
     height: 38px;
     border-radius: 10px;
-    background: #EFF6FF;
+    background: #E8F7F0;
     color: var(--cv-primary-blue);
     display: flex;
     align-items: center;
@@ -3005,7 +3005,7 @@ if ($hasRealBookings) {
 }
 
 .doc-lightbox-btn-download {
-    background: #EFF6FF;
+    background: #E8F7F0;
     color: var(--cv-primary-blue);
     padding: 0.4rem 0.85rem;
     border-radius: 8px;

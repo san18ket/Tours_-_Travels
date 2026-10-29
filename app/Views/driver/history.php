@@ -1177,8 +1177,8 @@ $buildPageUrl = function(int $p) use ($search, $selectedStatus, $pSize) {
 }
 
 .cust-code-pill {
-    background: #EFF6FF;
-    color: #1D4ED8;
+    background: #E8F7F0;
+    color: #16443B;
     border: 1px solid #DBEAFE;
     font-size: 0.74rem;
     font-weight: 700;

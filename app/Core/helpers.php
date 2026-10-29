@@ -99,6 +99,10 @@ if (!function_exists('format_date')) {
 if (!function_exists('url')) {
     function url(string $path = ''): string
     {
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
         $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
         $base = rtrim(str_replace('\\', '/', dirname($scriptName)), '/');
         if ($base === '.' || $base === '') {
@@ -107,6 +111,12 @@ if (!function_exists('url')) {
             $base = '/' . $base;
         }
         $cleanPath = '/' . ltrim($path, '/');
+
+        // Prevent double prefixing if $cleanPath already starts with $base
+        if ($base !== '' && ($cleanPath === $base || str_starts_with($cleanPath, $base . '/'))) {
+            return $cleanPath;
+        }
+
         return ($base === '' || $base === '/') ? $cleanPath : $base . $cleanPath;
     }
 }

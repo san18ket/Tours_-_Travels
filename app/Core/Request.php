@@ -52,8 +52,9 @@ class Request
         }
 
         // Strip subfolder if app is served from a subdirectory
-        $scriptName = dirname($this->server['SCRIPT_NAME'] ?? '');
-        if ($scriptName !== '/' && $scriptName !== '\\' && strpos($uri, $scriptName) === 0) {
+        $scriptName = str_replace('\\', '/', dirname($this->server['SCRIPT_NAME'] ?? ''));
+        $uri = str_replace('\\', '/', $uri);
+        if ($scriptName !== '/' && $scriptName !== '.' && $scriptName !== '' && strpos($uri, $scriptName) === 0) {
             $uri = substr($uri, strlen($scriptName));
         }
 

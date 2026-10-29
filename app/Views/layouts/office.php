@@ -53,6 +53,7 @@
                     $isCustomersActive = str_contains($uri, '/office/customers');
                     $isVehiclesActive  = str_contains($uri, '/office/vehicles');
                     $isDriversActive   = str_contains($uri, '/office/employees');
+                    $isFinanceActive   = str_contains($uri, '/office/finance');
                     $isInvoicesActive  = str_contains($uri, '/office/invoices');
                     $isTripsActive     = str_contains($uri, '/office/trips') || str_contains($uri, '/office/dispatch');
                     $isTrackingActive  = str_contains($uri, '/office/tracking');
@@ -202,18 +203,71 @@
                 </div>
 
                 <!-- 6. Billing & Invoices -->
-                <div class="sidebar-category" id="cat-billing">
-                    <a href="<?= url('/office/invoices') ?>" class="category-header direct-link <?= $isInvoicesActive ? 'has-active' : '' ?>" id="cat-billing-header" data-title="<?= e(__('sidebar.invoices', 'Billing')) ?>">
+                <!-- 6. Finance & Billing -->
+                <div class="sidebar-category" id="cat-finance">
+                    <button type="button" class="category-header <?= ($isFinanceActive || $isInvoicesActive) ? 'has-active open' : '' ?>" id="cat-finance-header" data-title="<?= e(__('sidebar.finance', 'Finance')) ?>" onclick="toggleCategory('cat-finance')" aria-expanded="<?= ($isFinanceActive || $isInvoicesActive) ? 'true' : 'false' ?>">
                         <span class="category-label">
                             <span class="category-icon-wrap">
-                                <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             </span>
-                            <span class="category-title"><?= e(__('sidebar.invoices', 'Billing')) ?></span>
+                            <span class="category-title"><?= e(__('sidebar.finance', 'Finance')) ?></span>
                         </span>
                         <span class="category-header-right">
                             <svg class="category-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                         </span>
-                    </a>
+                    </button>
+                    <div class="sidebar-category-items <?= ($isFinanceActive || $isInvoicesActive) ? 'expanded' : '' ?>" id="cat-finance-items">
+                        <div class="category-items-inner">
+                            <a href="<?= url('/office/finance') ?>" class="nav-link <?= ($uri === '/office/finance' || $uri === '/office/finance/dashboard') ? 'active' : '' ?>">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                                    <span class="nav-text"><?= e(__('sidebar.finance_overview', 'Overview')) ?></span>
+                                </span>
+                            </a>
+                            <a href="<?= url('/office/finance/accounts') ?>" class="nav-link <?= str_contains($uri, '/office/finance/accounts') ? 'active' : '' ?>">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                                    <span class="nav-text"><?= e(__('sidebar.accounts', 'Accounts & Banks')) ?></span>
+                                </span>
+                            </a>
+                            <a href="<?= url('/office/finance/transactions') ?>" class="nav-link <?= str_contains($uri, '/office/finance/transactions') ? 'active' : '' ?>">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                                    <span class="nav-text"><?= e(__('sidebar.transactions', 'Money Transactions')) ?></span>
+                                </span>
+                            </a>
+                            <a href="<?= url('/office/finance/expenses') ?>" class="nav-link <?= str_contains($uri, '/office/finance/expenses') ? 'active' : '' ?>">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                    <span class="nav-text"><?= e(__('sidebar.expenses', 'Expenses')) ?></span>
+                                </span>
+                            </a>
+                            <a href="<?= url('/office/finance/payroll') ?>" class="nav-link <?= (str_contains($uri, '/office/finance/payroll') || str_contains($uri, '/office/finance/payslips')) ? 'active' : '' ?>">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                    <span class="nav-text"><?= e(__('sidebar.payroll', 'Payroll')) ?></span>
+                                </span>
+                            </a>
+                            <a href="<?= url('/office/finance/advances') ?>" class="nav-link <?= str_contains($uri, '/office/finance/advances') ? 'active' : '' ?>">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <span class="nav-text"><?= e(__('sidebar.advances', 'Staff Advances')) ?></span>
+                                </span>
+                            </a>
+                            <a href="<?= url('/office/finance/refunds') ?>" class="nav-link <?= str_contains($uri, '/office/finance/refunds') ? 'active' : '' ?>">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-1a4 4 0 00-4-4H4m0 0l3-3m-3 3l3 3m5 4v1a3 3 0 003 3h6a3 3 0 003-3v-6a3 3 0 00-3-3h-1"></path></svg>
+                                    <span class="nav-text"><?= e(__('sidebar.refunds', 'Refunds')) ?></span>
+                                </span>
+                            </a>
+                            <a href="<?= url('/office/invoices') ?>" class="nav-link <?= $isInvoicesActive ? 'active' : '' ?>">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                    <span class="nav-text"><?= e(__('sidebar.invoices', 'GST Invoices')) ?></span>
+                                </span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- 7. Trip Operations -->

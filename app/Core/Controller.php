@@ -21,7 +21,8 @@ abstract class Controller
         if ($flashType && $flashMessage) {
             Session::setFlash($flashType, $flashMessage);
         }
-        return Response::redirect($url);
+        $target = (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) ? $url : url($url);
+        return Response::redirect($target);
     }
 
     /**

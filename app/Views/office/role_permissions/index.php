@@ -122,7 +122,7 @@ $totalPerms   = (int)($metrics['total_permissions'] ?? 0);
     cursor: pointer;
 }
 .rp-action-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08); }
-.rp-action-btn.view:hover { background: #eff6ff; border-color: #bfdbfe; color: #2563eb; }
+.rp-action-btn.view:hover { background: #E8F7F0; border-color: rgba(23, 107, 91, 0.25); color: #176B5B; }
 .rp-action-btn.edit-perm:hover { background: #f0fdf4; border-color: #bbf7d0; color: #16a34a; }
 .rp-action-btn.edit-role:hover { background: #fefce8; border-color: #fde68a; color: #d97706; }
 .rp-action-btn.delete:hover { background: #fef2f2; border-color: #fecaca; color: #dc2626; }

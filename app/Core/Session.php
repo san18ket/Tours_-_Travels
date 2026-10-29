@@ -120,6 +120,11 @@ class Session
         $_SESSION['_flash'][$type] = $message;
     }
 
+    public static function flash(string $type, mixed $message): void
+    {
+        self::setFlash($type, $message);
+    }
+
     public static function getFlash(string $type): mixed
     {
         self::start();

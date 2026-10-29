@@ -282,7 +282,7 @@
                                     <?php endif; ?>
                                 </div>
                                 <div class="cust-phone-row" style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748B;">
-                                    <i class="fa-solid fa-phone" style="font-size: 10px; color: var(--brand-primary, #2563EB);"></i>
+                                    <i class="fa-solid fa-phone" style="font-size: 10px; color: var(--brand-primary, #176B5B);"></i>
                                     <a href="tel:<?= e($e['phone']) ?>" style="color: #0F172A; font-weight: 600; text-decoration: none;" title="Call employee"><?= e($e['phone']) ?></a>
                                 </div>
                             </div>
@@ -291,7 +291,7 @@
                         <!-- 4. Employee & Role (Shows only role) -->
                         <td>
                             <div class="emp-role-cell">
-                                <span class="emp-role-pill" style="display: inline-block; background: rgba(37,99,235,0.08); color: #1E40AF; border: 1px solid rgba(37,99,235,0.2); border-radius: 6px; padding: 4px 12px; font-size: 12.5px; font-weight: 700; text-transform: capitalize;">
+                                <span class="emp-role-pill" style="display: inline-block; background: rgba(23, 107, 91,0.08); color: #16443B; border: 1px solid rgba(23, 107, 91,0.2); border-radius: 6px; padding: 4px 12px; font-size: 12.5px; font-weight: 700; text-transform: capitalize;">
                                     <?= e($roleText) ?>
                                 </span>
                             </div>
@@ -412,7 +412,7 @@
             <div class="mv-booking-card-wrapper">
                 <a href="<?= url('/office/employees/' . $e['id']) ?>" class="mv-booking-card">
                     <div class="mv-thumb-wrap">
-                        <div class="mv-thumb-avatar" style="background:#EFF6FF;color:#2563EB;overflow:hidden;width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;">
+                        <div class="mv-thumb-avatar" style="background:#E8F7F0;color:#176B5B;overflow:hidden;width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;">
                             <?php if (!empty($e['profile_photo'])): ?>
                                 <img src="<?= e(url($e['profile_photo'])) ?>" alt="<?= e($fullName) ?>" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                 <span style="display: none;"><?= e($initials) ?></span>
@@ -457,7 +457,7 @@
                             </button>
                             <span class="mv-toggle-label-text <?= $statusClass ?>"><?= $statusText ?></span>
                         </div>
-                        <div class="mv-price" style="font-size: 11.5px; color: #1E40AF; margin-top: 4px;">
+                        <div class="mv-price" style="font-size: 11.5px; color: #16443B; margin-top: 4px;">
                             <?= ucfirst(str_replace('_', ' ', $e['employment_type'])) ?>
                         </div>
                     </div>
@@ -1530,13 +1530,13 @@
 }
 .booking-kpi-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(37, 99, 235, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
-    border-color: #BFDBFE;
+    box-shadow: 0 10px 25px rgba(23, 107, 91, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
+    border-color: rgba(23, 107, 91, 0.25);
 }
 .booking-kpi-card.is-selected {
-    border-color: #2563EB;
-    background: linear-gradient(180deg, #FFFFFF 0%, #EFF6FF 100%);
-    box-shadow: 0 4px 18px rgba(37, 99, 235, 0.18);
+    border-color: #176B5B;
+    background: linear-gradient(180deg, #FFFFFF 0%, #E8F7F0 100%);
+    box-shadow: 0 4px 18px rgba(23, 107, 91, 0.18);
 }
 .booking-kpi-sub {
     display: flex;
@@ -1551,7 +1551,7 @@
 }
 .booking-kpi-card:hover .kpi-filter-tag,
 .booking-kpi-card.is-selected .kpi-filter-tag {
-    color: #2563EB;
+    color: #176B5B;
     transform: translateX(3px);
 }
 .recent-bookings-section.is-filtering {
@@ -1631,7 +1631,7 @@
     font-style: italic;
 }
 .cust-full-name:hover {
-    color: var(--brand-primary, #2563EB) !important;
+    color: var(--brand-primary, #176B5B) !important;
 }
 /* Profile Avatar & Monogram matching customers/index */
 .cust-table-avatar-wrap {
@@ -1647,20 +1647,20 @@
     height: 44px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid #2563EB;
-    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.18);
-    background: #EFF6FF;
+    border: 2px solid #176B5B;
+    box-shadow: 0 2px 8px rgba(23, 107, 91, 0.18);
+    background: #E8F7F0;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .cust-table-avatar-img:hover {
     transform: scale(1.08);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    box-shadow: 0 4px 12px rgba(23, 107, 91, 0.3);
 }
 .cust-table-monogram {
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+    background: linear-gradient(135deg, #176B5B 0%, #16443B 100%);
     color: #FFFFFF;
     font-size: 1rem;
     font-weight: 800;
@@ -1669,7 +1669,7 @@
     align-items: center;
     justify-content: center;
     border: 2px solid rgba(255, 255, 255, 0.9);
-    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+    box-shadow: 0 2px 8px rgba(23, 107, 91, 0.25);
     text-transform: uppercase;
 }
 

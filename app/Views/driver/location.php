@@ -373,7 +373,7 @@ function updateLocationDisplay(coords, isServerConfirmed = false, serverData = n
                 if (!accuracyCircle) {
                     accuracyCircle = L.circle([lat, lng], {
                         radius: accuracy,
-                        color: '#2563EB',
+                        color: '#176B5B',
                         fillColor: '#60A5FA',
                         fillOpacity: 0.18,
                         weight: 1.5

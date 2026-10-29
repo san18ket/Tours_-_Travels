@@ -395,7 +395,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
                             <div class="view-kv-item">
                                 <span class="view-kv-label">Address</span>
                                 <span class="view-kv-value address-val">
-                                    <i class="fa-solid fa-location-dot" style="color: #2563EB;"></i>
+                                    <i class="fa-solid fa-location-dot" style="color: #176B5B;"></i>
                                     <span><?= e($locationDisplay) ?></span>
                                 </span>
                             </div>
@@ -476,7 +476,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
                             <div class="view-kv-item">
                                 <span class="view-kv-label">System Role</span>
                                 <span class="view-kv-value bold" style="text-transform: capitalize;">
-                                    <span class="emp-role-pill" style="display: inline-block; background: rgba(37,99,235,0.08); color: #1E40AF; border: 1px solid rgba(37,99,235,0.2); border-radius: 6px; padding: 2px 10px; font-size: 12px; font-weight: 700;">
+                                    <span class="emp-role-pill" style="display: inline-block; background: rgba(23, 107, 91,0.08); color: #16443B; border: 1px solid rgba(23, 107, 91,0.2); border-radius: 6px; padding: 2px 10px; font-size: 12px; font-weight: 700;">
                                         <?= e($roleLabel) ?>
                                     </span>
                                 </span>
@@ -702,7 +702,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
                         <div style="display: flex; flex-direction: column; gap: 10px;">
                             <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
                                 <span style="color: #64748B;">License Ref:</span>
-                                <code style="background: #EFF6FF; color: #1E40AF; padding: 2px 6px; border-radius: 4px; font-weight: 700;"><?= e($employee['license_number'] ?? 'Not Recorded') ?></code>
+                                <code style="background: #E8F7F0; color: #16443B; padding: 2px 6px; border-radius: 4px; font-weight: 700;"><?= e($employee['license_number'] ?? 'Not Recorded') ?></code>
                             </div>
                             <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
                                 <span style="color: #64748B;">License Expiry:</span>
@@ -906,7 +906,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
                                 </div>
                             </div>
                             <div class="mb-booking-card-footer">
-                                <div class="mb-booking-price" style="font-size: 12px; font-weight: 600; color: #1E40AF;">
+                                <div class="mb-booking-price" style="font-size: 12px; font-weight: 600; color: #16443B;">
                                     <i class="fa-solid fa-car-side"></i> <?= e($d['vehicle_number'] ?? 'Fleet Vehicle') ?>
                                 </div>
                                 <span class="mb-booking-arrow">View Details <i class="fa-solid fa-chevron-right"></i></span>
@@ -1609,14 +1609,14 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 /* Employee View Root & Executive Theme (Identical to Customer View sm.jpeg) */
 /* ========================================================================= */
 :root {
-    --cv-bg-start: #EBF4FC;
+    --cv-bg-start: #E8F7F0;
     --cv-bg-end: #F8FAFC;
     --cv-card-bg: #FFFFFF;
     --cv-card-border: rgba(226, 232, 240, 0.90);
-    --cv-shadow: 0 4px 20px rgba(37, 99, 235, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
-    --cv-shadow-hover: 0 10px 25px rgba(37, 99, 235, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
-    --cv-primary-blue: #2563EB;
-    --cv-primary-dark: #1D4ED8;
+    --cv-shadow: 0 4px 20px rgba(23, 107, 91, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
+    --cv-shadow-hover: 0 10px 25px rgba(23, 107, 91, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
+    --cv-primary-blue: #176B5B;
+    --cv-primary-dark: #16443B;
     --cv-teal: #176B5B;
     --cv-navy-900: #0F172A;
     --cv-slate-800: #1E293B;
@@ -1674,8 +1674,8 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 
 .view-header-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.16);
-    border-color: #BFDBFE;
+    box-shadow: 0 6px 16px rgba(23, 107, 91, 0.16);
+    border-color: rgba(23, 107, 91, 0.25);
     color: var(--cv-primary-dark);
 }
 
@@ -1796,7 +1796,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
     background: #FFFFFF;
     border-radius: var(--cv-radius-card);
     border: 1px solid var(--cv-card-border);
-    box-shadow: 0 8px 30px -8px rgba(37, 99, 235, 0.08), 0 2px 6px rgba(0, 0, 0, 0.02);
+    box-shadow: 0 8px 30px -8px rgba(23, 107, 91, 0.08), 0 2px 6px rgba(0, 0, 0, 0.02);
     position: relative;
     overflow: hidden;
     padding: 1.5rem;
@@ -1857,7 +1857,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+    background: linear-gradient(135deg, #176B5B 0%, #16443B 100%);
     color: #FFFFFF;
     font-size: 2.1rem;
     font-weight: 800;
@@ -1945,14 +1945,14 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 }
 
 .view-hero-code-pill {
-    background: #EFF6FF;
+    background: #E8F7F0;
     color: var(--cv-primary-blue);
     font-family: monospace;
     font-size: 0.74rem;
     font-weight: 700;
     padding: 2px 8px;
     border-radius: 6px;
-    border: 1px solid #BFDBFE;
+    border: 1px solid rgba(23, 107, 91, 0.25);
 }
 
 .emp-role-pill {
@@ -2056,9 +2056,9 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 }
 
 .hero-qa-pill.qa-call {
-    background: #EFF6FF;
-    color: #1D4ED8;
-    border-color: #BFDBFE;
+    background: #E8F7F0;
+    color: #16443B;
+    border-color: rgba(23, 107, 91, 0.25);
 }
 
 .hero-qa-pill.qa-wa {
@@ -2074,9 +2074,9 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 }
 
 .hero-qa-pill.qa-book {
-    background: #2563EB;
+    background: #176B5B;
     color: #FFFFFF;
-    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+    box-shadow: 0 2px 8px rgba(23, 107, 91, 0.25);
 }
 
 /* 3. KPI Cards Grid */
@@ -2101,7 +2101,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 .view-kpi-card:hover {
     transform: translateY(-3px);
     box-shadow: var(--cv-shadow-hover);
-    border-color: #BFDBFE;
+    border-color: rgba(23, 107, 91, 0.25);
 }
 
 .kpi-card-top-row {
@@ -2121,7 +2121,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
     font-size: 1rem;
 }
 
-.kpi-icon-wrap.blue { background: #EFF6FF; color: #2563EB; }
+.kpi-icon-wrap.blue { background: #E8F7F0; color: #176B5B; }
 .kpi-icon-wrap.amber { background: #FEF3C7; color: #D97706; }
 .kpi-icon-wrap.teal { background: #CCFBF1; color: #0D9488; }
 
@@ -2141,8 +2141,8 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
     font-weight: 700;
     padding: 2px 8px;
     border-radius: 9999px;
-    background: #EFF6FF;
-    color: #2563EB;
+    background: #E8F7F0;
+    color: #176B5B;
 }
 
 .kpi-tag-recent.empty {
@@ -2232,9 +2232,9 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 }
 
 .view-nav-pill.active {
-    background: #2563EB;
+    background: #176B5B;
     color: #FFFFFF;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28);
+    box-shadow: 0 4px 12px rgba(23, 107, 91, 0.28);
 }
 
 .pill-count {
@@ -2322,7 +2322,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
     font-size: 0.88rem;
 }
 
-.section-icon-badge.blue { background: #EFF6FF; color: #2563EB; }
+.section-icon-badge.blue { background: #E8F7F0; color: #176B5B; }
 .section-icon-badge.teal { background: #CCFBF1; color: #0D9488; }
 .section-icon-badge.amber { background: #FEF3C7; color: #D97706; }
 .section-icon-badge.purple { background: #F3E8FF; color: #7C3AED; }
@@ -2344,7 +2344,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 .section-header-link-btn {
     font-size: 0.8rem;
     font-weight: 700;
-    color: #2563EB;
+    color: #176B5B;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
@@ -2408,7 +2408,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 }
 
 .view-kv-value a {
-    color: #2563EB;
+    color: #176B5B;
     text-decoration: none;
 }
 
@@ -2459,8 +2459,8 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 }
 
 .doc-code {
-    background: #EFF6FF;
-    color: #1E40AF;
+    background: #E8F7F0;
+    color: #16443B;
     padding: 2px 6px;
     border-radius: 4px;
     font-family: monospace;
@@ -2555,9 +2555,9 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 }
 
 .btn-doc-action.preview:hover {
-    background: #EFF6FF;
+    background: #E8F7F0;
     border-color: #93C5FD;
-    color: #2563EB;
+    color: #176B5B;
 }
 
 .btn-doc-action.download:hover {
@@ -2585,7 +2585,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 }
 
 .doc-empty-state a {
-    color: #2563EB;
+    color: #176B5B;
     font-weight: 700;
     text-decoration: none;
 }
@@ -2623,7 +2623,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 .quick-action-tile:hover {
     background: #FFFFFF;
     border-color: #93C5FD;
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.1);
+    box-shadow: 0 4px 14px rgba(23, 107, 91, 0.1);
     transform: translateY(-2px);
 }
 
@@ -2638,7 +2638,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
     margin-bottom: 6px;
 }
 
-.qa-icon-wrap.blue { background: #EFF6FF; color: #2563EB; }
+.qa-icon-wrap.blue { background: #E8F7F0; color: #176B5B; }
 .qa-icon-wrap.whatsapp { background: #DCFCE7; color: #16A34A; }
 .qa-icon-wrap.purple { background: #F3E8FF; color: #7C3AED; }
 .qa-icon-wrap.cyan { background: #E0F2FE; color: #0284C7; }
@@ -2665,19 +2665,19 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: #2563EB;
+    background: #176B5B;
     color: #FFFFFF;
     padding: 6px 14px;
     border-radius: 9999px;
     font-size: 0.8rem;
     font-weight: 700;
     text-decoration: none;
-    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+    box-shadow: 0 2px 8px rgba(23, 107, 91, 0.25);
     transition: all 0.15s ease;
 }
 
 .btn-primary-compact:hover {
-    background: #1D4ED8;
+    background: #16443B;
     color: #FFFFFF;
 }
 
@@ -2714,8 +2714,8 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 }
 
 .table-code-link code {
-    background: #EFF6FF;
-    color: #1E40AF;
+    background: #E8F7F0;
+    color: #16443B;
     padding: 3px 8px;
     border-radius: 6px;
     font-weight: 700;
@@ -2747,7 +2747,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    color: #2563EB;
+    color: #176B5B;
     font-size: 0.82rem;
     font-weight: 700;
     text-decoration: none;
@@ -2790,7 +2790,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
     font-family: monospace;
     font-size: 0.82rem;
     font-weight: 700;
-    color: #1E40AF;
+    color: #16443B;
 }
 
 .mb-booking-title {
@@ -2820,7 +2820,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 .mb-booking-arrow {
     font-size: 0.78rem;
     font-weight: 700;
-    color: #2563EB;
+    color: #176B5B;
 }
 
 .tab-empty-state {
@@ -2835,8 +2835,8 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
     width: 64px;
     height: 64px;
     border-radius: 50%;
-    background: #EFF6FF;
-    color: #2563EB;
+    background: #E8F7F0;
+    color: #176B5B;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2920,7 +2920,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 
 .toggle-spinner {
     font-size: 10px;
-    color: #2563EB;
+    color: #176B5B;
 }
 
 .cust-status-toggle.sm .toggle-slider-track {
@@ -3030,9 +3030,9 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    background: #EFF6FF;
-    color: #2563EB;
-    border: 1px solid #BFDBFE;
+    background: #E8F7F0;
+    color: #176B5B;
+    border: 1px solid rgba(23, 107, 91, 0.25);
     padding: 6px 12px;
     border-radius: 8px;
     font-size: 0.8rem;

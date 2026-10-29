@@ -812,13 +812,13 @@
 }
 .booking-kpi-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(37, 99, 235, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
-    border-color: #BFDBFE;
+    box-shadow: 0 10px 25px rgba(23, 107, 91, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
+    border-color: rgba(23, 107, 91, 0.25);
 }
 .booking-kpi-card.is-selected {
-    border-color: #2563EB;
-    background: linear-gradient(180deg, #FFFFFF 0%, #EFF6FF 100%);
-    box-shadow: 0 4px 18px rgba(37, 99, 235, 0.18);
+    border-color: #176B5B;
+    background: linear-gradient(180deg, #FFFFFF 0%, #E8F7F0 100%);
+    box-shadow: 0 4px 18px rgba(23, 107, 91, 0.18);
 }
 .booking-kpi-sub {
     display: flex;
@@ -833,7 +833,7 @@
 }
 .booking-kpi-card:hover .kpi-filter-tag,
 .booking-kpi-card.is-selected .kpi-filter-tag {
-    color: #2563EB;
+    color: #176B5B;
     transform: translateX(3px);
 }
 .recent-bookings-section.is-filtering {

@@ -255,7 +255,7 @@
                             <div class="cust-serial-num"><?= $serial ?></div>
                         </td>
                         <td>
-                            <div class="project-name" style="font-family:ui-monospace, monospace;letter-spacing:0.02em;font-weight:700;color:var(--brand-primary, #2563EB);">
+                            <div class="project-name" style="font-family:ui-monospace, monospace;letter-spacing:0.02em;font-weight:700;color:var(--brand-primary, #176B5B);">
                                 <?= e($v['vehicle_number']) ?>
                             </div>
                         </td>
@@ -265,13 +265,13 @@
                             </div>
                         </td>
                         <td>
-                            <span style="display:inline-block;background:rgba(37,99,235,0.08);color:#1E40AF;border:1px solid rgba(37,99,235,0.18);border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600;text-transform:capitalize;">
+                            <span style="display:inline-block;background:rgba(23, 107, 91,0.08);color:#16443B;border:1px solid rgba(23, 107, 91,0.18);border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600;text-transform:capitalize;">
                                 <?= e(str_replace('_', ' ', $v['vehicle_type'])) ?>
                             </span>
                         </td>
                         <td class="text-center">
                             <div style="font-weight:700;color:#0F172A;font-size:13px;">
-                                <i class="fa-solid fa-users" style="font-size:10px;color:var(--brand-primary, #2563EB);"></i> <?= (int)$v['seating_capacity'] ?> Seats
+                                <i class="fa-solid fa-users" style="font-size:10px;color:var(--brand-primary, #176B5B);"></i> <?= (int)$v['seating_capacity'] ?> Seats
                             </div>
                             <small class="text-muted" style="font-size:11px;text-transform:uppercase;">
                                 <?= e($v['fuel_type']) ?>
@@ -368,7 +368,7 @@
             <div class="mv-booking-card-wrapper">
                 <div class="mv-booking-card">
                     <div class="mv-thumb-wrap">
-                        <div class="mv-thumb-avatar" style="background:#EFF6FF;color:#2563EB;">
+                        <div class="mv-thumb-avatar" style="background:#E8F7F0;color:#176B5B;">
                             <i class="fa-solid fa-van-shuttle" style="font-size:22px;"></i>
                         </div>
                     </div>
@@ -406,7 +406,7 @@
                             </button>
                             <span class="mv-toggle-label-text <?= $statusClass ?>"><?= $statusText ?></span>
                         </div>
-                        <div class="mv-price" style="font-size: 11.5px; color: #1E40AF; margin-top: 4px;">
+                        <div class="mv-price" style="font-size: 11.5px; color: #16443B; margin-top: 4px;">
                             <?= number_format((int)$v['odometer_km']) ?> km
                         </div>
                     </div>
@@ -1369,7 +1369,7 @@
     box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
 }
 .cust-status-toggle.is-locked .toggle-slider-track {
-    background: #3B82F6;
+    background: #218765;
     box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35);
 }
 .toggle-slider-thumb {
@@ -1445,7 +1445,7 @@
 }
 .cust-toggle-pill.in-progress, .cust-toggle-pill.on_trip {
     background: #DBEAFE;
-    color: #1E40AF;
+    color: #16443B;
 }
 .cust-toggle-pill.cancelled, .cust-toggle-pill.retired {
     background: #F1F5F9;
@@ -1465,7 +1465,7 @@
     background: #F59E0B;
 }
 .toggle-pulse-dot.in-progress, .toggle-pulse-dot.on_trip {
-    background: #3B82F6;
+    background: #218765;
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
 }
 .toggle-pulse-dot.cancelled, .toggle-pulse-dot.retired {
@@ -1488,7 +1488,7 @@
     color: #D97706;
 }
 .mv-toggle-label-text.in-progress, .mv-toggle-label-text.on_trip {
-    color: #2563EB;
+    color: #176B5B;
 }
 .mv-toggle-label-text.cancelled, .mv-toggle-label-text.retired {
     color: #64748B;
@@ -1504,13 +1504,13 @@
 }
 .booking-kpi-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(37, 99, 235, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
-    border-color: #BFDBFE;
+    box-shadow: 0 10px 25px rgba(23, 107, 91, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
+    border-color: rgba(23, 107, 91, 0.25);
 }
 .booking-kpi-card.is-selected {
-    border-color: #2563EB;
-    background: linear-gradient(180deg, #FFFFFF 0%, #EFF6FF 100%);
-    box-shadow: 0 4px 18px rgba(37, 99, 235, 0.18);
+    border-color: #176B5B;
+    background: linear-gradient(180deg, #FFFFFF 0%, #E8F7F0 100%);
+    box-shadow: 0 4px 18px rgba(23, 107, 91, 0.18);
 }
 .booking-kpi-sub {
     display: flex;
@@ -1525,7 +1525,7 @@
 }
 .booking-kpi-card:hover .kpi-filter-tag,
 .booking-kpi-card.is-selected .kpi-filter-tag {
-    color: #2563EB;
+    color: #176B5B;
     transform: translateX(3px);
 }
 .recent-bookings-section.is-filtering {
@@ -1615,13 +1615,13 @@
 }
 
 .booking-kpi-card[data-status="maintenance"].is-selected {
-    border-color: #3B82F6;
+    border-color: #218765;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.16), 0 10px 24px rgba(59, 130, 246, 0.08);
-    background: linear-gradient(180deg, #FFFFFF 0%, #EFF6FF 100%);
+    background: linear-gradient(180deg, #FFFFFF 0%, #E8F7F0 100%);
 }
 .booking-kpi-card[data-status="maintenance"].is-selected .kpi-filter-tag {
     opacity: 1;
-    color: #3B82F6;
+    color: #218765;
     font-weight: 700;
 }
 

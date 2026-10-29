@@ -235,11 +235,11 @@
                             <div class="cust-serial-num"><?= $serial ?></div>
                         </td>
                         <td>
-                            <div class="project-name" style="font-family:ui-monospace, monospace;letter-spacing:0.02em;font-weight:700;color:var(--brand-primary, #2563EB);">
+                            <div class="project-name" style="font-family:ui-monospace, monospace;letter-spacing:0.02em;font-weight:700;color:var(--brand-primary, #176B5B);">
                                 <?= e($d['dispatch_code']) ?>
                             </div>
                             <div style="margin-top: 3px;">
-                                <a href="<?= url('/office/bookings/' . $d['booking_id']) ?>" style="font-size:12px;font-weight:700;color:var(--brand-primary, #2563EB);text-decoration:none;">
+                                <a href="<?= url('/office/bookings/' . $d['booking_id']) ?>" style="font-size:12px;font-weight:700;color:var(--brand-primary, #176B5B);text-decoration:none;">
                                     #<?= e($d['booking_code']) ?>
                                 </a>
                             </div>
@@ -260,7 +260,7 @@
                             </div>
                             <?php if (!empty($d['driver_phone'])): ?>
                                 <small class="text-muted d-block" style="font-size:12px;margin-top:2px;">
-                                    <i class="fa-solid fa-phone" style="font-size:10px;color:var(--brand-primary, #2563EB);"></i> <?= e($d['driver_phone']) ?>
+                                    <i class="fa-solid fa-phone" style="font-size:10px;color:var(--brand-primary, #176B5B);"></i> <?= e($d['driver_phone']) ?>
                                 </small>
                             <?php endif; ?>
                         </td>
@@ -268,7 +268,7 @@
                             <div style="font-weight: 700; color: #0F172A; font-size: 13px;">
                                 <?= e($d['make_model']) ?>
                             </div>
-                            <small style="font-family:ui-monospace, monospace;color:var(--brand-primary, #2563EB);font-weight:600;font-size:11px;">
+                            <small style="font-family:ui-monospace, monospace;color:var(--brand-primary, #176B5B);font-weight:600;font-size:11px;">
                                 <?= e($d['vehicle_number']) ?>
                             </small>
                         </td>
@@ -350,7 +350,7 @@
             <div class="mv-booking-card-wrapper">
                 <a href="<?= url('/office/bookings/' . $d['booking_id']) ?>" class="mv-booking-card">
                     <div class="mv-thumb-wrap">
-                        <div class="mv-thumb-avatar" style="background:#EFF6FF;color:#2563EB;">
+                        <div class="mv-thumb-avatar" style="background:#E8F7F0;color:#176B5B;">
                             <i class="fa-solid fa-route" style="font-size:22px;"></i>
                         </div>
                     </div>
@@ -388,7 +388,7 @@
                             </button>
                             <span class="mv-toggle-label-text <?= $statusClass ?>"><?= $statusText ?></span>
                         </div>
-                        <div class="mv-price" style="font-size: 11px; color: #1E40AF; font-weight: 700; margin-top: 4px;">
+                        <div class="mv-price" style="font-size: 11px; color: #16443B; font-weight: 700; margin-top: 4px;">
                             #<?= e($d['booking_code']) ?>
                         </div>
                     </div>
@@ -1048,7 +1048,7 @@
 }
 .cust-toggle-pill.in-progress, .cust-toggle-pill.assigned {
     background: #DBEAFE;
-    color: #1E40AF;
+    color: #16443B;
 }
 .cust-toggle-pill.cancelled {
     background: #F1F5F9;
@@ -1065,7 +1065,7 @@
     box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
 }
 .toggle-pulse-dot.in-progress, .toggle-pulse-dot.assigned {
-    background: #3B82F6;
+    background: #218765;
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
 }
 .toggle-pulse-dot.cancelled {
@@ -1085,7 +1085,7 @@
     color: #10B981;
 }
 .mv-toggle-label-text.in-progress, .mv-toggle-label-text.assigned {
-    color: #2563EB;
+    color: #176B5B;
 }
 .mv-toggle-label-text.cancelled {
     color: #64748B;
@@ -1100,13 +1100,13 @@
 }
 .booking-kpi-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(37, 99, 235, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
-    border-color: #BFDBFE;
+    box-shadow: 0 10px 25px rgba(23, 107, 91, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
+    border-color: rgba(23, 107, 91, 0.25);
 }
 .booking-kpi-card.is-selected {
-    border-color: #2563EB;
-    background: linear-gradient(180deg, #FFFFFF 0%, #EFF6FF 100%);
-    box-shadow: 0 4px 18px rgba(37, 99, 235, 0.18);
+    border-color: #176B5B;
+    background: linear-gradient(180deg, #FFFFFF 0%, #E8F7F0 100%);
+    box-shadow: 0 4px 18px rgba(23, 107, 91, 0.18);
 }
 .booking-kpi-sub {
     display: flex;
@@ -1121,7 +1121,7 @@
 }
 .booking-kpi-card:hover .kpi-filter-tag,
 .booking-kpi-card.is-selected .kpi-filter-tag {
-    color: #2563EB;
+    color: #176B5B;
     transform: translateX(3px);
 }
 .recent-bookings-section.is-filtering {

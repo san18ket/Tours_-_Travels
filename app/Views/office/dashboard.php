@@ -730,14 +730,14 @@ $displayRevenue = isset($totalRevenue) && $totalRevenue > 0 ? format_currency($t
         <div class="mv-card-panel">
             <?php 
             $vTypes = !empty($vehicleBreakdown) ? $vehicleBreakdown : [
-                'Tempo Traveller' => ['count' => 48, 'percent' => 39, 'color' => '#2563eb'],
+                'Tempo Traveller' => ['count' => 48, 'percent' => 39, 'color' => '#176B5B'],
                 'Mini Bus'        => ['count' => 32, 'percent' => 26, 'color' => '#06b6d4'],
                 'Luxury Bus'      => ['count' => 20, 'percent' => 16, 'color' => '#10b981'],
                 'Car / Sedan'     => ['count' => 12, 'percent' => 10, 'color' => '#8b5cf6'],
                 'Others'          => ['count' => 12, 'percent' => 10, 'color' => '#94a3b8'],
             ];
             foreach ($vTypes as $vName => $vMeta): 
-                $vColor = $vMeta['color'] ?? '#2563eb';
+                $vColor = $vMeta['color'] ?? '#176B5B';
                 $vCount = $vMeta['count'] ?? 0;
                 $vPct = $vMeta['percent'] ?? 0;
             ?>

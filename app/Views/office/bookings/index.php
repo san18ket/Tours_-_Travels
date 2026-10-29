@@ -268,13 +268,13 @@
                             <div class="cust-serial-num"><?= $serial ?></div>
                         </td>
                         <td>
-                            <div class="project-name" style="font-family:ui-monospace, monospace;letter-spacing:0.02em;font-weight:700;color:var(--brand-primary, #2563EB);">
+                            <div class="project-name" style="font-family:ui-monospace, monospace;letter-spacing:0.02em;font-weight:700;color:var(--brand-primary, #176B5B);">
                                 <a href="<?= url('/office/bookings/' . $b['id']) ?>" style="color:inherit;text-decoration:none;">
                                     #<?= e($b['booking_code']) ?>
                                 </a>
                             </div>
                             <div style="margin-top: 3px;">
-                                <span style="display:inline-block;background:rgba(37,99,235,0.08);color:#1E40AF;border:1px solid rgba(37,99,235,0.18);border-radius:6px;padding:2px 8px;font-size:11.5px;font-weight:600;">
+                                <span style="display:inline-block;background:rgba(23, 107, 91,0.08);color:#16443B;border:1px solid rgba(23, 107, 91,0.18);border-radius:6px;padding:2px 8px;font-size:11.5px;font-weight:600;">
                                     <?= e($b['tour_title'] ?? 'Custom Route') ?>
                                 </span>
                             </div>
@@ -285,7 +285,7 @@
                                     <span class="client-name" style="font-weight:700;color:#0F172A;"><?= e($b['customer_name'] ?? 'Guest Traveler') ?></span>
                                     <?php if (!empty($b['customer_phone'])): ?>
                                         <small class="text-muted d-block" style="font-size:12px;margin-top:2px;">
-                                            <i class="fa-solid fa-phone" style="font-size:10px;color:var(--brand-primary, #2563EB);"></i> <?= e($b['customer_phone']) ?>
+                                            <i class="fa-solid fa-phone" style="font-size:10px;color:var(--brand-primary, #176B5B);"></i> <?= e($b['customer_phone']) ?>
                                         </small>
                                     <?php endif; ?>
                                 </div>
@@ -1458,7 +1458,7 @@
 }
 .cust-toggle-pill.assigned, .cust-toggle-pill.in-progress, .cust-toggle-pill.in_progress {
     background: #DBEAFE;
-    color: #1E40AF;
+    color: #16443B;
 }
 .cust-toggle-pill.pending {
     background: #FEF3C7;
@@ -1479,7 +1479,7 @@
     box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
 }
 .toggle-pulse-dot.assigned, .toggle-pulse-dot.in-progress, .toggle-pulse-dot.in_progress {
-    background: #3B82F6;
+    background: #218765;
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
 }
 .toggle-pulse-dot.pending {
@@ -1502,7 +1502,7 @@
     color: #10B981;
 }
 .mv-toggle-label-text.assigned, .mv-toggle-label-text.in-progress, .mv-toggle-label-text.in_progress {
-    color: #2563EB;
+    color: #176B5B;
 }
 .mv-toggle-label-text.pending {
     color: #D97706;
@@ -1520,13 +1520,13 @@
 }
 .booking-kpi-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(37, 99, 235, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
-    border-color: #BFDBFE;
+    box-shadow: 0 10px 25px rgba(23, 107, 91, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
+    border-color: rgba(23, 107, 91, 0.25);
 }
 .booking-kpi-card.is-selected {
-    border-color: #2563EB;
-    background: linear-gradient(180deg, #FFFFFF 0%, #EFF6FF 100%);
-    box-shadow: 0 4px 18px rgba(37, 99, 235, 0.18);
+    border-color: #176B5B;
+    background: linear-gradient(180deg, #FFFFFF 0%, #E8F7F0 100%);
+    box-shadow: 0 4px 18px rgba(23, 107, 91, 0.18);
 }
 .booking-kpi-sub {
     display: flex;
@@ -1541,7 +1541,7 @@
 }
 .booking-kpi-card:hover .kpi-filter-tag,
 .booking-kpi-card.is-selected .kpi-filter-tag {
-    color: #2563EB;
+    color: #176B5B;
     transform: translateX(3px);
 }
 .recent-bookings-section.is-filtering {
@@ -1631,13 +1631,13 @@
 }
 
 .booking-kpi-card[data-status="completed"].is-selected {
-    border-color: #3B82F6;
+    border-color: #218765;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.16), 0 10px 24px rgba(59, 130, 246, 0.08);
-    background: linear-gradient(180deg, #FFFFFF 0%, #EFF6FF 100%);
+    background: linear-gradient(180deg, #FFFFFF 0%, #E8F7F0 100%);
 }
 .booking-kpi-card[data-status="completed"].is-selected .kpi-filter-tag {
     opacity: 1;
-    color: #3B82F6;
+    color: #218765;
     font-weight: 700;
 }
 

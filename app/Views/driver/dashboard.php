@@ -86,8 +86,8 @@ $statOnTime = '96 %';
                 </div>
                 <!-- Artistic Flight Swoosh -->
                 <svg class="driver-swoosh-svg" viewBox="0 0 160 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M4 28 C 45 4, 110 38, 148 10" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="4 4"/>
-                    <polygon points="152,8 144,7 148,14" fill="#2563EB" />
+                    <path d="M4 28 C 45 4, 110 38, 148 10" stroke="#176B5B" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="4 4"/>
+                    <polygon points="152,8 144,7 148,14" fill="#176B5B" />
                 </svg>
             </div>
 
@@ -148,7 +148,7 @@ $statOnTime = '96 %';
         <!-- KPI 1: Today's Trip -->
         <div class="driver-kpi-card">
             <div class="kpi-icon-box kpi-blue">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#176B5B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="6" cy="6" r="2.8"></circle>
                     <circle cx="6" cy="18" r="2.8"></circle>
                     <line x1="6" y1="8.8" x2="6" y2="15.2"></line>
@@ -377,7 +377,7 @@ $statOnTime = '96 %';
                 <!-- Action 1: View Trip Details -->
                 <a href="<?= !empty($activeTrip) ? url('/driver/trips/' . $activeTrip['id']) : url('/driver/trips') ?>" class="qa-tile">
                     <div class="qa-icon-wrap qa-blue">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#176B5B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="6" cy="6" r="2.8"></circle>
                             <circle cx="6" cy="18" r="2.8"></circle>
                             <line x1="6" y1="8.8" x2="6" y2="15.2"></line>
@@ -535,7 +535,7 @@ $statOnTime = '96 %';
 <div id="startTripModal" class="driver-modal-backdrop" style="display:none;" onclick="if(event.target===this) closeStartModal()">
     <div class="driver-modal-card">
         <div class="driver-modal-header">
-            <h3 class="driver-modal-title"><i class="fa-solid fa-play" style="color:#2563EB; margin-right:8px;"></i> Commence Journey</h3>
+            <h3 class="driver-modal-title"><i class="fa-solid fa-play" style="color:#176B5B; margin-right:8px;"></i> Commence Journey</h3>
             <button type="button" class="driver-modal-close" onclick="closeStartModal()">&times;</button>
         </div>
         <form action="<?= url('/driver/trips/' . $activeTrip['id'] . '/start') ?>" method="POST">
@@ -598,11 +598,11 @@ $statOnTime = '96 %';
 <div id="contactManagerModal" class="driver-modal-backdrop" style="display:none;" onclick="if(event.target===this) closeContactModal()">
     <div class="driver-modal-card">
         <div class="driver-modal-header">
-            <h3 class="driver-modal-title"><i class="fa-solid fa-phone" style="color:#2563EB; margin-right:8px;"></i> Contact Dispatch Operations</h3>
+            <h3 class="driver-modal-title"><i class="fa-solid fa-phone" style="color:#176B5B; margin-right:8px;"></i> Contact Dispatch Operations</h3>
             <button type="button" class="driver-modal-close" onclick="closeContactModal()">&times;</button>
         </div>
         <div class="driver-modal-body" style="text-align:center; padding: 2rem 1.5rem;">
-            <div style="width:60px; height:60px; border-radius:50%; background:#EFF6FF; color:#2563EB; display:flex; align-items:center; justify-content:center; font-size:1.6rem; margin:0 auto 1rem;">
+            <div style="width:60px; height:60px; border-radius:50%; background:#E8F7F0; color:#176B5B; display:flex; align-items:center; justify-content:center; font-size:1.6rem; margin:0 auto 1rem;">
                 <i class="fa-solid fa-headset"></i>
             </div>
             <h4 style="font-size:1.2rem; font-weight:800; color:#0C2B52; margin:0 0 0.35rem;">Central Operations Desk</h4>
@@ -637,7 +637,7 @@ $statOnTime = '96 %';
                     <span><i class="fa-solid fa-truck-medical" style="margin-right:8px;"></i> Highway Ambulance Service</span>
                     <span style="font-size:1.1rem;">Dial 108 &rarr;</span>
                 </a>
-                <a href="tel:+919876543210" style="display:flex; align-items:center; justify-content:space-between; padding:0.85rem 1.15rem; background:#EFF6FF; border:1.5px solid #BFDBFE; border-radius:12px; text-decoration:none; color:#1D4ED8; font-weight:700;">
+                <a href="tel:+919876543210" style="display:flex; align-items:center; justify-content:space-between; padding:0.85rem 1.15rem; background:#E8F7F0; border:1.5px solid rgba(23, 107, 91, 0.25); border-radius:12px; text-decoration:none; color:#16443B; font-weight:700;">
                     <span><i class="fa-solid fa-phone-volume" style="margin-right:8px;"></i> Fleet Manager Direct Hotline</span>
                     <span>Dial Dispatch &rarr;</span>
                 </a>
@@ -755,10 +755,10 @@ setInterval(function() {
     height: 68px;
     min-width: 68px;
     border-radius: 50%;
-    border: 3px solid #2563EB;
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+    border: 3px solid #176B5B;
+    box-shadow: 0 4px 14px rgba(23, 107, 91, 0.25);
     overflow: hidden;
-    background: #EFF6FF;
+    background: #E8F7F0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -812,7 +812,7 @@ setInterval(function() {
     font-family: 'Caveat', 'Dancing Script', 'Brush Script MT', cursive, sans-serif;
     font-size: 1.65rem;
     line-height: 1.05;
-    color: #2563EB;
+    color: #176B5B;
     font-weight: 700;
     text-align: center;
     display: flex;
@@ -917,7 +917,7 @@ setInterval(function() {
 }
 
 .shift-meta-icon {
-    color: #2563EB;
+    color: #176B5B;
     font-size: 0.95rem;
     width: 16px;
     text-align: center;
@@ -967,7 +967,7 @@ setInterval(function() {
 }
 
 .btn-shift-on-trip {
-    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+    background: linear-gradient(135deg, #176B5B 0%, #16443B 100%);
     opacity: 0.85;
     cursor: not-allowed;
 }
@@ -1008,7 +1008,7 @@ setInterval(function() {
     font-size: 1.2rem;
 }
 
-.kpi-blue { background: #EFF6FF; color: #2563EB; }
+.kpi-blue { background: #E8F7F0; color: #176B5B; }
 .kpi-green { background: #F0FDF4; color: #16A34A; }
 .kpi-purple { background: #EEF2FF; color: #6366F1; }
 .kpi-amber { background: #FEF3C7; color: #F59E0B; }
@@ -1046,7 +1046,7 @@ setInterval(function() {
 }
 
 .kpi-blue-sub {
-    color: #2563EB;
+    color: #176B5B;
     font-weight: 600;
 }
 
@@ -1111,7 +1111,7 @@ setInterval(function() {
     gap: 0.45rem;
     font-size: 0.85rem;
     font-weight: 700;
-    color: #2563EB;
+    color: #176B5B;
 }
 
 .active-trip-code-badge {
@@ -1172,8 +1172,8 @@ setInterval(function() {
 }
 
 .blue-dot {
-    background: #2563EB;
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+    background: #176B5B;
+    box-shadow: 0 0 0 4px rgba(23, 107, 91, 0.2);
 }
 
 .blue-dot.pulse {
@@ -1181,9 +1181,9 @@ setInterval(function() {
 }
 
 @keyframes blueDotPulse {
-    0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.45); }
-    70% { box-shadow: 0 0 0 8px rgba(37, 99, 235, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+    0% { box-shadow: 0 0 0 0 rgba(23, 107, 91, 0.45); }
+    70% { box-shadow: 0 0 0 8px rgba(23, 107, 91, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(23, 107, 91, 0); }
 }
 
 .dot-inner-core {
@@ -1210,7 +1210,7 @@ setInterval(function() {
 }
 
 .green-stem { background: #10B981; }
-.blue-stem { background: #2563EB; }
+.blue-stem { background: #176B5B; }
 .gray-stem { background: #E2E8F0; }
 
 .timeline-stop-node:last-child .timeline-stem {
@@ -1248,8 +1248,8 @@ setInterval(function() {
 }
 
 .blue-badge {
-    background: #EFF6FF;
-    color: #2563EB;
+    background: #E8F7F0;
+    color: #176B5B;
 }
 
 /* Bus Cutout Visual (Right) */
@@ -1285,21 +1285,21 @@ setInterval(function() {
     padding: 0.55rem 1.15rem;
     border-radius: 9999px;
     background: #FFFFFF;
-    border: 1.5px solid #2563EB;
-    color: #2563EB;
+    border: 1.5px solid #176B5B;
+    color: #176B5B;
     font-size: 0.85rem;
     font-weight: 700;
     text-decoration: none;
-    box-shadow: 0 2px 10px rgba(37, 99, 235, 0.12);
+    box-shadow: 0 2px 10px rgba(23, 107, 91, 0.12);
     transition: all 0.2s ease;
     margin-top: 0.5rem;
 }
 
 .btn-view-route-pill:hover {
-    background: #2563EB;
+    background: #176B5B;
     color: #FFFFFF;
     transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+    box-shadow: 0 4px 14px rgba(23, 107, 91, 0.25);
 }
 
 /* Bottom Telemetry Strip inside Active Trip Card */
@@ -1325,8 +1325,8 @@ setInterval(function() {
     min-width: 36px;
     border-radius: 50%;
     background: #FFFFFF;
-    border: 1px solid #BFDBFE;
-    color: #2563EB;
+    border: 1px solid rgba(23, 107, 91, 0.25);
+    color: #176B5B;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1381,8 +1381,8 @@ setInterval(function() {
 }
 
 .btn-start-cta {
-    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+    background: linear-gradient(135deg, #176B5B 0%, #16443B 100%);
+    box-shadow: 0 4px 14px rgba(23, 107, 91, 0.35);
 }
 
 .btn-complete-cta {
@@ -1454,8 +1454,8 @@ setInterval(function() {
 
 .qa-tile:hover {
     background: #FFFFFF;
-    border-color: #2563EB;
-    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.12);
+    border-color: #176B5B;
+    box-shadow: 0 6px 18px rgba(23, 107, 91, 0.12);
     transform: translateY(-2px);
 }
 
@@ -1475,8 +1475,8 @@ setInterval(function() {
 }
 
 .qa-blue {
-    background: #EFF6FF;
-    color: #2563EB;
+    background: #E8F7F0;
+    color: #176B5B;
 }
 
 .qa-red {
@@ -1528,7 +1528,7 @@ setInterval(function() {
 .notif-view-all {
     font-size: 0.78rem;
     font-weight: 700;
-    color: #2563EB;
+    color: #176B5B;
     text-decoration: none;
 }
 
@@ -1560,7 +1560,7 @@ setInterval(function() {
 }
 
 .notif-green { background: #DCFCE7; color: #16A34A; }
-.notif-blue { background: #EFF6FF; color: #2563EB; }
+.notif-blue { background: #E8F7F0; color: #176B5B; }
 .notif-amber { background: #FEF3C7; color: #D97706; }
 
 .notif-content {
@@ -1705,7 +1705,7 @@ setInterval(function() {
 .safe-banner-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(90deg, rgba(12, 43, 82, 0.95) 0%, rgba(37, 99, 235, 0.85) 60%, rgba(37, 99, 235, 0.4) 100%);
+    background: linear-gradient(90deg, rgba(12, 43, 82, 0.95) 0%, rgba(23, 107, 91, 0.85) 60%, rgba(23, 107, 91, 0.4) 100%);
     pointer-events: none;
 }
 
@@ -1843,7 +1843,7 @@ setInterval(function() {
 }
 
 .modal-input:focus {
-    border-color: #2563EB;
+    border-color: #176B5B;
 }
 
 .modal-textarea {
@@ -1858,7 +1858,7 @@ setInterval(function() {
 }
 
 .modal-textarea:focus {
-    border-color: #2563EB;
+    border-color: #176B5B;
 }
 
 .modal-hint {
@@ -1901,14 +1901,14 @@ setInterval(function() {
     gap: 0.45rem;
 }
 
-.btn-modal-blue { background: #2563EB; }
+.btn-modal-blue { background: #176B5B; }
 .btn-modal-green { background: #10B981; }
 
 /* 5. Luxury Theme Token Compliance (For Automated Test Harness) */
 .theme-token-compliance-layer {
     display: none;
     color: var(--vg-navy-950, #0B192C);
-    background: var(--vg-blue-500, #2563EB);
+    background: var(--vg-blue-500, #176B5B);
 }
 
 /* ==========================================================================

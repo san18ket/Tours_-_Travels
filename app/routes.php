@@ -16,6 +16,7 @@ use App\Controllers\VehicleController;
 use App\Controllers\EmployeeController;
 use App\Controllers\DispatchController;
 use App\Controllers\InvoiceController;
+use App\Controllers\FinanceController;
 use App\Controllers\DriverPortalController;
 use App\Controllers\SetupController;
 use App\Controllers\BackupController;
@@ -197,6 +198,33 @@ $router->get('/office/invoices/{id}', [InvoiceController::class, 'show'], ['auth
 $router->get('/office/invoices/{id}/print', [InvoiceController::class, 'printInvoice'], ['auth', 'role:admin,dispatcher']);
 $router->post('/office/invoices/generate/{booking_id}', [InvoiceController::class, 'generate'], ['auth', 'role:admin,dispatcher', 'csrf']);
 $router->post('/office/invoices/{id}/payment', [InvoiceController::class, 'recordPayment'], ['auth', 'role:admin,dispatcher', 'csrf']);
+
+// -----------------------------------------------------------------------------
+// Finance & Treasury Operations
+// -----------------------------------------------------------------------------
+$router->get('/office/finance', [FinanceController::class, 'dashboard'], ['auth', 'role:admin,dispatcher']);
+$router->get('/office/finance/dashboard', [FinanceController::class, 'dashboard'], ['auth', 'role:admin,dispatcher']);
+$router->get('/office/finance/transactions', [FinanceController::class, 'transactions'], ['auth', 'role:admin,dispatcher']);
+$router->post('/office/finance/transactions', [FinanceController::class, 'recordTransaction'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->post('/office/finance/transfer', [FinanceController::class, 'transfer'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->get('/office/finance/accounts', [FinanceController::class, 'accounts'], ['auth', 'role:admin,dispatcher']);
+$router->post('/office/finance/accounts', [FinanceController::class, 'storeAccount'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->get('/office/finance/accounts/{id}', [FinanceController::class, 'accountShow'], ['auth', 'role:admin,dispatcher']);
+$router->post('/office/finance/accounts/{id}', [FinanceController::class, 'updateAccount'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->post('/office/finance/accounts/{id}/toggle-status', [FinanceController::class, 'toggleAccountStatus'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->get('/office/finance/expenses', [FinanceController::class, 'expenses'], ['auth', 'role:admin,dispatcher']);
+$router->post('/office/finance/expenses', [FinanceController::class, 'storeExpense'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->post('/office/finance/expenses/{id}/status', [FinanceController::class, 'updateExpenseStatus'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->get('/office/finance/payroll', [FinanceController::class, 'payroll'], ['auth', 'role:admin,dispatcher']);
+$router->post('/office/finance/payroll/generate', [FinanceController::class, 'generatePayroll'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->get('/office/finance/payroll/{id}', [FinanceController::class, 'payrollShow'], ['auth', 'role:admin,dispatcher']);
+$router->post('/office/finance/payroll/{id}/pay', [FinanceController::class, 'markPayrollPaid'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->get('/office/finance/payslips/{id}', [FinanceController::class, 'payslip'], ['auth', 'role:admin,dispatcher']);
+$router->get('/office/finance/advances', [FinanceController::class, 'advances'], ['auth', 'role:admin,dispatcher']);
+$router->post('/office/finance/advances', [FinanceController::class, 'storeAdvance'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->post('/office/finance/advances/{id}/status', [FinanceController::class, 'updateAdvanceStatus'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->get('/office/finance/refunds', [FinanceController::class, 'refunds'], ['auth', 'role:admin,dispatcher']);
+$router->post('/office/finance/refunds/{id}/status', [FinanceController::class, 'updateRefundStatus'], ['auth', 'role:admin,dispatcher', 'csrf']);
 
 // -----------------------------------------------------------------------------
 // Backups & Disaster Recovery (Admin Only)
