@@ -10,7 +10,7 @@ class FinanceTransaction extends Model
     protected array $fillable = [
         'account_id', 'transaction_type', 'amount', 'balance_after',
         'category', 'reference_type', 'reference_id', 'payment_method',
-        'transaction_ref', 'notes', 'created_by', 'transacted_at'
+        'transaction_ref', 'notes', 'status', 'created_by', 'transacted_at'
     ];
 
     /**
@@ -53,8 +53,8 @@ class FinanceTransaction extends Model
             $ins = $pdo->prepare("INSERT INTO `finance_ledger` (
                 `account_id`, `transaction_type`, `amount`, `balance_after`,
                 `category`, `reference_type`, `reference_id`, `payment_method`,
-                `transaction_ref`, `notes`, `created_by`, `transacted_at`, `created_at`
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                `transaction_ref`, `notes`, `status`, `created_by`, `transacted_at`, `created_at`
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
 
             $ins->execute([
                 $accountId,
@@ -67,6 +67,7 @@ class FinanceTransaction extends Model
                 $data['payment_method'] ?? 'bank_transfer',
                 $data['transaction_ref'] ?? null,
                 $data['notes'] ?? null,
+                $data['status'] ?? 'completed',
                 $data['created_by'] ?? null,
                 $data['transacted_at'] ?? date('Y-m-d H:i:s')
             ]);
@@ -106,9 +107,15 @@ class FinanceTransaction extends Model
             $params[] = $filters['category'];
         }
 
+        if (!empty($filters['status'])) {
+            $where[] = "l.status = ?";
+            $params[] = $filters['status'];
+        }
+
         if (!empty($filters['search'])) {
             $term = '%' . trim($filters['search']) . '%';
-            $where[] = "(l.transaction_ref LIKE ? OR l.notes LIKE ? OR l.category LIKE ? OR a.account_name LIKE ?)";
+            $where[] = "(l.transaction_ref LIKE ? OR l.notes LIKE ? OR l.category LIKE ? OR a.account_name LIKE ? OR a.bank_name LIKE ?)";
+            $params[] = $term;
             $params[] = $term;
             $params[] = $term;
             $params[] = $term;
@@ -161,9 +168,15 @@ class FinanceTransaction extends Model
             $params[] = $filters['category'];
         }
 
+        if (!empty($filters['status'])) {
+            $where[] = "l.status = ?";
+            $params[] = $filters['status'];
+        }
+
         if (!empty($filters['search'])) {
             $term = '%' . trim($filters['search']) . '%';
-            $where[] = "(l.transaction_ref LIKE ? OR l.notes LIKE ? OR l.category LIKE ? OR a.account_name LIKE ?)";
+            $where[] = "(l.transaction_ref LIKE ? OR l.notes LIKE ? OR l.category LIKE ? OR a.account_name LIKE ? OR a.bank_name LIKE ?)";
+            $params[] = $term;
             $params[] = $term;
             $params[] = $term;
             $params[] = $term;
@@ -207,5 +220,169 @@ class FinanceTransaction extends Model
         $stmt->execute([$year]);
         return $stmt->fetchAll();
     }
-}
 
+    public function findWithDetails(int $id): ?array
+    {
+        $sql = "SELECT l.*, a.account_name, a.account_type, a.bank_name, a.account_number, a.ifsc_code,
+                       u.name as creator_name
+                FROM `finance_ledger` l
+                JOIN `finance_accounts` a ON l.account_id = a.id
+                LEFT JOIN `users` u ON l.created_by = u.id
+                WHERE l.id = ?";
+        $stmt = $this->getPdo()->prepare($sql);
+        $stmt->execute([$id]);
+        $row = $stmt->fetch();
+        return $row ?: null;
+    }
+
+    public function updateTransaction(int $id, array $data): bool
+    {
+        $tx = $this->find($id);
+        if (!$tx) {
+            return false;
+        }
+
+        $pdo = $this->getPdo();
+        $inTx = $pdo->inTransaction();
+        if (!$inTx) {
+            $pdo->beginTransaction();
+        }
+
+        try {
+            $oldStatus = strtolower($tx['status'] ?? 'completed');
+            $newStatus = isset($data['status']) ? strtolower($data['status']) : $oldStatus;
+
+            // If status changed between completed and cancelled, adjust account balance
+            if ($oldStatus !== $newStatus) {
+                $accountId = (int)$tx['account_id'];
+                $amount = (float)$tx['amount'];
+                $isCredit = ($tx['transaction_type'] === 'credit');
+
+                if ($oldStatus === 'completed' && in_array($newStatus, ['cancelled', 'inactive', 'pending'], true)) {
+                    // Reversing transaction from active balance
+                    $diff = $isCredit ? (-$amount) : (+$amount);
+                    $upd = $pdo->prepare("UPDATE `finance_accounts` SET `current_balance` = `current_balance` + ?, `updated_at` = NOW() WHERE `id` = ?");
+                    $upd->execute([$diff, $accountId]);
+                } elseif (in_array($oldStatus, ['cancelled', 'inactive', 'pending'], true) && in_array($newStatus, ['completed', 'active'], true)) {
+                    // Re-applying transaction to active balance
+                    $diff = $isCredit ? (+$amount) : (-$amount);
+                    $upd = $pdo->prepare("UPDATE `finance_accounts` SET `current_balance` = `current_balance` + ?, `updated_at` = NOW() WHERE `id` = ?");
+                    $upd->execute([$diff, $accountId]);
+                }
+            }
+
+            $sql = "UPDATE `finance_ledger` SET 
+                        `category` = ?,
+                        `payment_method` = ?,
+                        `transaction_ref` = ?,
+                        `notes` = ?,
+                        `status` = ?,
+                        `transacted_at` = ?
+                    WHERE `id` = ?";
+
+            $stmt = $pdo->prepare($sql);
+            $res = $stmt->execute([
+                $data['category'] ?? $tx['category'],
+                $data['payment_method'] ?? $tx['payment_method'],
+                $data['transaction_ref'] ?? $tx['transaction_ref'],
+                $data['notes'] ?? $tx['notes'],
+                $newStatus,
+                $data['transacted_at'] ?? $tx['transacted_at'],
+                $id
+            ]);
+
+            if (!$inTx) {
+                $pdo->commit();
+            }
+
+            return $res;
+        } catch (\Throwable $e) {
+            if (!$inTx && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    public function deleteTransaction(int $id): bool
+    {
+        $tx = $this->find($id);
+        if (!$tx) {
+            return false;
+        }
+
+        $pdo = $this->getPdo();
+        $inTx = $pdo->inTransaction();
+        if (!$inTx) {
+            $pdo->beginTransaction();
+        }
+
+        try {
+            $status = strtolower($tx['status'] ?? 'completed');
+            if (in_array($status, ['completed', 'active'], true)) {
+                $accountId = (int)$tx['account_id'];
+                $amount = (float)$tx['amount'];
+                $isCredit = ($tx['transaction_type'] === 'credit');
+
+                // Reverse effect: credit (-) subtracts from account, debit (+) restores to account
+                $diff = $isCredit ? (-$amount) : (+$amount);
+                $upd = $pdo->prepare("UPDATE `finance_accounts` SET `current_balance` = `current_balance` + ?, `updated_at` = NOW() WHERE `id` = ?");
+                $upd->execute([$diff, $accountId]);
+            }
+
+            $del = $pdo->prepare("DELETE FROM `finance_ledger` WHERE `id` = ?");
+            $res = $del->execute([$id]);
+
+            if (!$inTx) {
+                $pdo->commit();
+            }
+
+            return $res;
+        } catch (\Throwable $e) {
+            if (!$inTx && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    public function toggleStatus(int $id, ?string $targetStatus = null): array
+    {
+        $tx = $this->find($id);
+        if (!$tx) {
+            throw new RuntimeException("Transaction #{$id} not found.");
+        }
+
+        $currentStatus = strtolower($tx['status'] ?? 'completed');
+        if (empty($targetStatus)) {
+            // Cycle sequence: completed -> pending -> cancelled -> completed
+            if ($currentStatus === 'completed' || $currentStatus === 'active') {
+                $targetStatus = 'pending';
+            } elseif ($currentStatus === 'pending') {
+                $targetStatus = 'cancelled';
+            } else {
+                $targetStatus = 'completed';
+            }
+        } else {
+            $targetStatus = strtolower($targetStatus);
+            if (!in_array($targetStatus, ['completed', 'pending', 'cancelled'], true)) {
+                $targetStatus = 'completed';
+            }
+        }
+
+        $this->updateTransaction($id, [
+            'status' => $targetStatus
+        ]);
+
+        $statusText = strtoupper($targetStatus);
+        $label = ucfirst($targetStatus);
+
+        return [
+            'success'    => true,
+            'status'     => $targetStatus,
+            'status_txt' => $statusText,
+            'label'      => $label,
+            'message'    => "Transaction status updated to {$label}."
+        ];
+    }
+}

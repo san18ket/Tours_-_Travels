@@ -109,7 +109,8 @@ class Response
         }
 
         // Add HSTS if running over HTTPS
-        if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+        $isHttps = function_exists('is_https') ? is_https() : (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+        if ($isHttps) {
             header('Strict-Transport-Security: max-age=31536000; includeSubDomains; preload');
         }
     }

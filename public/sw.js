@@ -1,13 +1,15 @@
 /**
- * MANASWI Tours & Travels Service Worker (v4.4)
- * Network-First for dynamic navigation & assets to prevent stale caching issues on normal refresh
+ * Tours Progressive Web App Service Worker (v5.0)
+ * Network-First for dynamic navigation & assets, offline fallback shell, and Web Push Notifications
  */
 
-const CACHE_NAME = 'manaswi-shell-v4.4';
+const CACHE_NAME = 'tours-shell-v5.0';
 const STATIC_ASSETS = [
     'assets/css/app.css',
     'assets/js/app.js',
-    'manifest.json'
+    'manifest.json',
+    'assets/icons/icon-192.png',
+    'assets/icons/icon-512.png'
 ];
 
 // Sensitive route patterns that MUST NOT be cached by Service Worker under security compliance
@@ -21,6 +23,9 @@ const PRIVATE_ROUTE_PATTERNS = [
     /\/private_uploads/
 ];
 
+// ==============================================================================
+// 1. INSTALL LIFECYCLE
+// ==============================================================================
 self.addEventListener('install', (event) => {
     // Force new service worker to activate immediately without waiting
     self.skipWaiting();
@@ -36,13 +41,16 @@ self.addEventListener('install', (event) => {
     );
 });
 
+// ==============================================================================
+// 2. ACTIVATE LIFECYCLE
+// ==============================================================================
 self.addEventListener('activate', (event) => {
-    // Purge all legacy caches immediately
+    // Only purge legacy Tours/Manaswi shells; never delete unrelated application caches
     event.waitUntil(
         caches.keys().then((keys) => {
             return Promise.all(
                 keys.map((key) => {
-                    if (key !== CACHE_NAME) {
+                    if ((key.startsWith('tours-shell-') || key.startsWith('manaswi-shell-')) && key !== CACHE_NAME) {
                         return caches.delete(key);
                     }
                 })
@@ -51,6 +59,9 @@ self.addEventListener('activate', (event) => {
     );
 });
 
+// ==============================================================================
+// 3. FETCH STRATEGY (Network-First with Safe Offline Fallback)
+// ==============================================================================
 self.addEventListener('fetch', (event) => {
     const request = event.request;
     const url = new URL(request.url);
@@ -67,7 +78,7 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Network-First strategy for static assets: ensures CSS/JS updates apply immediately on normal reload!
+    // Network-First strategy for static assets: ensures CSS/JS updates apply immediately on normal reload
     if (url.pathname.includes('/assets/')) {
         event.respondWith(
             fetch(request).then((networkResponse) => {
@@ -97,14 +108,14 @@ self.addEventListener('fetch', (event) => {
                         <head>
                             <meta charset="UTF-8">
                             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                            <title>Offline - MANASWI Tours & Travels</title>
+                            <title>Offline - Tours</title>
                             <link rel="stylesheet" href="/assets/css/app.css">
                         </head>
                         <body style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0B192C;color:#FFF;font-family:sans-serif;padding:20px;">
                             <div style="max-width:440px;background:#1E3E62;padding:32px;border-radius:16px;text-align:center;border:1px solid #2E5077;">
                                 <div style="font-size:3rem;margin-bottom:1rem;">📡</div>
                                 <h2 style="color:#FFF;margin-bottom:0.5rem;">Connection Offline</h2>
-                                <p style="color:#94A3B8;font-size:0.95rem;margin-bottom:1.5rem;">You appear to be without internet. Once connectivity is restored, operations will resume syncing automatically.</p>
+                                <p style="color:#94A3B8;font-size:0.95rem;margin-bottom:1.5rem;">You appear to be without internet. Once connectivity is restored, Tours will resume operations automatically.</p>
                                 <button onclick="window.location.reload()" class="btn btn-primary" style="width:100%;">Retry Connection</button>
                             </div>
                         </body>
@@ -115,4 +126,94 @@ self.addEventListener('fetch', (event) => {
             });
         })
     );
+});
+
+// ==============================================================================
+// 4. WEB PUSH NOTIFICATION RECEIVER
+// ==============================================================================
+self.addEventListener('push', (event) => {
+    let payload = {};
+
+    if (event.data) {
+        try {
+            payload = event.data.json();
+        } catch (e) {
+            payload = {
+                title: 'Tours Alert',
+                body: event.data.text()
+            };
+        }
+    }
+
+    const title = payload.title || 'Tours';
+    const destinationUrl = payload.url || (payload.data && payload.data.url) || './';
+
+    // Build absolute icon/badge URLs based on scope
+    const defaultIcon = new URL('assets/icons/icon-192.png', self.registration.scope).href;
+
+    const notificationOptions = {
+        body: payload.body || 'New trip or dispatch update received.',
+        icon: payload.icon || defaultIcon,
+        badge: payload.badge || defaultIcon,
+        tag: payload.tag || ('tours-notif-' + Date.now()),
+        data: {
+            url: destinationUrl,
+            timestamp: payload.timestamp || Date.now(),
+            extra: payload.data || {}
+        },
+        vibrate: [100, 50, 100],
+        renotify: true,
+        requireInteraction: Boolean(payload.requireInteraction)
+    };
+
+    event.waitUntil(
+        self.registration.showNotification(title, notificationOptions)
+    );
+});
+
+// ==============================================================================
+// 5. NOTIFICATION CLICK ROUTING & WINDOW FOCUS
+// ==============================================================================
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+
+    const notifData = event.notification.data || {};
+    const rawUrl = notifData.url || './';
+
+    // Resolve destination URL safely within application scope
+    const targetUrl = new URL(rawUrl, self.registration.scope).href;
+
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+            // 1. If a window is already open at the exact target URL, bring it to focus
+            for (const client of clientList) {
+                if (client.url === targetUrl && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+
+            // 2. If any window in the Tours PWA is open, focus it and navigate to the target
+            for (const client of clientList) {
+                if ('focus' in client) {
+                    client.focus();
+                    if ('navigate' in client) {
+                        return client.navigate(targetUrl);
+                    }
+                    return client;
+                }
+            }
+
+            // 3. Otherwise, open a new window to the destination URL
+            if (clients.openWindow) {
+                return clients.openWindow(targetUrl);
+            }
+        })
+    );
+});
+
+// ==============================================================================
+// 6. NOTIFICATION CLOSE EVENT
+// ==============================================================================
+self.addEventListener('notificationclose', (event) => {
+    // Optional dismissal handling
 });

@@ -1128,6 +1128,276 @@ a:hover {
     }
 }
 
+/* ==========================================================================
+   NOTIFICATION DROPDOWN UI (Pixel-Perfect Match to Reference Image)
+   ========================================================================== */
+.topbar-notif-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.notif-bell-btn {
+    position: relative;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.topbar-notif-box {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: -10px;
+    width: 360px;
+    max-width: calc(100vw - 24px);
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 18px;
+    box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.04);
+    display: none;
+    flex-direction: column;
+    z-index: 10005;
+    animation: vgFadeDown 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    box-sizing: border-box;
+    cursor: default;
+    overflow: hidden;
+}
+
+.topbar-notif-wrap.is-open .topbar-notif-box {
+    display: flex;
+}
+
+.notif-box-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.95rem 1.15rem 0.85rem;
+    border-bottom: 1px solid #F1F5F9;
+    background: #FFFFFF;
+}
+
+.notif-box-head-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.notif-box-head-icon {
+    color: #0F172A;
+}
+
+.notif-box-head-title {
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: #0F172A;
+    margin: 0;
+    letter-spacing: -0.2px;
+}
+
+.notif-box-head-badge {
+    background: #EF4444;
+    color: #FFFFFF;
+    font-size: 0.68rem;
+    font-weight: 800;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+    line-height: 1;
+}
+
+.notif-box-body {
+    max-height: 380px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0.35rem 0 0.5rem;
+}
+
+.notif-box-section-title {
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.75px;
+    text-transform: uppercase;
+    padding: 0.65rem 1.15rem 0.35rem;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.notif-box-section-title.notif-sec-red {
+    color: #EF4444;
+}
+
+.notif-box-section-title.notif-sec-amber {
+    color: #D97706;
+}
+
+.notif-box-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 1.15rem;
+    border-bottom: 1px solid #F8FAFC;
+    transition: background 0.15s ease, opacity 0.2s ease, transform 0.2s ease;
+}
+
+.notif-box-item:hover {
+    background: #F8FAFC;
+}
+
+.notif-box-item:last-child {
+    border-bottom: none;
+}
+
+.notif-box-item-icon {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+}
+
+.notif-box-icon-red {
+    background: #FEE2E2;
+    color: #EF4444;
+}
+
+.notif-box-icon-amber {
+    background: #FEF3C7;
+    color: #D97706;
+}
+
+.notif-box-item-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+    line-height: 1.25;
+}
+
+.notif-box-item-name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #1E293B;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 195px;
+}
+
+.notif-box-item-sub {
+    font-size: 0.7rem;
+    color: #64748B;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 195px;
+    margin-top: 2px;
+}
+
+.notif-box-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.notif-box-btn {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    border-radius: 6px;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.notif-box-btn:active {
+    transform: scale(0.92);
+}
+
+.notif-btn-green {
+    background: #22C55E;
+    color: #FFFFFF;
+}
+
+.notif-btn-green:hover {
+    background: #16A34A;
+    color: #FFFFFF;
+}
+
+.notif-btn-red {
+    background: #EF4444;
+    color: #FFFFFF;
+}
+
+.notif-btn-red:hover {
+    background: #DC2626;
+    color: #FFFFFF;
+}
+
+.notif-box-empty {
+    padding: 2.25rem 1rem;
+    text-align: center;
+}
+
+.notif-box-empty-icon {
+    font-size: 2rem;
+    color: #CBD5E1;
+    margin-bottom: 0.4rem;
+}
+
+.notif-box-empty-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #334155;
+}
+
+.notif-box-empty-sub {
+    font-size: 0.72rem;
+    color: #94A3B8;
+    margin-top: 2px;
+}
+
+.notif-box-footer {
+    padding: 0.8rem 1.15rem;
+    text-align: center;
+    border-top: 1px solid #F1F5F9;
+    background: #FAFAFA;
+}
+
+.notif-box-footer-link {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748B;
+    text-decoration: none;
+    transition: color 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.notif-box-footer-link:hover {
+    color: #0F172A;
+    text-decoration: underline;
+}
+
 /* Main Content Workspace */
 .main-content {
     flex: 1;
@@ -2485,7 +2755,7 @@ textarea.form-control {
 
 @media (max-width: 600px) {
     .main-content {
-        padding: 1rem 0.85rem 2rem !important;
+        padding: calc(60px + 12px) 0.85rem calc(64px + 32px + env(safe-area-inset-bottom, 0px)) !important;
     }
 
     .app-footer {
@@ -2534,7 +2804,7 @@ textarea.form-control {
     }
 
     .main-content {
-        padding: 0.85rem 0.65rem 2.2rem !important;
+        padding: calc(60px + 10px) 0.65rem calc(64px + 32px + env(safe-area-inset-bottom, 0px)) !important;
     }
 }
 
@@ -4944,7 +5214,7 @@ textarea.form-control {
 /* ==========================================================================
    DESKTOP / MOBILE DASHBOARD DISPLAY SWITCH (Strict Isolation)
    ========================================================================== */
-@media (min-width: 769px) {
+@media (min-width: 901px) {
     .mv-dashboard-view,
     .mv-dash-topbar {
         display: none !important;
@@ -4955,50 +5225,95 @@ textarea.form-control {
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .desktop-dashboard-view {
         display: none !important;
+    }
+
+    /* --------------------------------------------------------------------------
+       1. Fixed Modern Mobile Topbar Header Across ALL Driver & Owner Pages
+       -------------------------------------------------------------------------- */
+    .mv-dash-topbar {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        height: 60px !important;
+        min-height: 60px !important;
+        padding: 0 16px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.90) !important;
+        box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05) !important;
+        z-index: 1000 !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Hide standard desktop topbar across ALL pages on responsive devices (<= 900px) */
+    .topbar {
+        display: none !important;
+    }
+
+    /* Fixed Notched Bottom Navigation Across ALL Pages on Responsive Devices */
+    .notched-bottom-nav {
+        display: block !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        height: 64px !important;
+        z-index: 990 !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
+        pointer-events: auto !important;
+    }
+
+    /* Ensure Navigation Drawer and Backdrop Stay Above Both Fixed Navbars */
+    .sidebar-backdrop {
+        z-index: 10010 !important;
+    }
+    .sidebar {
+        z-index: 10020 !important;
+    }
+
+    /* Floating Dropdown Menus on Fixed Topbar */
+    .mv-dash-menu {
+        position: absolute !important;
+        top: calc(100% + 6px) !important;
+        right: 0 !important;
+        z-index: 10005 !important;
+    }
+
+    /* Universal Content Spacing (Guarantees zero overlap with fixed topbar and fixed bottom navbar) */
+    .main-content {
+        padding-top: calc(60px + 14px) !important;
+        padding-bottom: calc(64px + 32px + env(safe-area-inset-bottom, 0px)) !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+        box-sizing: border-box !important;
     }
 
     .mv-dashboard-view {
         display: block !important;
         background: #f8fafc;
         min-height: 100vh;
-        padding-bottom: 74px;
-        /* clearance for bottom dock */
-    }
-
-    /* Hide standard desktop topbar across ALL pages on responsive devices (<= 768px) */
-    .topbar {
-        display: none !important;
+        padding-top: calc(60px + 12px) !important;
+        padding-bottom: calc(64px + 32px) !important;
+        box-sizing: border-box !important;
     }
 
     body.mobile-dashboard-active .app-footer,
     .main-wrapper:has(.mv-dashboard-view) .app-footer {
         display: none !important;
-    }
-
-    body.mobile-dashboard-active .main-content,
-    .main-wrapper:has(.mv-dashboard-view) .main-content {
-        padding: 0 !important;
-        margin: 0 !important;
-        max-width: 100% !important;
-    }
-
-    /* --------------------------------------------------------------------------
-       1. Mobile Topbar Header (Matches Dashboard & mobile_dashbord.jpeg across ALL pages)
-       -------------------------------------------------------------------------- */
-    .mv-dash-topbar {
-        background: #ffffff;
-        padding: 12px 16px;
-        display: flex !important;
-        align-items: center;
-        justify-content: space-between;
-        border-bottom: 1px solid #f1f5f9;
-        position: sticky;
-        top: 0;
-        z-index: 95;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
     }
 
     .mv-dash-logo {
@@ -7723,7 +8038,7 @@ body.auth-body {
 @media (max-width: 1024px) {
     /* Main layout spacing */
     .main-content {
-        padding: 1.25rem 1rem 5rem !important;
+        padding: 1.25rem 1rem 5rem;
     }
 
     /* Form wrappers */
@@ -7914,7 +8229,7 @@ body.auth-body {
 @media (max-width: 576px) {
     /* Spacing & Padding */
     .main-content {
-        padding: 0.85rem 0.65rem 5.5rem !important;
+        padding: calc(60px + 10px) 0.65rem calc(64px + 32px + env(safe-area-inset-bottom, 0px)) !important;
     }
 
     .modern-form-wrapper {

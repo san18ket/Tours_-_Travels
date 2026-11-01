@@ -204,82 +204,132 @@ $headerActions .= '</div>';
 <!-- ========================================================================= -->
 <!-- MODAL: Disburse Batch Payout                                              -->
 <!-- ========================================================================= -->
-<div id="disburseModalBackdrop" class="modal-backdrop-custom" style="display: none;" onclick="handleModalBackdropClick(event, 'disburseModalBackdrop')">
+<div id="disburseModalBackdrop" class="modal-backdrop-custom" style="display: none;" onclick="window.handleModalBackdropClick(event, 'disburseModalBackdrop')">
     <div class="modal-dialog-custom">
         <div class="modal-header-custom">
-            <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--vg-navy-900);">
-                <i class="fa-solid fa-money-bill-wave" style="color: var(--brand-primary); margin-right: 0.45rem;"></i>
-                Disburse Entire Payroll Batch
+            <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--vg-navy-900); display: flex; align-items: center; gap: 8px;">
+                <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; background: rgba(33, 135, 101, 0.12); color: #218765; font-size: 0.95rem;">
+                    <i class="fa-solid fa-money-bill-wave"></i>
+                </span>
+                <span>Disburse Entire Payroll Batch</span>
             </h3>
-            <button type="button" class="modal-close-custom" onclick="closeDisburseModal()">&times;</button>
+            <button type="button" class="modal-close-custom" onclick="window.closeDisburseModal()" aria-label="Close modal">&times;</button>
         </div>
         <form action="<?= url('/office/finance/payroll/' . $payroll['id'] . '/pay') ?>" method="POST" id="disburseForm">
             <?= csrf_field() ?>
             <div class="modal-body-custom">
-                <div style="background: rgba(33, 135, 101, 0.08); border: 1.5px solid rgba(33, 135, 101, 0.25); border-radius: 12px; padding: 1rem; margin-bottom: 1.25rem;">
-                    <div style="font-size: 0.85rem; color: var(--text-secondary);">Total Net Salary Disbursal:</div>
-                    <div style="font-size: 1.6rem; font-weight: 800; color: #218765; margin: 0.25rem 0;"><?= format_currency((float)$payroll['total_net']) ?></div>
-                    <div style="font-size: 0.8rem; color: var(--text-muted);"><?= count($payroll['items']) ?> employee bank transfers will be marked as paid.</div>
+                <div style="background: rgba(33, 135, 101, 0.08); border: 1.5px solid rgba(33, 135, 101, 0.25); border-radius: 14px; padding: 1.1rem; margin-bottom: 1.25rem;">
+                    <div style="font-size: 0.82rem; color: #475569; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;">Total Net Salary Disbursal:</div>
+                    <div style="font-size: 1.75rem; font-weight: 800; color: #218765; margin: 0.25rem 0;"><?= format_currency((float)$payroll['total_net']) ?></div>
+                    <div style="font-size: 0.82rem; color: #64748B; display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-users-viewfinder" style="color: #218765;"></i>
+                        <span><strong><?= count($payroll['items'] ?? []) ?></strong> employee bank transfer(s) will be committed to the ledger.</span>
+                    </div>
                 </div>
 
                 <div class="form-group" style="margin-bottom: 1rem;">
-                    <label class="form-label" for="disburse_acc">Disburse From Bank Account <span class="req">*</span></label>
-                    <select name="account_id" id="disburse_acc" class="form-select" required>
+                    <label class="form-label" for="disburse_acc" style="font-weight: 600; color: #1E293B; margin-bottom: 4px; display: block;">Disburse From Treasury / Bank Vault <span class="req" style="color: #DC2626;">*</span></label>
+                    <select name="account_id" id="disburse_acc" class="form-select" required style="width: 100%; height: 44px; border-radius: 10px; border: 1.5px solid #CBD5E1; padding: 0 12px; font-weight: 500;">
                         <?php foreach ($accounts as $acc): ?>
-                            <option value="<?= $acc['id'] ?>"><?= e($acc['account_name']) ?> (<?= format_currency((float)$acc['current_balance']) ?>)</option>
+                            <option value="<?= $acc['id'] ?>"><?= e(!empty($acc['bank_name']) ? $acc['bank_name'] : $acc['account_name']) ?> (<?= e($acc['account_name']) ?>) &mdash; Available: <?= format_currency((float)$acc['current_balance']) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
 
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="form-label" for="disburse_method" style="font-weight: 600; color: #1E293B; margin-bottom: 4px; display: block;">Payment Channel</label>
+                    <select name="payment_method" id="disburse_method" class="form-select" style="width: 100%; height: 44px; border-radius: 10px; border: 1.5px solid #CBD5E1; padding: 0 12px; font-weight: 500;">
+                        <option value="bank_transfer" selected>NEFT / RTGS / IMPS Bank Transfer</option>
+                        <option value="upi">UPI / Instant Corporate Transfer</option>
+                        <option value="cheque">Corporate Cheque</option>
+                        <option value="cash">Office Cash Disbursement</option>
+                    </select>
+                </div>
+
                 <div class="form-group" style="margin-bottom: 0;">
-                    <label class="form-label" for="disburse_ref">Bank UTR / Disbursal Batch Reference</label>
-                    <input type="text" name="payment_ref" id="disburse_ref" class="form-control" value="BATCH-SAL-<?= date('Ymd') ?>" required>
+                    <label class="form-label" for="disburse_ref" style="font-weight: 600; color: #1E293B; margin-bottom: 4px; display: block;">Bank UTR / Disbursal Batch Reference <span class="req" style="color: #DC2626;">*</span></label>
+                    <input type="text" name="payment_ref" id="disburse_ref" class="form-control" value="BATCH-SAL-<?= date('Ymd') ?>" required style="width: 100%; height: 44px; border-radius: 10px; border: 1.5px solid #CBD5E1; padding: 0 12px; font-weight: 600; font-family: monospace;">
                 </div>
             </div>
-            <div class="modal-footer-custom">
-                <button type="button" class="btn btn-outline" onclick="closeDisburseModal()">Cancel</button>
-                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check-double"></i> <span>Authorize Bank Disbursal</span></button>
+            <div class="modal-footer-custom" style="display: flex; justify-content: flex-end; gap: 8px; padding: 1rem 1.25rem;">
+                <button type="button" class="btn btn-outline" onclick="window.closeDisburseModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="btnDisburseSubmit">
+                    <i class="fa-solid fa-check-double"></i> <span>Authorize Bank Disbursal</span>
+                </button>
             </div>
         </form>
     </div>
 </div>
 
 <script>
-    function openDisburseModal() {
-        document.getElementById('disburseModalBackdrop').style.display = 'flex';
-    }
-    function closeDisburseModal() {
-        document.getElementById('disburseModalBackdrop').style.display = 'none';
-    }
-    function handleModalBackdropClick(e, backdropId) {
-        if (e.target && e.target.id === backdropId) {
-            document.getElementById(backdropId).style.display = 'none';
+    window.openDisburseModal = function() {
+        var modal = document.getElementById('disburseModalBackdrop');
+        if (modal) {
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
         }
-    }
+    };
+
+    window.closeDisburseModal = function() {
+        var modal = document.getElementById('disburseModalBackdrop');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+    };
+
+    window.handleModalBackdropClick = function(e, backdropId) {
+        if (e && e.target && e.target.id === backdropId) {
+            window.closeDisburseModal();
+        }
+    };
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            window.closeDisburseModal();
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var form = document.getElementById('disburseForm');
+        if (form) {
+            form.addEventListener('submit', function() {
+                var btn = document.getElementById('btnDisburseSubmit');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Authorizing...</span>';
+                }
+            });
+        }
+    });
 </script>
 
 <style>
 .modal-backdrop-custom {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(15, 35, 30, 0.45);
+    position: fixed !important;
+    top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+    width: 100vw !important; height: 100vh !important;
+    background: rgba(15, 35, 30, 0.55) !important;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 9999;
+    z-index: 99999 !important;
     padding: 1rem;
+    box-sizing: border-box;
 }
 .modal-dialog-custom {
     background: #ffffff;
     border-radius: var(--vg-radius-lg, 18px);
-    box-shadow: 0 20px 45px rgba(22, 68, 59, 0.22);
-    border: 1px solid rgba(23, 107, 91, 0.15);
+    box-shadow: 0 24px 50px rgba(22, 68, 59, 0.28);
+    border: 1px solid rgba(23, 107, 91, 0.18);
     width: 100%;
     max-width: 520px;
     overflow: hidden;
     animation: modalSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    z-index: 100000;
 }
 @keyframes modalSlideIn {
     from { opacity: 0; transform: translateY(18px) scale(0.97); }
@@ -293,11 +343,24 @@ $headerActions .= '</div>';
     border-bottom: 1px solid rgba(22, 68, 59, 0.08);
 }
 .modal-close-custom {
-    background: transparent;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #F1F5F9;
     border: none;
-    font-size: 1.5rem;
-    color: var(--text-muted);
+    font-size: 1.4rem;
+    line-height: 1;
+    color: #64748B;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+.modal-close-custom:hover {
+    background: #E2E8F0;
+    color: #0F172A;
+    transform: scale(1.05);
 }
 .modal-body-custom {
     padding: 1.25rem 1.35rem;

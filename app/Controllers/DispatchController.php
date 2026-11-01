@@ -82,7 +82,14 @@ class DispatchController extends Controller
                 $assignedBy
             );
 
-            Session::setFlash('success', "Trip deployment successful! Dispatch Code: {$dispatch['dispatch_code']}");
+            $notifInfo = $dispatch['notification_info'] ?? null;
+            if (!empty($notifInfo['employee_name'])) {
+                $recipient = $notifInfo['employee_name'];
+                $phone = !empty($notifInfo['employee_phone']) ? " ({$notifInfo['employee_phone']})" : "";
+                Session::setFlash('success', "Trip deployment successful! Dispatch Code: {$dispatch['dispatch_code']} — Duty notification dispatched to {$recipient}{$phone}.");
+            } else {
+                Session::setFlash('success', "Trip deployment successful! Dispatch Code: {$dispatch['dispatch_code']}");
+            }
             return $this->redirect(url("/office/trips/history"));
         } catch (Throwable $e) {
             Session::setFlash('danger', $e->getMessage());

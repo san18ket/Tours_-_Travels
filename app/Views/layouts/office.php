@@ -7,6 +7,7 @@
     <meta name="base-url" content="<?= url('/') ?>">
     <title><?= e($title ?? 'Admin Dashboard') ?> - <?= e($app['name'] ?? 'MANASWI Tours & Travels') ?></title>
     <link rel="stylesheet" href="<?= asset('css/app.css') ?>?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/css/app.css') ?: '2.2' ?>">
+    <link rel="stylesheet" href="<?= asset('css/tours-pwa.css') ?>?v=5.0">
     <link rel="manifest" href="<?= url('/manifest.json') ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -460,6 +461,26 @@
                                 </div>
                                 <i class="fa-solid fa-chevron-right topbar-menu-arrow"></i>
                             </a>
+                            <button type="button" class="topbar-menu-item tours-install-action tours-install-btn" role="menuitem" onclick="triggerToursInstall(event)" style="background:none; border:none; width:100%; text-align:left; cursor:pointer;">
+                                <div class="topbar-menu-icon" style="background: rgba(23, 107, 91, 0.1); color: #176B5B;">
+                                    <i class="fa-solid fa-cloud-arrow-down"></i>
+                                </div>
+                                <div class="topbar-menu-text">
+                                    <span class="topbar-menu-title install-btn-label">Install Tours</span>
+                                    <span class="topbar-menu-sub">Launch as standalone app</span>
+                                </div>
+                                <i class="fa-solid fa-download topbar-menu-arrow"></i>
+                            </button>
+                            <a href="<?= url('/office/notification-settings') ?>" class="topbar-menu-item" role="menuitem">
+                                <div class="topbar-menu-icon" style="background: rgba(59, 130, 246, 0.1); color: #3B82F6;">
+                                    <i class="fa-solid fa-bell"></i>
+                                </div>
+                                <div class="topbar-menu-text">
+                                    <span class="topbar-menu-title">Notification Settings</span>
+                                    <span class="topbar-menu-sub">Web push alerts &amp; devices</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-right topbar-menu-arrow"></i>
+                            </a>
                             <div class="topbar-menu-divider"></div>
                             <form action="<?= url('/logout') ?>" method="POST" data-no-ajax="true" style="margin:0; width:100%;" onsubmit="var b = this.querySelector('button'); if(b){ b.disabled = true; b.style.opacity = '0.7'; var t = b.querySelector('.topbar-menu-title'); if(t) t.textContent = '<?= e(__('topbar.sign_out_desc', 'Signing out...')) ?>'; }">
                                 <?= csrf_field() ?>
@@ -564,6 +585,7 @@
     </nav>
 
     <script src="<?= asset('js/app.js') ?>?v=3.0"></script>
+    <script src="<?= asset('js/tours-pwa.js') ?>?v=5.0"></script>
     <script>
         function toggleUserDropdown(e) {
             if (e) {

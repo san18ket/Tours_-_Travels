@@ -28,13 +28,32 @@ class DriverProfile extends Model
 
     public function getAvailableDrivers(): array
     {
-        $sql = "SELECT dp.*, u.name, u.email, u.phone 
+        $sql = "SELECT dp.*, u.name, u.email, u.phone,
+                       e.employee_code, e.first_name, e.last_name, e.phone as employee_phone, e.designation
                 FROM `driver_profiles` dp
                 JOIN `users` u ON dp.user_id = u.id
+                LEFT JOIN `employees` e ON dp.employee_id = e.id
                 WHERE dp.duty_status IN ('on_duty', 'off_duty') AND u.status = 'active'
                 ORDER BY u.name ASC";
         $stmt = $this->getPdo()->query($sql);
         return $stmt->fetchAll();
+    }
+
+    public function getProfileWithDetailsById(int $id): ?array
+    {
+        $sql = "SELECT dp.*, u.name, u.username, u.email, u.phone, u.status as user_status,
+                       e.employee_code, e.first_name, e.last_name, e.phone as employee_phone,
+                       e.email as employee_email, e.department, e.designation, e.employment_type,
+                       e.joining_date, e.alternate_phone, e.address, e.emergency_contact as employee_emergency_contact
+                FROM `driver_profiles` dp
+                JOIN `users` u ON dp.user_id = u.id
+                LEFT JOIN `employees` e ON dp.employee_id = e.id
+                WHERE dp.id = ?
+                LIMIT 1";
+        $stmt = $this->getPdo()->prepare($sql);
+        $stmt->execute([$id]);
+        $row = $stmt->fetch();
+        return $row ?: null;
     }
 
     public function getProfileWithDetailsByUserId(int $userId): ?array

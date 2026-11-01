@@ -85,7 +85,6 @@ class AuthController extends Controller
     public function logout(Request $request): Response
     {
         $this->authService->logout();
-        Session::setFlash('info', 'You have been safely signed out.');
         return $this->redirect(url('/login'));
     }
 

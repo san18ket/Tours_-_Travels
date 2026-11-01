@@ -6,6 +6,7 @@ use App\Models\Booking;
 use App\Models\Vehicle;
 use App\Models\DriverProfile;
 use App\Models\AuditLog;
+use App\Services\NotificationService;
 use App\Core\Database;
 use App\Core\Logger;
 use RuntimeException;
@@ -17,6 +18,7 @@ class DispatchService
     private Vehicle $vehicleModel;
     private DriverProfile $driverModel;
     private AuditLog $auditLog;
+    private NotificationService $notificationService;
 
     public function __construct()
     {
@@ -25,6 +27,7 @@ class DispatchService
         $this->vehicleModel = new Vehicle();
         $this->driverModel = new DriverProfile();
         $this->auditLog = new AuditLog();
+        $this->notificationService = new NotificationService();
     }
 
     /**
@@ -114,7 +117,24 @@ class DispatchService
             ]);
 
             $pdo->commit();
-            return $this->dispatchModel->find($dispatchId);
+
+            $dispatch = $this->dispatchModel->find($dispatchId);
+
+            // Dispatch professional duty assignment notification to this particular chauffeur/employee
+            try {
+                $notifResult = $this->notificationService->notifyDriverTripAssigned(
+                    $dispatch,
+                    $booking,
+                    $vehicle,
+                    $driver,
+                    $assignedByUserId
+                );
+                $dispatch['notification_info'] = $notifResult;
+            } catch (\Throwable $ne) {
+                Logger::error("Failed to send chauffeur trip assignment notification: " . $ne->getMessage());
+            }
+
+            return $dispatch;
         } catch (\Throwable $e) {
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
@@ -140,6 +160,14 @@ class DispatchService
         if ($updated) {
             $this->recordStatusHistory($dispatchId, $oldStatus, 'driver_accepted', null, null, null, 'Accepted by driver via mobile PWA');
             $this->auditLog->record('trip_accepted_by_driver', 'dispatches', $dispatchId, null, null);
+            try {
+                $driverProfile = $this->driverModel->find($driverProfileId);
+                if ($driverProfile) {
+                    $this->notificationService->notifyOfficeDriverAction('accepted', $dispatch, $driverProfile);
+                }
+            } catch (\Throwable $ae) {
+                Logger::warning("Office notification skipped for trip accept: " . $ae->getMessage());
+            }
         }
         return $updated;
     }
@@ -180,6 +208,16 @@ class DispatchService
             ]);
 
             $pdo->commit();
+
+            try {
+                $driverProfile = $this->driverModel->find($driverProfileId);
+                if ($driverProfile) {
+                    $this->notificationService->notifyOfficeDriverAction('started', $dispatch, $driverProfile);
+                }
+            } catch (\Throwable $se) {
+                Logger::warning("Office notification skipped for trip start: " . $se->getMessage());
+            }
+
             return true;
         } catch (\Throwable $e) {
             if ($pdo->inTransaction()) {
@@ -238,6 +276,16 @@ class DispatchService
             ]);
 
             $pdo->commit();
+
+            try {
+                $driverProfile = $this->driverModel->find($driverProfileId);
+                if ($driverProfile) {
+                    $this->notificationService->notifyOfficeDriverAction('completed', $dispatch, $driverProfile);
+                }
+            } catch (\Throwable $ce) {
+                Logger::warning("Office notification skipped for trip completion: " . $ce->getMessage());
+            }
+
             return true;
         } catch (\Throwable $e) {
             if ($pdo->inTransaction()) {
@@ -290,6 +338,16 @@ class DispatchService
             ], $cancelledByUserId);
 
             $pdo->commit();
+
+            try {
+                $driverProfile = $this->driverModel->find($dispatch['driver_id']);
+                if ($driverProfile) {
+                    $this->notificationService->notifyDriverTripCancelled($dispatch, $driverProfile, $reason);
+                }
+            } catch (\Throwable $ce) {
+                Logger::warning("Driver cancellation notification skipped: " . $ce->getMessage());
+            }
+
             return true;
         } catch (\Throwable $e) {
             if ($pdo->inTransaction()) {

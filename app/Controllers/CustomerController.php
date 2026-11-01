@@ -348,7 +348,15 @@ class CustomerController extends Controller
                 ]
             );
             if ($newAvatar) {
+                if (!empty($customer['profile_photo'])) {
+                    $this->deleteCustomerAssociatedFiles(['profile_photo' => $customer['profile_photo']]);
+                }
                 $updateData['profile_photo'] = $newAvatar;
+            } elseif (!empty($input['remove_profile_photo']) && $input['remove_profile_photo'] === '1') {
+                if (!empty($customer['profile_photo'])) {
+                    $this->deleteCustomerAssociatedFiles(['profile_photo' => $customer['profile_photo']]);
+                }
+                $updateData['profile_photo'] = null;
             }
 
             $newDoc = $this->saveUploadedFileOrBase64(
@@ -368,7 +376,15 @@ class CustomerController extends Controller
                 ]
             );
             if ($newDoc) {
+                if (!empty($customer['id_document_file'])) {
+                    $this->deleteCustomerAssociatedFiles(['id_document_file' => $customer['id_document_file']]);
+                }
                 $updateData['id_document_file'] = $newDoc;
+            } elseif (!empty($input['remove_id_document']) && $input['remove_id_document'] === '1') {
+                if (!empty($customer['id_document_file'])) {
+                    $this->deleteCustomerAssociatedFiles(['id_document_file' => $customer['id_document_file']]);
+                }
+                $updateData['id_document_file'] = null;
             }
 
             $this->customerModel->update($id, $updateData);

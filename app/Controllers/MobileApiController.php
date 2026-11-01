@@ -332,6 +332,36 @@ class MobileApiController extends Controller
     }
 
     /**
+     * GET /api/mobile/v1/driver/notifications
+     * Recent Notifications for Mobile App
+     */
+    public function notifications(Request $request): Response
+    {
+        $driverId = (int)$request->getAttribute('auth_driver_id', 0);
+        $driver = $this->driverModel->find($driverId);
+        if (!$driver) {
+            return $this->json(['success' => false, 'error' => 'Chauffeur not found.'], 404);
+        }
+
+        $notificationService = new \App\Services\NotificationService();
+        $notifications = $notificationService->getDriverNotifications(
+            (int)$driver['user_id'],
+            !empty($driver['employee_id']) ? (int)$driver['employee_id'] : null,
+            20
+        );
+        $unreadCount = $notificationService->getUnreadCount(
+            (int)$driver['user_id'],
+            !empty($driver['employee_id']) ? (int)$driver['employee_id'] : null
+        );
+
+        return $this->json([
+            'success'       => true,
+            'unread_count'  => $unreadCount,
+            'notifications' => $notifications,
+        ]);
+    }
+
+    /**
      * GET /api/mobile/v1/tracking/status
      * Tracking State and Active Telemetry Session
      */

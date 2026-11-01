@@ -1,0 +1,1034 @@
+/**
+ * Tours PWA & Push Notification System Styles
+ * Matches Forest Teal / Luxury ERP Design System
+ */
+
+/* ==========================================================================
+   1. PWA INSTALL & NOTIFICATION MODALS
+   ========================================================================== */
+.tours-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    padding: max(0.75rem, env(safe-area-inset-top)) max(0.75rem, env(safe-area-inset-right)) max(0.75rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
+    box-sizing: border-box;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.tours-modal-box {
+    background: #1E3E62;
+    border: 1px solid #2E5077;
+    border-radius: clamp(12px, 3vw, 16px);
+    width: 100%;
+    max-width: 480px;
+    max-height: calc(100vh - 1rem);
+    max-height: calc(100dvh - 1rem);
+    display: flex;
+    flex-direction: column;
+    margin: auto;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    overflow: hidden;
+    animation: toursModalSlideIn 0.25s ease-out;
+    position: relative;
+    box-sizing: border-box;
+}
+
+@keyframes toursModalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(14px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.tours-modal-header {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: clamp(0.6rem, 2vw, 0.9rem);
+    padding: clamp(0.7rem, 2vw, 1rem) clamp(0.85rem, 3vw, 1.25rem);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.2);
+    position: relative;
+    box-sizing: border-box;
+}
+
+.tours-modal-icon {
+    width: clamp(34px, 8vw, 42px);
+    height: clamp(34px, 8vw, 42px);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
+    flex-shrink: 0;
+}
+
+.tours-modal-head-text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.tours-modal-head-text h3 {
+    margin: 0;
+    font-size: clamp(0.95rem, 3vw, 1.15rem);
+    font-weight: 700;
+    color: #FFFFFF;
+    line-height: 1.25;
+}
+
+.tours-modal-head-text p {
+    margin: 0.15rem 0 0;
+    font-size: clamp(0.74rem, 2vw, 0.82rem);
+    color: #94A3B8;
+    line-height: 1.3;
+}
+
+.tours-modal-close {
+    position: absolute;
+    top: clamp(0.65rem, 2vw, 0.95rem);
+    right: clamp(0.75rem, 3vw, 1rem);
+    background: transparent;
+    border: none;
+    color: #94A3B8;
+    font-size: 1.4rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0.25rem;
+    transition: color 0.15s;
+    z-index: 2;
+}
+
+.tours-modal-close:hover {
+    color: #FFFFFF;
+}
+
+.tours-modal-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: clamp(0.75rem, 2.5vw, 1.2rem) clamp(0.85rem, 3vw, 1.25rem);
+    color: #E2E8F0;
+    font-size: clamp(0.82rem, 2.5vw, 0.92rem);
+    line-height: 1.45;
+    box-sizing: border-box;
+}
+
+.tours-modal-footer {
+    flex-shrink: 0;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    padding: clamp(0.65rem, 2vw, 0.85rem) clamp(0.85rem, 3vw, 1.25rem);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: #0E2238;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    box-sizing: border-box;
+}
+
+/* iOS Steps UI */
+.ios-install-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.ios-step-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 0.85rem 1rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.ios-step-item .step-num {
+    background: #176B5B;
+    color: #FFFFFF;
+    font-weight: 700;
+    font-size: 0.85rem;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.ios-step-item .step-desc {
+    color: #E2E8F0;
+    font-size: 0.9rem;
+    line-height: 1.45;
+}
+
+.step-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    color: #67E8F9;
+    margin-top: 0.35rem;
+}
+
+.ios-note-box {
+    background: rgba(23, 107, 91, 0.15);
+    border: 1px solid rgba(23, 107, 91, 0.35);
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    color: #5EEAD4;
+    font-size: 0.83rem;
+    line-height: 1.4;
+}
+
+.ios-note-box i {
+    font-size: 1rem;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+/* Denied Instructions UI */
+.denied-instructions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.denied-instructions .inst-item {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: #CBD5E1;
+    border-left: 3px solid #EF4444;
+}
+
+.denied-instructions .inst-item strong {
+    display: block;
+    color: #FFFFFF;
+    margin-bottom: 0.2rem;
+}
+
+/* ==========================================================================
+   2. FLOATING TOAST NOTIFICATIONS
+   ========================================================================== */
+.tours-toast-container {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 999999;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-width: 380px;
+    width: calc(100vw - 3rem);
+    pointer-events: none;
+}
+
+.tours-toast-item {
+    pointer-events: auto;
+    background: #1E3E62;
+    border: 1px solid #2E5077;
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    animation: toastPopIn 0.25s ease-out;
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+.tours-toast-item.is-fadeout {
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+@keyframes toastPopIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.toast-icon-wrap {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.toast-content-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.toast-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #94A3B8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.toast-msg {
+    font-size: 0.88rem;
+    color: #FFFFFF;
+    line-height: 1.4;
+}
+
+.toast-close-btn {
+    background: transparent;
+    border: none;
+    color: #94A3B8;
+    font-size: 1.25rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0.1rem;
+    margin-left: 0.25rem;
+}
+
+/* ==========================================================================
+   3. DROPDOWN INSTALL BUTTON STATES
+   ========================================================================== */
+.tours-install-action.is-installed {
+    opacity: 0.65;
+    cursor: default;
+}
+
+.tours-install-action.is-installed .topbar-menu-icon {
+    background: rgba(16, 185, 129, 0.15) !important;
+    color: #10B981 !important;
+}
+
+/* ==========================================================================
+   4. NOTIFICATION SETTINGS PAGE UI
+   ========================================================================== */
+.notif-settings-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-top: 1.25rem;
+}
+
+@media (min-width: 992px) {
+    .notif-settings-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    .notif-settings-full {
+        grid-column: 1 / -1;
+    }
+}
+
+.notif-card {
+    background: #1E3E62;
+    border: 1px solid #2E5077;
+    border-radius: 14px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.notif-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.notif-card-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.notif-card-title-wrap h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #FFFFFF;
+    font-weight: 700;
+}
+
+.notif-status-badge {
+    padding: 0.25rem 0.65rem;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.status-granted {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34D399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-default {
+    background: rgba(245, 158, 11, 0.15);
+    color: #FBBF24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.status-denied {
+    background: rgba(239, 68, 68, 0.15);
+    color: #F87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.device-table-wrap {
+    overflow-x: auto;
+}
+
+.device-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.device-table th {
+    text-align: left;
+    padding: 0.75rem 1rem;
+    font-size: 0.8rem;
+    color: #94A3B8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.device-table td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: #CBD5E1;
+    font-size: 0.88rem;
+    vertical-align: middle;
+}
+
+.device-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    font-weight: 600;
+    color: #FFFFFF;
+}
+
+.device-icon-pill {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(23, 107, 91, 0.2);
+    color: #5EEAD4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+}
+
+/* ==========================================================================
+   5. TOURS PROFESSIONAL LIGHT NOTIFICATION & INSTALL MODAL (PURPLE LUXURY)
+   ========================================================================== */
+.tours-light-modal {
+    background: rgba(255, 255, 255, 0.96) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(226, 232, 240, 0.9) !important;
+    border-radius: clamp(16px, 4vw, 22px) !important;
+    width: 100% !important;
+    max-width: 440px !important;
+    max-height: calc(100vh - 1.5rem) !important;
+    max-height: calc(100dvh - 1.5rem) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    margin: auto !important;
+    box-shadow: 0 25px 50px -12px rgba(109, 40, 217, 0.22), 0 0 0 1px rgba(255, 255, 255, 0.95) inset, 0 10px 25px -5px rgba(0, 0, 0, 0.08) !important;
+    overflow: hidden !important;
+    animation: toursModalSlideIn 0.26s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    position: relative !important;
+    box-sizing: border-box !important;
+    color: #1E293B !important;
+}
+
+.tours-light-header {
+    padding: clamp(1.2rem, 3.5vw, 1.5rem) clamp(1.2rem, 3.5vw, 1.5rem) 0.4rem;
+    text-align: center;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.tours-light-icon-wrap {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    box-shadow: 0 10px 22px -4px rgba(124, 58, 237, 0.38), 0 0 0 4px rgba(139, 92, 246, 0.12);
+    margin-bottom: 0.75rem;
+    animation: toursBellPulse 2.6s infinite ease-in-out;
+}
+
+@keyframes toursBellPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+}
+
+.tours-light-header h3 {
+    margin: 0;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    font-size: clamp(1.15rem, 3.5vw, 1.35rem);
+    font-weight: 800;
+    color: #0F172A;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+}
+
+.tours-light-header p {
+    margin: 0.35rem 0 0;
+    font-size: clamp(0.82rem, 2.3vw, 0.88rem);
+    color: #64748B;
+    line-height: 1.45;
+    max-width: 370px;
+}
+
+.tours-light-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(241, 245, 249, 0.9);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748B;
+    font-size: 1.15rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    transition: all 0.15s ease;
+    z-index: 5;
+}
+
+.tours-light-close:hover {
+    background: #E2E8F0;
+    color: #0F172A;
+}
+
+.tours-light-body {
+    padding: 0.4rem clamp(1.2rem, 3.5vw, 1.5rem) 0.4rem;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    box-sizing: border-box;
+}
+
+.tours-benefits-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    margin: 0.4rem 0 0.6rem;
+}
+
+.tours-benefit-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(248, 250, 252, 0.95);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-radius: 12px;
+    padding: clamp(0.55rem, 1.8vw, 0.7rem) clamp(0.7rem, 2vw, 0.9rem);
+    font-size: clamp(0.82rem, 2.2vw, 0.88rem);
+    font-weight: 600;
+    color: #334155;
+    transition: all 0.2s ease;
+}
+
+.tours-benefit-item:hover {
+    background: #FFFFFF;
+    border-color: rgba(139, 92, 246, 0.35);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.08);
+}
+
+.tours-benefit-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: rgba(139, 92, 246, 0.12);
+    color: #7C3AED;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.tours-light-footer {
+    padding: 0.7rem clamp(1.2rem, 3.5vw, 1.5rem) clamp(1.1rem, 3vw, 1.4rem);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.98);
+    border-top: 1px solid rgba(241, 245, 249, 0.9);
+    flex-shrink: 0;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+}
+
+.btn-purple-primary {
+    width: 100%;
+    background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%);
+    color: #FFFFFF !important;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    padding: clamp(0.7rem, 2.2vw, 0.82rem) 1.25rem;
+    font-size: clamp(0.86rem, 2.4vw, 0.92rem);
+    box-shadow: 0 6px 18px -2px rgba(109, 40, 217, 0.38);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    min-height: 44px;
+}
+
+.btn-purple-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+    box-shadow: 0 8px 24px -2px rgba(109, 40, 217, 0.48);
+    transform: translateY(-1px);
+    color: #FFFFFF !important;
+}
+
+.btn-purple-primary:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.btn-purple-primary:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.btn-purple-secondary {
+    width: 100%;
+    background: rgba(241, 245, 249, 0.95);
+    color: #64748B !important;
+    font-weight: 600;
+    border: 1px solid rgba(203, 213, 225, 0.8);
+    border-radius: 12px;
+    padding: clamp(0.62rem, 2vw, 0.75rem) 1.25rem;
+    font-size: clamp(0.84rem, 2.3vw, 0.9rem);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 42px;
+}
+
+.btn-purple-secondary:hover {
+    background: #E2E8F0;
+    color: #1E293B !important;
+}
+
+/* Light Theme Blocked Guidance */
+.tours-light-blocked-box {
+    background: rgba(254, 242, 242, 0.95);
+    border: 1px solid rgba(254, 202, 202, 0.95);
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    margin: 0.4rem 0 0.6rem;
+    color: #991B1B;
+}
+
+.tours-light-blocked-box strong {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.88rem;
+    margin-bottom: 0.35rem;
+    color: #DC2626;
+}
+
+.tours-light-blocked-box p {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: #475569;
+}
+
+.tours-light-blocked-steps {
+    margin: 0.6rem 0 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.tours-light-blocked-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    font-size: 0.78rem;
+    color: #334155;
+    line-height: 1.35;
+}
+
+.tours-step-badge-purple {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #7C3AED;
+    color: #FFFFFF;
+    font-size: 0.68rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+/* Inline HTTPS Requirement Notice */
+.tours-https-inline-notice {
+    background: rgba(254, 243, 199, 0.75);
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    border-radius: 10px;
+    padding: 0.55rem 0.75rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    font-size: clamp(0.72rem, 2vw, 0.78rem);
+    color: #92400E;
+    line-height: 1.35;
+    margin: 0.45rem 0 0.2rem;
+}
+
+.tours-https-inline-notice i {
+    color: #D97706;
+    font-size: 0.95rem;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.tours-https-notice-text {
+    flex: 1 1 auto;
+}
+
+.tours-https-notice-text strong {
+    color: #78350F;
+    display: block;
+    margin-bottom: 0.1rem;
+}
+
+/* Legacy & Dark Modals Preservation */
+.tours-onboarding-box {
+    max-width: 480px;
+    width: 100%;
+    border: 1px solid #176B5B;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7), 0 0 40px rgba(23, 107, 91, 0.25);
+}
+
+.onboarding-badge {
+    background: rgba(245, 158, 11, 0.15);
+    color: #FBBF24;
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    font-size: clamp(0.68rem, 2vw, 0.74rem);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-bottom: 0.35rem;
+}
+
+.onboarding-badge.badge-success {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34D399;
+    border-color: rgba(16, 185, 129, 0.35);
+}
+
+.onboarding-badge.badge-danger {
+    background: rgba(239, 68, 68, 0.15);
+    color: #F87171;
+    border-color: rgba(239, 68, 68, 0.35);
+}
+
+.onboarding-badge.badge-warning {
+    background: rgba(245, 158, 11, 0.15);
+    color: #FBBF24;
+    border-color: rgba(245, 158, 11, 0.35);
+}
+
+.onboarding-feature-list {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.4rem, 1.5vw, 0.6rem);
+    margin: clamp(0.6rem, 2vw, 0.85rem) 0;
+}
+
+.onboarding-feature-item {
+    display: flex;
+    align-items: center;
+    gap: clamp(0.55rem, 1.8vw, 0.75rem);
+    background: rgba(0, 0, 0, 0.22);
+    padding: clamp(0.45rem, 1.6vw, 0.65rem) clamp(0.65rem, 2vw, 0.85rem);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: #E2E8F0;
+    font-size: clamp(0.78rem, 2.2vw, 0.86rem);
+    line-height: 1.35;
+}
+
+.onboarding-feature-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    background: rgba(23, 107, 91, 0.25);
+    color: #5EEAD4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.8rem;
+}
+
+.tours-step-guide {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.35rem, 1.4vw, 0.5rem);
+    margin: clamp(0.5rem, 1.8vw, 0.75rem) 0 0;
+}
+
+.tours-step-item {
+    display: flex;
+    align-items: center;
+    gap: clamp(0.5rem, 1.8vw, 0.7rem);
+    background: rgba(0, 0, 0, 0.22);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 8px;
+    padding: clamp(0.4rem, 1.5vw, 0.6rem) clamp(0.6rem, 2vw, 0.8rem);
+    font-size: clamp(0.76rem, 2.2vw, 0.84rem);
+    color: #E2E8F0;
+}
+
+.tours-step-num {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #176B5B;
+    color: #FFFFFF;
+    font-weight: 700;
+    font-size: 0.72rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.tours-step-text {
+    flex: 1 1 auto;
+    line-height: 1.35;
+    min-width: 0;
+}
+
+.tours-step-highlight {
+    color: #5EEAD4;
+    font-weight: 600;
+}
+
+.insecure-context-card {
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    border-radius: 10px;
+    padding: clamp(0.6rem, 2vw, 0.8rem) clamp(0.7rem, 2.2vw, 0.95rem);
+    margin: clamp(0.4rem, 1.5vw, 0.65rem) 0;
+}
+
+.insecure-context-card strong {
+    color: #FBBF24;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: clamp(0.82rem, 2.4vw, 0.9rem);
+    margin-bottom: 0.35rem;
+}
+
+.insecure-context-card p {
+    color: #E2E8F0;
+    font-size: clamp(0.76rem, 2.2vw, 0.84rem);
+    line-height: 1.4;
+    margin: 0 0 0.4rem;
+}
+
+.insecure-opt-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-top: 0.45rem;
+}
+
+.insecure-opt-item {
+    background: rgba(0, 0, 0, 0.28);
+    padding: clamp(0.35rem, 1.4vw, 0.5rem) clamp(0.5rem, 1.8vw, 0.7rem);
+    border-radius: 6px;
+    font-size: clamp(0.72rem, 2vw, 0.8rem);
+    color: #CBD5E1;
+    line-height: 1.35;
+    border-left: 2px solid #FBBF24;
+}
+
+.insecure-opt-item code {
+    background: rgba(255, 255, 255, 0.12);
+    color: #5EEAD4;
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    word-break: break-all;
+}
+
+.tunnel-guide-box {
+    background: rgba(14, 165, 233, 0.12);
+    border: 1px solid rgba(14, 165, 233, 0.35);
+    border-radius: 8px;
+    padding: clamp(0.55rem, 1.8vw, 0.8rem);
+    margin-top: 0.5rem;
+}
+
+.tunnel-guide-box strong {
+    color: #38BDF8;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: clamp(0.8rem, 2.2vw, 0.88rem);
+    margin-bottom: 0.35rem;
+}
+
+.tunnel-guide-box p {
+    color: #E2E8F0;
+    font-size: clamp(0.74rem, 2vw, 0.82rem);
+    line-height: 1.4;
+    margin: 0 0 0.35rem;
+}
+
+.tunnel-cmd {
+    background: #0B192C;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 6px;
+    padding: 0.35rem 0.6rem;
+    font-family: Consolas, Monaco, "Courier New", monospace;
+    font-size: clamp(0.72rem, 2vw, 0.78rem);
+    color: #38BDF8;
+    display: block;
+    margin: 0.35rem 0;
+    word-break: break-all;
+    user-select: all;
+}
+
+.blocked-permission-card {
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    border-radius: 10px;
+    padding: clamp(0.6rem, 2vw, 0.8rem) clamp(0.7rem, 2.2vw, 0.95rem);
+    margin: clamp(0.4rem, 1.5vw, 0.65rem) 0;
+}
+
+.blocked-permission-card strong {
+    color: #F87171;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: clamp(0.82rem, 2.4vw, 0.9rem);
+    margin-bottom: 0.3rem;
+}
+
+.blocked-permission-card p {
+    color: #E2E8F0;
+    font-size: clamp(0.76rem, 2.2vw, 0.85rem);
+    line-height: 1.4;
+    margin: 0;
+}
+
+@media (max-height: 540px) {
+    .tours-light-header {
+        padding: 0.6rem 1rem 0.2rem;
+    }
+    .tours-light-icon-wrap {
+        width: 38px;
+        height: 38px;
+        font-size: 1rem;
+        margin-bottom: 0.35rem;
+    }
+    .tours-benefits-list {
+        display: none;
+    }
+    .tours-light-footer {
+        padding: 0.4rem 1rem 0.6rem;
+    }
+    .tours-modal-header {
+        padding: 0.45rem 0.85rem;
+    }
+    .tours-modal-icon {
+        width: 30px;
+        height: 30px;
+        font-size: 0.9rem;
+    }
+    .tours-modal-body {
+        padding: 0.5rem 0.85rem;
+    }
+    .tours-modal-footer {
+        padding: 0.45rem 0.85rem;
+    }
+    .onboarding-feature-list {
+        display: none;
+    }
+}

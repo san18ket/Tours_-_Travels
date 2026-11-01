@@ -1,13 +1,13 @@
 {
-  "name": "VoyageGo Tours & Travels Fleet Operations",
-  "short_name": "VoyageGo",
-  "description": "Enterprise Fleet Dispatch, Tour Booking & Chauffeur Operations System",
+  "name": "Tours",
+  "short_name": "Tours",
+  "description": "Tours & Travels Fleet Operations, Booking & Chauffeur Suite",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#0B192C",
   "theme_color": "#0B192C",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "icons": [
     {
       "src": "assets/icons/icon-192.png",

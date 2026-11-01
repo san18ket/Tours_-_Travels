@@ -96,6 +96,28 @@ if (!function_exists('format_date')) {
     }
 }
 
+if (!function_exists('is_https')) {
+    function is_https(): bool
+    {
+        if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+            return true;
+        }
+        if (isset($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443) {
+            return true;
+        }
+        if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https') {
+            return true;
+        }
+        if (isset($_SERVER['HTTP_CF_VISITOR'])) {
+            $visitor = json_decode($_SERVER['HTTP_CF_VISITOR'], true);
+            if (isset($visitor['scheme']) && $visitor['scheme'] === 'https') {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
 if (!function_exists('url')) {
     function url(string $path = ''): string
     {
@@ -420,6 +442,38 @@ if (!function_exists('customer_document_url')) {
         return storage_url($path);
     }
 }
+
+if (!function_exists('time_ago')) {
+    /**
+     * Human-friendly relative time difference
+     */
+    function time_ago(?string $datetime): string
+    {
+        if (empty($datetime)) {
+            return '';
+        }
+        $timestamp = strtotime($datetime);
+        if (!$timestamp) {
+            return '';
+        }
+        $diff = time() - $timestamp;
+        if ($diff < 60) {
+            return 'Just now';
+        } elseif ($diff < 3600) {
+            $mins = max(1, (int)floor($diff / 60));
+            return "{$mins}m ago";
+        } elseif ($diff < 86400) {
+            $hours = (int)floor($diff / 3600);
+            return "{$hours}h ago";
+        } elseif ($diff < 604800) {
+            $days = (int)floor($diff / 86400);
+            return "{$days}d ago";
+        } else {
+            return date('d M', $timestamp);
+        }
+    }
+}
+
 
 
 

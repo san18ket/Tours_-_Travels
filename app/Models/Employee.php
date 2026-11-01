@@ -17,13 +17,30 @@ class Employee extends Model
         'phone',
         'alternate_phone',
         'email',
+        'profile_photo',
+        'date_of_birth',
+        'gender',
+        'nationality',
         'department',
         'designation',
         'employment_type',
         'joining_date',
         'status',
         'emergency_contact',
+        'emergency_contact_name',
+        'emergency_contact_phone',
         'address',
+        'address_line',
+        'city',
+        'state',
+        'postal_code',
+        'country',
+        'id_type',
+        'id_number',
+        'id_expiry',
+        'id_document_file',
+        'license_document_file',
+        'notes',
         'created_at',
         'updated_at',
     ];
@@ -131,7 +148,8 @@ class Employee extends Model
                        dp.license_expiry,
                        COALESCE(dp.experience_years, 1) as experience_years,
                        COALESCE(dp.duty_status, 'off_duty') as duty_status,
-                       COALESCE(dp.rating, 5.0) as rating
+                       COALESCE(dp.rating, 5.0) as rating,
+                       COALESCE(e.license_document_file, dp.license_document_file) as driver_license_doc
                 FROM `employees` e
                 LEFT JOIN `users` u ON e.user_id = u.id
                 LEFT JOIN `driver_profiles` dp ON (dp.employee_id = e.id OR (e.user_id IS NOT NULL AND dp.user_id = e.user_id))

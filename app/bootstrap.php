@@ -12,6 +12,12 @@ ini_set('log_errors', '1');
 require_once __DIR__ . '/Core/Autoloader.php';
 \App\Core\Autoloader::register();
 
+// Load Composer packages if available
+$composerAutoload = dirname(__DIR__) . '/vendor/autoload.php';
+if (file_exists($composerAutoload)) {
+    require_once $composerAutoload;
+}
+
 // Load global helpers
 require_once __DIR__ . '/Core/helpers.php';
 

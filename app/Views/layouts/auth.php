@@ -18,7 +18,8 @@
         $iconVer = @filemtime(dirname(__DIR__, 2) . '/public/assets/images/manaswi-icon.png') ?: time();
     ?>
 
-    <!-- Favicon -->
+    <!-- Favicon & PWA Manifest -->
+    <link rel="manifest" href="<?= url('/manifest.json') ?>">
     <link rel="icon" type="image/png" href="<?= asset('images/manaswi-icon.png') ?>?v=<?= $iconVer ?>">
     <link rel="icon" type="image/svg+xml" href="<?= asset('images/manaswi-logo.svg') ?>?v=<?= $iconVer ?>">
     
@@ -542,30 +543,6 @@
             <!-- Right Glassmorphism Card Container -->
             <section class="hero-right-col">
                 <div class="glass-login-card">
-                    <!-- Floating Toast Notifications -->
-                    <?php $activeFlashes = !empty($flashes) ? $flashes : \App\Core\Session::getAllFlashes(); ?>
-                    <?php if (!empty($activeFlashes)): ?>
-                    <script>
-                        (function() {
-                            var f = <?= json_encode($activeFlashes, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
-                            var emit = function() {
-                                if (typeof window.vgNotify === 'function') {
-                                    for (var k in f) {
-                                        if (f.hasOwnProperty(k)) window.vgNotify(f[k], k);
-                                    }
-                                } else {
-                                    setTimeout(emit, 40);
-                                }
-                            };
-                            if (document.readyState === 'loading') {
-                                document.addEventListener('DOMContentLoaded', emit);
-                            } else {
-                                emit();
-                            }
-                        })();
-                    </script>
-                    <?php endif; ?>
-
                     <?= $content ?>
                 </div>
             </section>

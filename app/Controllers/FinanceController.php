@@ -119,6 +119,7 @@ class FinanceController extends Controller
         $search = trim((string)$request->get('search', (string)$request->get('q', '')));
         $type = trim((string)$request->get('type', ''));
         $category = trim((string)$request->get('category', ''));
+        $status = trim((string)$request->get('status', ''));
         $accountId = (int)$request->get('account_id', 0);
         $dateFrom = trim((string)$request->get('date_from', ''));
         $dateTo = trim((string)$request->get('date_to', ''));
@@ -129,6 +130,7 @@ class FinanceController extends Controller
             'search'           => $search,
             'transaction_type' => $type,
             'category'         => $category,
+            'status'           => $status,
             'account_id'       => $accountId,
             'date_from'        => $dateFrom,
             'date_to'          => $dateTo,
@@ -170,6 +172,7 @@ class FinanceController extends Controller
             'search'         => $search,
             'selectedType'   => $type,
             'selectedCategory' => $category,
+            'selectedStatus'   => $status,
             'selectedAccount'  => $accountId,
             'dateFrom'       => $dateFrom,
             'dateTo'         => $dateTo,
@@ -231,6 +234,152 @@ class FinanceController extends Controller
             }
             Session::setFlash('error', $err);
             return $this->redirect($redirectTo);
+        }
+    }
+
+    /**
+     * View single transaction voucher details (Dedicated View Page matching office/customers/30)
+     */
+    public function showTransaction(Request $request, array $params): Response
+    {
+        $id = (int)($params['id'] ?? 0);
+        $tx = $this->transactionModel->findWithDetails($id);
+        if (!$tx) {
+            if ($request->wantsJson()) {
+                return $this->json(['success' => false, 'message' => 'Transaction record not found.'], 404);
+            }
+            Session::setFlash('error', 'Transaction record not found.');
+            return $this->redirect(url('/office/finance/transactions'));
+        }
+
+        if ($request->wantsJson()) {
+            return $this->json(['success' => true, 'transaction' => $tx]);
+        }
+
+        $activeAccounts = $this->accountModel->getActiveAccounts();
+        $account = $this->accountModel->find((int)$tx['account_id']);
+
+        // Fetch contextual linked data if available
+        $linkedData = null;
+        if (!empty($tx['reference_type']) && !empty($tx['reference_id'])) {
+            $pdo = \App\Core\Database::getConnection();
+            if ($tx['reference_type'] === 'booking') {
+                $stmt = $pdo->prepare("SELECT b.booking_code, b.total_amount, b.status as booking_status, c.name as customer_name, c.phone as customer_phone FROM `bookings` b LEFT JOIN `customers` c ON b.customer_profile_id = c.id WHERE b.id = ?");
+                $stmt->execute([(int)$tx['reference_id']]);
+                $linkedData = $stmt->fetch(\PDO::FETCH_ASSOC);
+            } elseif ($tx['reference_type'] === 'business_expense') {
+                $stmt = $pdo->prepare("SELECT expense_code, category, vendor_name, amount, status as expense_status FROM `business_expenses` WHERE id = ?");
+                $stmt->execute([(int)$tx['reference_id']]);
+                $linkedData = $stmt->fetch(\PDO::FETCH_ASSOC);
+            }
+        }
+
+        $refTitle = $tx['transaction_ref'] ?: ('TX-' . str_pad($tx['id'], 5, '0', STR_PAD_LEFT));
+
+        return $this->render('office/finance/transaction_show', [
+            'title'          => "{$refTitle} — Transaction Voucher Details",
+            'transaction'    => $tx,
+            'account'        => $account,
+            'activeAccounts' => $activeAccounts,
+            'linkedData'     => $linkedData
+        ], 'layouts/office');
+    }
+
+    /**
+     * Update transaction voucher details
+     */
+    public function updateTransaction(Request $request, array $params): Response
+    {
+        $id = (int)($params['id'] ?? 0);
+        $redirectTo = $request->post('redirect_to') ?: url('/office/finance/transactions');
+        try {
+            $category = trim((string)$request->post('category', ''));
+            $paymentMethod = trim((string)$request->post('payment_method', 'bank_transfer'));
+            $ref = trim((string)$request->post('transaction_ref', ''));
+            $notes = trim((string)$request->post('notes', ''));
+            $status = trim((string)$request->post('status', 'completed'));
+            $transactedAt = trim((string)$request->post('transacted_at', ''));
+
+            $ok = $this->transactionModel->updateTransaction($id, [
+                'category'        => $category,
+                'payment_method'  => $paymentMethod,
+                'transaction_ref' => $ref,
+                'notes'           => $notes,
+                'status'          => $status,
+                'transacted_at'   => $transactedAt ?: date('Y-m-d H:i:s')
+            ]);
+
+            if (!$ok) {
+                $err = 'Transaction record not found or could not be updated.';
+                if ($request->isAjax()) {
+                    return $this->json(['success' => false, 'message' => $err], 404);
+                }
+                Session::setFlash('error', $err);
+                return $this->redirect($redirectTo);
+            }
+
+            $msg = 'Transaction voucher successfully updated.';
+            Session::setFlash('success', $msg);
+            if ($request->isAjax()) {
+                return $this->json(['success' => true, 'message' => $msg]);
+            }
+            return $this->redirect($redirectTo);
+        } catch (\Throwable $e) {
+            $err = 'Failed to update transaction: ' . $e->getMessage();
+            if ($request->isAjax()) {
+                return $this->json(['success' => false, 'message' => $err], 500);
+            }
+            Session::setFlash('error', $err);
+            return $this->redirect($redirectTo);
+        }
+    }
+
+    /**
+     * Delete transaction voucher entry & reconcile balance
+     */
+    public function deleteTransaction(Request $request, array $params): Response
+    {
+        $id = (int)($params['id'] ?? 0);
+        $redirectTo = $request->post('redirect_to') ?: url('/office/finance/transactions');
+        try {
+            $ok = $this->transactionModel->deleteTransaction($id);
+            if (!$ok) {
+                $err = 'Transaction record not found or could not be deleted.';
+                if ($request->isAjax()) {
+                    return $this->json(['success' => false, 'message' => $err], 404);
+                }
+                Session::setFlash('error', $err);
+                return $this->redirect($redirectTo);
+            }
+
+            $msg = 'Transaction voucher deleted and account balance reconciled.';
+            Session::setFlash('success', $msg);
+            if ($request->isAjax()) {
+                return $this->json(['success' => true, 'message' => $msg]);
+            }
+            return $this->redirect($redirectTo);
+        } catch (\Throwable $e) {
+            $err = 'Failed to delete transaction: ' . $e->getMessage();
+            if ($request->isAjax()) {
+                return $this->json(['success' => false, 'message' => $err], 500);
+            }
+            Session::setFlash('error', $err);
+            return $this->redirect($redirectTo);
+        }
+    }
+
+    /**
+     * AJAX Toggle transaction status between completed and cancelled
+     */
+    public function toggleTransactionStatus(Request $request, array $params): Response
+    {
+        $id = (int)($params['id'] ?? 0);
+        try {
+            $targetStatus = trim((string)$request->post('status', ''));
+            $res = $this->transactionModel->toggleStatus($id, $targetStatus ?: null);
+            return $this->json($res);
+        } catch (\Throwable $e) {
+            return $this->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -983,6 +1132,12 @@ class FinanceController extends Controller
             return $this->redirect(url('/office/finance/payroll'));
         }
 
+        // Auto-populate draft batch if it has 0 items but active employees exist
+        if ($payroll['status'] === 'draft' && empty($payroll['items'])) {
+            $this->syncDraftPayrollItems($id, (int)$payroll['year'], (int)$payroll['month']);
+            $payroll = $this->payrollModel->findWithItems($id);
+        }
+
         $accounts = $this->accountModel->getActiveAccounts();
 
         return $this->render('office/finance/payroll_show', [
@@ -990,6 +1145,65 @@ class FinanceController extends Controller
             'payroll'  => $payroll,
             'accounts' => $accounts,
         ], 'layouts/office');
+    }
+
+    /**
+     * Auto-sync active employees into an empty draft payroll batch
+     */
+    private function syncDraftPayrollItems(int $payrollId, int $year, int $month): void
+    {
+        $employees = $this->employeeModel->where("status = 'active'", [], 'id ASC');
+        if (empty($employees)) {
+            return;
+        }
+
+        $salaryStructModel = new SalaryStructure();
+        $totalGross = 0.0;
+        $totalDeductions = 0.0;
+        $totalNet = 0.0;
+
+        foreach ($employees as $emp) {
+            $struct = $salaryStructModel->findByEmployeeId((int)$emp['id']);
+            $basic = $struct ? (float)$struct['basic_salary'] : 18000.00;
+            $allowances = $struct ? ((float)$struct['hra'] + (float)$struct['transport_allowance'] + (float)$struct['medical_allowance'] + (float)$struct['special_allowance']) : 0.00;
+            $gross = $basic + $allowances;
+
+            $statutoryDeductions = $struct ? ((float)$struct['pf_deduction'] + (float)$struct['esi_deduction'] + (float)$struct['professional_tax'] + (float)$struct['tds_deduction'] + (float)$struct['other_deductions']) : 0.00;
+
+            $pendingAdvance = $this->advanceModel->getPendingAdvanceForEmployee((int)$emp['id']);
+            $advanceToDeduct = min($pendingAdvance, round($gross * 0.15, 2));
+
+            $totalEmpDeductions = $statutoryDeductions + $advanceToDeduct;
+            $netSalary = max(0.0, $gross - $totalEmpDeductions);
+
+            $payslipNumber = $this->payrollItemModel->generatePayslipNumber($year, $month, (int)$emp['id']);
+
+            $this->payrollItemModel->create([
+                'payroll_id'       => $payrollId,
+                'employee_id'      => $emp['id'],
+                'payslip_number'   => $payslipNumber,
+                'basic_salary'     => $basic,
+                'allowances_total' => $allowances,
+                'gross_salary'     => $gross,
+                'deductions_total' => $statutoryDeductions,
+                'advance_deducted' => $advanceToDeduct,
+                'net_salary'       => $netSalary,
+                'payment_status'   => 'unpaid',
+                'created_at'       => date('Y-m-d H:i:s'),
+                'updated_at'       => date('Y-m-d H:i:s'),
+            ]);
+
+            $totalGross += $gross;
+            $totalDeductions += $totalEmpDeductions;
+            $totalNet += $netSalary;
+        }
+
+        $this->payrollModel->update($payrollId, [
+            'total_gross'      => $totalGross,
+            'total_deductions' => $totalDeductions,
+            'total_net'        => $totalNet,
+            'updated_at'       => date('Y-m-d H:i:s'),
+        ]);
     }
 
     /**
@@ -1026,8 +1240,17 @@ class FinanceController extends Controller
             $now = date('Y-m-d H:i:s');
             $totalNet = (float)$payroll['total_net'];
 
+            if (empty($payroll['items']) || $totalNet <= 0) {
+                $err = 'Cannot disburse an empty payroll batch. Please ensure staff members are present in the batch.';
+                if ($request->isAjax()) {
+                    return $this->json(['success' => false, 'message' => $err], 422);
+                }
+                Session::setFlash('error', $err);
+                return $this->redirect(url('/office/finance/payroll/' . $id));
+            }
+
             // 1. Debit total payroll amount from selected account
-            if ($accountId > 0) {
+            if ($accountId > 0 && $totalNet > 0) {
                 $this->transactionModel->recordTransaction([
                     'account_id'       => $accountId,
                     'transaction_type' => 'debit',
@@ -1044,7 +1267,7 @@ class FinanceController extends Controller
             }
 
             // 2. Mark all items as paid
-            $pdo = $this->payrollModel->getPdo();
+            $pdo = \App\Core\Database::getConnection();
             $stmt = $pdo->prepare("UPDATE `payroll_items` SET `payment_status` = 'paid', `payment_method` = ?, `payment_ref` = ?, `paid_at` = ?, `updated_at` = ? WHERE `payroll_id` = ?");
             $stmt->execute([$paymentMethod, $ref, $now, $now, $id]);
 
@@ -1276,6 +1499,213 @@ class FinanceController extends Controller
             }
             Session::setFlash('error', $err);
             return $this->redirect(url('/office/finance/advances'));
+        }
+    }
+
+    /**
+    /**
+     * Show single employee advance profile / voucher view
+     */
+    public function showAdvance(Request $request, array $params): Response
+    {
+        $id = (int)($params['id'] ?? 0);
+        $adv = $this->advanceModel->findWithDetails($id);
+        if (!$adv) {
+            if ($request->wantsJson()) {
+                return $this->json(['success' => false, 'message' => 'Staff advance record not found.'], 404);
+            }
+            Session::setFlash('error', 'Staff advance record not found.');
+            return $this->redirect(url('/office/finance/advances'));
+        }
+
+        if ($request->wantsJson()) {
+            return $this->json(['success' => true, 'advance' => $adv]);
+        }
+
+        $employee = $this->employeeModel->find((int)$adv['employee_id']);
+        $accounts = $this->accountModel->getActiveAccounts();
+        $employees = $this->employeeModel->where("status = 'active'", [], 'first_name ASC, last_name ASC');
+
+        // Fetch linked journal disbursement transaction if any
+        $linkedTransaction = null;
+        try {
+            $pdo = \App\Core\Database::getConnection();
+            $txStmt = $pdo->prepare("SELECT t.*, a.account_name, a.bank_name, a.account_number, a.ifsc_code 
+                                     FROM `finance_transactions` t 
+                                     LEFT JOIN `finance_accounts` a ON t.account_id = a.id 
+                                     WHERE t.reference_type = 'employee_advance' AND t.reference_id = ? 
+                                     ORDER BY t.id DESC LIMIT 1");
+            $txStmt->execute([$id]);
+            $linkedTransaction = $txStmt->fetch() ?: null;
+        } catch (\Throwable $e) {
+            $linkedTransaction = null;
+        }
+
+        // Fetch payroll deduction history where advance was deducted
+        $deductions = [];
+        try {
+            $pdo = \App\Core\Database::getConnection();
+            $dedStmt = $pdo->prepare("SELECT pi.*, p.month, p.year, p.payroll_code, p.status as payroll_status 
+                                     FROM `payroll_items` pi 
+                                     JOIN `payrolls` p ON pi.payroll_id = p.id 
+                                     WHERE pi.employee_id = ? AND pi.advance_deducted > 0 
+                                     ORDER BY p.year DESC, p.month DESC");
+            $dedStmt->execute([(int)$adv['employee_id']]);
+            $deductions = $dedStmt->fetchAll() ?: [];
+        } catch (\Throwable $e) {
+            $deductions = [];
+        }
+
+        return $this->render('office/finance/advance_show', [
+            'title'             => "Advance Voucher #{$adv['advance_code']}",
+            'advance'           => $adv,
+            'employee'          => $employee,
+            'accounts'          => $accounts,
+            'employees'         => $employees,
+            'linkedTransaction' => $linkedTransaction,
+            'deductions'        => $deductions,
+        ], 'layouts/office');
+    }
+
+    /**
+     * Update employee advance record
+     */
+    public function updateAdvance(Request $request, array $params): Response
+    {
+        $id = (int)($params['id'] ?? 0);
+        $redirectTo = $request->post('redirect_to') ?: url('/office/finance/advances');
+        try {
+            $adv = $this->advanceModel->find($id);
+            if (!$adv) {
+                $err = 'Staff advance record not found.';
+                if ($request->isAjax()) {
+                    return $this->json(['success' => false, 'message' => $err], 404);
+                }
+                Session::setFlash('error', $err);
+                return $this->redirect($redirectTo);
+            }
+
+            $amount = (float)$request->post('amount', $adv['amount']);
+            $reason = trim((string)$request->post('reason', $adv['reason']));
+            $reqDate = trim((string)$request->post('requested_date', $adv['requested_date']));
+            $notes = trim((string)$request->post('notes', $adv['notes'] ?? ''));
+            $status = trim((string)$request->post('status', $adv['status']));
+            $accountId = (int)$request->post('account_id', 0) ?: null;
+
+            if ($amount <= 0 || empty($reason)) {
+                $err = 'Valid advance amount and reason are required.';
+                if ($request->isAjax()) {
+                    return $this->json(['success' => false, 'message' => $err], 422);
+                }
+                Session::setFlash('error', $err);
+                return $this->redirect($redirectTo);
+            }
+
+            $userId = Session::getUserId();
+            $now = date('Y-m-d H:i:s');
+
+            $data = [
+                'amount'         => $amount,
+                'reason'         => $reason,
+                'requested_date' => $reqDate,
+                'notes'          => $notes,
+                'status'         => $status,
+                'updated_at'     => $now,
+            ];
+
+            if ($status === 'approved' && $adv['status'] !== 'approved') {
+                $data['approved_by'] = $userId;
+                $data['approved_at'] = $now;
+
+                if ($accountId) {
+                    $emp = $this->employeeModel->find((int)$adv['employee_id']);
+                    $empName = $emp ? trim(($emp['first_name'] ?? '') . ' ' . ($emp['last_name'] ?? '')) : "Employee #{$adv['employee_id']}";
+                    $this->transactionModel->recordTransaction([
+                        'account_id'       => $accountId,
+                        'transaction_type' => 'debit',
+                        'amount'           => $amount,
+                        'category'         => 'Staff Advance',
+                        'reference_type'   => 'employee_advance',
+                        'reference_id'     => $id,
+                        'payment_method'   => 'cash',
+                        'transaction_ref'  => $adv['advance_code'],
+                        'notes'            => "Disbursed advance to {$empName}. Reason: {$reason}",
+                        'created_by'       => $userId,
+                        'transacted_at'    => $now,
+                    ]);
+                }
+            }
+
+            $this->advanceModel->update($id, $data);
+
+            $msg = "Advance {$adv['advance_code']} successfully updated.";
+            Session::setFlash('success', $msg);
+
+            if ($request->isAjax()) {
+                return $this->json(['success' => true, 'message' => $msg]);
+            }
+            return $this->redirect($redirectTo);
+        } catch (\Throwable $e) {
+            $err = 'Failed to update advance: ' . $e->getMessage();
+            if ($request->isAjax()) {
+                return $this->json(['success' => false, 'message' => $err], 500);
+            }
+            Session::setFlash('error', $err);
+            return $this->redirect($redirectTo);
+        }
+    }
+
+    /**
+     * Delete employee advance record
+     */
+    public function deleteAdvance(Request $request, array $params): Response
+    {
+        $id = (int)($params['id'] ?? 0);
+        $redirectTo = $request->post('redirect_to') ?: url('/office/finance/advances');
+        try {
+            $adv = $this->advanceModel->find($id);
+            if (!$adv) {
+                $err = 'Staff advance record not found or could not be deleted.';
+                if ($request->isAjax()) {
+                    return $this->json(['success' => false, 'message' => $err], 404);
+                }
+                Session::setFlash('error', $err);
+                return $this->redirect($redirectTo);
+            }
+
+            $code = $adv['advance_code'];
+            $this->advanceModel->delete($id);
+
+            $msg = "Advance record {$code} deleted successfully.";
+            Session::setFlash('success', $msg);
+
+            if ($request->isAjax()) {
+                return $this->json(['success' => true, 'message' => $msg]);
+            }
+            return $this->redirect($redirectTo);
+        } catch (\Throwable $e) {
+            $err = 'Failed to delete advance: ' . $e->getMessage();
+            if ($request->isAjax()) {
+                return $this->json(['success' => false, 'message' => $err], 500);
+            }
+            Session::setFlash('error', $err);
+            return $this->redirect($redirectTo);
+        }
+    }
+
+    /**
+     * AJAX Toggle advance status between approved, pending, recovered, rejected
+     */
+    public function toggleAdvanceStatus(Request $request, array $params): Response
+    {
+        $id = (int)($params['id'] ?? 0);
+        try {
+            $targetStatus = trim((string)$request->post('status', ''));
+            $userId = Session::getUserId();
+            $res = $this->advanceModel->toggleStatus($id, $targetStatus ?: null, $userId);
+            return $this->json($res);
+        } catch (\Throwable $e) {
+            return $this->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 

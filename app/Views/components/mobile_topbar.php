@@ -15,6 +15,7 @@ $dashLangs = [
 ];
 $homeUrl = (auth_role() === 'driver') ? url('/driver/dashboard') : url('/office/dashboard');
 $profileUrl = (auth_role() === 'driver') ? url('/driver/profile') : url('/office/users');
+$notifSettingsUrl = (auth_role() === 'driver') ? url('/driver/notification-settings') : url('/office/notification-settings');
 $curReturnUrl = $_SERVER['REQUEST_URI'] ?? $homeUrl;
 ?>
 <!-- Mobile Top Navbar (Matches Dashboard Home Page on Responsive Devices) -->
@@ -80,6 +81,20 @@ $curReturnUrl = $_SERVER['REQUEST_URI'] ?? $homeUrl;
                         <i class="fa-solid fa-user-circle"></i>
                     </div>
                     <span class="mv-menu-item-label"><?= e(__('topbar.view_profile', 'View Profile')) ?></span>
+                    <i class="fa-solid fa-chevron-right mv-menu-item-arrow"></i>
+                </a>
+                <button type="button" class="mv-menu-item tours-install-action tours-install-btn" onclick="toggleMvProfile(event); triggerToursInstall(event);" style="background:none; border:none; width:100%; text-align:left; cursor:pointer;">
+                    <div class="mv-menu-item-icon" style="background: rgba(23, 107, 91, 0.1); color: #176B5B;">
+                        <i class="fa-solid fa-cloud-arrow-down"></i>
+                    </div>
+                    <span class="mv-menu-item-label install-btn-label">Install Tours</span>
+                    <i class="fa-solid fa-download mv-menu-item-arrow"></i>
+                </button>
+                <a href="<?= $notifSettingsUrl ?>" class="mv-menu-item">
+                    <div class="mv-menu-item-icon" style="background: rgba(59, 130, 246, 0.1); color: #3B82F6;">
+                        <i class="fa-solid fa-bell"></i>
+                    </div>
+                    <span class="mv-menu-item-label">Notification Settings</span>
                     <i class="fa-solid fa-chevron-right mv-menu-item-arrow"></i>
                 </a>
                 <div class="mv-menu-divider"></div>

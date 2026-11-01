@@ -44,7 +44,7 @@ it("1b. Office layout contains vgNotify flash emitter", str_contains($officeLayo
 it("2a. Driver layout does NOT render static <div class=\"alert alert-", !str_contains($driverLayout, '<div class="alert alert-'));
 it("2b. Driver layout contains vgNotify flash emitter", str_contains($driverLayout, 'window.vgNotify('));
 it("3a. Auth layout does NOT render static <div class=\"alert alert-", !str_contains($authLayout, '<div class="alert alert-'));
-it("3b. Auth layout contains vgNotify flash emitter", str_contains($authLayout, 'window.vgNotify('));
+it("3b. Auth layout does NOT emit floating toasts per login UX specification", !str_contains($authLayout, 'window.vgNotify('));
 
 it("4a. Vehicle create does NOT render static <div class=\"alert alert-danger\"", !str_contains($vehCreate, '<div class="alert alert-danger'));
 it("4b. Vehicle create emits error via window.vgNotify", str_contains($vehCreate, "window.vgNotify(firstErr, 'error')"));

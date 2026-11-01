@@ -13,6 +13,7 @@ use App\Models\Employee;
 use App\Models\GpsLog;
 use App\Models\AuditLog;
 use App\Services\DispatchService;
+use App\Services\NotificationService;
 use Throwable;
 
 class DriverPortalController extends Controller
@@ -25,6 +26,7 @@ class DriverPortalController extends Controller
     private Employee $employeeModel;
     private GpsLog $gpsLogModel;
     private AuditLog $auditLog;
+    private NotificationService $notificationService;
 
     public function __construct()
     {
@@ -36,6 +38,7 @@ class DriverPortalController extends Controller
         $this->employeeModel = new Employee();
         $this->gpsLogModel = new GpsLog();
         $this->auditLog = new AuditLog();
+        $this->notificationService = new NotificationService();
     }
 
     /**
@@ -79,14 +82,22 @@ class DriverPortalController extends Controller
             // Current assigned vehicle
             $currentVehicle = $this->dispatchModel->getDriverCurrentVehicle($driverProfileId);
 
+            // Recent Notifications & Unread count for this employee/driver
+            $driverUserId = (int)$driver['user_id'];
+            $driverEmpId = !empty($driver['employee_id']) ? (int)$driver['employee_id'] : null;
+            $notifications = $this->notificationService->getDriverNotifications($driverUserId, $driverEmpId, 8);
+            $unreadNotifCount = $this->notificationService->getUnreadCount($driverUserId, $driverEmpId);
+
             return $this->render('driver/dashboard', [
-                'driver'         => $driver,
-                'stats'          => $stats,
-                'activeTrip'     => $activeTrip,
-                'assignedTrips'  => $assignedTrips,
-                'recentHistory'  => $recentHistory,
-                'currentVehicle' => $currentVehicle,
-                'title'          => 'Chauffeur Command Dashboard',
+                'driver'           => $driver,
+                'stats'            => $stats,
+                'activeTrip'       => $activeTrip,
+                'assignedTrips'    => $assignedTrips,
+                'recentHistory'    => $recentHistory,
+                'currentVehicle'   => $currentVehicle,
+                'notifications'    => $notifications,
+                'unreadNotifCount' => $unreadNotifCount,
+                'title'            => 'Chauffeur Command Dashboard',
             ], 'layouts/driver');
         } catch (Throwable $e) {
             Session::setFlash('danger', $e->getMessage());
@@ -515,5 +526,101 @@ class DriverPortalController extends Controller
             return $this->redirect($referer);
         }
         return $this->redirect(url('/driver/dashboard'));
+    }
+
+    /**
+     * Mark single notification as read (AJAX or Form POST)
+     */
+    public function markNotificationRead(Request $request, array $params = []): Response
+    {
+        try {
+            $id = (int)($params['id'] ?? $request->input('id', 0));
+            $driver = $this->getAuthenticatedDriver();
+            $this->notificationService->markAsRead($id, (int)$driver['user_id']);
+
+            if ($request->isAjax() || $request->wantsJson()) {
+                $driverEmpId = !empty($driver['employee_id']) ? (int)$driver['employee_id'] : null;
+                $unread = $this->notificationService->getUnreadCount((int)$driver['user_id'], $driverEmpId);
+                return $this->json([
+                    'success' => true,
+                    'unread_count' => $unread,
+                ]);
+            }
+
+            return $this->redirect(url('/driver/dashboard#notifications'));
+        } catch (Throwable $e) {
+            if ($request->isAjax() || $request->wantsJson()) {
+                return $this->json(['success' => false, 'error' => $e->getMessage()], 400);
+            }
+            Session::setFlash('danger', $e->getMessage());
+            return $this->redirect(url('/driver/dashboard'));
+        }
+    }
+
+    /**
+     * Mark all notifications as read (AJAX or Form POST)
+     */
+    public function markAllNotificationsRead(Request $request): Response
+    {
+        try {
+            $driver = $this->getAuthenticatedDriver();
+            $driverEmpId = !empty($driver['employee_id']) ? (int)$driver['employee_id'] : null;
+            $this->notificationService->markAllAsRead((int)$driver['user_id'], $driverEmpId);
+
+            if ($request->isAjax() || $request->wantsJson()) {
+                return $this->json([
+                    'success' => true,
+                    'unread_count' => 0,
+                ]);
+            }
+
+            return $this->redirect(url('/driver/dashboard#notifications'));
+        } catch (Throwable $e) {
+            if ($request->isAjax() || $request->wantsJson()) {
+                return $this->json(['success' => false, 'error' => $e->getMessage()], 400);
+            }
+            Session::setFlash('danger', $e->getMessage());
+            return $this->redirect(url('/driver/dashboard'));
+        }
+    }
+
+    /**
+     * MODULE 19.5: Dedicated Driver Notifications Center Page
+     */
+    public function notificationsPage(Request $request): Response
+    {
+        try {
+            $driver = $this->getAuthenticatedDriver();
+            $driverUserId = (int)$driver['user_id'];
+            $driverEmpId = !empty($driver['employee_id']) ? (int)$driver['employee_id'] : null;
+
+            $search = trim((string)$request->get('search', ''));
+            $status = trim((string)$request->get('status', ''));
+            $page = max(1, (int)$request->get('page', 1));
+            $perPage = in_array((int)$request->get('per_page'), [10, 25, 50], true) ? (int)$request->get('per_page') : 10;
+
+            $kpis = $this->notificationService->getKpiStats($driverUserId, $driverEmpId);
+            $totalRecords = $this->notificationService->countFiltered($driverUserId, $driverEmpId, $search, $status);
+            $notifications = $this->notificationService->getPaginatedNotifications($driverUserId, $driverEmpId, $search, $status, $page, $perPage);
+            $totalPages = max(1, (int)ceil($totalRecords / $perPage));
+            $unreadNotifCount = $kpis['total_unread'] ?? 0;
+
+            return $this->render('driver/notifications', [
+                'driver'           => $driver,
+                'notifications'    => $notifications,
+                'totalRecords'     => $totalRecords,
+                'totalPages'       => $totalPages,
+                'page'             => $page,
+                'perPage'          => $perPage,
+                'search'           => $search,
+                'status'           => $status,
+                'kpis'             => $kpis,
+                'unreadNotifCount' => $unreadNotifCount,
+                'title'            => 'Chauffeur Notifications & Dispatch Alerts',
+            ], 'layouts/driver');
+        } catch (Throwable $e) {
+            Session::setFlash('danger', $e->getMessage());
+            return $this->redirect(url('/driver/dashboard'));
+        }
     }
 }

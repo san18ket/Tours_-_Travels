@@ -238,64 +238,76 @@
         font-size: 0.88rem;
     }
 
-    /* Glass Flash Alerts */
-    .glass-alert {
-        padding: 0.75rem 1rem;
-        border-radius: 16px;
-        margin-bottom: 1.25rem;
+    /* Professional Inline Error Alert (Shown ONLY when wrong username/password entered) */
+    .glass-alert-danger {
+        padding: 0.85rem 1.1rem;
+        border-radius: 14px;
+        margin-bottom: 1.35rem;
         font-size: 0.88rem;
+        font-weight: 600;
         display: flex;
         align-items: center;
-        gap: 0.65rem;
-        backdrop-filter: blur(12px);
-        transition: opacity 0.4s ease, transform 0.4s ease, max-height 0.4s ease, margin 0.4s ease, padding 0.4s ease;
+        gap: 0.75rem;
+        background: rgba(254, 242, 242, 0.95);
+        border: 1.5px solid rgba(239, 68, 68, 0.35);
+        color: #b91c1c;
+        box-shadow: 0 4px 14px rgba(220, 38, 38, 0.08);
+        backdrop-filter: blur(10px);
+        animation: alertSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: opacity 0.3s ease, transform 0.3s ease, max-height 0.3s ease;
         max-height: 120px;
         overflow: hidden;
     }
 
-    .glass-alert.fade-out {
+    @keyframes alertSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-8px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .glass-alert-danger.fade-out {
         opacity: 0;
         transform: translateY(-8px);
         max-height: 0;
-        margin-top: 0;
         margin-bottom: 0;
         padding-top: 0;
         padding-bottom: 0;
         border: none;
     }
 
-    .glass-alert-danger {
-        background: rgba(220, 53, 69, 0.12);
-        border: 1px solid rgba(220, 53, 69, 0.3);
-        color: #a71d2a;
+    .glass-alert-danger i.alert-icon {
+        color: #dc2626;
+        font-size: 1.05rem;
+        flex-shrink: 0;
     }
 
-    .glass-alert-success {
-        background: rgba(40, 167, 69, 0.12);
-        border: 1px solid rgba(40, 167, 69, 0.3);
-        color: #155724;
+    .glass-alert-danger .alert-text {
+        flex: 1;
+        line-height: 1.4;
     }
 
-    .glass-alert-info {
-        background: rgba(13, 110, 253, 0.12);
-        border: 1px solid rgba(13, 110, 253, 0.3);
-        color: #0b4ec2;
-    }
-
-    .glass-alert-close {
+    .glass-alert-danger .glass-alert-close {
         margin-left: auto;
         background: none;
         border: none;
-        color: inherit;
+        color: #dc2626;
         opacity: 0.55;
         cursor: pointer;
-        font-size: 1.15rem;
+        font-size: 1.25rem;
         line-height: 1;
         padding: 0 0.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         transition: opacity 0.2s ease;
     }
 
-    .glass-alert-close:hover {
+    .glass-alert-danger .glass-alert-close:hover {
         opacity: 1;
     }
 
@@ -364,27 +376,18 @@
     <p class="glass-card-sub"><?= e(__('auth.signin_prompt', 'Sign in to continue your journey')) ?></p>
 </div>
 
-<!-- Active Flash Notifications -->
-<?php $activeFlashes = !empty($flashes) ? $flashes : \App\Core\Session::getAllFlashes(); ?>
-<?php if (!empty($activeFlashes)): ?>
-    <?php foreach ($activeFlashes as $type => $message): ?>
-        <?php
-            $alertClass = 'glass-alert-success';
-            $alertIcon = 'fa-circle-check';
-            if ($type === 'danger' || $type === 'error') {
-                $alertClass = 'glass-alert-danger';
-                $alertIcon = 'fa-circle-exclamation';
-            } elseif ($type === 'info') {
-                $alertClass = 'glass-alert-info';
-                $alertIcon = 'fa-circle-info';
-            }
-        ?>
-        <div class="glass-alert <?= $alertClass ?> flash-auto-dismiss" role="alert">
-            <i class="fa-solid <?= $alertIcon ?>"></i>
-            <span><?= e($message) ?></span>
-            <button type="button" class="glass-alert-close" onclick="dismissAlert(this.closest('.glass-alert'))" aria-label="Dismiss">&times;</button>
-        </div>
-    <?php endforeach; ?>
+<!-- Error Alert: ONLY shown if user enters wrong username or password -->
+<?php
+    $allFlashes = !empty($flashes) ? $flashes : \App\Core\Session::getAllFlashes();
+    // Strictly error/danger only — never show success, info, or logout messages
+    $loginError = $allFlashes['danger'] ?? $allFlashes['error'] ?? null;
+?>
+<?php if (!empty($loginError)): ?>
+    <div class="glass-alert-danger" role="alert" id="loginAlertBox">
+        <i class="fa-solid fa-circle-exclamation alert-icon"></i>
+        <span class="alert-text"><?= e($loginError) ?></span>
+        <button type="button" class="glass-alert-close" onclick="dismissAlert(this.closest('.glass-alert-danger'))" aria-label="Dismiss">&times;</button>
+    </div>
 <?php endif; ?>
 
 <!-- Primary Authentication Form -->
@@ -556,57 +559,39 @@ function dismissAlert(alertEl) {
     alertEl.classList.add('fade-out');
     setTimeout(function() {
         if (alertEl.parentNode) alertEl.parentNode.removeChild(alertEl);
-    }, 400);
+    }, 320);
 }
 
-function showLoginAlert(msg, type) {
-    var existing = document.querySelector('.glass-alert');
+function showLoginAlert(msg) {
+    var existing = document.getElementById('loginAlertBox') || document.querySelector('.glass-alert-danger');
     if (existing) existing.remove();
 
     var alertDiv = document.createElement('div');
-    alertDiv.className = 'glass-alert ' + (type === 'danger' ? 'glass-alert-danger' : 'glass-alert-info') + ' flash-auto-dismiss';
+    alertDiv.id = 'loginAlertBox';
+    alertDiv.className = 'glass-alert-danger';
     alertDiv.setAttribute('role', 'alert');
-    alertDiv.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> <span>' + msg + '</span>' +
-                         '<button type="button" class="glass-alert-close" onclick="dismissAlert(this.closest(\'.glass-alert\'))" aria-label="Dismiss">&times;</button>';
+    alertDiv.innerHTML = '<i class="fa-solid fa-circle-exclamation alert-icon"></i> ' +
+                         '<span class="alert-text">' + msg + '</span>' +
+                         '<button type="button" class="glass-alert-close" onclick="dismissAlert(this.closest(\'.glass-alert-danger\'))" aria-label="Dismiss">&times;</button>';
 
     var formEl = document.getElementById('loginForm');
     if (formEl && formEl.parentNode) {
         formEl.parentNode.insertBefore(alertDiv, formEl);
     }
-
-    setTimeout(function() {
-        dismissAlert(alertDiv);
-    }, 4500);
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    // Auto-dismiss existing flash alerts
-    var alerts = document.querySelectorAll('.flash-auto-dismiss');
-    alerts.forEach(function (alert) {
-        var timer = null;
-        var remaining = 3500;
-        var start = Date.now();
-
-        function startTimer() {
-            start = Date.now();
-            timer = setTimeout(function () {
-                dismissAlert(alert);
-            }, remaining);
+    // Clear error alert as soon as the user starts typing to correct credentials
+    ['login', 'password'].forEach(function(fieldId) {
+        var inputEl = document.getElementById(fieldId);
+        if (inputEl) {
+            inputEl.addEventListener('input', function() {
+                var alertBox = document.getElementById('loginAlertBox') || document.querySelector('.glass-alert-danger');
+                if (alertBox) {
+                    dismissAlert(alertBox);
+                }
+            });
         }
-
-        alert.addEventListener('mouseenter', function () {
-            if (timer) {
-                clearTimeout(timer);
-                timer = null;
-                remaining = Math.max(500, remaining - (Date.now() - start));
-            }
-        });
-
-        alert.addEventListener('mouseleave', function () {
-            if (!timer) startTimer();
-        });
-
-        startTimer();
     });
 
     // Lightning-fast AJAX Submit Handler for Login
@@ -627,7 +612,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var passVal = (passInput ? passInput.value : '');
 
             if (!loginVal || !passVal) {
-                showLoginAlert('Please enter your username/email and password.', 'danger');
+                showLoginAlert('Please enter your username/email and password.');
                 if (!loginVal && loginInput) loginInput.focus();
                 else if (passInput) passInput.focus();
                 return false;
@@ -665,8 +650,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!data) return;
 
                 if (data.success) {
-                    btn.style.background = 'linear-gradient(135deg, #10B981 0%, #059669 100%)';
-                    btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> <span>Success! Opening Admin Panel...</span>';
+                    // Professional redirect without success alert popups
+                    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Redirecting...</span>';
                     var target = data.redirect || '<?= url('/office/dashboard') ?>';
                     window.location.href = target;
                 } else {
@@ -674,7 +659,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     btn.style.pointerEvents = '';
                     btn.style.opacity = '1';
                     btn.innerHTML = '<i class="fa-solid fa-arrow-right"></i> <span><?= e(__('auth.login_btn', 'Login')) ?></span>';
-                    showLoginAlert(data.message || 'Invalid credentials provided. Please check username or password.', 'danger');
+                    showLoginAlert(data.message || 'Invalid credentials provided. Please check username or password.');
                 }
             })
             .catch(function(err) {

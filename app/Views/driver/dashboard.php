@@ -419,60 +419,85 @@ $statOnTime = '96 %';
         <div class="driver-right-stack">
 
             <!-- 1. Recent Notifications Card -->
-            <div class="driver-card driver-notif-card">
+            <div class="driver-card driver-notif-card" id="notifications">
                 <div class="notif-card-header">
-                    <h3 class="notif-card-title">Recent Notifications</h3>
-                    <a href="<?= url('/driver/trips') ?>" class="notif-view-all">View All &rarr;</a>
+                    <div style="display:flex; align-items:center; gap:0.5rem;">
+                        <h3 class="notif-card-title">Recent Notifications</h3>
+                        <?php if (!empty($unreadNotifCount) && $unreadNotifCount > 0): ?>
+                            <span class="notif-unread-count-pill" id="unreadNotifCountPill"><?= (int)$unreadNotifCount ?> unread</span>
+                        <?php endif; ?>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:0.6rem;">
+                        <?php if (!empty($unreadNotifCount) && $unreadNotifCount > 0): ?>
+                            <button type="button" class="btn-mark-all-read" onclick="markAllNotificationsRead()" title="Mark all as read">
+                                <i class="fa-solid fa-check-double"></i> Mark all read
+                            </button>
+                        <?php endif; ?>
+                        <a href="<?= url('/driver/trips') ?>" class="notif-view-all">All Trips &rarr;</a>
+                    </div>
                 </div>
 
-                <div class="notif-list">
-                    <!-- Item 1: Trip Started -->
-                    <div class="notif-item">
-                        <div class="notif-icon-circle notif-green">
-                            <i class="fa-solid fa-check"></i>
+                <div class="notif-list" id="driverNotifList">
+                    <?php if (empty($notifications)): ?>
+                        <div class="notif-empty-state">
+                            <div class="notif-empty-icon"><i class="fa-regular fa-bell-slash"></i></div>
+                            <div class="notif-empty-title">All caught up!</div>
+                            <div class="notif-empty-sub">No recent notifications. New trip duty dispatches will appear here.</div>
                         </div>
-                        <div class="notif-content">
-                            <strong class="notif-title">Trip started successfully</strong>
-                            <span class="notif-sub">Mumbai &rarr; Pune</span>
-                        </div>
-                        <span class="notif-time">08:02 AM</span>
-                    </div>
-
-                    <!-- Item 2: Passenger Count -->
-                    <div class="notif-item">
-                        <div class="notif-icon-circle notif-blue">
-                            <i class="fa-solid fa-info"></i>
-                        </div>
-                        <div class="notif-content">
-                            <strong class="notif-title">Passenger count updated</strong>
-                            <span class="notif-sub">12 passengers on board</span>
-                        </div>
-                        <span class="notif-time">09:10 AM</span>
-                    </div>
-
-                    <!-- Item 3: Next Stop -->
-                    <div class="notif-item">
-                        <div class="notif-icon-circle notif-amber">
-                            <i class="fa-solid fa-exclamation"></i>
-                        </div>
-                        <div class="notif-content">
-                            <strong class="notif-title">Next stop approaching</strong>
-                            <span class="notif-sub">Lonavala</span>
-                        </div>
-                        <span class="notif-time">10:15 AM</span>
-                    </div>
-
-                    <!-- Item 4: Message from Manager -->
-                    <div class="notif-item">
-                        <div class="notif-icon-circle notif-blue">
-                            <i class="fa-solid fa-comment-dots"></i>
-                        </div>
-                        <div class="notif-content">
-                            <strong class="notif-title">New message from manager</strong>
-                            <span class="notif-sub">&ldquo;Keep up the good work!&rdquo;</span>
-                        </div>
-                        <span class="notif-time">10:32 AM</span>
-                    </div>
+                    <?php else: ?>
+                        <?php foreach ($notifications as $n): ?>
+                            <?php
+                                $payload = $n['payload'] ?? [];
+                                $isUnread = empty($n['is_read']);
+                                $isTrip = ($n['type'] ?? '') === 'trip_assigned';
+                                $timeAgo = time_ago($n['created_at']);
+                                $dispatchId = $payload['dispatch_id'] ?? $n['reference_id'] ?? null;
+                            ?>
+                            <div class="notif-item <?= $isUnread ? 'is-unread' : '' ?>" id="notif-item-<?= (int)$n['id'] ?>">
+                                <div class="notif-icon-circle <?= $isTrip ? 'notif-gold' : 'notif-blue' ?>">
+                                    <i class="fa-solid <?= $isTrip ? 'fa-route' : 'fa-bell' ?>"></i>
+                                </div>
+                                <div class="notif-content">
+                                    <div class="notif-title-row">
+                                        <strong class="notif-title"><?= e($n['title']) ?></strong>
+                                        <?php if ($isUnread): ?>
+                                            <span class="notif-pill-new">NEW</span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="notif-sub-details">
+                                        <?php if (!empty($payload['pickup_address']) && !empty($payload['drop_address'])): ?>
+                                            <div class="notif-route-line">
+                                                <i class="fa-solid fa-location-dot" style="color:#D4AF37; margin-right:4px;"></i>
+                                                <span><?= e($payload['pickup_address']) ?> &rarr; <?= e($payload['drop_address']) ?></span>
+                                            </div>
+                                            <div class="notif-meta-line">
+                                                <span><i class="fa-solid fa-calendar-day" style="margin-right:4px;"></i> <?= e($payload['reporting_time'] ?? '') ?></span>
+                                                <?php if (!empty($payload['vehicle_number'])): ?>
+                                                    <span class="notif-meta-dot">•</span>
+                                                    <span><i class="fa-solid fa-car" style="margin-right:4px;"></i> <?= e($payload['vehicle_name']) ?> (<?= e($payload['vehicle_number']) ?>)</span>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php else: ?>
+                                            <p style="margin:0; font-size:0.75rem; color:#475569;"><?= nl2br(e($n['message'])) ?></p>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="notif-item-actions">
+                                        <?php if ($dispatchId): ?>
+                                            <a href="<?= url('/driver/trips/' . $dispatchId) ?>" class="notif-btn-action">
+                                                <i class="fa-solid fa-circle-arrow-right"></i> Review Trip Duty
+                                            </a>
+                                        <?php endif; ?>
+                                        <?php if ($isUnread): ?>
+                                            <button type="button" class="notif-btn-dismiss" onclick="markNotificationRead(<?= (int)$n['id'] ?>)">
+                                                <i class="fa-solid fa-check"></i> Mark read
+                                            </button>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                                <span class="notif-time"><?= e($timeAgo) ?></span>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -701,6 +726,85 @@ setInterval(function() {
         el.textContent = hStr + ':' + mStr + ' ' + ampm;
     }
 }, 1000);
+
+// Notification Mark Read Helpers
+function markNotificationRead(id) {
+    var csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    fetch('<?= url('/driver/notifications/') ?>' + id + '/read', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrf,
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        if (data.success) {
+            var item = document.getElementById('notif-item-' + id);
+            if (item) {
+                item.classList.remove('is-unread');
+                var newBadge = item.querySelector('.notif-pill-new');
+                if (newBadge) newBadge.remove();
+                var dismissBtn = item.querySelector('.notif-btn-dismiss');
+                if (dismissBtn) dismissBtn.remove();
+            }
+            updateNotifBadges(data.unread_count);
+        }
+    })
+    .catch(function(err) { console.error('Mark read failed:', err); });
+}
+
+function markAllNotificationsRead() {
+    var csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    fetch('<?= url('/driver/notifications/mark-all-read') ?>', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrf,
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        if (data.success) {
+            document.querySelectorAll('.notif-item.is-unread').forEach(function(item) {
+                item.classList.remove('is-unread');
+                var newBadge = item.querySelector('.notif-pill-new');
+                if (newBadge) newBadge.remove();
+                var dismissBtn = item.querySelector('.notif-btn-dismiss');
+                if (dismissBtn) dismissBtn.remove();
+            });
+            var markAllBtn = document.querySelector('.btn-mark-all-read');
+            if (markAllBtn) markAllBtn.remove();
+            updateNotifBadges(0);
+        }
+    })
+    .catch(function(err) { console.error('Mark all read failed:', err); });
+}
+
+function updateNotifBadges(count) {
+    var topBadge = document.getElementById('driverTopNotifBadge');
+    var bottomBadge = document.getElementById('driverBottomNotifBadge');
+    var countPill = document.getElementById('unreadNotifCountPill');
+
+    if (topBadge) {
+        topBadge.textContent = count;
+        topBadge.style.display = count > 0 ? 'inline-flex' : 'none';
+    }
+    if (bottomBadge) {
+        bottomBadge.textContent = count;
+        bottomBadge.style.display = count > 0 ? 'inline-flex' : 'none';
+    }
+    if (countPill) {
+        if (count > 0) {
+            countPill.textContent = count + ' unread';
+            countPill.style.display = 'inline-block';
+        } else {
+            countPill.remove();
+        }
+    }
+}
 </script>
 
 <style>
@@ -1962,6 +2066,9 @@ setInterval(function() {
 
 /* Breakpoint 3: Small Tablets / Phablets <= 768px */
 @media (max-width: 768px) {
+    .driver-db-container {
+        padding: 0 0 1rem;
+    }
     .driver-banner-slogan {
         display: none;
     }

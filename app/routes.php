@@ -26,6 +26,7 @@ use App\Controllers\CustomerController;
 use App\Controllers\RoleController;
 use App\Controllers\MobileApiController;
 use App\Controllers\LanguageController;
+use App\Controllers\PushSubscriptionController;
 
 $router = new Router();
 
@@ -206,6 +207,10 @@ $router->get('/office/finance', [FinanceController::class, 'dashboard'], ['auth'
 $router->get('/office/finance/dashboard', [FinanceController::class, 'dashboard'], ['auth', 'role:admin,dispatcher']);
 $router->get('/office/finance/transactions', [FinanceController::class, 'transactions'], ['auth', 'role:admin,dispatcher']);
 $router->post('/office/finance/transactions', [FinanceController::class, 'recordTransaction'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->get('/office/finance/transactions/{id}', [FinanceController::class, 'showTransaction'], ['auth', 'role:admin,dispatcher']);
+$router->post('/office/finance/transactions/{id}', [FinanceController::class, 'updateTransaction'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->post('/office/finance/transactions/{id}/delete', [FinanceController::class, 'deleteTransaction'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->post('/office/finance/transactions/{id}/toggle-status', [FinanceController::class, 'toggleTransactionStatus'], ['auth', 'role:admin,dispatcher', 'csrf']);
 $router->post('/office/finance/transfer', [FinanceController::class, 'transfer'], ['auth', 'role:admin,dispatcher', 'csrf']);
 $router->get('/office/finance/accounts', [FinanceController::class, 'accounts'], ['auth', 'role:admin,dispatcher']);
 $router->post('/office/finance/accounts', [FinanceController::class, 'storeAccount'], ['auth', 'role:admin,dispatcher', 'csrf']);
@@ -223,6 +228,10 @@ $router->get('/office/finance/payslips/{id}', [FinanceController::class, 'paysli
 $router->get('/office/finance/advances', [FinanceController::class, 'advances'], ['auth', 'role:admin,dispatcher']);
 $router->post('/office/finance/advances', [FinanceController::class, 'storeAdvance'], ['auth', 'role:admin,dispatcher', 'csrf']);
 $router->post('/office/finance/advances/{id}/status', [FinanceController::class, 'updateAdvanceStatus'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->get('/office/finance/advances/{id}', [FinanceController::class, 'showAdvance'], ['auth', 'role:admin,dispatcher']);
+$router->post('/office/finance/advances/{id}', [FinanceController::class, 'updateAdvance'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->post('/office/finance/advances/{id}/delete', [FinanceController::class, 'deleteAdvance'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->post('/office/finance/advances/{id}/toggle-status', [FinanceController::class, 'toggleAdvanceStatus'], ['auth', 'role:admin,dispatcher', 'csrf']);
 $router->get('/office/finance/refunds', [FinanceController::class, 'refunds'], ['auth', 'role:admin,dispatcher']);
 $router->post('/office/finance/refunds/{id}/status', [FinanceController::class, 'updateRefundStatus'], ['auth', 'role:admin,dispatcher', 'csrf']);
 
@@ -251,7 +260,10 @@ $router->get('/driver/location', [DriverPortalController::class, 'location'], ['
 $router->get('/driver/profile', [DriverPortalController::class, 'profile'], ['auth', 'role:driver']);
 $router->post('/driver/profile', [DriverPortalController::class, 'updateProfile'], ['auth', 'role:driver', 'csrf']);
 $router->post('/driver/profile/password', [DriverPortalController::class, 'updatePassword'], ['auth', 'role:driver', 'csrf']);
+$router->get('/driver/notifications', [DriverPortalController::class, 'notificationsPage'], ['auth', 'role:driver']);
 $router->post('/driver/duty/toggle', [DriverPortalController::class, 'toggleDuty'], ['auth', 'role:driver', 'csrf']);
+$router->post('/driver/notifications/{id}/read', [DriverPortalController::class, 'markNotificationRead'], ['auth', 'role:driver', 'csrf']);
+$router->post('/driver/notifications/mark-all-read', [DriverPortalController::class, 'markAllNotificationsRead'], ['auth', 'role:driver', 'csrf']);
 $router->get('/driver/duty', function ($request) {
     return Response::redirect(url('/driver/dashboard'));
 }, ['auth', 'role:driver']);
@@ -271,9 +283,25 @@ $router->post('/api/mobile/v1/auth/refresh', [MobileApiController::class, 'refre
 $router->post('/api/mobile/v1/auth/logout', [MobileApiController::class, 'logout'], ['mobile_auth']);
 $router->get('/api/mobile/v1/driver/me', [MobileApiController::class, 'me'], ['mobile_auth']);
 $router->get('/api/mobile/v1/driver/trips', [MobileApiController::class, 'trips'], ['mobile_auth']);
+$router->get('/api/mobile/v1/driver/notifications', [MobileApiController::class, 'notifications'], ['mobile_auth']);
 $router->get('/api/mobile/v1/tracking/status', [MobileApiController::class, 'trackingStatus'], ['mobile_auth']);
 $router->post('/api/mobile/v1/tracking/start', [MobileApiController::class, 'trackingStart'], ['mobile_auth']);
 $router->post('/api/mobile/v1/tracking/stop', [MobileApiController::class, 'trackingStop'], ['mobile_auth']);
 $router->post('/api/mobile/v1/gps', [MobileApiController::class, 'syncGps'], ['mobile_auth', 'throttle:gps']);
+
+// -----------------------------------------------------------------------------
+// PWA & Web Push Notification Routes
+// -----------------------------------------------------------------------------
+$router->get('/office/notification-settings', [PushSubscriptionController::class, 'officeSettings'], ['auth', 'role:admin,dispatcher']);
+$router->get('/driver/notification-settings', [PushSubscriptionController::class, 'driverSettings'], ['auth', 'role:driver']);
+
+// Push API Endpoints
+$router->get('/api/push/vapid-key', [PushSubscriptionController::class, 'getVapidPublicKey'], ['auth']);
+$router->get('/api/push/status', [PushSubscriptionController::class, 'status'], ['auth']);
+$router->post('/api/push/subscribe', [PushSubscriptionController::class, 'register'], ['auth', 'csrf']);
+$router->post('/api/push/unsubscribe', [PushSubscriptionController::class, 'unsubscribe'], ['auth', 'csrf']);
+$router->get('/api/push/devices', [PushSubscriptionController::class, 'listDevices'], ['auth']);
+$router->post('/api/push/devices/{id}/remove', [PushSubscriptionController::class, 'removeDevice'], ['auth', 'csrf']);
+$router->post('/api/push/test', [PushSubscriptionController::class, 'testNotification'], ['auth', 'csrf']);
 
 return $router;
