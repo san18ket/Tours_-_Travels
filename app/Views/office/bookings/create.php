@@ -69,12 +69,27 @@
         <input type="hidden" name="tour_id" value="">
         <input type="hidden" id="discount_amount" name="discount_amount" value="0.00">
 
-        <div class="modern-form-card">
+        <!-- ========================================================================= -->
+        <!-- STEP 1: Client Identification & Passengers                                -->
+        <!-- ========================================================================= -->
+        <div class="modern-step-panel" id="wizardPanel1">
+            <div class="modern-form-card">
+                <!-- Section Header -->
+                <div class="modern-section-header">
+                    <div class="modern-section-badge">
+                        <i class="fa-solid fa-user-tag"></i>
+                    </div>
+                    <div class="modern-section-meta" style="flex: 1;">
+                        <h2 class="modern-section-title">Client Identification</h2>
+                        <p class="modern-section-sub">Assign reservation to a verified guest or corporate client and set passenger count.</p>
+                    </div>
 
-            <!-- ========================================================================= -->
-            <!-- STEP 1: Client Identification & Passengers                                -->
-            <!-- ========================================================================= -->
-            <div class="modern-step-panel" id="wizardPanel1">
+                    <?php if (auth_role() !== 'customer'): ?>
+                    <a href="<?= url('/office/customers/create') ?>" target="_blank" class="booking-add-cust-btn" title="Register New Customer Profile">
+                        <i class="fa-solid fa-user-plus"></i> Add Customer
+                    </a>
+                    <?php endif; ?>
+                </div>
 
                 <?php if (auth_role() === 'customer'): ?>
                     <input type="hidden" name="customer_id" id="customer_id" value="<?= auth_id() ?>">
@@ -88,14 +103,10 @@
                     </div>
                 <?php else: ?>
                     <div class="modern-form-group" style="margin-bottom: 1.5rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                            <label class="modern-form-label" for="customer_id" style="margin-bottom: 0;">
-                                Guest Account <span class="req">*</span>
-                            </label>
-                            <a href="<?= url('/office/customers/create') ?>" target="_blank" class="booking-add-cust-btn" style="padding: 4px 12px; font-size: 0.8rem;" title="Register New Customer Profile">
-                                <i class="fa-solid fa-user-plus"></i> Add Customer
-                            </a>
-                        </div>
+                        <label class="modern-form-label" for="customer_id" style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>Guest Account <span class="req">*</span></span>
+                            <span style="font-size: 0.78rem; color: #64748B; font-weight: normal;"><?= count($customers) ?> verified guest profile<?= count($customers) === 1 ? '' : 's' ?> available</span>
+                        </label>
 
                         <div class="modern-input-wrapper">
                             <span class="modern-input-icon"><i class="fa-solid fa-users"></i></span>
@@ -164,11 +175,22 @@
                     </button>
                 </div>
             </div>
+        </div>
 
-            <!-- ========================================================================= -->
-            <!-- STEP 2: Itinerary Route & Timetable                                       -->
-            <!-- ========================================================================= -->
-            <div class="modern-step-panel" id="wizardPanel2" style="display: none;">
+        <!-- ========================================================================= -->
+        <!-- STEP 2: Itinerary Route & Timetable                                       -->
+        <!-- ========================================================================= -->
+        <div class="modern-step-panel" id="wizardPanel2" style="display: none;">
+            <div class="modern-form-card">
+                <div class="modern-section-header">
+                    <div class="modern-section-badge">
+                        <i class="fa-solid fa-route"></i>
+                    </div>
+                    <div class="modern-section-meta">
+                        <h2 class="modern-section-title">Itinerary Route &amp; Schedule</h2>
+                        <p class="modern-section-sub">Pickup address, destination drop, journey dates, and chauffeur instructions.</p>
+                    </div>
+                </div>
 
                 <!-- Origin & Destination Grid -->
                 <div class="modern-form-grid-2">
@@ -258,11 +280,23 @@
                     </button>
                 </div>
             </div>
+        </div>
 
-            <!-- ========================================================================= -->
-            <!-- STEP 3: Fare Calculation & Billing                                        -->
-            <!-- ========================================================================= -->
-            <div class="modern-step-panel" id="wizardPanel3" style="display: none;">
+        <!-- ========================================================================= -->
+        <!-- STEP 3: Fare Calculation & Billing                                        -->
+        <!-- ========================================================================= -->
+        <div class="modern-step-panel" id="wizardPanel3" style="display: none;">
+            <div class="modern-form-card">
+                <div class="modern-section-header">
+                    <div class="modern-section-badge">
+                        <i class="fa-solid fa-calculator"></i>
+                    </div>
+                    <div class="modern-section-meta" style="flex: 1;">
+                        <h2 class="modern-section-title">Fare Calculation &amp; Billing</h2>
+                        <p class="modern-section-sub">Base rack rate, promotional discounts, statutory GST, and real-time total breakdown.</p>
+                    </div>
+                    <span id="manifestHeaderBadge" class="modern-badge doc-category-badge">5% GST</span>
+                </div>
 
                 <div class="fare-step-layout" style="display: grid; grid-template-columns: 1fr 380px; gap: 1.75rem; align-items: start;">
                     <!-- Left: Fare Inputs & Presets -->
@@ -385,11 +419,22 @@
                     </button>
                 </div>
             </div>
+        </div>
 
-            <!-- ========================================================================= -->
-            <!-- STEP 4: Review & Reserve                                                  -->
-            <!-- ========================================================================= -->
-            <div class="modern-step-panel" id="wizardPanel4" style="display: none;">
+        <!-- ========================================================================= -->
+        <!-- STEP 4: Review & Reserve                                                  -->
+        <!-- ========================================================================= -->
+        <div class="modern-step-panel" id="wizardPanel4" style="display: none;">
+            <div class="modern-form-card">
+                <div class="modern-section-header">
+                    <div class="modern-section-badge" style="background: #E8F8F0; color: #10B981;">
+                        <i class="fa-solid fa-clipboard-check"></i>
+                    </div>
+                    <div class="modern-section-meta">
+                        <h2 class="modern-section-title">Review &amp; Reserve</h2>
+                        <p class="modern-section-sub">Comprehensive reservation dossier verification prior to confirming passenger booking.</p>
+                    </div>
+                </div>
 
                 <!-- Live Executive Dossier Container -->
                 <div class="review-dossier-wrapper">
@@ -1034,150 +1079,102 @@ document.addEventListener('DOMContentLoaded', () => {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-bottom: 2rem;
-    padding: 0;
-    width: 100%;
+    margin-bottom: 1.5rem;
+    padding: 0 0.5rem;
 }
 .modern-stepper-container {
     width: 100%;
-    max-width: 100%;
+    max-width: 860px;
     background: #FFFFFF;
-    border: 1.5px solid #E2E8F0;
+    border: 1px solid #E2E8F0;
     border-radius: 20px;
-    padding: 1.1rem 2rem;
-    box-shadow: 0 4px 20px rgba(12, 43, 82, 0.04);
+    padding: 1rem 1.75rem;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
 }
 .modern-stepper-track {
     display: flex;
     align-items: center;
     justify-content: space-between;
     position: relative;
-    width: 100%;
-    max-width: 960px;
-    margin: 0 auto;
 }
 .modern-step-item {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    background: transparent !important;
-    border: none !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: transparent;
+    border: none;
     cursor: pointer;
-    padding: 0.35rem 0.6rem !important;
-    border-radius: 12px !important;
-    transition: all 0.2s ease !important;
+    padding: 0.35rem 0.6rem;
+    border-radius: 12px;
+    transition: all 0.2s ease;
     z-index: 2;
-    color: #64748B !important;
-    outline: none !important;
-    text-decoration: none !important;
+    color: #64748B;
 }
 .modern-step-item:hover {
-    color: #0C2B52 !important;
-    transform: translateY(-1px);
+    color: #0C2B52;
 }
 .modern-step-circle {
-    width: 38px !important;
-    height: 38px !important;
-    min-width: 38px !important;
-    border-radius: 50% !important;
-    background: #FFFFFF !important;
-    color: #64748B !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-size: 0.95rem !important;
-    font-weight: 700 !important;
-    border: 2px solid #CBD5E1 !important;
-    margin-bottom: 0.45rem !important;
-    transition: all 0.25s ease !important;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #F1F5F9;
+    color: #64748B;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    font-weight: 700;
+    border: 2px solid #CBD5E1;
+    margin-bottom: 0.4rem;
+    transition: all 0.25s ease;
 }
 .modern-step-label {
-    font-size: 0.82rem !important;
-    font-weight: 600 !important;
-    color: #64748B !important;
-    margin-top: 0 !important;
-    white-space: nowrap !important;
-    transition: color 0.2s ease !important;
+    font-size: 0.82rem;
+    font-weight: 600;
+    white-space: nowrap;
 }
 .modern-step-item.active .modern-step-circle {
-    background: #176B5B !important;
-    border-color: #176B5B !important;
-    color: #FFFFFF !important;
-    box-shadow: 0 0 0 4px rgba(23, 107, 91, 0.18), 0 4px 12px rgba(23, 107, 91, 0.25) !important;
-    transform: scale(1.08) !important;
+    background: #176B5B;
+    border-color: #176B5B;
+    color: #FFFFFF;
+    box-shadow: 0 0 0 4px rgba(23, 107, 91, 0.18);
+    transform: scale(1.08);
 }
 .modern-step-item.active .modern-step-label {
-    color: #176B5B !important;
-    font-weight: 700 !important;
+    color: #176B5B;
+    font-weight: 700;
 }
 .modern-step-item.completed .modern-step-circle {
-    background: #10B981 !important;
-    border-color: #10B981 !important;
-    color: #FFFFFF !important;
+    background: #E8F4F0;
+    border-color: #176B5B;
+    color: #176B5B;
 }
 .modern-step-item.completed .modern-step-label {
-    color: #10B981 !important;
+    color: #176B5B;
 }
 .modern-step-connector {
-    flex: 1 !important;
-    height: 3px !important;
-    background: #E2E8F0 !important;
-    margin: -1.2rem 0.5rem 0 0.5rem !important;
-    transition: background 0.3s ease !important;
-    border-radius: 4px !important;
+    flex: 1;
+    height: 3px;
+    background: #E2E8F0;
+    margin: -1.2rem 0.5rem 0 0.5rem;
+    transition: background 0.3s ease;
+    border-radius: 4px;
 }
 .modern-step-connector.completed {
-    background: #10B981 !important;
+    background: #176B5B;
 }
 
-@media (max-width: 768px) {
-    .modern-stepper-header-centered {
-        margin-bottom: 1.5rem;
-    }
+@media (max-width: 640px) {
     .modern-stepper-container {
-        padding: 0.85rem 1rem;
-        border-radius: 18px;
-    }
-    .modern-step-circle {
-        width: 34px !important;
-        height: 34px !important;
-        min-width: 34px !important;
-        font-size: 0.88rem !important;
-        margin-bottom: 0.35rem !important;
+        padding: 0.85rem 0.75rem;
     }
     .modern-step-label {
-        font-size: 0.76rem !important;
-    }
-    .modern-step-connector {
-        margin: -1.1rem 0.35rem 0 0.35rem !important;
-    }
-}
-
-@media (max-width: 480px) {
-    .modern-stepper-container {
-        padding: 0.75rem 0.65rem;
-        border-radius: 16px;
-    }
-    .modern-step-item {
-        padding: 0.2rem 0.35rem !important;
+        font-size: 0.72rem;
     }
     .modern-step-circle {
-        width: 30px !important;
-        height: 30px !important;
-        min-width: 30px !important;
-        font-size: 0.82rem !important;
-        margin-bottom: 0.25rem !important;
-    }
-    .modern-step-connector {
-        margin: -0.95rem 0.25rem 0 0.25rem !important;
-    }
-    .modern-step-item:not(.active) .modern-step-label {
-        display: none !important;
-    }
-    .modern-step-item.active .modern-step-label {
-        display: inline-block !important;
-        font-size: 0.72rem !important;
+        width: 32px;
+        height: 32px;
+        font-size: 0.85rem;
     }
 }
 
@@ -1185,14 +1182,11 @@ document.addEventListener('DOMContentLoaded', () => {
 /* Form Cards & Section Headers                                             */
 /* ========================================================================= */
 .modern-form-wrapper {
-    width: 100%;
-    max-width: 100%;
-    margin: 0;
-    padding: 0.25rem 0 3.5rem 0;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 1.25rem 1rem 3rem 1rem;
 }
 .modern-form-card {
-    width: 100%;
-    max-width: 100%;
     background: #FFFFFF;
     border: 1px solid #E2E8F0;
     border-radius: 20px;
@@ -1200,9 +1194,6 @@ document.addEventListener('DOMContentLoaded', () => {
     box-shadow: 0 6px 24px rgba(15, 23, 42, 0.05);
 }
 @media (max-width: 768px) {
-    .modern-form-wrapper {
-        padding: 0 0 2rem;
-    }
     .modern-form-card {
         padding: 1.5rem 1.25rem;
         border-radius: 16px;

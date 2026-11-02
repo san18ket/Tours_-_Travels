@@ -45,20 +45,17 @@ const jsPath = path.join(__dirname, '../public/assets/js/tours-pwa.js');
 const js = fs.readFileSync(jsPath, 'utf8');
 
 // Task 4: Insecure Context & Secure Origin Detection
-check('getSecurityContext function is defined', js.includes('function getSecurityContext()'));
-check('getSecurityContext evaluates window.isSecureContext', js.includes('typeof window.isSecureContext === \'boolean\'') && js.includes('window.isSecureContext'));
-check('Detects HTTPS and localhost separately', js.includes('isHttps') && js.includes('isLocalhost') && js.includes('isLanIp'));
-check('Does not treat an ordinary HTTP LAN IP as a secure context', js.includes('!(!isHttps && isLanIp)'));
 check('isSecureContextOrigin function is defined', js.includes('function isSecureContextOrigin()'));
+check('isSecureContextOrigin explicitly checks window.isSecureContext', js.includes('typeof window.isSecureContext === \'boolean\'') && js.includes('window.isSecureContext'));
 check('isPushSupported checks Notification, serviceWorker, and PushManager', js.includes('function isPushSupported()') && js.includes('PushManager') && js.includes('serviceWorker'));
 
 const expectedInsecureMsg = 'Secure connection required. Push notifications require HTTPS. Please access Tours through a secure HTTPS address.';
 check('Exact required insecure context message is present in JS', js.includes(expectedInsecureMsg));
 
-check('Cloudflare Tunnel setup guidance is documented in UI without bypassing security flags', 
-    js.includes('cloudflared tunnel --url') && 
-    js.includes('trycloudflare.com') &&
-    !js.includes('#unsafely-treat-insecure-origin-as-secure'));
+check('Developer options for LAN testing (Chrome flags, USB, HTTPS) are documented in UI', 
+    js.includes('chrome://flags/#unsafely-treat-insecure-origin-as-secure') && 
+    js.includes('chrome://inspect') && 
+    js.includes('cloudflared'));
 
 // Task 2: Permission-blocked screen & Android Chrome guidance
 const expectedBlockedMsg = 'Notifications are blocked for Tours. Enable notifications in your browser or device settings to receive important trip updates.';
@@ -96,4 +93,3 @@ check('Vanilla JavaScript used without jQuery ($ references to jQuery)', !js.inc
 console.log('\n============================================================');
 console.log('TEST SUMMARY: ALL CRITICAL REQUIREMENTS VERIFIED');
 console.log('============================================================');
-

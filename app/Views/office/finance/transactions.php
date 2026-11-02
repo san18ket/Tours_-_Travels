@@ -119,7 +119,6 @@ $actionsHtml = '<button type="button" class="btn btn-primary" onclick="openTrans
         <select name="status" id="statusInput">
             <option value="" <?= empty($selectedStatus) ? 'selected' : '' ?>>All Status</option>
             <option value="completed" <?= ($selectedStatus ?? '') === 'completed' ? 'selected' : '' ?>>Completed</option>
-            <option value="pending" <?= ($selectedStatus ?? '') === 'pending' ? 'selected' : '' ?>>Pending</option>
             <option value="cancelled" <?= ($selectedStatus ?? '') === 'cancelled' ? 'selected' : '' ?>>Cancelled</option>
         </select>
 
@@ -135,11 +134,11 @@ $actionsHtml = '<button type="button" class="btn btn-primary" onclick="openTrans
         </div>
     </form>
 
-    <!-- 4. MOBILE ONLY: Top App Bar, Search, Drawer & Status Scroll (Exact office/customers Architecture) -->
+    <!-- 4. MOBILE ONLY: Top App Bar, Search, Drawer & Status Scroll -->
     <div class="mv-bookings-header">
         <div class="mv-top-bar">
             <div class="mv-top-bar-left">
-                <a href="<?= url('/office/dashboard') ?>" class="mv-back-btn" title="Back to Dashboard">
+                <a href="<?= url('/office/finance') ?>" class="mv-back-btn" title="Back">
                     <i class="fa-solid fa-arrow-left"></i>
                 </a>
                 <h2 class="mv-page-title">General Ledger</h2>
@@ -150,108 +149,25 @@ $actionsHtml = '<button type="button" class="btn btn-primary" onclick="openTrans
             </button>
         </div>
 
-        <!-- Mobile Search Bar & Filter Toggle -->
         <div class="mv-search-bar-wrap">
-            <form method="GET" action="<?= url('/office/finance/transactions') ?>" class="mv-search-form" id="mvSearchForm">
+            <form method="GET" action="<?= url('/office/finance/transactions') ?>" class="mv-search-form">
                 <div class="mv-search-input-box">
                     <i class="fa-solid fa-magnifying-glass mv-search-ico"></i>
-                    <input type="text" name="search" id="mvSearchInput" placeholder="Search reference, notes, category..." value="<?= e($search ?? '') ?>" autocomplete="off">
-                    <?php if (!empty($search)): ?>
-                        <a href="<?= url('/office/finance/transactions') ?>" class="mv-search-clear" title="Clear search">
-                            <i class="fa-solid fa-xmark"></i>
-                        </a>
-                    <?php endif; ?>
+                    <input type="text" name="search" placeholder="Search reference, notes..." value="<?= e($search ?? '') ?>" autocomplete="off">
                 </div>
-                <button type="button" class="mv-filter-toggle" id="mvFilterToggleBtn" onclick="toggleMobileFilter()" title="Filter options">
-                    <i class="fa-solid fa-sliders"></i>
-                </button>
             </form>
-
-            <!-- Collapsible Mobile Filter Panel (Exact office/customers drawer) -->
-            <div class="mv-filter-panel" id="mvFilterPanel" style="display: none;">
-                <form method="GET" action="<?= url('/office/finance/transactions') ?>">
-                    <?php if (!empty($search)): ?>
-                        <input type="hidden" name="search" value="<?= e($search) ?>">
-                    <?php endif; ?>
-                    <div class="mv-filter-row">
-                        <label for="mvTypeSelect">Type:</label>
-                        <select name="type" id="mvTypeSelect">
-                            <option value="">All Types</option>
-                            <option value="credit" <?= ($selectedType ?? '') === 'credit' ? 'selected' : '' ?>>Credit (+ Inflow)</option>
-                            <option value="debit" <?= ($selectedType ?? '') === 'debit' ? 'selected' : '' ?>>Debit (- Outflow)</option>
-                        </select>
-                    </div>
-                    <div class="mv-filter-row">
-                        <label for="mvAccountSelect">Account:</label>
-                        <select name="account_id" id="mvAccountSelect">
-                            <option value="">All Accounts</option>
-                            <?php foreach ($accounts as $acc): ?>
-                                <option value="<?= $acc['id'] ?>" <?= ($selectedAccount ?? 0) == $acc['id'] ? 'selected' : '' ?>>
-                                    <?= e($acc['account_name']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="mv-filter-row">
-                        <label for="mvStatusSelect">Status:</label>
-                        <select name="status" id="mvStatusSelect">
-                            <option value="">All Statuses</option>
-                            <option value="completed" <?= ($selectedStatus ?? '') === 'completed' ? 'selected' : '' ?>>Completed</option>
-                            <option value="pending" <?= ($selectedStatus ?? '') === 'pending' ? 'selected' : '' ?>>Pending</option>
-                            <option value="cancelled" <?= ($selectedStatus ?? '') === 'cancelled' ? 'selected' : '' ?>>Cancelled</option>
-                        </select>
-                    </div>
-                    <div class="mv-filter-row">
-                        <label for="mvPerPageSelect">Per Page:</label>
-                        <select name="per_page" id="mvPerPageSelect">
-                            <?php foreach ([10, 15, 25, 50, 100] as $opt): ?>
-                                <option value="<?= $opt ?>" <?= ($perPage ?? 15) == $opt ? 'selected' : '' ?>><?= $opt ?> per page</option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div style="display: flex; gap: 8px; margin-top: 10px;">
-                        <button type="submit" class="btn btn-primary btn-sm" style="flex: 1; justify-content: center;">
-                            <i class="fa-solid fa-filter"></i> Apply
-                        </button>
-                        <a href="<?= url('/office/finance/transactions') ?>" class="btn btn-outline btn-sm" style="flex: 1; justify-content: center; text-decoration: none;">
-                            Reset
-                        </a>
-                    </div>
-                </form>
-            </div>
         </div>
 
-        <!-- Horizontal Scrollable Status Pills -->
-        <?php
-            $makeFilterUrl = function(?string $t, ?string $st) use ($search, $selectedAccount, $perPage) {
-                $p = [];
-                if (!empty($search)) $p['search'] = $search;
-                if (!empty($selectedAccount)) $p['account_id'] = $selectedAccount;
-                if (!empty($t)) $p['type'] = $t;
-                if (!empty($st)) $p['status'] = $st;
-                if (!empty($perPage) && $perPage != 15) $p['per_page'] = $perPage;
-                return url('/office/finance/transactions' . (!empty($p) ? '?' . http_build_query($p) : ''));
-            };
-        ?>
         <div class="mv-status-scroll">
-            <a href="<?= $makeFilterUrl(null, null) ?>" class="mv-pill <?= empty($selectedType) && empty($selectedStatus) ? 'active' : '' ?>">
+            <a href="<?= url('/office/finance/transactions') ?>" class="mv-pill <?= empty($selectedType) ? 'active' : '' ?>">
                 <span>All Entries</span>
                 <span class="mv-pill-cnt"><?= number_format($totalAll) ?></span>
             </a>
-            <a href="<?= $makeFilterUrl('credit', null) ?>" class="mv-pill <?= ($selectedType ?? '') === 'credit' ? 'active' : '' ?>">
+            <a href="<?= url('/office/finance/transactions?type=credit') ?>" class="mv-pill <?= $selectedType === 'credit' ? 'active' : '' ?>">
                 <span>Credits (+)</span>
             </a>
-            <a href="<?= $makeFilterUrl('debit', null) ?>" class="mv-pill <?= ($selectedType ?? '') === 'debit' ? 'active' : '' ?>">
+            <a href="<?= url('/office/finance/transactions?type=debit') ?>" class="mv-pill <?= $selectedType === 'debit' ? 'active' : '' ?>">
                 <span>Debits (-)</span>
-            </a>
-            <a href="<?= $makeFilterUrl(null, 'completed') ?>" class="mv-pill <?= ($selectedStatus ?? '') === 'completed' ? 'active' : '' ?>">
-                <span>Completed</span>
-            </a>
-            <a href="<?= $makeFilterUrl(null, 'pending') ?>" class="mv-pill <?= ($selectedStatus ?? '') === 'pending' ? 'active' : '' ?>">
-                <span>Pending</span>
-            </a>
-            <a href="<?= $makeFilterUrl(null, 'cancelled') ?>" class="mv-pill <?= ($selectedStatus ?? '') === 'cancelled' ? 'active' : '' ?>">
-                <span>Cancelled</span>
             </a>
         </div>
     </div>
@@ -299,17 +215,9 @@ $actionsHtml = '<button type="button" class="btn btn-primary" onclick="openTrans
                             $isCredit = $tx['transaction_type'] === 'credit';
                             $rowNum = ($currentPage - 1) * $perPage + $idx + 1;
                             $st = strtolower($tx['status'] ?? 'completed');
-                            if ($st === 'pending') {
-                                $statusClass = 'pending';
-                                $statusText = 'PENDING';
-                            } elseif ($st === 'cancelled') {
-                                $statusClass = 'cancelled';
-                                $statusText = 'CANCELLED';
-                            } else {
-                                $statusClass = 'completed';
-                                $statusText = 'COMPLETED';
-                            }
-                            $isCompleted = ($statusClass === 'completed');
+                            $isCompleted = ($st === 'completed' || $st === 'active');
+                            $statusClass = $isCompleted ? 'completed' : 'cancelled';
+                            $statusText = $isCompleted ? 'COMPLETED' : 'CANCELLED';
                         ?>
                         <tr id="txRow-<?= (int)$tx['id'] ?>">
                             <!-- 1. # Index -->
@@ -317,16 +225,19 @@ $actionsHtml = '<button type="button" class="btn btn-primary" onclick="openTrans
                                 <?= $rowNum ?>
                             </td>
 
-                            <!-- 2. Account: Only show Bank Name -->
+                            <!-- 2. Account -->
                             <td>
-                                <?php $bankDisplayName = !empty($tx['bank_name']) ? $tx['bank_name'] : (!empty($tx['account_name']) ? $tx['account_name'] : 'Internal Vault'); ?>
-                                <div style="font-weight: 700; color: var(--vg-navy-900); font-size: 0.88rem; display: flex; align-items: center; gap: 8px;">
-                                    <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 7px; background: rgba(23, 107, 91, 0.08); color: #176B5B; font-size: 0.8rem; flex-shrink: 0;">
-                                        <i class="fa-solid fa-building-columns"></i>
-                                    </span>
-                                    <a href="<?= url('/office/finance/transactions/' . $tx['id']) ?>" style="color: inherit; text-decoration: none;" class="tx-account-link" title="View Transaction Details for <?= e($bankDisplayName) ?>">
-                                        <?= e($bankDisplayName) ?>
+                                <div style="font-weight: 700; color: var(--vg-navy-900); font-size: 0.88rem;">
+                                    <a href="<?= url('/office/finance/accounts/' . $tx['account_id']) ?>" style="color: inherit; text-decoration: none;" class="tx-account-link" title="View Vault Details">
+                                        <?= e($tx['account_name']) ?>
                                     </a>
+                                </div>
+                                <div style="font-size: 0.74rem; color: var(--text-muted); display: flex; align-items: center; gap: 5px; margin-top: 1px;">
+                                    <span><?= !empty($tx['bank_name']) ? e($tx['bank_name']) : strtoupper($tx['account_type']) ?></span>
+                                    <?php if (!empty($tx['transaction_ref'])): ?>
+                                        <span>•</span>
+                                        <code style="font-size: 0.72rem; padding: 1px 5px; background: rgba(23, 107, 91, 0.08); border-radius: 4px; color: #176B5B; font-weight: 600;"><?= e($tx['transaction_ref']) ?></code>
+                                    <?php endif; ?>
                                 </div>
                             </td>
 
@@ -360,48 +271,27 @@ $actionsHtml = '<button type="button" class="btn btn-primary" onclick="openTrans
                                 <?= format_currency((float)$tx['balance_after']) ?>
                             </td>
 
-                            <!-- 7. Status (3-State Toggle & Interactive Dropdown: Completed, Pending, Cancelled) -->
+                            <!-- 7. Status (Toggle switch like office/finance/accounts and office/customers) -->
                             <td class="text-center">
                                 <div class="cust-toggle-cell" id="txToggleWrap-<?= (int)$tx['id'] ?>">
                                     <button type="button" 
-                                            class="cust-status-toggle <?= $statusClass ?><?= $isCompleted ? ' is-active' : '' ?>" 
+                                            class="cust-status-toggle <?= $isCompleted ? 'is-active' : '' ?>" 
                                             role="switch" 
                                             aria-checked="<?= $isCompleted ? 'true' : 'false' ?>" 
                                             data-id="<?= (int)$tx['id'] ?>"
-                                            data-status="<?= $statusClass ?>"
                                             data-ref="<?= addslashes(e($tx['transaction_ref'] ?: ('TX-#' . $tx['id']))) ?>"
                                             onclick="toggleTransactionStatus(<?= (int)$tx['id'] ?>, this, event)"
-                                            title="Click to cycle status: Completed &rarr; Pending &rarr; Cancelled (Current: <?= $statusText ?>)">
+                                            title="Click to toggle status (currently <?= $statusText ?>)">
                                         <span class="toggle-slider-track">
                                             <span class="toggle-slider-thumb">
                                                 <span class="toggle-spinner" style="display: none;"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
                                             </span>
                                         </span>
                                     </button>
-                                    <div class="status-pill-dropdown-wrap">
-                                        <button type="button" 
-                                                class="cust-toggle-pill <?= $statusClass ?>" 
-                                                onclick="openTxStatusDropdown(<?= (int)$tx['id'] ?>, this, event)"
-                                                title="Click to select status (Completed / Pending / Cancelled)">
-                                            <span class="toggle-pulse-dot <?= $statusClass ?>"></span>
-                                            <span class="toggle-label-text"><?= $statusText ?></span>
-                                            <i class="fa-solid fa-chevron-down pill-chevron"></i>
-                                        </button>
-                                        <div class="tx-status-dropdown-menu" id="txStatusDropdown-<?= (int)$tx['id'] ?>">
-                                            <button type="button" class="tx-status-item <?= $statusClass === 'completed' ? 'active' : '' ?>" data-status="completed" onclick="setTransactionDirectStatus(<?= (int)$tx['id'] ?>, 'completed', event)">
-                                                <span class="status-menu-dot completed"></span>
-                                                <span>Completed</span>
-                                            </button>
-                                            <button type="button" class="tx-status-item <?= $statusClass === 'pending' ? 'active' : '' ?>" data-status="pending" onclick="setTransactionDirectStatus(<?= (int)$tx['id'] ?>, 'pending', event)">
-                                                <span class="status-menu-dot pending"></span>
-                                                <span>Pending</span>
-                                            </button>
-                                            <button type="button" class="tx-status-item <?= $statusClass === 'cancelled' ? 'active' : '' ?>" data-status="cancelled" onclick="setTransactionDirectStatus(<?= (int)$tx['id'] ?>, 'cancelled', event)">
-                                                <span class="status-menu-dot cancelled"></span>
-                                                <span>Cancelled</span>
-                                            </button>
-                                        </div>
-                                    </div>
+                                    <span class="cust-toggle-pill <?= $statusClass ?>">
+                                        <span class="toggle-pulse-dot <?= $statusClass ?>"></span>
+                                        <span class="toggle-label-text"><?= $statusText ?></span>
+                                    </span>
                                 </div>
                             </td>
 
@@ -418,9 +308,9 @@ $actionsHtml = '<button type="button" class="btn btn-primary" onclick="openTrans
                                         <i class="fa-solid fa-ellipsis"></i>
                                     </button>
                                     <div class="action-btns-popup">
-                                        <a href="<?= url('/office/finance/transactions/' . $tx['id']) ?>" class="action-btn-table view" title="View Transaction Voucher Details">
+                                        <button type="button" class="action-btn-table view" title="View Transaction Voucher" onclick="openViewModal(<?= htmlspecialchars(json_encode($tx), ENT_QUOTES, 'UTF-8') ?>, event)">
                                             <i class="fa-solid fa-eye"></i>
-                                        </a>
+                                        </button>
                                         <button type="button" class="action-btn-table edit" title="Edit Transaction Voucher" onclick="openEditModal(<?= htmlspecialchars(json_encode($tx), ENT_QUOTES, 'UTF-8') ?>, event)">
                                             <i class="fa-solid fa-pen-to-square"></i>
                                         </button>
@@ -437,86 +327,77 @@ $actionsHtml = '<button type="button" class="btn btn-primary" onclick="openTrans
             </table>
         </div>
 
-        <!-- Mobile App Cards (Exact Match to office/customers Architecture) -->
+        <!-- Mobile App Cards (Screen Width < 992px) -->
         <div class="cards-grid">
             <?php foreach ($transactions as $idx => $tx):
                 $isCredit = $tx['transaction_type'] === 'credit';
                 $st = strtolower($tx['status'] ?? 'completed');
-                if ($st === 'pending') {
-                    $statusClass = 'pending';
-                    $statusText = 'Pending';
-                } elseif ($st === 'cancelled') {
-                    $statusClass = 'cancelled';
-                    $statusText = 'Cancelled';
-                } else {
-                    $statusClass = 'completed';
-                    $statusText = 'Completed';
-                }
-                $isCompleted = ($statusClass === 'completed');
+                $isCompleted = ($st === 'completed' || $st === 'active');
+                $statusClass = $isCompleted ? 'completed' : 'cancelled';
+                $statusText = $isCompleted ? 'COMPLETED' : 'CANCELLED';
             ?>
-            <div class="mv-booking-card-wrapper" id="mvTxCard-<?= (int)$tx['id'] ?>">
-                <a href="<?= url('/office/finance/transactions/' . $tx['id']) ?>" class="mv-booking-card">
-                    <!-- 1. Left Thumbnail Avatar (Matching office/customers) -->
-                    <div class="mv-thumb-wrap">
-                        <div class="mv-tx-avatar <?= $isCredit ? 'credit' : 'debit' ?>">
-                            <i class="fa-solid <?= $isCredit ? 'fa-arrow-down-left' : 'fa-arrow-up-right-from-square' ?>"></i>
+            <div class="mv-booking-card-wrapper" id="mvTxCard-<?= (int)$tx['id'] ?>" style="position: relative;">
+                <div class="mv-booking-card" style="padding: 12px 14px;">
+                    <!-- Top row: Avatar icon + Category + Amount -->
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px;">
+                        <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+                            <div style="width: 38px; height: 38px; border-radius: 10px; background: <?= $isCredit ? 'rgba(33, 135, 101, 0.12)' : 'rgba(220, 38, 38, 0.12)' ?>; color: <?= $isCredit ? '#218765' : '#DC2626' ?>; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0;">
+                                <i class="fa-solid <?= $isCredit ? 'fa-arrow-down-left' : 'fa-arrow-up-right' ?>"></i>
+                            </div>
+                            <div style="min-width: 0;">
+                                <strong style="display: block; font-size: 0.9rem; color: var(--vg-navy-900); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?= e($tx['category']) ?></strong>
+                                <span style="font-size: 0.76rem; color: var(--text-muted); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?= e($tx['account_name']) ?></span>
+                            </div>
+                        </div>
+                        <div style="text-align: right; flex-shrink: 0; padding-right: 28px;">
+                            <strong style="font-size: 1rem; color: <?= $isCredit ? '#218765' : '#DC2626' ?>; display: block; font-weight: 800;">
+                                <?= $isCredit ? '+' : '-' ?><?= format_currency((float)$tx['amount']) ?>
+                            </strong>
+                            <span style="font-size: 0.74rem; color: var(--text-muted); font-weight: 600;">Bal: <?= format_currency((float)$tx['balance_after']) ?></span>
                         </div>
                     </div>
 
-                    <!-- 2. Middle Details (Code, Category, Account, Date, Method) -->
-                    <div class="mv-details">
-                        <div class="mv-code-row">
-                            <span class="mv-code"><?= !empty($tx['transaction_ref']) ? e($tx['transaction_ref']) : ('TX-#' . $tx['id']) ?></span>
-                            <span class="mv-tx-badge <?= $isCredit ? 'credit' : 'debit' ?>"><?= $isCredit ? 'CREDIT' : 'DEBIT' ?></span>
+                    <!-- Middle meta info -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--text-muted); padding: 6px 0; border-top: 1px dashed #E2E8F0; border-bottom: 1px dashed #E2E8F0; margin-bottom: 8px;">
+                        <div>
+                            <i class="fa-regular fa-clock" style="margin-right: 3px;"></i> <?= format_datetime($tx['transacted_at']) ?>
                         </div>
-                        <div class="mv-tour-title" title="<?= e($tx['category']) ?>"><?= e($tx['category']) ?></div>
-                        <div class="mv-date-duration">
-                            <i class="fa-solid fa-building-columns"></i>
-                            <span><?= e(!empty($tx['bank_name']) ? $tx['bank_name'] : $tx['account_name']) ?></span>
+                        <div>
+                            <?php if (!empty($tx['transaction_ref'])): ?>
+                                <code style="font-size: 0.72rem; padding: 1px 5px; background: rgba(23,107,91,0.06); border-radius: 4px; color: #176B5B;"><?= e($tx['transaction_ref']) ?></code>
+                            <?php endif; ?>
                         </div>
-                        <div class="mv-passenger">
-                            <i class="fa-regular fa-clock"></i>
-                            <span><?= date('d M Y, h:i A', strtotime($tx['transacted_at'])) ?></span>
-                        </div>
-                        <?php if (!empty($tx['payment_method'])): ?>
-                        <div class="mv-vehicle">
-                            <i class="fa-solid fa-credit-card"></i>
-                            <span><?= strtoupper(str_replace('_', ' ', $tx['payment_method'])) ?></span>
-                        </div>
-                        <?php endif; ?>
                     </div>
 
-                    <!-- 3. Right Column: Status Toggle on Top, Amount & Balance on Bottom -->
-                    <div class="mv-right-col">
-                        <div class="mv-status-toggle-wrap" onclick="event.preventDefault(); event.stopPropagation();">
+                    <!-- Bottom row: Type pill + Status toggle switch -->
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="tx-type-pill <?= $isCredit ? 'credit' : 'debit' ?>" style="font-size: 0.7rem; padding: 2px 7px;">
+                            <i class="fa-solid <?= $isCredit ? 'fa-arrow-down' : 'fa-arrow-up' ?>"></i>
+                            <span><?= $isCredit ? 'CREDIT' : 'DEBIT' ?></span>
+                        </span>
+
+                        <div class="cust-toggle-cell" style="margin: 0;">
                             <button type="button" 
-                                    class="cust-status-toggle sm <?= $statusClass ?><?= $isCompleted ? ' is-active' : '' ?>" 
+                                    class="cust-status-toggle sm <?= $isCompleted ? 'is-active' : '' ?>" 
                                     role="switch" 
                                     aria-checked="<?= $isCompleted ? 'true' : 'false' ?>" 
                                     data-id="<?= (int)$tx['id'] ?>"
-                                    data-status="<?= $statusClass ?>"
                                     data-ref="<?= addslashes(e($tx['transaction_ref'] ?: ('TX-#' . $tx['id']))) ?>"
                                     onclick="toggleTransactionStatus(<?= (int)$tx['id'] ?>, this, event)"
-                                    title="Click to cycle status: Completed &rarr; Pending &rarr; Cancelled (Current: <?= $statusText ?>)">
+                                    title="Click to toggle status (currently <?= $statusText ?>)">
                                 <span class="toggle-slider-track">
                                     <span class="toggle-slider-thumb">
                                         <span class="toggle-spinner" style="display: none;"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
                                     </span>
                                 </span>
                             </button>
-                            <span class="mv-toggle-label-text <?= $statusClass ?>" onclick="toggleTransactionStatus(<?= (int)$tx['id'] ?>, this.previousElementSibling, event)"><?= $statusText ?></span>
-                        </div>
-
-                        <div class="mv-tx-amounts">
-                            <div class="mv-price <?= $isCredit ? 'credit' : 'debit' ?>">
-                                <?= $isCredit ? '+' : '-' ?><?= format_currency((float)$tx['amount']) ?>
-                            </div>
-                            <div class="mv-bal-sub">
-                                Bal: <?= format_currency((float)$tx['balance_after']) ?>
-                            </div>
+                            <span class="cust-toggle-pill <?= $statusClass ?>" style="font-size: 0.7rem; padding: 2px 6px;">
+                                <span class="toggle-pulse-dot <?= $statusClass ?>"></span>
+                                <span class="toggle-label-text"><?= $statusText ?></span>
+                            </span>
                         </div>
                     </div>
-                </a>
+                </div>
 
                 <!-- 3-Dots Quick Action in Corner -->
                 <div class="mv-card-actions">
@@ -524,9 +405,9 @@ $actionsHtml = '<button type="button" class="btn btn-primary" onclick="openTrans
                         <i class="fa-solid fa-ellipsis-vertical"></i>
                     </button>
                     <div class="card-btns-popup">
-                        <a href="<?= url('/office/finance/transactions/' . $tx['id']) ?>" class="action-btn-table view" title="View Transaction Voucher Details">
+                        <button type="button" class="action-btn-table view" title="View Voucher" onclick="openViewModal(<?= htmlspecialchars(json_encode($tx), ENT_QUOTES, 'UTF-8') ?>, event)">
                             <i class="fa-solid fa-eye"></i>
-                        </a>
+                        </button>
                         <button type="button" class="action-btn-table edit" title="Edit Voucher" onclick="openEditModal(<?= htmlspecialchars(json_encode($tx), ENT_QUOTES, 'UTF-8') ?>, event)">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </button>
@@ -537,53 +418,21 @@ $actionsHtml = '<button type="button" class="btn btn-primary" onclick="openTrans
                 </div>
             </div>
             <?php endforeach; ?>
-            <?php if (empty($transactions)): ?>
-            <div class="no-data-message" style="text-align: center; padding: 2.5rem 1rem;">
-                <div class="no-data-icon"><i class="fa-regular fa-folder-open"></i></div>
-                <h4 style="font-weight: 700; color: #1e293b; margin-bottom: 6px;">No transactions found</h4>
-                <p class="text-muted" style="margin: 0;">Try adjusting your search filters or record a new transaction.</p>
-            </div>
-            <?php endif; ?>
         </div>
 
-        <!-- Modern Pagination Matching office/customers Architecture -->
-        <?php
-            $totRec = $totalRecords ?? count($transactions);
-            $currP = $currentPage ?? 1;
-            $pSize = $perPage ?? 15;
-            $from = $totRec > 0 ? (($currP - 1) * $pSize) + 1 : 0;
-            $to   = min($currP * $pSize, $totRec);
-            $buildPageUrl = function(int $p) use ($search, $selectedType, $selectedAccount, $selectedStatus, $pSize) {
-                $q = [];
-                if (!empty($search)) $q['search'] = $search;
-                if (!empty($selectedType)) $q['type'] = $selectedType;
-                if (!empty($selectedAccount)) $q['account_id'] = $selectedAccount;
-                if (!empty($selectedStatus)) $q['status'] = $selectedStatus;
-                if (!empty($pSize) && $pSize != 15) $q['per_page'] = $pSize;
-                $q['page'] = $p;
-                return url('/office/finance/transactions?' . http_build_query($q));
-            };
-        ?>
-        <?php if (($totalPages ?? 1) > 1): ?>
-        <div class="pagination-wrapper" style="margin-top: 1.5rem;">
-            <div class="pagination-info">Showing <span><?= $from ?>&ndash;<?= $to ?></span> of <span><?= number_format($totRec) ?></span> transaction(s)</div>
-            <div class="pagination">
-                <a href="<?= $buildPageUrl(max(1, $currP - 1)) ?>" class="<?= $currP <= 1 ? 'disabled' : '' ?>" title="Previous Page">&#10094;</a>
-                <?php
-                    $rangeStart = max(1, $currP - 1);
-                    $rangeEnd   = min($totalPages, $rangeStart + 2);
-                    if ($rangeEnd - $rangeStart < 2 && $rangeStart > 1) {
-                        $rangeStart = max(1, $rangeEnd - 2);
-                    }
-                    for ($i = $rangeStart; $i <= $rangeEnd; $i++):
-                ?>
-                    <a href="<?= $buildPageUrl($i) ?>" class="<?= $i === $currP ? 'active' : '' ?>"><?= $i ?></a>
-                <?php endfor; ?>
-                <?php if ($rangeEnd < $totalPages): ?>
-                    <span class="dots">...</span>
-                    <a href="<?= $buildPageUrl($totalPages) ?>" class="<?= $currP === $totalPages ? 'active' : '' ?>"><?= $totalPages ?></a>
+        <!-- Pagination Controls -->
+        <?php if ($totalPages > 1): ?>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div style="font-size: 0.85rem; color: var(--text-muted);">
+                Showing page <strong><?= $currentPage ?></strong> of <strong><?= $totalPages ?></strong> (<?= number_format($totalRecords) ?> total records)
+            </div>
+            <div style="display: flex; gap: 0.35rem;">
+                <?php if ($currentPage > 1): ?>
+                    <a href="<?= url('/office/finance/transactions?page=' . ($currentPage - 1) . '&search=' . urlencode($search) . '&type=' . $selectedType . '&account_id=' . $selectedAccount . '&status=' . $selectedStatus . '&per_page=' . $perPage) ?>" class="btn btn-outline btn-sm">&larr; Previous</a>
                 <?php endif; ?>
-                <a href="<?= $buildPageUrl(min($totalPages, $currP + 1)) ?>" class="<?= $currP >= $totalPages ? 'disabled' : '' ?>" title="Next Page">&#10095;</a>
+                <?php if ($currentPage < $totalPages): ?>
+                    <a href="<?= url('/office/finance/transactions?page=' . ($currentPage + 1) . '&search=' . urlencode($search) . '&type=' . $selectedType . '&account_id=' . $selectedAccount . '&status=' . $selectedStatus . '&per_page=' . $perPage) ?>" class="btn btn-outline btn-sm">Next &rarr;</a>
+                <?php endif; ?>
             </div>
         </div>
         <?php endif; ?>
@@ -625,7 +474,7 @@ $actionsHtml = '<button type="button" class="btn btn-primary" onclick="openTrans
                     <select name="account_id" id="tx_account_id" class="form-select" required>
                         <?php foreach ($accounts as $acc): ?>
                             <option value="<?= $acc['id'] ?>">
-                                <?= e($acc['account_name']) ?> (<?= strtoupper($acc['account_type'] ?? 'Account') ?>) — Available: <?= format_currency((float)($acc['current_balance'] ?? $acc['balance'] ?? 0)) ?>
+                                <?= e($acc['account_name']) ?> (<?= strtoupper($acc['account_type']) ?>) — Available: <?= format_currency((float)$acc['current_balance']) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -809,8 +658,7 @@ $actionsHtml = '<button type="button" class="btn btn-primary" onclick="openTrans
                     <div class="form-group">
                         <label class="form-label" for="edit_tx_status">Status</label>
                         <select name="status" id="edit_tx_status" class="form-select">
-                            <option value="completed">Completed (Funds Cleared)</option>
-                            <option value="pending">Pending (Under Clearance)</option>
+                            <option value="completed">Completed (Active)</option>
                             <option value="cancelled">Cancelled (Void)</option>
                         </select>
                     </div>
@@ -911,62 +759,7 @@ $actionsHtml = '<button type="button" class="btn btn-primary" onclick="openTrans
         }
     });
 
-    // 2. Status Management & 3-State AJAX (Completed, Pending, Cancelled)
-    function applyTxStatusUI(id, status) {
-        const st = (status || 'completed').toLowerCase();
-        const isCompleted = (st === 'completed' || st === 'active');
-        const isPending = (st === 'pending');
-        const isCancelled = (st === 'cancelled');
-
-        const statusClass = isPending ? 'pending' : (isCancelled ? 'cancelled' : 'completed');
-        const statusText = isPending ? 'PENDING' : (isCancelled ? 'CANCELLED' : 'COMPLETED');
-
-        // A. Update Desktop Table Row
-        const row = document.getElementById('txRow-' + id);
-        if (row) {
-            const toggleBtn = row.querySelector('.cust-status-toggle');
-            if (toggleBtn) {
-                toggleBtn.className = 'cust-status-toggle ' + statusClass + (isCompleted ? ' is-active' : '');
-                toggleBtn.setAttribute('aria-checked', isCompleted ? 'true' : 'false');
-                toggleBtn.setAttribute('data-status', statusClass);
-                toggleBtn.title = 'Current status: ' + statusText + '. Click to cycle status.';
-            }
-            const pill = row.querySelector('.cust-toggle-pill');
-            if (pill) {
-                pill.className = 'cust-toggle-pill ' + statusClass;
-            }
-            const dot = row.querySelector('.toggle-pulse-dot');
-            if (dot) {
-                dot.className = 'toggle-pulse-dot ' + statusClass;
-            }
-            const text = row.querySelector('.toggle-label-text');
-            if (text) {
-                text.textContent = statusText;
-            }
-            // Update active item in dropdown
-            row.querySelectorAll('.tx-status-item').forEach(item => {
-                const itemStatus = item.getAttribute('data-status');
-                item.classList.toggle('active', itemStatus === statusClass);
-            });
-        }
-
-        // B. Update Mobile Card
-        const card = document.getElementById('mvTxCard-' + id);
-        if (card) {
-            const mToggleBtn = card.querySelector('.cust-status-toggle');
-            if (mToggleBtn) {
-                mToggleBtn.className = 'cust-status-toggle sm ' + statusClass + (isCompleted ? ' is-active' : '');
-                mToggleBtn.setAttribute('aria-checked', isCompleted ? 'true' : 'false');
-                mToggleBtn.setAttribute('data-status', statusClass);
-            }
-            const mText = card.querySelector('.mv-toggle-label-text');
-            if (mText) {
-                mText.className = 'mv-toggle-label-text ' + statusClass;
-                mText.textContent = statusText.charAt(0).toUpperCase() + statusText.slice(1).toLowerCase();
-            }
-        }
-    }
-
+    // 2. Toggle Status via AJAX
     function toggleTransactionStatus(id, btn, e) {
         if (e) {
             e.preventDefault();
@@ -974,52 +767,12 @@ $actionsHtml = '<button type="button" class="btn btn-primary" onclick="openTrans
         }
         if (!id || btn.classList.contains('is-loading')) return;
 
+        const currentActive = btn.classList.contains('is-active');
+        const targetStatus = currentActive ? 'cancelled' : 'completed';
+
         btn.classList.add('is-loading');
         const spinner = btn.querySelector('.toggle-spinner');
         if (spinner) spinner.style.display = 'inline-block';
-
-        const url = '<?= url('/office/finance/transactions/') ?>' + id + '/toggle-status';
-        const csrfToken = '<?= csrf_token() ?>';
-
-        // Leaving status empty triggers automatic sequence cycle:
-        // completed -> pending -> cancelled -> completed
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': csrfToken
-            },
-            body: new URLSearchParams({
-                '_csrf_token': csrfToken
-            })
-        })
-        .then(res => res.json())
-        .then(data => {
-            btn.classList.remove('is-loading');
-            if (spinner) spinner.style.display = 'none';
-
-            if (data && data.success) {
-                applyTxStatusUI(id, data.status);
-            } else {
-                alert(data.message || 'Could not update transaction status.');
-            }
-        })
-        .catch(err => {
-            btn.classList.remove('is-loading');
-            if (spinner) spinner.style.display = 'none';
-            console.error('Toggle status error:', err);
-            alert('A network error occurred while toggling status.');
-        });
-    }
-
-    function setTransactionDirectStatus(id, targetStatus, e) {
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-        closeAllTxStatusDropdowns();
-        if (!id) return;
 
         const url = '<?= url('/office/finance/transactions/') ?>' + id + '/toggle-status';
         const csrfToken = '<?= csrf_token() ?>';
@@ -1038,61 +791,49 @@ $actionsHtml = '<button type="button" class="btn btn-primary" onclick="openTrans
         })
         .then(res => res.json())
         .then(data => {
+            btn.classList.remove('is-loading');
+            if (spinner) spinner.style.display = 'none';
+
             if (data && data.success) {
-                applyTxStatusUI(id, data.status);
+                const isNowCompleted = (data.status === 'completed' || data.status === 'active');
+                
+                // Update button
+                if (isNowCompleted) {
+                    btn.classList.add('is-active');
+                    btn.setAttribute('aria-checked', 'true');
+                } else {
+                    btn.classList.remove('is-active');
+                    btn.setAttribute('aria-checked', 'false');
+                }
+
+                // Update label pill on desktop
+                const cell = btn.closest('.cust-toggle-cell');
+                if (cell) {
+                    const pill = cell.querySelector('.cust-toggle-pill');
+                    const dot = cell.querySelector('.toggle-pulse-dot');
+                    const text = cell.querySelector('.toggle-label-text');
+
+                    if (pill) {
+                        pill.className = 'cust-toggle-pill ' + (isNowCompleted ? 'completed' : 'cancelled');
+                    }
+                    if (dot) {
+                        dot.className = 'toggle-pulse-dot ' + (isNowCompleted ? 'completed' : 'cancelled');
+                    }
+                    if (text) {
+                        text.textContent = isNowCompleted ? 'COMPLETED' : 'CANCELLED';
+                    }
+                }
             } else {
                 alert(data.message || 'Could not update transaction status.');
             }
         })
         .catch(err => {
-            console.error('Direct status error:', err);
-            alert('A network error occurred while updating status.');
+            btn.classList.remove('is-loading');
+            if (spinner) spinner.style.display = 'none';
+            console.error('Toggle status error:', err);
+            alert('A network error occurred while toggling status.');
         });
     }
-
-    function openTxStatusDropdown(id, pillBtn, e) {
-        if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-        const menu = document.getElementById('txStatusDropdown-' + id);
-        if (!menu) return;
-        const wasOpen = menu.classList.contains('open');
-        closeAllTxStatusDropdowns();
-        if (!wasOpen) {
-            menu.classList.add('open');
-        }
-    }
-
-    function closeAllTxStatusDropdowns() {
-        document.querySelectorAll('.tx-status-dropdown-menu.open').forEach(m => m.classList.remove('open'));
-    }
-
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.status-pill-dropdown-wrap')) {
-            closeAllTxStatusDropdowns();
-        }
-    });
-
-    // 2.1 Mobile Filter Panel Drawer
-    function toggleMobileFilter() {
-        const p = document.getElementById('mvFilterPanel');
-        const b = document.getElementById('mvFilterToggleBtn');
-        if (p) {
-            const isHidden = p.style.display === 'none' || p.style.display === '';
-            p.style.display = isHidden ? 'block' : 'none';
-            if (b) b.classList.toggle('active', isHidden);
-        }
-    }
-
-    document.addEventListener('click', function(e) {
-        const p = document.getElementById('mvFilterPanel');
-        const b = document.getElementById('mvFilterToggleBtn');
-        if (p && !p.contains(e.target) && b && !b.contains(e.target)) {
-            p.style.display = 'none';
-            if (b) b.classList.remove('active');
-        }
-    });
 
     // 3. Modal Handlers: Record Modal
     function openTransactionModal() {
@@ -1539,732 +1280,5 @@ $actionsHtml = '<button type="button" class="btn btn-primary" onclick="openTrans
     top: calc(100% + 4px);
     bottom: auto;
     transform-origin: top right;
-}
-
-/* 9. 3-State Toggle Switch (Completed, Pending, Cancelled) */
-.cust-toggle-cell {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    position: relative;
-    user-select: none;
-}
-.cust-status-toggle {
-    position: relative;
-    background: transparent;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    outline: none;
-    display: inline-block;
-    vertical-align: middle;
-}
-.cust-status-toggle .toggle-slider-track {
-    display: block;
-    width: 44px;
-    height: 24px;
-    border-radius: 9999px;
-    background: #CBD5E1;
-    position: relative;
-    transition: background-color 0.25s ease, box-shadow 0.25s ease;
-}
-.cust-status-toggle.completed .toggle-slider-track,
-.cust-status-toggle.is-active .toggle-slider-track {
-    background: #176B5B;
-    box-shadow: 0 2px 8px rgba(23, 107, 91, 0.35);
-}
-.cust-status-toggle.pending .toggle-slider-track {
-    background: #F59E0B;
-    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35);
-}
-.cust-status-toggle.cancelled .toggle-slider-track {
-    background: #E2E8F0;
-    border: 1px solid #CBD5E1;
-}
-.cust-status-toggle .toggle-slider-thumb {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: #FFFFFF;
-    position: absolute;
-    left: 3px;
-    top: 3px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.22);
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.cust-status-toggle.completed .toggle-slider-thumb,
-.cust-status-toggle.is-active .toggle-slider-thumb {
-    transform: translateX(20px);
-}
-.cust-status-toggle.pending .toggle-slider-thumb {
-    transform: translateX(10px);
-}
-.cust-status-toggle.cancelled .toggle-slider-thumb {
-    transform: translateX(0px);
-}
-
-/* Small toggle for mobile cards */
-.cust-status-toggle.sm .toggle-slider-track {
-    width: 36px;
-    height: 20px;
-}
-.cust-status-toggle.sm .toggle-slider-thumb {
-    width: 14px;
-    height: 14px;
-    left: 3px;
-    top: 3px;
-}
-.cust-status-toggle.sm.completed .toggle-slider-thumb,
-.cust-status-toggle.sm.is-active .toggle-slider-thumb {
-    transform: translateX(16px);
-}
-.cust-status-toggle.sm.pending .toggle-slider-thumb {
-    transform: translateX(8px);
-}
-.cust-status-toggle.sm.cancelled .toggle-slider-thumb {
-    transform: translateX(0px);
-}
-
-/* 10. Status Pills & Pulse Dots */
-.cust-toggle-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 3px 8px;
-    border-radius: 9999px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    cursor: pointer;
-    border: 1px solid transparent;
-    transition: all 0.2s ease;
-    background: transparent;
-}
-.cust-toggle-pill .pill-chevron {
-    font-size: 0.65rem;
-    opacity: 0.65;
-    transition: transform 0.2s ease;
-}
-.cust-toggle-pill.completed {
-    background: #E8F7F0;
-    color: #176B5B;
-    border-color: rgba(23, 107, 91, 0.2);
-}
-.cust-toggle-pill.pending {
-    background: #FEF3C7;
-    color: #B45309;
-    border-color: rgba(217, 119, 6, 0.25);
-}
-.cust-toggle-pill.cancelled {
-    background: #FEE2E2;
-    color: #DC2626;
-    border-color: rgba(220, 38, 38, 0.2);
-}
-.cust-toggle-pill:hover {
-    filter: brightness(0.96);
-}
-
-.toggle-pulse-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    display: inline-block;
-    transition: all 0.2s ease;
-}
-.toggle-pulse-dot.completed {
-    background: #176B5B;
-    box-shadow: 0 0 0 2px rgba(23, 107, 91, 0.25);
-}
-.toggle-pulse-dot.pending {
-    background: #F59E0B;
-    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
-}
-.toggle-pulse-dot.cancelled {
-    background: #DC2626;
-    box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.25);
-}
-
-/* 11. Status Dropdown Menu */
-.status-pill-dropdown-wrap {
-    position: relative;
-    display: inline-block;
-}
-.tx-status-dropdown-menu {
-    position: absolute;
-    top: calc(100% + 5px);
-    left: 50%;
-    transform: translateX(-50%);
-    background: #FFFFFF;
-    border: 1px solid rgba(22, 68, 59, 0.15);
-    border-radius: 10px;
-    box-shadow: 0 10px 25px rgba(22, 68, 59, 0.15);
-    padding: 4px;
-    min-width: 130px;
-    z-index: 1000;
-    display: none;
-}
-.tx-status-dropdown-menu.open {
-    display: flex;
-    flex-direction: column;
-    animation: txDropFade 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-}
-@keyframes txDropFade {
-    from { opacity: 0; transform: translate(-50%, -6px); }
-    to { opacity: 1; transform: translate(-50%, 0); }
-}
-.tx-status-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    padding: 6px 10px;
-    border: none;
-    background: transparent;
-    border-radius: 6px;
-    font-size: 0.76rem;
-    font-weight: 600;
-    color: #334155;
-    cursor: pointer;
-    text-align: left;
-    transition: background-color 0.15s ease;
-}
-.tx-status-item:hover {
-    background: #F1F5F9;
-    color: #0F172A;
-}
-.tx-status-item.active {
-    background: rgba(23, 107, 91, 0.08);
-    color: #176B5B;
-    font-weight: 700;
-}
-.status-menu-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-}
-.status-menu-dot.completed { background: #176B5B; }
-.status-menu-dot.pending { background: #F59E0B; }
-.status-menu-dot.cancelled { background: #DC2626; }
-
-/* =========================================================================
-   12. MOBILE APP RESPONSIVE SYSTEM (EXACT MATCH TO office/customers)
-   ========================================================================= */
-
-/* Desktop Defaults (Screens >= 769px: Mobile Elements Completely Hidden) */
-.mv-bookings-header {
-    display: none !important;
-}
-.bookings-page-view.finance-page-view .cards-grid {
-    display: none !important;
-}
-
-/* Tablet Screens (769px to 991px) */
-@media (max-width: 991px) and (min-width: 769px) {
-    .booking-kpi-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 12px !important;
-    }
-    .filter-bar-compact {
-        flex-wrap: wrap !important;
-        gap: 10px !important;
-    }
-    .fbc-search {
-        min-width: 240px;
-        flex: 1 1 auto;
-    }
-    .modern-table-container {
-        overflow-x: auto !important;
-        -webkit-overflow-scrolling: touch;
-    }
-}
-
-/* Mobile Screens (Screens <= 768px: Switch from Desktop to Mobile App UI) */
-@media (max-width: 768px) {
-    .bookings-page-view.finance-page-view {
-        padding-bottom: 76px;
-    }
-
-    /* Hide Desktop Views */
-    .bookings-page-view.finance-page-view .desktop-header-wrapper,
-    .bookings-page-view.finance-page-view .booking-kpi-grid,
-    .bookings-page-view.finance-page-view .filter-bar-compact,
-    .bookings-page-view.finance-page-view .section-header,
-    .bookings-page-view.finance-page-view .modern-table-container {
-        display: none !important;
-    }
-
-    /* Show Mobile Specific App Bar & Controls */
-    .bookings-page-view.finance-page-view .mv-bookings-header {
-        display: block !important;
-        margin-bottom: 12px;
-    }
-
-    /* Show Mobile Cards Grid */
-    .bookings-page-view.finance-page-view .cards-grid {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 12px !important;
-        margin-bottom: 20px !important;
-    }
-
-    /* Top App Bar */
-    .mv-top-bar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 4px 0 12px 0;
-    }
-    .mv-top-bar-left {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .mv-back-btn {
-        width: 36px;
-        height: 36px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 10px;
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        color: #1e293b;
-        font-size: 14px;
-        text-decoration: none;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-        transition: all 0.15s ease;
-    }
-    .mv-back-btn:hover {
-        background: #f8fafc;
-        color: #176B5B;
-    }
-    .mv-page-title {
-        margin: 0;
-        font-size: 1.35rem;
-        font-weight: 800;
-        color: #0f172a;
-        letter-spacing: -0.02em;
-        line-height: 1;
-    }
-    .mv-add-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 8px 16px;
-        border-radius: 9999px;
-        background: linear-gradient(135deg, #176B5B 0%, #0F493E 100%);
-        color: #ffffff;
-        font-size: 12.5px;
-        font-weight: 700;
-        text-decoration: none;
-        box-shadow: 0 4px 14px rgba(23, 107, 91, 0.32);
-        border: none;
-        cursor: pointer;
-        white-space: nowrap;
-        transition: all 0.2s ease;
-    }
-    .mv-add-btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 18px rgba(23, 107, 91, 0.42);
-        color: #ffffff;
-    }
-
-    /* Mobile Search & Filter */
-    .mv-search-bar-wrap {
-        margin-bottom: 12px;
-    }
-    .mv-search-form {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        width: 100%;
-        margin: 0;
-    }
-    .mv-search-input-box {
-        flex: 1;
-        min-width: 0;
-        position: relative;
-        display: flex;
-        align-items: center;
-    }
-    .mv-search-ico {
-        position: absolute;
-        left: 14px;
-        color: #94a3b8;
-        font-size: 13.5px;
-        pointer-events: none;
-    }
-    .mv-search-input-box input {
-        width: 100%;
-        height: 44px;
-        padding: 0 36px 0 40px;
-        border-radius: 14px;
-        border: 1.5px solid #e2e8f0;
-        background: #f8fafc;
-        font-size: 13.5px;
-        font-weight: 500;
-        color: #1e293b;
-        outline: none;
-        box-sizing: border-box;
-        transition: all 0.2s ease;
-    }
-    .mv-search-input-box input:focus {
-        background: #ffffff;
-        border-color: #176B5B;
-        box-shadow: 0 0 0 3px rgba(23, 107, 91, 0.12);
-    }
-    .mv-search-clear {
-        position: absolute;
-        right: 12px;
-        color: #94a3b8;
-        font-size: 13px;
-        text-decoration: none;
-        padding: 4px;
-    }
-    .mv-search-clear:hover {
-        color: #ef4444;
-    }
-    .mv-filter-toggle {
-        width: 44px;
-        height: 44px;
-        min-width: 44px;
-        border-radius: 14px;
-        border: 1.5px solid #e2e8f0;
-        background: #ffffff;
-        color: #475569;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        font-size: 15px;
-        transition: all 0.2s ease;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
-    }
-    .mv-filter-toggle:hover,
-    .mv-filter-toggle.active {
-        background: #f1f5f9;
-        color: #176B5B;
-        border-color: #cbd5e1;
-    }
-    .mv-filter-panel {
-        background: #ffffff;
-        border-radius: 14px;
-        padding: 12px 14px;
-        margin-top: 10px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-    }
-    .mv-filter-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 8px;
-    }
-    .mv-filter-row:last-child {
-        margin-bottom: 0;
-    }
-    .mv-filter-row label {
-        font-size: 12.5px;
-        font-weight: 600;
-        color: #64748b;
-    }
-    .mv-filter-row select {
-        padding: 6px 12px;
-        border-radius: 8px;
-        border: 1px solid #cbd5e1;
-        font-size: 13px;
-        color: #1e293b;
-        background: #f8fafc;
-    }
-
-    /* Horizontal Scroll Status Pills */
-    .mv-status-scroll {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        overflow-x: auto;
-        white-space: nowrap;
-        padding-bottom: 4px;
-        margin-bottom: 14px;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-    }
-    .mv-status-scroll::-webkit-scrollbar {
-        display: none;
-    }
-    .mv-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 7px 14px;
-        border-radius: 9999px;
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        color: #64748b;
-        font-size: 12.5px;
-        font-weight: 600;
-        text-decoration: none;
-        transition: all 0.2s ease;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-        flex-shrink: 0;
-    }
-    .mv-pill:hover {
-        border-color: #cbd5e1;
-        color: #1e293b;
-    }
-    .mv-pill-cnt {
-        font-size: 11px;
-        font-weight: 700;
-        padding: 1px 6px;
-        border-radius: 10px;
-        background: #f1f5f9;
-        color: #475569;
-    }
-    .mv-pill.active {
-        background: #176B5B !important;
-        border-color: #176B5B !important;
-        color: #ffffff !important;
-        box-shadow: 0 3px 10px rgba(23, 107, 91, 0.25);
-    }
-    .mv-pill.active .mv-pill-cnt {
-        background: rgba(255, 255, 255, 0.25) !important;
-        color: #ffffff !important;
-    }
-
-    /* Mobile Transaction Cards (Exact office/customers Architecture) */
-    .mv-booking-card-wrapper {
-        position: relative;
-        width: 100%;
-    }
-    .mv-booking-card {
-        display: flex;
-        align-items: stretch;
-        gap: 12px;
-        padding: 12px 14px;
-        padding-right: 36px;
-        background: #ffffff;
-        border-radius: 16px;
-        border: 1px solid #edf2f7;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
-        text-decoration: none;
-        transition: all 0.2s ease;
-        box-sizing: border-box;
-        width: 100%;
-    }
-    .mv-booking-card:active {
-        transform: scale(0.99);
-        background: #fbfcfe;
-    }
-    .mv-thumb-wrap {
-        width: 46px;
-        height: 46px;
-        min-width: 46px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        align-self: flex-start;
-    }
-    .mv-tx-avatar {
-        width: 46px;
-        height: 46px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.15rem;
-    }
-    .mv-tx-avatar.credit {
-        background: #E8F7F0;
-        color: #218765;
-        border: 1.5px solid rgba(33, 135, 101, 0.25);
-    }
-    .mv-tx-avatar.debit {
-        background: #FEE2E2;
-        color: #DC2626;
-        border: 1.5px solid rgba(220, 38, 38, 0.25);
-    }
-    .mv-details {
-        flex: 1;
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: 2.5px;
-    }
-    .mv-code-row {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-    .mv-code {
-        font-size: 11px;
-        font-weight: 700;
-        color: #176B5B;
-        letter-spacing: -0.01em;
-        font-family: monospace;
-        background: rgba(23, 107, 91, 0.08);
-        padding: 1px 6px;
-        border-radius: 4px;
-    }
-    .mv-tx-badge {
-        font-size: 9.5px;
-        font-weight: 800;
-        padding: 1px 5px;
-        border-radius: 4px;
-        letter-spacing: 0.02em;
-    }
-    .mv-tx-badge.credit {
-        background: #E8F7F0;
-        color: #218765;
-    }
-    .mv-tx-badge.debit {
-        background: #FEE2E2;
-        color: #DC2626;
-    }
-    .mv-tour-title {
-        font-size: 13.5px;
-        font-weight: 700;
-        color: #0f172a;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        line-height: 1.3;
-    }
-    .mv-date-duration {
-        font-size: 11.5px;
-        color: #64748b;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    .mv-date-duration i {
-        font-size: 10px;
-        color: #94a3b8;
-    }
-    .mv-passenger {
-        font-size: 11.5px;
-        color: #334155;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    .mv-passenger i {
-        font-size: 10px;
-        color: #94a3b8;
-    }
-    .mv-vehicle {
-        font-size: 11px;
-        color: #64748b;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    .mv-vehicle i {
-        font-size: 10px;
-        color: #94a3b8;
-    }
-    .mv-right-col {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        align-items: flex-end;
-        flex-shrink: 0;
-        padding: 1px 0;
-    }
-    .mv-status-toggle-wrap {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 2px 6px;
-        border-radius: 9999px;
-        background: rgba(255, 255, 255, 0.95);
-        border: 1px solid rgba(226, 232, 240, 0.9);
-    }
-    .mv-toggle-label-text {
-        font-size: 0.7rem;
-        font-weight: 700;
-        text-transform: capitalize;
-    }
-    .mv-toggle-label-text.completed {
-        color: #176B5B;
-    }
-    .mv-toggle-label-text.pending {
-        color: #B45309;
-    }
-    .mv-toggle-label-text.cancelled {
-        color: #DC2626;
-    }
-    .mv-tx-amounts {
-        text-align: right;
-        margin-top: auto;
-    }
-    .mv-price {
-        font-size: 1.05rem;
-        font-weight: 800;
-        line-height: 1.2;
-        white-space: nowrap;
-    }
-    .mv-price.credit {
-        color: #218765;
-    }
-    .mv-price.debit {
-        color: #DC2626;
-    }
-    .mv-bal-sub {
-        font-size: 0.72rem;
-        color: #64748B;
-        font-weight: 600;
-        margin-top: 2px;
-        white-space: nowrap;
-    }
-}
-
-/* Extra Compact Phones (<= 480px) */
-@media (max-width: 480px) {
-    .mv-booking-card {
-        padding: 10px 12px !important;
-        padding-right: 32px !important;
-        gap: 10px !important;
-    }
-    .mv-thumb-wrap, .mv-tx-avatar {
-        width: 42px !important;
-        height: 42px !important;
-        min-width: 42px !important;
-        font-size: 1.05rem !important;
-    }
-    .mv-price {
-        font-size: 0.98rem !important;
-    }
-    .mv-tour-title {
-        font-size: 13px !important;
-    }
-}
-
-/* Modals on Mobile Devices */
-@media (max-width: 640px) {
-    .modal-dialog-custom {
-        width: calc(100% - 24px) !important;
-        max-width: 440px !important;
-        margin: 0 auto !important;
-    }
 }
 </style>

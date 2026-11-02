@@ -79,9 +79,7 @@ echo "\n2. Verifying AJAX Employee Deletion & Cascade Clean...\n";
 // Create test user
 $userModel = new User();
 $testEmail = 'del_emp_' . time() . '@example.com';
-$testUsername = 'del_user_' . time();
 $testUserId = $userModel->create([
-    'username'   => $testUsername,
     'name'       => 'Test Del Staff',
     'email'      => $testEmail,
     'password'   => password_hash('Secret123!', PASSWORD_BCRYPT),

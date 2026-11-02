@@ -1,56 +1,37 @@
 <?php
 /**
- * MANASWI Tours & Travels — Finance Module Configuration
+ * Finance Module Configuration
+ * Default settings, gateway configurations, and accounting policies
  */
 
 return [
-    'currency' => [
-        'code'   => 'INR',
-        'symbol' => '₹',
-        'locale' => 'en_IN',
+    'currency'        => 'INR',
+    'currency_symbol' => '₹',
+
+    // Razorpay Payment Gateway (Test Sandbox Mode Default)
+    'razorpay' => [
+        'enabled'        => true,
+        'mode'           => getenv('RAZORPAY_MODE') ?: 'test', // 'test' or 'live'
+        'key_id'         => getenv('RAZORPAY_KEY_ID') ?: 'rzp_test_ToursTravelsTest2026',
+        'key_secret'     => getenv('RAZORPAY_KEY_SECRET') ?: 'ToursTravelsSecretKey2026',
+        'webhook_secret' => getenv('RAZORPAY_WEBHOOK_SECRET') ?: 'ToursTravelsWebhookSecret2026',
+        'company_name'   => 'MANASWI Tours & Travels',
+        'theme_color'    => '#176B5B',
     ],
 
-    'account_types' => [
-        'bank'    => 'Commercial Bank Account',
-        'cash'    => 'Petty Cash / Counter Cash',
-        'gateway' => 'Online Payment Gateway (Razorpay/UPI)',
-    ],
-
-    'expense_categories' => [
-        'fuel_bulk'         => 'Fleet Fuel (Diesel/Petrol)',
-        'maintenance'       => 'Vehicle Maintenance & Parts',
-        'driver_allowance'  => 'Driver Daily Bata / Allowances',
-        'office_rent'       => 'Office & Garage Rent',
-        'utilities'         => 'Electricity, Water & Internet',
-        'software_saas'     => 'Software, GPS & Telematics',
-        'marketing'         => 'Advertising & Promotion',
-        'office_supplies'   => 'Stationery & Operations',
-        'legal_accounting'  => 'Taxation, Legal & Audit Fees',
-        'misc'              => 'Miscellaneous Expenses',
-    ],
-
-    'payment_methods' => [
-        'bank_transfer' => 'NEFT / RTGS / IMPS',
-        'upi'           => 'UPI Transfer (GPay / PhonePe / Paytm)',
-        'cash'          => 'Cash in Hand',
-        'card'          => 'Credit / Debit Card',
-        'cheque'        => 'Bank Cheque / Draft',
-    ],
-
+    // Default Statutory Payroll Parameters (India FY 2026-27 Compliant)
     'payroll' => [
-        'payslip_prefix'  => 'MAN-PAY-',
-        'payroll_prefix'  => 'PR-',
-        'expense_prefix'  => 'EXP-',
-        'advance_prefix'  => 'ADV-',
-        'refund_prefix'   => 'REF-',
+        'standard_work_days'     => 30,
+        'pf_employee_percent'    => 12.00,
+        'esi_employee_percent'   => 0.75,
+        'default_hra_percent'    => 40.00,
+        'professional_tax_slab'  => 200.00,
     ],
 
-    'gateways' => [
-        'razorpay' => [
-            'enabled' => false,
-            'key_id' => getenv('RAZORPAY_KEY_ID') ?: '',
-            'key_secret' => getenv('RAZORPAY_KEY_SECRET') ?: '',
-        ],
-    ],
+    // Accounts Receivable Overdue Slabs (in days)
+    'aging_slabs' => [
+        'current' => 30,
+        'medium'  => 60,
+        'high'    => 90,
+    ]
 ];
-

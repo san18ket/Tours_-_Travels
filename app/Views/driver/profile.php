@@ -32,7 +32,7 @@
                     </div>
                     <div>
                         <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--vg-gold-400); font-weight: 700;">
-                            VoyageGo Licensed Chauffeur
+                            <?= e(company_name()) ?> Licensed Chauffeur
                         </div>
                         <h2 style="font-size: 1.35rem; font-weight: 800; color: #FFF; margin: 0.2rem 0; letter-spacing: -0.01em;">
                             <?= e($driver['name']) ?>

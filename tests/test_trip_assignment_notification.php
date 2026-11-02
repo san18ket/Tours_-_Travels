@@ -155,4 +155,3 @@ if (!empty($createdTestVehicle)) {
 echo "============================================================\n";
 echo "ALL TESTS PASSED SUCCESSFULLY! Notification engine is fully verified.\n";
 echo "============================================================\n";
-

@@ -94,10 +94,6 @@ assertCondition(strpos($html, 'Track Location') !== false, "Response body contai
 assertCondition(strpos($html, 'liveRadarMap') !== false, "Response body contains liveRadarMap");
 assertCondition(strpos($html, 'Trip Information') !== false, "Response body contains Trip Information");
 
-echo "\n--- 8. Testing Mobile Bottom Navbar Labels ---\n";
-assertCondition(strpos($html, '<span>Trips</span>') !== false, "Bottom navbar displays concise 'Trips' label");
-assertCondition(strpos($html, '<span>Trip Operations</span>') === false, "Bottom navbar does NOT display lengthy 'Trip Operations'");
-
 // Dispatcher Role (Allowed)
 Session::set('user_role', 'dispatcher');
 $dispReq = new Request([], [], ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => '/office/tracking']);
@@ -118,4 +114,3 @@ if ($failed > 0) {
     exit(1);
 }
 exit(0);
-

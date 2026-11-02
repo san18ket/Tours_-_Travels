@@ -7,6 +7,20 @@
 
 <div class="modern-form-wrapper">
 
+    <!-- Top Action Breadcrumbs & Direct Admin Panel Navigation -->
+    <div class="customer-create-top-bar">
+        <div class="create-topbar-left">
+            <a href="<?= url('/office/employees') ?>" class="create-topbar-back-btn" title="Back to Employee Directory">
+                <i class="fa-solid fa-arrow-left"></i> <span>Employee Directory</span>
+            </a>
+        </div>
+        <div class="create-topbar-right">
+            <a href="<?= url('/office/dashboard') ?>" class="create-topbar-admin-btn" title="Open Admin Panel">
+                <i class="fa-solid fa-gauge-high"></i> <span>Admin Panel</span>
+            </a>
+        </div>
+    </div>
+
     <!-- Centered Professional 5-Step Stepper Header -->
     <div class="modern-stepper-header-centered">
         <div class="modern-stepper-container">
@@ -79,12 +93,20 @@
         <input type="text" name="fake_username_remembered" tabindex="-1" style="position: absolute; top: -9999px; left: -9999px; opacity: 0; width: 0; height: 0; pointer-events: none;" autocomplete="off">
         <input type="password" name="fake_password_remembered" tabindex="-1" style="position: absolute; top: -9999px; left: -9999px; opacity: 0; width: 0; height: 0; pointer-events: none;" autocomplete="new-password">
 
-        <div class="modern-form-card">
-
-            <!-- ========================================================================= -->
-            <!-- STEP 1: Personal Details, Photo & Address                                -->
-            <!-- ========================================================================= -->
-            <div class="modern-step-panel" id="wizardPanel1">
+        <!-- ========================================================================= -->
+        <!-- STEP 1: Personal Details, Photo & Address                                -->
+        <!-- ========================================================================= -->
+        <div class="modern-step-panel" id="wizardPanel1">
+            <div class="modern-form-card">
+                <div class="modern-section-header">
+                    <div class="modern-section-badge">
+                        <i class="fa-solid fa-user-tie"></i>
+                    </div>
+                    <div class="modern-section-meta">
+                        <h2 class="modern-section-title">Personal Identity</h2>
+                        <p class="modern-section-sub">Staff legal full name, profile photo, and residential address.</p>
+                    </div>
+                </div>
 
                 <!-- Professional Profile Photo Upload Component (Exact Customers Architecture) -->
                 <div class="customer-avatar-upload-card">
@@ -304,11 +326,22 @@
                     </button>
                 </div>
             </div>
+        </div>
 
-            <!-- ========================================================================= -->
-            <!-- STEP 2: Role & Contract                                                   -->
-            <!-- ========================================================================= -->
-            <div class="modern-step-panel" id="wizardPanel2" style="display: none;">
+        <!-- ========================================================================= -->
+        <!-- STEP 2: Role & Contract                                                   -->
+        <!-- ========================================================================= -->
+        <div class="modern-step-panel" id="wizardPanel2" style="display: none;">
+            <div class="modern-form-card">
+                <div class="modern-section-header">
+                    <div class="modern-section-badge">
+                        <i class="fa-solid fa-briefcase"></i>
+                    </div>
+                    <div class="modern-section-meta">
+                        <h2 class="modern-section-title">Operational Role &amp; Contract</h2>
+                        <p class="modern-section-sub">Position classification, employment contract type, joining date, and contact reachability.</p>
+                    </div>
+                </div>
 
                 <!-- Row 1: Role, Employment Type, Date of Joining -->
                 <div class="modern-form-grid-3">
@@ -402,11 +435,22 @@
                     </button>
                 </div>
             </div>
+        </div>
 
-            <!-- ========================================================================= -->
-            <!-- STEP 3: Driving License & Compliance Documents                           -->
-            <!-- ========================================================================= -->
-            <div class="modern-step-panel" id="wizardPanel3" style="display: none;">
+        <!-- ========================================================================= -->
+        <!-- STEP 3: Driving License & Compliance Documents                           -->
+        <!-- ========================================================================= -->
+        <div class="modern-step-panel" id="wizardPanel3" style="display: none;">
+            <div class="modern-form-card">
+                <div class="modern-section-header">
+                    <div class="modern-section-badge">
+                        <i class="fa-solid fa-id-card"></i>
+                    </div>
+                    <div class="modern-section-meta">
+                        <h2 class="modern-section-title">License &amp; Documents</h2>
+                        <p class="modern-section-sub">Commercial driving license verification, official identification scans, and compliance certificates.</p>
+                    </div>
+                </div>
 
                 <!-- SECTION 3A: Commercial Driving License Verification -->
                 <div id="chauffeurLicenseSection" style="background: #F0FDF8; border: 1.5px solid #A7F3D0; padding: 1.5rem; border-radius: 18px; margin-bottom: 1.75rem;">
@@ -651,11 +695,22 @@
                     </button>
                 </div>
             </div>
+        </div>
 
-            <!-- ========================================================================= -->
-            <!-- STEP 4: Access Credentials                                                -->
-            <!-- ========================================================================= -->
-            <div class="modern-step-panel" id="wizardPanel4" style="display: none;">
+        <!-- ========================================================================= -->
+        <!-- STEP 4: Access Credentials                                                -->
+        <!-- ========================================================================= -->
+        <div class="modern-step-panel" id="wizardPanel4" style="display: none;">
+            <div class="modern-form-card">
+                <div class="modern-section-header">
+                    <div class="modern-section-badge">
+                        <i class="fa-solid fa-key"></i>
+                    </div>
+                    <div class="modern-section-meta">
+                        <h2 class="modern-section-title">Access Credentials</h2>
+                        <p class="modern-section-sub">System login credentials, mobile app account setup, and authentication credentials.</p>
+                    </div>
+                </div>
 
                 <!-- System Login Credentials Card -->
                 <div style="background: #F8FAFD; border: 1.5px solid #DCE6F2; border-radius: 18px; padding: 1.5rem; margin-bottom: 1.75rem;">
@@ -716,11 +771,22 @@
                     </button>
                 </div>
             </div>
+        </div>
 
-            <!-- ========================================================================= -->
-            <!-- STEP 5: Review & Submit                                                   -->
-            <!-- ========================================================================= -->
-            <div class="modern-step-panel" id="wizardPanel5" style="display: none;">
+        <!-- ========================================================================= -->
+        <!-- STEP 5: Review & Submit                                                   -->
+        <!-- ========================================================================= -->
+        <div class="modern-step-panel" id="wizardPanel5" style="display: none;">
+            <div class="modern-form-card">
+                <div class="modern-section-header">
+                    <div class="modern-section-badge" style="background: #E8F8F0; color: #10B981;">
+                        <i class="fa-solid fa-clipboard-check"></i>
+                    </div>
+                    <div class="modern-section-meta">
+                        <h2 class="modern-section-title">Review &amp; Submit</h2>
+                        <p class="modern-section-sub">Comprehensive profile verification and document dossier review prior to onboarding.</p>
+                    </div>
+                </div>
 
                 <!-- Live Executive Dossier Container (Exact Customers Architecture) -->
                 <div class="review-dossier-wrapper">
@@ -1798,10 +1864,9 @@ document.addEventListener('DOMContentLoaded', function() {
 /* Complete Luxury Modern Form Styling (Exact Customers Standard)            */
 /* ========================================================================= */
 .modern-form-wrapper {
-    width: 100%;
-    max-width: 100%;
-    margin: 0;
-    padding: 0.25rem 0 3.5rem;
+    max-width: 1040px;
+    margin: 0 auto;
+    padding-bottom: 3.5rem;
 }
 
 /* Top Utility Bar */
@@ -1859,154 +1924,83 @@ document.addEventListener('DOMContentLoaded', function() {
     margin-bottom: 2rem;
     display: flex;
     justify-content: center;
-    align-items: center;
-    padding: 0;
-    width: 100%;
 }
 .modern-stepper-container {
     width: 100%;
-    max-width: 100%;
-    background: #FFFFFF;
-    border: 1.5px solid #E2E8F0;
-    border-radius: 20px;
-    padding: 1.1rem 2rem;
-    box-shadow: 0 4px 20px rgba(12, 43, 82, 0.04);
+    max-width: 860px;
 }
 .modern-stepper-track {
     display: flex;
     align-items: center;
     justify-content: space-between;
     position: relative;
-    width: 100%;
-    max-width: 960px;
-    margin: 0 auto;
 }
 .modern-step-item {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    background: transparent !important;
-    border: none !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
     cursor: pointer;
-    padding: 0.35rem 0.6rem !important;
-    border-radius: 12px !important;
-    transition: all 0.2s ease !important;
+    padding: 0 4px;
     z-index: 2;
-    color: #64748B !important;
-    outline: none !important;
-    text-decoration: none !important;
+    transition: transform 0.2s ease;
 }
 .modern-step-item:hover {
-    color: #0C2B52 !important;
     transform: translateY(-1px);
 }
 .modern-step-circle {
-    width: 38px !important;
-    height: 38px !important;
-    min-width: 38px !important;
-    border-radius: 50% !important;
-    background: #FFFFFF !important;
-    color: #64748B !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-size: 0.95rem !important;
-    font-weight: 700 !important;
-    border: 2px solid #CBD5E1 !important;
-    margin-bottom: 0.45rem !important;
-    transition: all 0.25s ease !important;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.88rem;
+    background: #FFFFFF;
+    color: #64748B;
+    border: 2px solid #CBD5E1;
+    transition: all 0.25s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 .modern-step-label {
-    font-size: 0.82rem !important;
-    font-weight: 600 !important;
-    color: #64748B !important;
-    margin-top: 0 !important;
-    white-space: nowrap !important;
-    transition: color 0.2s ease !important;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #64748B;
+    white-space: nowrap;
+    transition: color 0.25s ease;
 }
 .modern-step-item.active .modern-step-circle {
-    background: #176B5B !important;
-    border-color: #176B5B !important;
-    color: #FFFFFF !important;
-    box-shadow: 0 0 0 4px rgba(23, 107, 91, 0.18), 0 4px 12px rgba(23, 107, 91, 0.25) !important;
-    transform: scale(1.08) !important;
+    background: linear-gradient(135deg, #176B5B 0%, #16443B 100%);
+    color: #FFFFFF;
+    border-color: #176B5B;
+    box-shadow: 0 0 0 4px rgba(23, 107, 91, 0.2);
 }
 .modern-step-item.active .modern-step-label {
-    color: #176B5B !important;
-    font-weight: 700 !important;
+    color: #176B5B;
+    font-weight: 800;
 }
 .modern-step-item.completed .modern-step-circle {
-    background: #10B981 !important;
-    border-color: #10B981 !important;
-    color: #FFFFFF !important;
+    background: #10B981;
+    color: #FFFFFF;
+    border-color: #10B981;
 }
 .modern-step-item.completed .modern-step-label {
-    color: #10B981 !important;
+    color: #10B981;
 }
 .modern-step-connector {
-    flex: 1 !important;
-    height: 3px !important;
-    background: #E2E8F0 !important;
-    margin: -1.2rem 0.5rem 0 0.5rem !important;
-    transition: background 0.3s ease !important;
-    border-radius: 4px !important;
+    flex: 1;
+    height: 3px;
+    background: #E2E8F0;
+    margin: -20px 8px 0;
+    z-index: 1;
+    transition: background 0.3s ease;
+    border-radius: 2px;
 }
 .modern-step-connector.completed {
-    background: #10B981 !important;
-}
-
-@media (max-width: 768px) {
-    .modern-form-wrapper {
-        padding: 0 0 2rem;
-    }
-    .modern-stepper-header-centered {
-        margin-bottom: 1.5rem;
-    }
-    .modern-stepper-container {
-        padding: 0.85rem 1rem;
-        border-radius: 18px;
-    }
-    .modern-step-circle {
-        width: 34px !important;
-        height: 34px !important;
-        min-width: 34px !important;
-        font-size: 0.88rem !important;
-        margin-bottom: 0.35rem !important;
-    }
-    .modern-step-label {
-        font-size: 0.76rem !important;
-    }
-    .modern-step-connector {
-        margin: -1.1rem 0.35rem 0 0.35rem !important;
-    }
-}
-
-@media (max-width: 480px) {
-    .modern-stepper-container {
-        padding: 0.75rem 0.65rem;
-        border-radius: 16px;
-    }
-    .modern-step-item {
-        padding: 0.2rem 0.35rem !important;
-    }
-    .modern-step-circle {
-        width: 30px !important;
-        height: 30px !important;
-        min-width: 30px !important;
-        font-size: 0.82rem !important;
-        margin-bottom: 0.25rem !important;
-    }
-    .modern-step-connector {
-        margin: -0.95rem 0.25rem 0 0.25rem !important;
-    }
-    .modern-step-item:not(.active) .modern-step-label {
-        display: none !important;
-    }
-    .modern-step-item.active .modern-step-label {
-        display: inline-block !important;
-        font-size: 0.72rem !important;
-    }
+    background: #10B981;
 }
 
 /* Form Card */

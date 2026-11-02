@@ -1,6 +1,5 @@
 {
     "require": {
-        "minishlink/web-push": "^11.0",
-        "guzzlehttp/guzzle": "^8.3"
+        "phpmailer/phpmailer": "^7.1"
     }
 }

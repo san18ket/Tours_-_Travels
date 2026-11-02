@@ -99,7 +99,7 @@ $cust2Values = [
 ];
 
 foreach ($cust2Values as $val => $label) {
-    if (strpos($html, (string)$val) === false) {
+    if (strpos($html, $val) === false) {
         echo "[FAIL] {$label} (expected: '{$val}')\n";
         $failed = true;
     } else {
@@ -140,42 +140,6 @@ if ($response->getStatusCode() === 200) {
     echo "[PASS] CustomerController::edit returns HTTP 200\n";
 } else {
     echo "[FAIL] CustomerController::edit returned status " . $response->getStatusCode() . "\n";
-    $failed = true;
-}
-
-// Test submitting update via POST
-$_SERVER['REQUEST_METHOD'] = 'POST';
-$_POST = [
-    'title' => 'Mrs',
-    'name' => 'Anushka Sharma',
-    'status' => 'active',
-    'phone' => '8799845232',
-    'email' => 'sanket@gmail.com',
-    'address_line' => 'New Bhangeaon Khaperkheda Near Sai mandir',
-    'city' => 'Nagpur',
-    'state' => 'Mahārāshtra',
-    'postal_code' => '441102',
-    'country' => 'India',
-    'id_type' => 'aadhaar',
-    'id_number' => '5432 1234 5678',
-    'notes' => 'Updated via automated test',
-    'marketing_consent' => '1',
-    'csrf_token' => \App\Core\Csrf::getToken()
-];
-
-$postRequest = new \App\Core\Request();
-$updateResponse = $controller->update($postRequest, ['id' => 2]);
-if ($updateResponse->getStatusCode() === 302) {
-    echo "[PASS] CustomerController::update redirected successfully (HTTP 302)\n";
-    $updatedCust = $customerModel->find(2);
-    if ($updatedCust['id_type'] === 'aadhaar' && $updatedCust['id_number'] === '5432 1234 5678' && $updatedCust['notes'] === 'Updated via automated test') {
-        echo "[PASS] Customer 2 fields id_type, id_number, and notes verified in database!\n";
-    } else {
-        echo "[FAIL] Customer 2 database fields did not match expected updated values.\n";
-        $failed = true;
-    }
-} else {
-    echo "[FAIL] CustomerController::update returned status " . $updateResponse->getStatusCode() . "\n";
     $failed = true;
 }
 

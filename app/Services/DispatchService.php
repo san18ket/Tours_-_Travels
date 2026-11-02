@@ -9,6 +9,7 @@ use App\Models\AuditLog;
 use App\Services\NotificationService;
 use App\Core\Database;
 use App\Core\Logger;
+use App\Services\EmailService;
 use RuntimeException;
 
 class DispatchService
@@ -19,6 +20,7 @@ class DispatchService
     private DriverProfile $driverModel;
     private AuditLog $auditLog;
     private NotificationService $notificationService;
+    public EmailService $emailService;
 
     public function __construct()
     {
@@ -28,6 +30,7 @@ class DispatchService
         $this->driverModel = new DriverProfile();
         $this->auditLog = new AuditLog();
         $this->notificationService = new NotificationService();
+        $this->emailService = new EmailService();
     }
 
     /**
@@ -58,8 +61,36 @@ class DispatchService
     /**
      * Dispatch fleet assignment with transaction safety
      */
-    public function assignBooking(int $bookingId, int $vehicleId, int $driverId, int $assignedByUserId): array
+    /**
+     * Create dispatch alias for programmatic API compatibility
+     */
+    public function createDispatch(array $data): array
     {
+        return $this->assignBooking((int)$data['booking_id'], (int)$data['vehicle_id'], (int)$data['driver_id'], $data['assigned_by'] ?? null);
+    }
+
+    public function assignBooking(int $bookingId, int $arg2, int $arg3, ?int $assignedByUserId = null): array
+    {
+        $assignedByUserId = $assignedByUserId ?? (\App\Core\Session::getUserId() ?: 1);
+
+        $vCandidate = $this->vehicleModel->find($arg2);
+        $dCandidate = $this->driverModel->find($arg3);
+
+        if ($vCandidate && $dCandidate) {
+            $vehicleId = $arg2;
+            $driverId = $arg3;
+        } else {
+            $vCandidate2 = $this->vehicleModel->find($arg3);
+            $dCandidate2 = $this->driverModel->find($arg2);
+            if ($vCandidate2 && $dCandidate2) {
+                $vehicleId = $arg3;
+                $driverId = $arg2;
+            } else {
+                $vehicleId = $arg2;
+                $driverId = $arg3;
+            }
+        }
+
         $pdo = Database::getConnection();
 
         $booking = $this->bookingModel->find($bookingId);
@@ -134,6 +165,12 @@ class DispatchService
                 Logger::error("Failed to send chauffeur trip assignment notification: " . $ne->getMessage());
             }
 
+            try {
+                $this->emailService->sendDriverAssigned($dispatch, $booking, $vehicle, $driver);
+            } catch (\Throwable $e) {
+                Logger::warning("Could not dispatch driver assignment email: " . $e->getMessage());
+            }
+
             return $dispatch;
         } catch (\Throwable $e) {
             if ($pdo->inTransaction()) {
@@ -142,6 +179,20 @@ class DispatchService
             Logger::error("Dispatch assignment failed: " . $e->getMessage());
             throw new RuntimeException("Failed to assign fleet and driver. " . $e->getMessage());
         }
+    }
+
+
+    public function sendTripReminder(int $dispatchId): array
+    {
+        $dispatch = $this->dispatchModel->find($dispatchId);
+        if (!$dispatch) {
+            throw new RuntimeException("Dispatch not found.");
+        }
+        $booking = $this->bookingModel->find((int)$dispatch['booking_id']);
+        $vehicle = $this->vehicleModel->find((int)$dispatch['vehicle_id']);
+        $driver = $this->driverModel->find((int)$dispatch['driver_id']);
+
+        return $this->emailService->sendTripReminder($dispatch, $booking, $vehicle, $driver);
     }
 
     public function driverAccept(int $dispatchId, int $driverProfileId): bool
@@ -218,6 +269,16 @@ class DispatchService
                 Logger::warning("Office notification skipped for trip start: " . $se->getMessage());
             }
 
+            try {
+                $refreshedDispatch = $this->dispatchModel->find($dispatchId);
+                $booking = $this->bookingModel->find((int)$dispatch['booking_id']);
+                $vehicle = $this->vehicleModel->find((int)$dispatch['vehicle_id']);
+                $driver = $this->driverModel->find((int)$dispatch['driver_id']);
+                $this->emailService->sendTripStarted($refreshedDispatch, $booking, $vehicle, $driver);
+            } catch (\Throwable $e) {
+                Logger::warning("Could not dispatch trip started email: " . $e->getMessage());
+            }
+
             return true;
         } catch (\Throwable $e) {
             if ($pdo->inTransaction()) {
@@ -284,6 +345,16 @@ class DispatchService
                 }
             } catch (\Throwable $ce) {
                 Logger::warning("Office notification skipped for trip completion: " . $ce->getMessage());
+            }
+
+            try {
+                $refreshedDispatch = $this->dispatchModel->find($dispatchId);
+                $booking = $this->bookingModel->find((int)$dispatch['booking_id']);
+                $vehicle = $this->vehicleModel->find((int)$dispatch['vehicle_id']);
+                $driver = $this->driverModel->find((int)$dispatch['driver_id']);
+                $this->emailService->sendTripCompleted($refreshedDispatch, $booking, $vehicle, $driver);
+            } catch (\Throwable $e) {
+                Logger::warning("Could not dispatch trip completed email: " . $e->getMessage());
             }
 
             return true;

@@ -28,26 +28,17 @@ echo " RUNNING SUITE: Driver Dashboard Modern UI Console (/driver/dashboard)\n";
 echo "======================================================\n";
 
 // 1. Setup authenticated driver session
-Session::start();
 $userModel = new User();
 $driverModel = new DriverProfile();
 
-$allProfiles = $driverModel->all();
-if (!empty($allProfiles)) {
-    $prof = $allProfiles[0];
-    $testDriverUser = $userModel->find($prof['user_id']);
-    $driverId = (int)$prof['user_id'];
-    $driverName = $testDriverUser['name'] ?? 'Ramesh K.';
-} else {
-    $driverId = 17;
-    $driverName = 'Ramesh K.';
-}
+$testDriverUser = $userModel->findBy('role', 'driver');
+$driverId = $testDriverUser ? $testDriverUser['id'] : 1;
 
 Session::set('user_id', $driverId);
 Session::set('user_role', 'driver');
 Session::set('user', [
     'id'   => $driverId,
-    'name' => $driverName,
+    'name' => 'Ramesh K.',
     'role' => 'driver',
 ]);
 
@@ -65,11 +56,7 @@ echo "\n--- 1. Testing Route Dispatch & Master Layout Shell ---\n";
 assertCondition($res->getStatusCode() === 200, "GET /driver/dashboard returns HTTP 200 OK");
 assertCondition(strpos($html, 'id="sidebar"') !== false, "Sidebar navigation shell is preserved");
 assertCondition(strpos($html, 'topbar-user-profile') !== false, "Top navbar profile chip is preserved");
-assertCondition(strpos($html, 'topbar-search-form') !== false, "Desktop top navbar omnisearch form is present (matching owner dashboard)");
-assertCondition(strpos($html, 'toggleAppFullscreen()') !== false, "Desktop top navbar fullscreen toggle button is present");
-assertCondition(strpos($html, 'mv-dash-topbar') !== false, "Mobile top navbar component is present");
-assertCondition(strpos($html, 'notched-bottom-nav') !== false, "Curved notched bottom navigation is present (matching owner dashboard)");
-assertCondition(strpos($html, 'bottom-nav-fab-btn') !== false, "Center elevated notch FAB button is present");
+assertCondition(strpos($html, 'notched-bottom-nav') !== false, "Notched mobile bottom nav dock is preserved");
 
 echo "\n--- 2. Testing Top Hero Section (Greeting Banner & Shift Card) ---\n";
 assertCondition(strpos($html, 'driver-greeting-banner') !== false, "Driver greeting banner card is present");

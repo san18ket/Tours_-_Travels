@@ -26,7 +26,6 @@ use App\Controllers\CustomerController;
 use App\Controllers\RoleController;
 use App\Controllers\MobileApiController;
 use App\Controllers\LanguageController;
-use App\Controllers\PushSubscriptionController;
 
 $router = new Router();
 
@@ -290,18 +289,15 @@ $router->post('/api/mobile/v1/tracking/stop', [MobileApiController::class, 'trac
 $router->post('/api/mobile/v1/gps', [MobileApiController::class, 'syncGps'], ['mobile_auth', 'throttle:gps']);
 
 // -----------------------------------------------------------------------------
-// PWA & Web Push Notification Routes
+// Notification Settings (Email Notifications Diagnostics)
 // -----------------------------------------------------------------------------
-$router->get('/office/notification-settings', [PushSubscriptionController::class, 'officeSettings'], ['auth', 'role:admin,dispatcher']);
-$router->get('/driver/notification-settings', [PushSubscriptionController::class, 'driverSettings'], ['auth', 'role:driver']);
-
-// Push API Endpoints
-$router->get('/api/push/vapid-key', [PushSubscriptionController::class, 'getVapidPublicKey'], ['auth']);
-$router->get('/api/push/status', [PushSubscriptionController::class, 'status'], ['auth']);
-$router->post('/api/push/subscribe', [PushSubscriptionController::class, 'register'], ['auth', 'csrf']);
-$router->post('/api/push/unsubscribe', [PushSubscriptionController::class, 'unsubscribe'], ['auth', 'csrf']);
-$router->get('/api/push/devices', [PushSubscriptionController::class, 'listDevices'], ['auth']);
-$router->post('/api/push/devices/{id}/remove', [PushSubscriptionController::class, 'removeDevice'], ['auth', 'csrf']);
-$router->post('/api/push/test', [PushSubscriptionController::class, 'testNotification'], ['auth', 'csrf']);
+$router->get('/office/notification-settings', [App\Controllers\EmailTestController::class, 'index'], ['auth', 'role:admin,dispatcher']);
+$router->post('/office/notification-settings', [App\Controllers\EmailTestController::class, 'sendTest'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->get('/office/email/test', [App\Controllers\EmailTestController::class, 'index'], ['auth', 'role:admin,dispatcher']);
+$router->post('/office/email/test', [App\Controllers\EmailTestController::class, 'sendTest'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->post('/office/email/retry/{id}', [App\Controllers\EmailTestController::class, 'retry'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->post('/office/customers/{id}/resend-welcome', [CustomerController::class, 'resendWelcome'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->post('/office/employees/{id}/resend-welcome', [EmployeeController::class, 'resendWelcome'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->get('/driver/notification-settings', [App\Controllers\EmailTestController::class, 'index'], ['auth', 'role:driver']);
 
 return $router;

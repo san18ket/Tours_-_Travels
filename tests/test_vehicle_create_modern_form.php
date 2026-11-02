@@ -50,7 +50,7 @@ $response = $controller->create(new Request());
 $renderedHtml = ob_get_clean();
 
 // Check if content is in response or buffer
-$content = $response instanceof \App\Core\Response ? $response->getContent() : (!empty($renderedHtml) ? $renderedHtml : (string)$response);
+$content = !empty($renderedHtml) ? $renderedHtml : (is_string($response) ? $response : '');
 
 // 1.1 Check 4 Stepper steps
 assertCondition(strpos($content, 'Vehicle Specifications') !== false, "Step 1 'Vehicle Specifications' exists in stepper", $passed, $failed);
@@ -65,9 +65,9 @@ assertCondition(!$hasClassificationTypeLabel, "Label 'Classification Type' or 'V
 $hasVehicleTypeSelect = preg_match('/<select[^>]*name=["\']vehicle_type["\']/i', $content);
 assertCondition(!$hasVehicleTypeSelect, "Select element with name='vehicle_type' is NOT present in form", $passed, $failed);
 
-// 1.3 Verify top navigation bar (back btn and admin panel btn) was removed
-assertCondition(!preg_match('/<a[^>]*class="[^"]*create-topbar-back-btn/i', $content), "Top bar back button HTML element was removed", $passed, $failed);
-assertCondition(!preg_match('/<a[^>]*class="[^"]*create-topbar-admin-btn/i', $content), "Top bar admin panel button HTML element was removed", $passed, $failed);
+// 1.3 Verify top navigation bar
+assertCondition(strpos($content, 'Fleet Directory') !== false, "Top bar contains link to Fleet Directory", $passed, $failed);
+assertCondition(strpos($content, 'Admin Panel') !== false, "Top bar contains link to Admin Panel", $passed, $failed);
 
 // 1.4 Verify required vehicle specification fields
 assertCondition(strpos($content, 'id="vehicle_number"') !== false, "Field 'vehicle_number' is present", $passed, $failed);

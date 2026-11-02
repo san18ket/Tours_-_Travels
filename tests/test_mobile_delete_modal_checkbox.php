@@ -3,7 +3,7 @@
  * Test: Verification of Checkbox Presence & Functionality in Delete Modal on Mobile & Desktop
  */
 
-require_once __DIR__ . '/../app/Core/Autoloader.php';
+require_once __DIR__ . '/../app/Core/autoload.php';
 
 $views = [
     'bookings/index'   => __DIR__ . '/../app/Views/office/bookings/index.php',

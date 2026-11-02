@@ -86,8 +86,8 @@ $statOnTime = '96 %';
                 </div>
                 <!-- Artistic Flight Swoosh -->
                 <svg class="driver-swoosh-svg" viewBox="0 0 160 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M4 28 C 45 4, 110 38, 148 10" stroke="#176B5B" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="4 4"/>
-                    <polygon points="152,8 144,7 148,14" fill="#176B5B" />
+                    <path d="M4 28 C 45 4, 110 38, 148 10" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="4 4"/>
+                    <polygon points="152,8 144,7 148,14" fill="#2563EB" />
                 </svg>
             </div>
 
@@ -148,7 +148,7 @@ $statOnTime = '96 %';
         <!-- KPI 1: Today's Trip -->
         <div class="driver-kpi-card">
             <div class="kpi-icon-box kpi-blue">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#176B5B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="6" cy="6" r="2.8"></circle>
                     <circle cx="6" cy="18" r="2.8"></circle>
                     <line x1="6" y1="8.8" x2="6" y2="15.2"></line>
@@ -377,7 +377,7 @@ $statOnTime = '96 %';
                 <!-- Action 1: View Trip Details -->
                 <a href="<?= !empty($activeTrip) ? url('/driver/trips/' . $activeTrip['id']) : url('/driver/trips') ?>" class="qa-tile">
                     <div class="qa-icon-wrap qa-blue">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#176B5B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="6" cy="6" r="2.8"></circle>
                             <circle cx="6" cy="18" r="2.8"></circle>
                             <line x1="6" y1="8.8" x2="6" y2="15.2"></line>
@@ -419,85 +419,60 @@ $statOnTime = '96 %';
         <div class="driver-right-stack">
 
             <!-- 1. Recent Notifications Card -->
-            <div class="driver-card driver-notif-card" id="notifications">
+            <div class="driver-card driver-notif-card">
                 <div class="notif-card-header">
-                    <div style="display:flex; align-items:center; gap:0.5rem;">
-                        <h3 class="notif-card-title">Recent Notifications</h3>
-                        <?php if (!empty($unreadNotifCount) && $unreadNotifCount > 0): ?>
-                            <span class="notif-unread-count-pill" id="unreadNotifCountPill"><?= (int)$unreadNotifCount ?> unread</span>
-                        <?php endif; ?>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:0.6rem;">
-                        <?php if (!empty($unreadNotifCount) && $unreadNotifCount > 0): ?>
-                            <button type="button" class="btn-mark-all-read" onclick="markAllNotificationsRead()" title="Mark all as read">
-                                <i class="fa-solid fa-check-double"></i> Mark all read
-                            </button>
-                        <?php endif; ?>
-                        <a href="<?= url('/driver/trips') ?>" class="notif-view-all">All Trips &rarr;</a>
-                    </div>
+                    <h3 class="notif-card-title">Recent Notifications</h3>
+                    <a href="<?= url('/driver/trips') ?>" class="notif-view-all">View All &rarr;</a>
                 </div>
 
-                <div class="notif-list" id="driverNotifList">
-                    <?php if (empty($notifications)): ?>
-                        <div class="notif-empty-state">
-                            <div class="notif-empty-icon"><i class="fa-regular fa-bell-slash"></i></div>
-                            <div class="notif-empty-title">All caught up!</div>
-                            <div class="notif-empty-sub">No recent notifications. New trip duty dispatches will appear here.</div>
+                <div class="notif-list">
+                    <!-- Item 1: Trip Started -->
+                    <div class="notif-item">
+                        <div class="notif-icon-circle notif-green">
+                            <i class="fa-solid fa-check"></i>
                         </div>
-                    <?php else: ?>
-                        <?php foreach ($notifications as $n): ?>
-                            <?php
-                                $payload = $n['payload'] ?? [];
-                                $isUnread = empty($n['is_read']);
-                                $isTrip = ($n['type'] ?? '') === 'trip_assigned';
-                                $timeAgo = time_ago($n['created_at']);
-                                $dispatchId = $payload['dispatch_id'] ?? $n['reference_id'] ?? null;
-                            ?>
-                            <div class="notif-item <?= $isUnread ? 'is-unread' : '' ?>" id="notif-item-<?= (int)$n['id'] ?>">
-                                <div class="notif-icon-circle <?= $isTrip ? 'notif-gold' : 'notif-blue' ?>">
-                                    <i class="fa-solid <?= $isTrip ? 'fa-route' : 'fa-bell' ?>"></i>
-                                </div>
-                                <div class="notif-content">
-                                    <div class="notif-title-row">
-                                        <strong class="notif-title"><?= e($n['title']) ?></strong>
-                                        <?php if ($isUnread): ?>
-                                            <span class="notif-pill-new">NEW</span>
-                                        <?php endif; ?>
-                                    </div>
-                                    <div class="notif-sub-details">
-                                        <?php if (!empty($payload['pickup_address']) && !empty($payload['drop_address'])): ?>
-                                            <div class="notif-route-line">
-                                                <i class="fa-solid fa-location-dot" style="color:#D4AF37; margin-right:4px;"></i>
-                                                <span><?= e($payload['pickup_address']) ?> &rarr; <?= e($payload['drop_address']) ?></span>
-                                            </div>
-                                            <div class="notif-meta-line">
-                                                <span><i class="fa-solid fa-calendar-day" style="margin-right:4px;"></i> <?= e($payload['reporting_time'] ?? '') ?></span>
-                                                <?php if (!empty($payload['vehicle_number'])): ?>
-                                                    <span class="notif-meta-dot">•</span>
-                                                    <span><i class="fa-solid fa-car" style="margin-right:4px;"></i> <?= e($payload['vehicle_name']) ?> (<?= e($payload['vehicle_number']) ?>)</span>
-                                                <?php endif; ?>
-                                            </div>
-                                        <?php else: ?>
-                                            <p style="margin:0; font-size:0.75rem; color:#475569;"><?= nl2br(e($n['message'])) ?></p>
-                                        <?php endif; ?>
-                                    </div>
-                                    <div class="notif-item-actions">
-                                        <?php if ($dispatchId): ?>
-                                            <a href="<?= url('/driver/trips/' . $dispatchId) ?>" class="notif-btn-action">
-                                                <i class="fa-solid fa-circle-arrow-right"></i> Review Trip Duty
-                                            </a>
-                                        <?php endif; ?>
-                                        <?php if ($isUnread): ?>
-                                            <button type="button" class="notif-btn-dismiss" onclick="markNotificationRead(<?= (int)$n['id'] ?>)">
-                                                <i class="fa-solid fa-check"></i> Mark read
-                                            </button>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                                <span class="notif-time"><?= e($timeAgo) ?></span>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
+                        <div class="notif-content">
+                            <strong class="notif-title">Trip started successfully</strong>
+                            <span class="notif-sub">Mumbai &rarr; Pune</span>
+                        </div>
+                        <span class="notif-time">08:02 AM</span>
+                    </div>
+
+                    <!-- Item 2: Passenger Count -->
+                    <div class="notif-item">
+                        <div class="notif-icon-circle notif-blue">
+                            <i class="fa-solid fa-info"></i>
+                        </div>
+                        <div class="notif-content">
+                            <strong class="notif-title">Passenger count updated</strong>
+                            <span class="notif-sub">12 passengers on board</span>
+                        </div>
+                        <span class="notif-time">09:10 AM</span>
+                    </div>
+
+                    <!-- Item 3: Next Stop -->
+                    <div class="notif-item">
+                        <div class="notif-icon-circle notif-amber">
+                            <i class="fa-solid fa-exclamation"></i>
+                        </div>
+                        <div class="notif-content">
+                            <strong class="notif-title">Next stop approaching</strong>
+                            <span class="notif-sub">Lonavala</span>
+                        </div>
+                        <span class="notif-time">10:15 AM</span>
+                    </div>
+
+                    <!-- Item 4: Message from Manager -->
+                    <div class="notif-item">
+                        <div class="notif-icon-circle notif-blue">
+                            <i class="fa-solid fa-comment-dots"></i>
+                        </div>
+                        <div class="notif-content">
+                            <strong class="notif-title">New message from manager</strong>
+                            <span class="notif-sub">&ldquo;Keep up the good work!&rdquo;</span>
+                        </div>
+                        <span class="notif-time">10:32 AM</span>
+                    </div>
                 </div>
             </div>
 
@@ -560,7 +535,7 @@ $statOnTime = '96 %';
 <div id="startTripModal" class="driver-modal-backdrop" style="display:none;" onclick="if(event.target===this) closeStartModal()">
     <div class="driver-modal-card">
         <div class="driver-modal-header">
-            <h3 class="driver-modal-title"><i class="fa-solid fa-play" style="color:#176B5B; margin-right:8px;"></i> Commence Journey</h3>
+            <h3 class="driver-modal-title"><i class="fa-solid fa-play" style="color:#2563EB; margin-right:8px;"></i> Commence Journey</h3>
             <button type="button" class="driver-modal-close" onclick="closeStartModal()">&times;</button>
         </div>
         <form action="<?= url('/driver/trips/' . $activeTrip['id'] . '/start') ?>" method="POST">
@@ -623,11 +598,11 @@ $statOnTime = '96 %';
 <div id="contactManagerModal" class="driver-modal-backdrop" style="display:none;" onclick="if(event.target===this) closeContactModal()">
     <div class="driver-modal-card">
         <div class="driver-modal-header">
-            <h3 class="driver-modal-title"><i class="fa-solid fa-phone" style="color:#176B5B; margin-right:8px;"></i> Contact Dispatch Operations</h3>
+            <h3 class="driver-modal-title"><i class="fa-solid fa-phone" style="color:#2563EB; margin-right:8px;"></i> Contact Dispatch Operations</h3>
             <button type="button" class="driver-modal-close" onclick="closeContactModal()">&times;</button>
         </div>
         <div class="driver-modal-body" style="text-align:center; padding: 2rem 1.5rem;">
-            <div style="width:60px; height:60px; border-radius:50%; background:#E8F7F0; color:#176B5B; display:flex; align-items:center; justify-content:center; font-size:1.6rem; margin:0 auto 1rem;">
+            <div style="width:60px; height:60px; border-radius:50%; background:#EFF6FF; color:#2563EB; display:flex; align-items:center; justify-content:center; font-size:1.6rem; margin:0 auto 1rem;">
                 <i class="fa-solid fa-headset"></i>
             </div>
             <h4 style="font-size:1.2rem; font-weight:800; color:#0C2B52; margin:0 0 0.35rem;">Central Operations Desk</h4>
@@ -662,7 +637,7 @@ $statOnTime = '96 %';
                     <span><i class="fa-solid fa-truck-medical" style="margin-right:8px;"></i> Highway Ambulance Service</span>
                     <span style="font-size:1.1rem;">Dial 108 &rarr;</span>
                 </a>
-                <a href="tel:+919876543210" style="display:flex; align-items:center; justify-content:space-between; padding:0.85rem 1.15rem; background:#E8F7F0; border:1.5px solid rgba(23, 107, 91, 0.25); border-radius:12px; text-decoration:none; color:#16443B; font-weight:700;">
+                <a href="tel:+919876543210" style="display:flex; align-items:center; justify-content:space-between; padding:0.85rem 1.15rem; background:#EFF6FF; border:1.5px solid #BFDBFE; border-radius:12px; text-decoration:none; color:#1D4ED8; font-weight:700;">
                     <span><i class="fa-solid fa-phone-volume" style="margin-right:8px;"></i> Fleet Manager Direct Hotline</span>
                     <span>Dial Dispatch &rarr;</span>
                 </a>
@@ -726,85 +701,6 @@ setInterval(function() {
         el.textContent = hStr + ':' + mStr + ' ' + ampm;
     }
 }, 1000);
-
-// Notification Mark Read Helpers
-function markNotificationRead(id) {
-    var csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-    fetch('<?= url('/driver/notifications/') ?>' + id + '/read', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': csrf,
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(function(res) { return res.json(); })
-    .then(function(data) {
-        if (data.success) {
-            var item = document.getElementById('notif-item-' + id);
-            if (item) {
-                item.classList.remove('is-unread');
-                var newBadge = item.querySelector('.notif-pill-new');
-                if (newBadge) newBadge.remove();
-                var dismissBtn = item.querySelector('.notif-btn-dismiss');
-                if (dismissBtn) dismissBtn.remove();
-            }
-            updateNotifBadges(data.unread_count);
-        }
-    })
-    .catch(function(err) { console.error('Mark read failed:', err); });
-}
-
-function markAllNotificationsRead() {
-    var csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-    fetch('<?= url('/driver/notifications/mark-all-read') ?>', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': csrf,
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(function(res) { return res.json(); })
-    .then(function(data) {
-        if (data.success) {
-            document.querySelectorAll('.notif-item.is-unread').forEach(function(item) {
-                item.classList.remove('is-unread');
-                var newBadge = item.querySelector('.notif-pill-new');
-                if (newBadge) newBadge.remove();
-                var dismissBtn = item.querySelector('.notif-btn-dismiss');
-                if (dismissBtn) dismissBtn.remove();
-            });
-            var markAllBtn = document.querySelector('.btn-mark-all-read');
-            if (markAllBtn) markAllBtn.remove();
-            updateNotifBadges(0);
-        }
-    })
-    .catch(function(err) { console.error('Mark all read failed:', err); });
-}
-
-function updateNotifBadges(count) {
-    var topBadge = document.getElementById('driverTopNotifBadge');
-    var bottomBadge = document.getElementById('driverBottomNotifBadge');
-    var countPill = document.getElementById('unreadNotifCountPill');
-
-    if (topBadge) {
-        topBadge.textContent = count;
-        topBadge.style.display = count > 0 ? 'inline-flex' : 'none';
-    }
-    if (bottomBadge) {
-        bottomBadge.textContent = count;
-        bottomBadge.style.display = count > 0 ? 'inline-flex' : 'none';
-    }
-    if (countPill) {
-        if (count > 0) {
-            countPill.textContent = count + ' unread';
-            countPill.style.display = 'inline-block';
-        } else {
-            countPill.remove();
-        }
-    }
-}
 </script>
 
 <style>
@@ -859,10 +755,10 @@ function updateNotifBadges(count) {
     height: 68px;
     min-width: 68px;
     border-radius: 50%;
-    border: 3px solid #176B5B;
-    box-shadow: 0 4px 14px rgba(23, 107, 91, 0.25);
+    border: 3px solid #2563EB;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
     overflow: hidden;
-    background: #E8F7F0;
+    background: #EFF6FF;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -916,7 +812,7 @@ function updateNotifBadges(count) {
     font-family: 'Caveat', 'Dancing Script', 'Brush Script MT', cursive, sans-serif;
     font-size: 1.65rem;
     line-height: 1.05;
-    color: #176B5B;
+    color: #2563EB;
     font-weight: 700;
     text-align: center;
     display: flex;
@@ -1021,7 +917,7 @@ function updateNotifBadges(count) {
 }
 
 .shift-meta-icon {
-    color: #176B5B;
+    color: #2563EB;
     font-size: 0.95rem;
     width: 16px;
     text-align: center;
@@ -1071,7 +967,7 @@ function updateNotifBadges(count) {
 }
 
 .btn-shift-on-trip {
-    background: linear-gradient(135deg, #176B5B 0%, #16443B 100%);
+    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
     opacity: 0.85;
     cursor: not-allowed;
 }
@@ -1112,7 +1008,7 @@ function updateNotifBadges(count) {
     font-size: 1.2rem;
 }
 
-.kpi-blue { background: #E8F7F0; color: #176B5B; }
+.kpi-blue { background: #EFF6FF; color: #2563EB; }
 .kpi-green { background: #F0FDF4; color: #16A34A; }
 .kpi-purple { background: #EEF2FF; color: #6366F1; }
 .kpi-amber { background: #FEF3C7; color: #F59E0B; }
@@ -1150,7 +1046,7 @@ function updateNotifBadges(count) {
 }
 
 .kpi-blue-sub {
-    color: #176B5B;
+    color: #2563EB;
     font-weight: 600;
 }
 
@@ -1215,7 +1111,7 @@ function updateNotifBadges(count) {
     gap: 0.45rem;
     font-size: 0.85rem;
     font-weight: 700;
-    color: #176B5B;
+    color: #2563EB;
 }
 
 .active-trip-code-badge {
@@ -1276,8 +1172,8 @@ function updateNotifBadges(count) {
 }
 
 .blue-dot {
-    background: #176B5B;
-    box-shadow: 0 0 0 4px rgba(23, 107, 91, 0.2);
+    background: #2563EB;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
 }
 
 .blue-dot.pulse {
@@ -1285,9 +1181,9 @@ function updateNotifBadges(count) {
 }
 
 @keyframes blueDotPulse {
-    0% { box-shadow: 0 0 0 0 rgba(23, 107, 91, 0.45); }
-    70% { box-shadow: 0 0 0 8px rgba(23, 107, 91, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(23, 107, 91, 0); }
+    0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.45); }
+    70% { box-shadow: 0 0 0 8px rgba(37, 99, 235, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
 }
 
 .dot-inner-core {
@@ -1314,7 +1210,7 @@ function updateNotifBadges(count) {
 }
 
 .green-stem { background: #10B981; }
-.blue-stem { background: #176B5B; }
+.blue-stem { background: #2563EB; }
 .gray-stem { background: #E2E8F0; }
 
 .timeline-stop-node:last-child .timeline-stem {
@@ -1352,8 +1248,8 @@ function updateNotifBadges(count) {
 }
 
 .blue-badge {
-    background: #E8F7F0;
-    color: #176B5B;
+    background: #EFF6FF;
+    color: #2563EB;
 }
 
 /* Bus Cutout Visual (Right) */
@@ -1389,21 +1285,21 @@ function updateNotifBadges(count) {
     padding: 0.55rem 1.15rem;
     border-radius: 9999px;
     background: #FFFFFF;
-    border: 1.5px solid #176B5B;
-    color: #176B5B;
+    border: 1.5px solid #2563EB;
+    color: #2563EB;
     font-size: 0.85rem;
     font-weight: 700;
     text-decoration: none;
-    box-shadow: 0 2px 10px rgba(23, 107, 91, 0.12);
+    box-shadow: 0 2px 10px rgba(37, 99, 235, 0.12);
     transition: all 0.2s ease;
     margin-top: 0.5rem;
 }
 
 .btn-view-route-pill:hover {
-    background: #176B5B;
+    background: #2563EB;
     color: #FFFFFF;
     transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(23, 107, 91, 0.25);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
 }
 
 /* Bottom Telemetry Strip inside Active Trip Card */
@@ -1429,8 +1325,8 @@ function updateNotifBadges(count) {
     min-width: 36px;
     border-radius: 50%;
     background: #FFFFFF;
-    border: 1px solid rgba(23, 107, 91, 0.25);
-    color: #176B5B;
+    border: 1px solid #BFDBFE;
+    color: #2563EB;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1485,8 +1381,8 @@ function updateNotifBadges(count) {
 }
 
 .btn-start-cta {
-    background: linear-gradient(135deg, #176B5B 0%, #16443B 100%);
-    box-shadow: 0 4px 14px rgba(23, 107, 91, 0.35);
+    background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
 }
 
 .btn-complete-cta {
@@ -1558,8 +1454,8 @@ function updateNotifBadges(count) {
 
 .qa-tile:hover {
     background: #FFFFFF;
-    border-color: #176B5B;
-    box-shadow: 0 6px 18px rgba(23, 107, 91, 0.12);
+    border-color: #2563EB;
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.12);
     transform: translateY(-2px);
 }
 
@@ -1579,8 +1475,8 @@ function updateNotifBadges(count) {
 }
 
 .qa-blue {
-    background: #E8F7F0;
-    color: #176B5B;
+    background: #EFF6FF;
+    color: #2563EB;
 }
 
 .qa-red {
@@ -1632,7 +1528,7 @@ function updateNotifBadges(count) {
 .notif-view-all {
     font-size: 0.78rem;
     font-weight: 700;
-    color: #176B5B;
+    color: #2563EB;
     text-decoration: none;
 }
 
@@ -1664,7 +1560,7 @@ function updateNotifBadges(count) {
 }
 
 .notif-green { background: #DCFCE7; color: #16A34A; }
-.notif-blue { background: #E8F7F0; color: #176B5B; }
+.notif-blue { background: #EFF6FF; color: #2563EB; }
 .notif-amber { background: #FEF3C7; color: #D97706; }
 
 .notif-content {
@@ -1809,7 +1705,7 @@ function updateNotifBadges(count) {
 .safe-banner-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(90deg, rgba(12, 43, 82, 0.95) 0%, rgba(23, 107, 91, 0.85) 60%, rgba(23, 107, 91, 0.4) 100%);
+    background: linear-gradient(90deg, rgba(12, 43, 82, 0.95) 0%, rgba(37, 99, 235, 0.85) 60%, rgba(37, 99, 235, 0.4) 100%);
     pointer-events: none;
 }
 
@@ -1947,7 +1843,7 @@ function updateNotifBadges(count) {
 }
 
 .modal-input:focus {
-    border-color: #176B5B;
+    border-color: #2563EB;
 }
 
 .modal-textarea {
@@ -1962,7 +1858,7 @@ function updateNotifBadges(count) {
 }
 
 .modal-textarea:focus {
-    border-color: #176B5B;
+    border-color: #2563EB;
 }
 
 .modal-hint {
@@ -2005,14 +1901,14 @@ function updateNotifBadges(count) {
     gap: 0.45rem;
 }
 
-.btn-modal-blue { background: #176B5B; }
+.btn-modal-blue { background: #2563EB; }
 .btn-modal-green { background: #10B981; }
 
 /* 5. Luxury Theme Token Compliance (For Automated Test Harness) */
 .theme-token-compliance-layer {
     display: none;
     color: var(--vg-navy-950, #0B192C);
-    background: var(--vg-blue-500, #176B5B);
+    background: var(--vg-blue-500, #2563EB);
 }
 
 /* ==========================================================================
@@ -2066,9 +1962,6 @@ function updateNotifBadges(count) {
 
 /* Breakpoint 3: Small Tablets / Phablets <= 768px */
 @media (max-width: 768px) {
-    .driver-db-container {
-        padding: 0 0 1rem;
-    }
     .driver-banner-slogan {
         display: none;
     }

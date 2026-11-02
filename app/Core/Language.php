@@ -35,7 +35,7 @@ class Language
         ],
     ];
 
-    public const COOKIE_NAME = 'voyagego_locale';
+    public const COOKIE_NAME = 'app_locale';
     public const COOKIE_LIFETIME = 31536000; // 365 days
 
     /**

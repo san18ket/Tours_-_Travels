@@ -244,7 +244,7 @@ $recentTransfers = $account['recent_transfers'] ?? [];
          ========================================================================= -->
     <div id="tabContent-overview" class="view-tab-pane active" role="tabpanel">
         <div class="view-layout-split">
-            <!-- Left Column: Primary Account Details -->
+            <!-- Left Column: Primary Account Details & Latest Transactions -->
             <div class="view-col-main">
                 <!-- 1. Institutional Account Information Card -->
                 <div class="view-section-card card-institution">
@@ -312,25 +312,11 @@ $recentTransfers = $account['recent_transfers'] ?? [];
                                 <span class="view-kv-value"><?= format_datetime($account['created_at']) ?></span>
                             </div>
                         </div>
-
-                        <!-- Policy & Double-Entry Settlement Reassurance Box (Matching office/customers/show.php:485-493) -->
-                        <div class="view-account-audit-box">
-                            <div class="account-audit-label">
-                                <i class="fa-solid fa-shield-halved" style="color: #176B5B;"></i>
-                                <span>Treasury Vault Compliance &amp; Settlement Policy</span>
-                            </div>
-                            <div class="account-audit-text">
-                                This account operates under automated double-entry verification. All debits, credit collections, and inter-vault transfers maintain cryptographically indexed audit trails with immutable timestamps.
-                            </div>
-                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Right Column: Recent Activity & Quick Actions (Matching office/customers/show.php) -->
-            <div class="view-col-side">
                 <!-- 2. Latest Transactions Card (Direct match with Recent Bookings in office/customers/show.php:574-658) -->
-                <div class="view-section-card card-latest-tx">
+                <div class="view-section-card card-latest-tx" style="margin-top: 1.25rem;">
                     <div class="section-card-header">
                         <div class="section-title-wrap">
                             <div class="section-icon-badge green">
@@ -429,9 +415,44 @@ $recentTransfers = $account['recent_transfers'] ?? [];
                         <?php endif; ?>
                     </div>
                 </div>
+            </div>
 
-                <!-- 3. Quick Actions Grid (Direct 1:1 match with office/customers/show.php:660-696) -->
-                <div class="view-section-card card-quick-actions">
+            <!-- Right Column: Balance Summary & Quick Actions (Matching office/customers/show.php) -->
+            <div class="view-col-side">
+                <!-- 3. Liquidity Position Card -->
+                <div class="view-section-card card-liquidity">
+                    <div class="section-card-header">
+                        <div class="section-title-wrap">
+                            <div class="section-icon-badge green">
+                                <i class="fa-solid fa-vault"></i>
+                            </div>
+                            <h3 class="section-title">Liquidity Position</h3>
+                        </div>
+                    </div>
+                    <div class="section-card-body">
+                        <div class="liquidity-hero-box">
+                            <span class="liquidity-label">Available Balance</span>
+                            <div class="liquidity-amount"><?= format_currency((float)$account['current_balance']) ?></div>
+                            <span class="liquidity-status"><i class="fa-solid fa-circle-check"></i> Reconciled &amp; Active</span>
+                        </div>
+
+                        <div class="liquidity-metric-row">
+                            <span class="lm-label"><i class="fa-solid fa-arrow-down" style="color: #218765;"></i> Total Lifetime Inflows</span>
+                            <span class="lm-val" style="color: #218765;"><?= format_currency((float)$account['total_inflow']) ?></span>
+                        </div>
+                        <div class="liquidity-metric-row">
+                            <span class="lm-label"><i class="fa-solid fa-arrow-up" style="color: #C78A35;"></i> Total Lifetime Outflows</span>
+                            <span class="lm-val" style="color: #C78A35;"><?= format_currency((float)$account['total_outflow']) ?></span>
+                        </div>
+                        <div class="liquidity-metric-row">
+                            <span class="lm-label"><i class="fa-solid fa-layer-group" style="color: #176B5B;"></i> Initial Starting Float</span>
+                            <span class="lm-val"><?= format_currency((float)$account['opening_balance']) ?></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Quick Actions Grid (Direct 1:1 match with office/customers/show.php:660-696) -->
+                <div class="view-section-card card-quick-actions" style="margin-top: 1.25rem;">
                     <div class="section-card-header compact">
                         <h4 class="quick-actions-title">Quick Actions</h4>
                     </div>
@@ -1763,7 +1784,6 @@ $recentTransfers = $account['recent_transfers'] ?? [];
 .view-col-main, .view-col-side {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
 }
 
 .view-section-card {
@@ -1898,30 +1918,75 @@ $recentTransfers = $account['recent_transfers'] ?? [];
 }
 
 /* ========================================================================= */
-/* SECTION 2: Compliance & Policy Reassurance Box                            */
+/* SECTION 2: Liquidity Position Card & Metric Rows                          */
 /* ========================================================================= */
-.view-account-audit-box {
-    margin-top: 1.1rem;
-    padding-top: 1rem;
-    border-top: 1px solid #F1F5F9;
+.liquidity-hero-box {
+    background: linear-gradient(135deg, #176B5B 0%, #16443B 100%);
+    color: #FFFFFF;
+    border-radius: 14px;
+    padding: 1.15rem;
+    margin-bottom: 0.85rem;
+    box-shadow: 0 6px 18px rgba(23, 107, 91, 0.22);
 }
 
-.account-audit-label {
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: #64748B;
+.liquidity-label {
+    font-size: 0.74rem;
     text-transform: uppercase;
-    letter-spacing: 0.03em;
-    margin-bottom: 0.35rem;
+    font-weight: 700;
+    opacity: 0.85;
+    letter-spacing: 0.04em;
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.liquidity-amount {
+    font-size: 1.85rem;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 0.45rem;
+    letter-spacing: -0.02em;
+    word-break: break-word;
+}
+
+.liquidity-status {
+    font-size: 0.74rem;
+    font-weight: 700;
+    opacity: 0.9;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.liquidity-metric-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.65rem 0;
+    border-bottom: 1px solid #F1F5F9;
+    font-size: 0.84rem;
+    gap: 0.5rem;
+}
+
+.liquidity-metric-row:last-of-type {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.lm-label {
+    color: var(--cv-slate-600);
+    font-weight: 600;
     display: flex;
     align-items: center;
     gap: 0.4rem;
+    min-width: 0;
 }
 
-.account-audit-text {
-    font-size: 0.85rem;
-    color: var(--cv-slate-600);
-    line-height: 1.5;
+.lm-val {
+    font-weight: 700;
+    color: var(--cv-navy-900);
+    white-space: nowrap;
+    text-align: right;
+    flex-shrink: 0;
 }
 
 /* ========================================================================= */
@@ -2649,10 +2714,6 @@ $recentTransfers = $account['recent_transfers'] ?? [];
         gap: 1rem;
     }
 
-    .view-col-main, .view-col-side {
-        gap: 1rem;
-    }
-
     .view-hero-content {
         gap: 1.15rem;
     }
@@ -2848,7 +2909,7 @@ $recentTransfers = $account['recent_transfers'] ?? [];
         gap: 0.4rem !important;
     }
 
-    /* 5. Natural Section Flow & Ordering on Mobile (Matching office/customers/show.php:3671-3678) */
+    /* 5. Natural Section Flow & Ordering on Mobile */
     .view-layout-split {
         display: flex !important;
         flex-direction: column !important;
@@ -2856,14 +2917,32 @@ $recentTransfers = $account['recent_transfers'] ?? [];
     }
 
     .view-col-main, .view-col-side {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 0.85rem !important;
+        display: contents !important;
     }
 
-    .card-institution,
-    .card-latest-tx,
+    /* Smooth Logical Order on Mobile:
+       1. Institutional Account Information
+       2. Liquidity Position
+       3. Quick Actions
+       4. Latest Transactions
+    */
+    .card-institution {
+        order: 1 !important;
+        margin-top: 0 !important;
+    }
+
+    .card-liquidity {
+        order: 2 !important;
+        margin-top: 0 !important;
+    }
+
     .card-quick-actions {
+        order: 3 !important;
+        margin-top: 0 !important;
+    }
+
+    .card-latest-tx {
+        order: 4 !important;
         margin-top: 0 !important;
     }
 
@@ -2898,7 +2977,20 @@ $recentTransfers = $account['recent_transfers'] ?? [];
         font-size: 0.86rem !important;
     }
 
+    /* Responsive Section 2: Liquidity Position */
+    .liquidity-hero-box {
+        padding: 1rem !important;
+        border-radius: 12px !important;
+    }
 
+    .liquidity-amount {
+        font-size: 1.55rem !important;
+    }
+
+    .liquidity-metric-row {
+        font-size: 0.8rem !important;
+        padding: 0.55rem 0 !important;
+    }
 
     /* Responsive Section 3: Latest Transactions List */
     .recent-tx-card {
@@ -3015,7 +3107,18 @@ $recentTransfers = $account['recent_transfers'] ?? [];
         font-size: 1.6rem !important;
     }
 
+    /* Small Screen Liquidity Position */
+    .liquidity-amount {
+        font-size: 1.35rem !important;
+    }
 
+    .lm-label {
+        font-size: 0.74rem !important;
+    }
+
+    .lm-val {
+        font-size: 0.78rem !important;
+    }
 
     /* Small Screen Latest Transactions */
     .recent-tx-card {
@@ -3097,10 +3200,6 @@ $recentTransfers = $account['recent_transfers'] ?? [];
 
     .view-layout-split {
         grid-template-columns: 1.15fr 0.85fr;
-        gap: 1.5rem;
-    }
-
-    .view-col-main, .view-col-side {
         gap: 1.5rem;
     }
 }

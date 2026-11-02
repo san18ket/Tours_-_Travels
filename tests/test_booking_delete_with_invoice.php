@@ -71,7 +71,7 @@ assertCheck((int)$invoice['booking_id'] === $bookingId, "Invoice is currently li
 $router = require APP_ROOT . '/app/routes.php';
 $req = new Request(
     [],
-    ['_token' => csrf_token()],
+    ['_token' => Session::getCsrfToken()],
     [
         'REQUEST_METHOD' => 'POST',
         'REQUEST_URI'    => "/office/bookings/{$bookingId}/delete",

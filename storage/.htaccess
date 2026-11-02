@@ -1,8 +1,20 @@
-# Deny direct web access to all storage files
+# VoyageGo Storage Security Directives
+# Allow public access to uploaded public storage assets while strictly protecting private logs and backups
+
 <IfModule mod_authz_core.c>
-    Require all denied
+    <RequireAll>
+        Require all granted
+    </RequireAll>
 </IfModule>
 <IfModule !mod_authz_core.c>
-    Order deny,allow
-    Deny from all
+    Order allow,deny
+    Allow from all
+</IfModule>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # Deny access to private internal folders
+    RewriteRule ^(backups|logs|rate_limits|private_uploads)/ - [F,L]
+    # Pass public media through to public storage
+    RewriteRule ^(.*)$ ../public/storage/$1 [L]
 </IfModule>

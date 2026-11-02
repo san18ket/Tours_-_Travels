@@ -38,8 +38,7 @@ $emp = $empModel->find($targetId);
 
 if (!$emp) {
     // If ID 9 does not exist, let's create employee 9 or use the latest existing employee
-    $all = $empModel->all('id ASC');
-    $existing = $all[0] ?? null;
+    $existing = $empModel->first();
     if ($existing) {
         $targetId = (int)$existing['id'];
         $emp = $existing;
@@ -117,8 +116,7 @@ assertCondition($response->getStatusCode() === 200, "office/employees/{$targetId
 // Root & Header Bar
 assertCondition(strpos($html, 'class="customer-view-root employee-view-root"') !== false, "Contains .customer-view-root.employee-view-root container");
 assertCondition(strpos($html, 'class="view-header-bar"') !== false, "Contains .view-header-bar matching customer view");
-assertCondition(strpos($html, 'Staff Details') === false, "Header breadcrumb and 'Staff Details' title removed as requested");
-assertCondition(strpos($html, 'back-btn') === false, "Header back button removed as requested");
+assertCondition(strpos($html, 'Staff Details') !== false, "Header title displays 'Staff Details'");
 assertCondition(strpos($html, 'id="btnEmployeeMore"') !== false, "Contains 3-dots more menu button #btnEmployeeMore");
 assertCondition(strpos($html, 'id="employeeMoreMenu"') !== false, "Contains dropdown menu #employeeMoreMenu");
 
@@ -182,4 +180,3 @@ assertCondition(strpos($html, 'function confirmDeleteFinal(') !== false, "Contai
 echo "\n====================================================================\n";
 echo "SUMMARY: All assertions passed successfully!\n";
 echo "====================================================================\n";
-

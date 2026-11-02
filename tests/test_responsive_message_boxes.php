@@ -82,10 +82,9 @@ $authLayout = file_get_contents(APP_ROOT . '/app/Views/layouts/auth.php');
 $driverLayout = file_get_contents(APP_ROOT . '/app/Views/layouts/driver.php');
 
 assertRule(strpos($officeLayout, 'window.vgNotify') !== false, "office.php layout emits via window.vgNotify");
-assertRule(strpos($authLayout, 'window.vgNotify') === false, "auth.php layout does not emit floating messages per login UX specification");
+assertRule(strpos($authLayout, 'window.vgNotify') !== false, "auth.php layout emits via window.vgNotify");
 assertRule(strpos($driverLayout, 'window.vgNotify') !== false, "driver.php layout emits via window.vgNotify");
 
 echo "\n====================================================================\n";
 echo "SUCCESS: All responsive message box verification checks passed!\n";
 echo "====================================================================\n";
-

@@ -28,25 +28,6 @@ echo "====================================================================\n\n";
 
 // 1. Verify View Structure in GET /office/vehicles
 echo "1. Verifying View Structure in GET /office/vehicles...\n";
-
-// Ensure a vehicle exists so table rows and action menus are rendered
-$vehicleModel = new Vehicle();
-$initialCount = $vehicleModel->count();
-$fixtureVehicleId = null;
-if ($initialCount === 0) {
-    $fixtureVehicleId = $vehicleModel->create([
-        'vehicle_number'   => 'MH 12 FIXTURE',
-        'make_model'       => 'Toyota Camry Fixture',
-        'vehicle_type'     => 'sedan',
-        'seating_capacity' => 4,
-        'fuel_type'        => 'petrol',
-        'status'           => 'available',
-        'odometer_km'      => 12000,
-        'created_at'       => date('Y-m-d H:i:s'),
-        'updated_at'       => date('Y-m-d H:i:s'),
-    ]);
-}
-
 $_SERVER['REQUEST_METHOD'] = 'GET';
 $_SERVER['REQUEST_URI'] = '/office/vehicles';
 $_SERVER['REMOTE_ADDR'] = '127.0.0.1';

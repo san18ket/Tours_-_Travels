@@ -14,8 +14,8 @@
                 <i class="fa-solid fa-paper-plane"></i>
             </div>
             <div class="modern-header-content">
-                <h1 class="modern-header-title"><?= e(__('trip_form.assign_title', 'Assign Trip Duty to Driver')) ?></h1>
-                <p class="modern-header-subtitle"><?= e(__('trip_form.assign_subtitle', 'Deploy active chauffeur and commercial vehicle to an itinerary reservation manifest.')) ?></p>
+                <h1 class="modern-header-title"><?= e(__('trip_form.assign_title', [], 'Dispatch & Assign Trip')) ?></h1>
+                <p class="modern-header-subtitle"><?= e(__('trip_form.assign_subtitle', [], 'Allocate commercial vehicle and licensed chauffeur to confirmed booking.')) ?></p>
             </div>
         </div>
     </div>
@@ -31,26 +31,26 @@
                     <i class="fa-solid fa-file-invoice"></i>
                 </div>
                 <div class="modern-section-meta">
-                    <h2 class="modern-section-title"><?= e(__('trip_form.manifest_title', 'Dispatch Assignment Manifest')) ?></h2>
-                    <p class="modern-section-sub"><?= e(__('trip_form.manifest_summary', 'Choose a tour booking to bind commercial vehicle and chauffeur deployment.')) ?></p>
+                    <h2 class="modern-section-title"><?= e(__('trip_form.manifest_title', [], 'Select Confirmed Reservation')) ?></h2>
+                    <p class="modern-section-sub"><?= e(__('trip_form.manifest_sub', [], 'Choose a tour booking to bind commercial vehicle and chauffeur deployment.')) ?></p>
                 </div>
             </div>
 
             <!-- Booking Selection -->
             <div class="modern-form-group" style="margin-bottom: 1.5rem;">
                 <label class="modern-form-label" for="booking_id">
-                    <?= e(__('trip_form.select_booking', 'Select Reservation Itinerary')) ?> <span class="req">*</span>
+                    <?= e(__('trip_form.select_booking', [], 'Reservation Manifest')) ?> <span class="req">*</span>
                 </label>
                 <div class="modern-input-wrapper">
                     <span class="modern-input-icon"><i class="fa-solid fa-clipboard-list"></i></span>
                     <select id="booking_id" name="booking_id" class="modern-select-pill" required onchange="onBookingChange(this)">
-                        <option value=""><?= e(__('trip_form.choose_booking', 'Choose Pending / Confirmed Booking...')) ?></option>
+                        <option value=""><?= e(__('trip_form.choose_booking', [], 'Choose a Confirmed Tour Reservation...')) ?></option>
                         <?php if ($selectedBooking): ?>
                             <option value="<?= (int)$selectedBooking['id'] ?>" selected 
                                     data-passengers="<?= (int)$selectedBooking['passenger_count'] ?>" 
                                     data-route="<?= e($selectedBooking['pickup_address']) ?> → <?= e($selectedBooking['drop_address']) ?>" 
                                     data-date="<?= format_date($selectedBooking['start_date']) ?>">
-                                <?= e($selectedBooking['booking_code']) ?> — <?= e($selectedBooking['customer_name'] ?? 'Guest') ?> (<?= (int)$selectedBooking['passenger_count'] ?> <?= e(__('common.guests', 'guests')) ?>) · <?= format_date($selectedBooking['start_date']) ?>
+                                <?= e($selectedBooking['booking_code']) ?> — <?= e($selectedBooking['customer_name'] ?? 'Guest') ?> (<?= (int)$selectedBooking['passenger_count'] ?> <?= e(__('common.guests', [], 'guests')) ?>) · <?= format_date($selectedBooking['start_date']) ?>
                             </option>
                         <?php endif; ?>
                         <?php foreach ($pendingBookings as $b): ?>
@@ -59,7 +59,7 @@
                                     data-passengers="<?= (int)$b['passenger_count'] ?>" 
                                     data-route="<?= e($b['pickup_address']) ?> → <?= e($b['drop_address']) ?>" 
                                     data-date="<?= format_date($b['start_date']) ?>">
-                                <?= e($b['booking_code']) ?> — (<?= (int)$b['passenger_count'] ?> <?= e(__('common.guests', 'guests')) ?>) · <?= format_date($b['start_date']) ?> (<?= e($b['pickup_address']) ?>)
+                                <?= e($b['booking_code']) ?> — (<?= (int)$b['passenger_count'] ?> <?= e(__('common.guests', [], 'guests')) ?>) · <?= format_date($b['start_date']) ?> (<?= e($b['pickup_address']) ?>)
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -69,17 +69,17 @@
             <!-- Modern Luxury Booking Route Summary Box -->
             <div id="bookingSummaryBox" class="trip-manifest-summary-card" style="display: <?= $selectedBooking ? 'block' : 'none' ?>;">
                 <div class="trip-summary-header">
-                    <span class="trip-summary-badge"><i class="fa-solid fa-route"></i> <?= e(__('trip_form.manifest_summary', 'Itinerary Route Details')) ?></span>
-                    <span class="trip-summary-status"><i class="fa-solid fa-circle-check"></i> <?= e(__('status.confirmed', 'Confirmed Reservation')) ?></span>
+                    <span class="trip-summary-badge"><i class="fa-solid fa-route"></i> <?= e(__('trip_form.itinerary_details', [], 'Itinerary Route Details')) ?></span>
+                    <span class="trip-summary-status"><i class="fa-solid fa-circle-check"></i> <?= e(__('trip_form.confirmed_reservation', [], 'Confirmed Reservation')) ?></span>
                 </div>
                 <div id="summaryRoute" class="trip-summary-route">
                     <?= $selectedBooking ? e($selectedBooking['pickup_address']) . ' → ' . e($selectedBooking['drop_address']) : '' ?>
                 </div>
                 <div id="summaryMeta" class="trip-summary-meta">
                     <?php if ($selectedBooking): ?>
-                        <span class="trip-summary-meta-item"><i class="fa-solid fa-users"></i> <?= e(__('dashboard.guests_count', 'Passenger Count')) ?>: <strong><?= (int)$selectedBooking['passenger_count'] ?> guests</strong></span>
+                        <span class="trip-summary-meta-item"><i class="fa-solid fa-users"></i> <?= e(__('trip_form.passenger_count', [], 'Passenger Count')) ?>: <strong><?= (int)$selectedBooking['passenger_count'] ?> guests</strong></span>
                         <span class="trip-summary-meta-dot">•</span>
-                        <span class="trip-summary-meta-item"><i class="fa-solid fa-calendar-day"></i> <?= e(__('table.date', 'Departure Date')) ?>: <strong><?= format_date($selectedBooking['start_date']) ?></strong></span>
+                        <span class="trip-summary-meta-item"><i class="fa-solid fa-calendar-day"></i> <?= e(__('trip_form.departure_date', [], 'Departure Date')) ?>: <strong><?= format_date($selectedBooking['start_date']) ?></strong></span>
                     <?php endif; ?>
                 </div>
             </div>
@@ -90,8 +90,8 @@
                     <i class="fa-solid fa-car-side"></i>
                 </div>
                 <div class="modern-section-meta">
-                    <h2 class="modern-section-title"><?= e(__('trip_form.deployment_badge', 'Vehicle & Chauffeur Assignment')) ?></h2>
-                    <p class="modern-section-sub"><?= e(__('trip_form.driver_hint', 'Pair an available commercial vehicle with an on-duty verified chauffeur.')) ?></p>
+                    <h2 class="modern-section-title"><?= e(__('trip_form.deployment_title', [], 'Vehicle & Chauffeur Assignment')) ?></h2>
+                    <p class="modern-section-sub"><?= e(__('trip_form.deployment_sub', [], 'Pair an available commercial vehicle with an on-duty verified chauffeur.')) ?></p>
                 </div>
             </div>
 
@@ -99,14 +99,14 @@
                 <!-- Vehicle Selection -->
                 <div class="modern-form-group">
                     <label class="modern-form-label" for="vehicle_id">
-                        <?= e(__('trip_form.assign_vehicle', 'Assigned Commercial Vehicle')) ?> <span class="req">*</span>
+                        <?= e(__('trip_form.assign_vehicle', [], 'Commercial Vehicle')) ?> <span class="req">*</span>
                     </label>
                     <div class="modern-input-wrapper">
                         <span class="modern-input-icon"><i class="fa-solid fa-car"></i></span>
                         <select id="vehicle_id" name="vehicle_id" class="modern-select-pill" required>
-                            <option value=""><?= e(__('trip_form.choose_vehicle', 'Select Ready Fleet Vehicle...')) ?></option>
+                            <option value=""><?= e(__('trip_form.choose_vehicle', [], 'Choose Vehicle...')) ?></option>
                             <?php if (empty($availableVehicles)): ?>
-                                <option value="" disabled><?= e(__('trip_form.no_vehicles', 'No vehicles currently available')) ?></option>
+                                <option value="" disabled><?= e(__('trip_form.no_vehicles', [], 'No vehicles currently available')) ?></option>
                             <?php else: ?>
                                 <?php foreach ($availableVehicles as $v): ?>
                                     <option value="<?= (int)$v['id'] ?>">
@@ -121,41 +121,22 @@
                 <!-- Driver Selection -->
                 <div class="modern-form-group">
                     <label class="modern-form-label" for="driver_id">
-                        <?= e(__('trip_form.assign_driver', 'Assigned Chauffeur')) ?> <span class="req">*</span>
+                        <?= e(__('trip_form.assign_driver', [], 'Assigned Chauffeur / Driver')) ?> <span class="req">*</span>
                     </label>
                     <div class="modern-input-wrapper">
                         <span class="modern-input-icon"><i class="fa-solid fa-id-badge"></i></span>
-                        <select id="driver_id" name="driver_id" class="modern-select-pill" required onchange="onDriverChange(this)">
-                            <option value=""><?= e(__('trip_form.choose_driver', 'Select Active Chauffeur...')) ?></option>
+                        <select id="driver_id" name="driver_id" class="modern-select-pill" required>
+                            <option value=""><?= e(__('trip_form.choose_driver', [], 'Choose Driver...')) ?></option>
                             <?php if (empty($availableDrivers)): ?>
-                                <option value="" disabled><?= e(__('trip_form.no_drivers', 'No drivers currently available')) ?></option>
+                                <option value="" disabled><?= e(__('trip_form.no_drivers', [], 'No drivers currently available')) ?></option>
                             <?php else: ?>
                                 <?php foreach ($availableDrivers as $d): ?>
-                                    <?php
-                                        $empCode = !empty($d['employee_code']) ? " [{$d['employee_code']}]" : '';
-                                        $displayName = !empty($d['first_name']) ? trim($d['first_name'] . ' ' . ($d['last_name'] ?? '')) : $d['name'];
-                                        $displayPhone = $d['employee_phone'] ?? $d['phone'] ?? '';
-                                    ?>
-                                    <option value="<?= (int)$d['id'] ?>"
-                                            data-name="<?= e($displayName) ?>"
-                                            data-code="<?= e($d['employee_code'] ?? '') ?>"
-                                            data-phone="<?= e($displayPhone) ?>"
-                                            data-license="<?= e($d['license_number']) ?>">
-                                        <?= e($displayName) ?><?= e($empCode) ?> · <?= e($displayPhone) ?> · Lic: <?= e($d['license_number']) ?>
+                                    <option value="<?= (int)$d['id'] ?>">
+                                        <?= e($d['name']) ?> (<?= e($d['phone']) ?>) · License: <?= e($d['license_number']) ?>
                                     </option>
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </select>
-                    </div>
-                    <!-- Live Employee Notification Preview Banner -->
-                    <div id="driverNotificationPreview" class="trip-driver-notif-preview" style="display: none; margin-top: 0.85rem;">
-                        <div class="notif-preview-box">
-                            <div class="notif-preview-icon"><i class="fa-solid fa-paper-plane"></i></div>
-                            <div class="notif-preview-text">
-                                <span class="notif-preview-headline"><i class="fa-solid fa-bell"></i> Instant Duty Notification Dispatch</span>
-                                <span id="driverNotifTarget" class="notif-preview-target">A professional assignment notification will be automatically sent to the selected employee upon deployment.</span>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -163,10 +144,10 @@
             <!-- Bottom Actions -->
             <div class="modern-form-actions">
                 <a href="<?= url('/office/trips/history') ?>" class="modern-btn-cancel">
-                    <i class="fa-solid fa-xmark"></i> <?= e(__('form.cancel', 'Cancel')) ?>
+                    <i class="fa-solid fa-xmark"></i> <?= e(__('form.cancel', [], 'Cancel')) ?>
                 </a>
                 <button type="submit" class="modern-btn-submit" id="btnDeployTrip">
-                    <i class="fa-solid fa-paper-plane"></i> <?= e(__('trip_form.deploy_btn', 'Deploy Trip Assignment')) ?>
+                    <i class="fa-solid fa-paper-plane"></i> <?= e(__('trip_form.deploy_btn', [], 'Deploy Live Trip')) ?>
                 </button>
             </div>
         </div>
@@ -174,27 +155,6 @@
 </div>
 
 <script>
-function onDriverChange(sel) {
-    const opt = sel.options[sel.selectedIndex];
-    const preview = document.getElementById('driverNotificationPreview');
-    const target = document.getElementById('driverNotifTarget');
-    if (!opt || !opt.value) {
-        if (preview) preview.style.display = 'none';
-        return;
-    }
-    const name = opt.getAttribute('data-name') || 'Chauffeur';
-    const code = opt.getAttribute('data-code') || '';
-    const phone = opt.getAttribute('data-phone') || '';
-
-    let label = 'A professional duty assignment notification (In-App & SMS) will be automatically dispatched to <strong>' + name + '</strong>';
-    if (code) label += ' (ID: <strong>' + code + '</strong>)';
-    if (phone) label += ' at <strong>' + phone + '</strong>';
-    label += ' upon deployment.';
-
-    if (target) target.innerHTML = label;
-    if (preview) preview.style.display = 'block';
-}
-
 function onBookingChange(sel) {
     const opt = sel.options[sel.selectedIndex];
     const box = document.getElementById('bookingSummaryBox');
@@ -220,47 +180,6 @@ function onBookingChange(sel) {
 </script>
 
 <style>
-/* Instant Chauffeur Notification Preview */
-.trip-driver-notif-preview {
-    background: linear-gradient(135deg, rgba(23, 107, 91, 0.06), rgba(212, 175, 55, 0.08));
-    border: 1px solid rgba(23, 107, 91, 0.25);
-    border-radius: 14px;
-    padding: 0.85rem 1.15rem;
-    box-shadow: 0 2px 10px rgba(23, 107, 91, 0.04);
-}
-.notif-preview-box {
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
-}
-.notif-preview-icon {
-    width: 34px;
-    height: 34px;
-    min-width: 34px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #176B5B, #0E483D);
-    color: #FFF;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.85rem;
-    box-shadow: 0 2px 6px rgba(23, 107, 91, 0.25);
-}
-.notif-preview-text {
-    font-size: 0.825rem;
-    color: #1E293B;
-    line-height: 1.45;
-}
-.notif-preview-headline {
-    font-weight: 700;
-    color: #176B5B;
-    display: block;
-    margin-bottom: 2px;
-}
-.notif-preview-target strong {
-    color: #0F172A;
-}
-
 /* Full-Width Workspace Form Wrapper & Master Card */
 .modern-form-wrapper {
     width: 100%;

@@ -1,4 +1,10 @@
 <?php
+if (!function_exists('env')) {
+    function env(string $key, mixed $default = null): mixed
+    {
+        return \App\Core\Env::get($key, $default);
+    }
+}
 
 use App\Core\View;
 use App\Core\Csrf;
@@ -146,7 +152,11 @@ if (!function_exists('url')) {
 if (!function_exists('asset')) {
     function asset(string $path): string
     {
-        return url('/assets/' . ltrim($path, '/'));
+        $clean = ltrim($path, '/');
+        if (str_starts_with($clean, 'assets/')) {
+            $clean = substr($clean, 7);
+        }
+        return url('/assets/' . $clean);
     }
 }
 
@@ -476,4 +486,75 @@ if (!function_exists('time_ago')) {
 
 
 
+
+
+
+if (!function_exists('company_name')) {
+    function company_name(): string
+    {
+        return \App\Services\CompanySettingsService::getCompanyName();
+    }
+}
+
+if (!function_exists('company_tagline')) {
+    function company_tagline(): string
+    {
+        return \App\Services\CompanySettingsService::getTagline();
+    }
+}
+
+if (!function_exists('company_email')) {
+    function company_email(): string
+    {
+        return \App\Services\CompanySettingsService::getCompanyEmail();
+    }
+}
+
+if (!function_exists('company_phone')) {
+    function company_phone(): string
+    {
+        return \App\Services\CompanySettingsService::getPhone();
+    }
+}
+
+if (!function_exists('company_website')) {
+    function company_website(): string
+    {
+        return \App\Services\CompanySettingsService::getWebsite();
+    }
+}
+
+if (!function_exists('company_address')) {
+    function company_address(): string
+    {
+        return \App\Services\CompanySettingsService::getAddress();
+    }
+}
+
+if (!function_exists('company_logo')) {
+    function company_logo(bool $absolute = false): ?string
+    {
+        return \App\Services\CompanySettingsService::getLogoUrl($absolute);
+    }
+}
+
+if (!function_exists('company_logo_url')) {
+    function company_logo_url(bool $absolute = false): ?string
+    {
+        return \App\Services\CompanySettingsService::getLogoUrl($absolute);
+    }
+}
+if (!function_exists('has_company_logo')) {
+    function has_company_logo(): bool
+    {
+        return \App\Services\CompanySettingsService::hasLogo();
+    }
+}
+
+if (!function_exists('has_configured_company')) {
+    function has_configured_company(): bool
+    {
+        return \App\Services\CompanySettingsService::hasConfiguredProfile();
+    }
+}
 

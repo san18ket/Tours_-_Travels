@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= e($title ?? 'Error Notice') ?> - <?= e($app['name']) ?></title>
-    <link rel="stylesheet" href="<?= asset('css/app.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/app.css') ?>?v=<?= @filemtime(dirname(__DIR__, 3) . '/public/assets/css/app.css') ?: time() ?>">
     <link rel="icon" type="image/svg+xml" href="<?= asset('icons/icon.svg') ?>">
 </head>
 <body style="background: #0B192C; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem; color: #FFF;">

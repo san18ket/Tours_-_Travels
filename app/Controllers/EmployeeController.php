@@ -107,6 +107,7 @@ class EmployeeController extends Controller
             $rules = [
                 'first_name'      => 'required|min:2|max:80',
                 'last_name'       => 'required|min:1|max:80',
+                'email'           => 'required|email|max:150',
                 'phone'           => 'required|min:8|max:30',
                 'employment_type' => 'required|in:full_time,part_time,contract,probation',
                 'joining_date'    => 'required|date',
@@ -153,7 +154,7 @@ class EmployeeController extends Controller
                     throw new ValidationException("Username '{$username}' is already in use by another account.", ['username' => ['This username is already taken.']]);
                 }
 
-                $userEmail = !empty($input['email']) ? strtolower(trim($input['email'])) : ($username . '@voyagego.internal');
+                $userEmail = !empty($input['email']) ? strtolower(trim($input['email'])) : ($username . '@internal.local');
                 $existingEmail = $this->userModel->findBy('email', $userEmail);
                 if ($existingEmail) {
                     throw new ValidationException("Email address '{$userEmail}' is already registered with another account.", ['email' => ['This email address is already in use.']]);
@@ -240,19 +241,24 @@ class EmployeeController extends Controller
             // If chauffeur/driver role and user account wasn't created yet, auto-create one for driver portal linking
             if ($isDriverRole && !$userId) {
                 $driverUsername = 'driver_' . strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $data['first_name'])) . '_' . rand(100, 999);
-                $driverEmail = !empty($input['email']) ? strtolower(trim($input['email'])) : ($driverUsername . '@voyagego.internal');
-                $newUserId = $this->userModel->create([
-                    'name'       => trim($data['first_name'] . ' ' . $data['last_name']),
-                    'username'   => $driverUsername,
-                    'email'      => $driverEmail,
-                    'phone'      => trim($data['phone']),
-                    'password'   => password_hash('Driver@' . rand(1000, 9999), PASSWORD_BCRYPT, ['cost' => 12]),
-                    'role'       => 'driver',
-                    'status'     => 'active',
-                    'created_at' => date('Y-m-d H:i:s'),
-                    'updated_at' => date('Y-m-d H:i:s'),
-                ]);
-                $userId = $newUserId;
+                $driverEmail = strtolower(trim($data['email']));
+                $existingUser = $this->userModel->findBy('email', $driverEmail);
+                if ($existingUser) {
+                    $userId = (int)$existingUser['id'];
+                } else {
+                    $newUserId = $this->userModel->create([
+                        'name'       => trim($data['first_name'] . ' ' . $data['last_name']),
+                        'username'   => $driverUsername,
+                        'email'      => $driverEmail,
+                        'phone'      => trim($data['phone']),
+                        'password'   => password_hash('Driver@' . rand(1000, 9999), PASSWORD_BCRYPT, ['cost' => 12]),
+                        'role'       => 'driver',
+                        'status'     => 'active',
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'updated_at' => date('Y-m-d H:i:s'),
+                    ]);
+                    $userId = $newUserId;
+                }
             }
 
             $employeeId = $this->employeeModel->create([
@@ -332,6 +338,22 @@ class EmployeeController extends Controller
                 ],
                 Session::getUserId()
             );
+
+            $emailResult = null;
+            try {
+                $emailService = new \App\Services\EmailService();
+                $fullEmp = $this->employeeModel->find($employeeId);
+                if ($fullEmp && !empty($fullEmp['email'])) {
+                    $emailResult = $emailService->sendEmployeeWelcome($fullEmp);
+                }
+            } catch (\Throwable $e) {
+                Logger::warning("Could not dispatch employee welcome email: " . $e->getMessage());
+                $emailResult = ['success' => false, 'error' => $e->getMessage()];
+            }
+
+            if ($emailResult !== null && !$emailResult['success'] && empty($emailResult['duplicate'])) {
+                return $this->redirect(url('/office/employees'), 'warning', "Employee [{$employeeCode}] {$data['first_name']} {$data['last_name']} successfully registered, but onboarding email delivery failed (" . ($emailResult['error'] ?? 'SMTP Error') . "). You can retry anytime from Notification Settings.");
+            }
 
             return $this->redirect(url('/office/employees'), 'success', "Employee [{$employeeCode}] {$data['first_name']} {$data['last_name']} successfully registered.");
 
@@ -590,6 +612,14 @@ class EmployeeController extends Controller
 
             // 4. Update primary employee record
             $this->employeeModel->update($id, $updateData);
+
+            if ($userId && !empty($updateData['email'])) {
+                $this->userModel->update((int)$userId, [
+                    'email' => $updateData['email'],
+                    'name'  => trim($updateData['first_name'] . ' ' . $updateData['last_name']),
+                    'phone' => $updateData['phone'],
+                ]);
+            }
 
             // 5. Driver Profile synchronization if license number or driver role is present
             $isDriverRole = in_array($department, ['fleet_chauffeur', 'driver'], true) || !empty($input['license_number']) || !empty($employee['driver_profile_id']);
@@ -933,5 +963,30 @@ class EmployeeController extends Controller
         }
 
         return $savedRelPath;
+    }
+    /**
+     * Re-dispatch employee onboarding email without recreating employee
+     */
+    public function resendWelcome(Request $request, int $id): Response
+    {
+        $employee = $this->employeeModel->find($id);
+        if (!$employee || empty($employee['email'])) {
+            Session::setFlash('danger', 'Employee or email address not found.');
+            return $this->redirect(url('/office/employees/' . $id));
+        }
+
+        try {
+            $emailService = new \App\Services\EmailService();
+            $result = $emailService->sendEmployeeWelcome($employee);
+            if (!empty($result['success'])) {
+                Session::setFlash('success', "Onboarding email sent successfully to {$employee['email']}!");
+            } else {
+                Session::setFlash('warning', "Onboarding email delivery failed: " . ($result['error'] ?? 'SMTP connection error'));
+            }
+        } catch (\Throwable $e) {
+            Session::setFlash('danger', "Failed to dispatch onboarding email: " . $e->getMessage());
+        }
+
+        return $this->redirect(url('/office/employees/' . $id));
     }
 }

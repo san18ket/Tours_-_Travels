@@ -310,7 +310,6 @@ $actionsHtml = '<div style="display: flex; gap: 0.65rem; flex-wrap: wrap;">'
         </div>
         <form action="<?= url('/office/finance/transactions') ?>" method="POST" id="recordTxForm">
             <?= csrf_field() ?>
-            <input type="hidden" name="redirect_to" value="<?= url('/office/finance/dashboard') ?>">
             <div class="modal-body-custom">
                 <div class="form-group" style="margin-bottom: 1rem;">
                     <label class="form-label">Transaction Type <span class="req">*</span></label>
@@ -402,7 +401,6 @@ $actionsHtml = '<div style="display: flex; gap: 0.65rem; flex-wrap: wrap;">'
         </div>
         <form action="<?= url('/office/finance/transfer') ?>" method="POST" id="fundTransferForm">
             <?= csrf_field() ?>
-            <input type="hidden" name="redirect_to" value="<?= url('/office/finance/dashboard') ?>">
             <div class="modal-body-custom">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
                     <div class="form-group">
@@ -599,4 +597,3 @@ $actionsHtml = '<div style="display: flex; gap: 0.65rem; flex-wrap: wrap;">'
     }
 }
 </style>
-

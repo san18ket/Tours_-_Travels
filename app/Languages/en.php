@@ -4,10 +4,10 @@
  */
 return [
     // Brand & Meta
-    'app.name' => 'VoyageGo',
+    'app.name' => function_exists('company_name') ? company_name() : 'Tours & Travels',
     'app.tagline' => 'Enterprise Fleet & Tour Dispatch Operations',
     'app.tagline_short' => 'Luxury Travel Ops',
-    'app.copyright' => 'VoyageGo Systems. Secured with AES-256 and TLS.',
+    'app.copyright' => (function_exists('company_name') ? company_name() : 'Tours & Travels') . ' Systems. Secured with AES-256 and TLS.',
 
     // Language Selector
     'lang.language' => 'Language',
@@ -772,7 +772,7 @@ return [
     'customer_form.primary_mobile' => 'Primary Mobile',
     'customer_form.location_city' => 'Location / City',
     'customer_form.isolation_guarantee' => 'Account Isolation Guarantee',
-    'customer_form.isolation_desc' => 'This registration strictly adds a customer profile to VoyageGo. No staff credentials or administrative access to the office dashboard are generated.',
+    'customer_form.isolation_desc' => 'This registration strictly adds a customer profile to the system. No staff credentials or administrative access to the office dashboard are generated.',
     'customer_form.record_settings' => 'Record Settings',
     'customer_form.customer_code' => 'Customer Reference Code',
     'customer_form.profile_status' => 'Profile Status',

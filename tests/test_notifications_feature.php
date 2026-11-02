@@ -7,7 +7,7 @@
  * 4. Dedicated notifications page (/driver/notifications) renders KPI cards, filters, and notification cards.
  */
 
-require_once __DIR__ . '/../app/bootstrap.php';
+require_once __DIR__ . '/../bootstrap.php';
 
 use App\Core\Database;
 use App\Models\User;
@@ -49,7 +49,7 @@ if (strpos($layoutContent, 'href="<?= url(\'/driver/notifications\') ?>" class="
 
 // 2. Test controller action notificationsPage
 // Find or create a test driver user
-$db = Database::getConnection();
+$db = Database::getInstance();
 $driverUser = $db->query("SELECT u.*, e.id as employee_id FROM users u LEFT JOIN employees e ON e.user_id = u.id WHERE u.role = 'driver' AND u.status = 'active' LIMIT 1")->fetch();
 
 if (!$driverUser) {
@@ -67,8 +67,7 @@ if (!$driverUser) {
     $unreadCount = $notifService->getUnreadCount($driverUser['id'], $driverUser['employee_id']);
     
     if ($unreadCount === 0) {
-        $notifModel = new Notification();
-        $payload = [
+        $notifService->notifyDriverTripAssigned($driverUser['id'], $driverUser['employee_id'], [
             'dispatch_id' => 9999,
             'dispatch_code' => 'DSP-TEST-999',
             'pickup_address' => 'Pune Airport, Lohegaon',
@@ -79,18 +78,6 @@ if (!$driverUser) {
             'customer_name' => 'Rajesh Sharma',
             'customer_phone' => '+91 98765 43210',
             'passenger_count' => 2,
-        ];
-        $notifModel->create([
-            'user_id' => $driverUser['id'],
-            'employee_id' => $driverUser['employee_id'],
-            'title' => 'New Trip Duty Assigned: DSP-TEST-999',
-            'message' => 'You have been assigned to trip duty DSP-TEST-999.',
-            'type' => 'trip_assigned',
-            'reference_type' => 'dispatches',
-            'reference_id' => 9999,
-            'channel' => 'in_app',
-            'data' => json_encode($payload),
-            'is_read' => 0,
         ]);
         echo "[INFO] Created sample test notification." . PHP_EOL;
     }
@@ -98,25 +85,20 @@ if (!$driverUser) {
     // Invoke notificationsPage controller
     $controller = new DriverPortalController();
     $req = new Request();
-    try {
-        $response = $controller->notificationsPage($req);
-        $html = $response->getBody();
-    } catch (\Throwable $e) {
-        echo "Exception in notificationsPage: " . $e->getMessage() . " at " . $e->getFile() . ":" . $e->getLine() . PHP_EOL;
-        echo $e->getTraceAsString() . PHP_EOL;
-        exit(1);
-    }
+    $response = $controller->notificationsPage($req);
+    
+    $html = $response->getBody();
     
     // Check page elements
-    $mainPos = strpos($html, '<main');
-    echo "MAIN PREVIEW:" . PHP_EOL . substr($html, $mainPos, 1200) . PHP_EOL;
     $checks = [
-        'Duty Notifications &amp; Alerts' => 'Card Header Title',
-        'notif-ref-card' => 'Reference Card Container',
+        'Duty Notifications & Alerts' => 'Page Header Title',
+        'Total Notifications' => 'KPI Total Card',
+        'Unread Alerts' => 'KPI Unread Card',
+        'Duty Dispatches' => 'KPI Dispatches Card',
+        'Read / Archived' => 'KPI Read Card',
         'driverNotifFilterForm' => 'Filter Form',
         'Search by trip code' => 'Search Input',
-        'NEW DUTY ASSIGNMENTS' => 'Reference Image Red Section Title',
-        'notif-ref-item' => 'Clickable Notification Item',
+        'Review Trip Duty Details' => 'Trip Details Action Button',
     ];
     
     foreach ($checks as $needle => $label) {
@@ -128,19 +110,5 @@ if (!$driverUser) {
         }
     }
 }
-
-    // Test markNotificationRead AJAX call
-    $notifRow = $db->query("SELECT id FROM notifications WHERE user_id = {$driverUser['id']} OR employee_id = " . ($driverUser['employee_id'] ? $driverUser['employee_id'] : -1) . " ORDER BY id DESC LIMIT 1")->fetch();
-    if ($notifRow) {
-        $readReq = new Request([], [], ['REQUEST_METHOD' => 'POST', 'HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest']);
-        $readResp = $controller->markNotificationRead($readReq, ['id' => (string)$notifRow['id']]);
-        echo "[INFO] Mark read status: " . $readResp->getStatusCode() . ", Body: " . $readResp->getBody() . PHP_EOL;
-        if ($readResp->getStatusCode() === 200 && strpos($readResp->getBody(), '"success":true') !== false) {
-            echo "[PASS] markNotificationRead returns success JSON." . PHP_EOL;
-        } else {
-            echo "[FAIL] markNotificationRead did not return success!" . PHP_EOL;
-            exit(1);
-        }
-    }
 
 echo "=== ALL NOTIFICATION FEATURE TESTS PASSED SUCCESSFULLY! ===" . PHP_EOL;

@@ -23,9 +23,9 @@ $curReturnUrl = $_SERVER['REQUEST_URI'] ?? $homeUrl;
     <a href="<?= $homeUrl ?>" class="mv-dash-logo" title="MANASWI <?= e(__('app.tours_travels', 'Tours & Travels')) ?> - <?= e(__('sidebar.dashboard', 'Home')) ?>">
         <img src="<?= asset('images/brand-teal-bus.svg') ?>" class="mv-logo-bus-img" alt="Bus">
         <div class="mv-logo-text">
-            <span class="mv-brand-title">MANASWI</span>
+            <span class="mv-brand-title"><?= e(company_name()) ?></span>
             <span class="mv-brand-sub"><?= e(__('app.tours_travels', 'Tours & Travels')) ?></span>
-            <span class="mv-brand-tagline"><?= e(__('app.safe_journey_tagline', 'Safe Journey • Happy Memories')) ?></span>
+            <span class="mv-brand-tagline"><?= e(company_tagline()) ?></span>
         </div>
     </a>
     <div class="mv-dash-top-actions">

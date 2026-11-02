@@ -95,12 +95,12 @@ echo "\n3. Verifying AJAX Booking Deletion & Cascade Clean...\n";
 // Get or create test tour
 $tourModel = new Tour();
 $tours = $tourModel->all();
-$tourId = !empty($tours[0]['id']) ? (int)$tours[0]['id'] : null;
+$tourId = !empty($tours[0]['id']) ? (int)$tours[0]['id'] : 1;
 
 // Get or create test customer user
 $userModel = new User();
 $users = $userModel->where("role = 'customer'");
-$customerId = !empty($users[0]['id']) ? (int)$users[0]['id'] : null;
+$customerId = !empty($users[0]['id']) ? (int)$users[0]['id'] : 1;
 
 // Create test booking
 $bookingModel = new Booking();
@@ -119,19 +119,11 @@ $testBookingId = $bookingModel->create([
 ]);
 echo "  [PASS] Created temporary test booking ID: {$testBookingId} with code: {$testBookingCode}\n";
 
-// Optionally link a mock dispatch record if drivers & vehicles exist
-$driverStmt = $pdo->query("SELECT id FROM driver_profiles LIMIT 1");
-$driver = $driverStmt ? $driverStmt->fetch(PDO::FETCH_ASSOC) : null;
-$vehicleStmt = $pdo->query("SELECT id FROM vehicles LIMIT 1");
-$vehicle = $vehicleStmt ? $vehicleStmt->fetch(PDO::FETCH_ASSOC) : null;
-
-$dispId = null;
-if (!empty($driver['id']) && !empty($vehicle['id'])) {
-    $stmtDisp = $pdo->prepare("INSERT INTO `dispatches` (`booking_id`, `driver_id`, `vehicle_id`, `assigned_by`, `status`, `created_at`, `updated_at`) VALUES (?, ?, ?, 1, 'pending', NOW(), NOW())");
-    $stmtDisp->execute([$testBookingId, $driver['id'], $vehicle['id']]);
-    $dispId = $pdo->lastInsertId();
-    echo "  [PASS] Created linked test dispatch record ID: {$dispId}\n";
-}
+// Insert a mock dispatch record linking to this booking
+$stmtDisp = $pdo->prepare("INSERT INTO `dispatches` (`booking_id`, `status`, `created_at`, `updated_at`) VALUES (?, 'pending', NOW(), NOW())");
+$stmtDisp->execute([$testBookingId]);
+$dispId = $pdo->lastInsertId();
+echo "  [PASS] Created linked test dispatch record ID: {$dispId}\n";
 
 // Send AJAX Delete request
 $_SERVER['REQUEST_METHOD'] = 'POST';
@@ -153,13 +145,11 @@ assertCondition(isset($delJson['metrics']['total']), "Response contains updated 
 $foundBooking = $bookingModel->find($testBookingId);
 assertCondition(empty($foundBooking), "Booking record removed from database");
 
-// Verify DB: Linked dispatch record should be removed if created
-if ($dispId) {
-    $stmtCheckDisp = $pdo->prepare("SELECT * FROM `dispatches` WHERE `id` = ?");
-    $stmtCheckDisp->execute([$dispId]);
-    $foundDisp = $stmtCheckDisp->fetch();
-    assertCondition(empty($foundDisp), "Linked dispatch record removed from database");
-}
+// Verify DB: Linked dispatch record should be removed
+$stmtCheckDisp = $pdo->prepare("SELECT * FROM `dispatches` WHERE `id` = ?");
+$stmtCheckDisp->execute([$dispId]);
+$foundDisp = $stmtCheckDisp->fetch();
+assertCondition(empty($foundDisp), "Linked dispatch record removed from database");
 
 echo "\n====================================================================\n";
 echo "SUMMARY: All Bookings top cards, filters & delete assertions passed!\n";

@@ -25,6 +25,17 @@ class AuditLog extends Model
         ]);
     }
 
+    public function log(mixed ...$args): int
+    {
+        if (count($args) >= 3 && (is_null($args[0]) || is_numeric($args[0])) && is_string($args[1])) {
+            $userId = !is_null($args[0]) ? (int)$args[0] : null;
+            $action = (string)$args[1];
+            $desc = (string)$args[2];
+            return $this->record($action, 'general', null, null, ['description' => $desc], $userId);
+        }
+        return $this->record(...$args);
+    }
+
     public function getRecent(int $limit = 100): array
     {
         $sql = "SELECT a.*, u.name as user_name, u.email as user_email, u.role as user_role

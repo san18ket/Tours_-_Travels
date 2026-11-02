@@ -93,8 +93,22 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 ?>
 
 <div class="customer-view-root employee-view-root">
-    <!-- 1. Top App Bar / Header Actions -->
+    <!-- 1. Top App Bar / Header (Exact Customers Architecture) -->
     <div class="view-header-bar">
+        <div class="view-header-left">
+            <a href="<?= url('/office/employees') ?>" class="view-header-btn back-btn" title="Back to Staff Directory" aria-label="Back">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <div class="view-header-title-wrap">
+                <div class="view-header-breadcrumbs">
+                    <a href="<?= url('/office/employees') ?>">Staff Directory</a>
+                    <i class="fa-solid fa-chevron-right"></i>
+                    <span><?= e($empFullName) ?></span>
+                </div>
+                <h1 class="view-header-title">Staff Details</h1>
+                <p class="view-header-subtitle">Employee Information, Professional Credentials &amp; Roster History</p>
+            </div>
+        </div>
         <div class="view-header-right">
             <?php if (auth_role() === 'admin'): ?>
             <a href="<?= url('/office/employees/' . $employee['id'] . '/edit') ?>" class="view-header-btn edit-btn" title="Edit Profile" aria-label="Edit Profile">
@@ -120,6 +134,12 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
                     <a href="javascript:void(0)" onclick="window.print()" class="view-dropdown-item">
                         <i class="fa-solid fa-print"></i> Print Profile
                     </a>
+                    <form action="<?= url('/office/employees/' . $employee['id'] . '/resend-welcome') ?>" method="POST" style="margin: 0;" data-no-ajax="true">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="view-dropdown-item" style="background: none; border: none; width: 100%; text-align: left; cursor: pointer; color: inherit; padding: 0.6rem 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fa-solid fa-envelope"></i> Resend Onboarding Email
+                        </button>
+                    </form>
                     <?php if (auth_role() === 'admin'): ?>
                     <div class="view-dropdown-divider"></div>
                     <a href="javascript:void(0)" onclick="openDeleteModal(<?= (int)$employee['id'] ?>, '<?= addslashes(e($empFullName)) ?>')" class="view-dropdown-item danger">
@@ -183,7 +203,9 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
                     </div>
 
                     <span class="view-hero-code-pill"><?= e($empCode) ?></span>
-                    <span class="emp-role-pill"><?= e($roleLabel) ?></span>
+                    <span class="emp-role-pill" style="display: inline-block; background: rgba(255,255,255,0.22); color: #FFFFFF; border: 1px solid rgba(255,255,255,0.4); border-radius: 9999px; padding: 4px 14px; font-size: 12px; font-weight: 700; text-transform: capitalize; backdrop-filter: blur(4px);">
+                        <?= e($roleLabel) ?>
+                    </span>
                 </div>
 
                 <div class="view-hero-meta-list">
@@ -196,7 +218,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
                         <?php if (!empty($employee['email'])): ?>
                             <a href="mailto:<?= e($employee['email']) ?>"><?= e($employee['email']) ?></a>
                         <?php else: ?>
-                            <span class="text-muted">Not provided</span>
+                            <span class="text-muted" style="color: rgba(255,255,255,0.7);">Not provided</span>
                         <?php endif; ?>
                     </div>
                     <div class="view-hero-meta-item">
@@ -395,7 +417,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
                             <div class="view-kv-item">
                                 <span class="view-kv-label">Address</span>
                                 <span class="view-kv-value address-val">
-                                    <i class="fa-solid fa-location-dot" style="color: #176B5B;"></i>
+                                    <i class="fa-solid fa-location-dot" style="color: #2563EB;"></i>
                                     <span><?= e($locationDisplay) ?></span>
                                 </span>
                             </div>
@@ -476,7 +498,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
                             <div class="view-kv-item">
                                 <span class="view-kv-label">System Role</span>
                                 <span class="view-kv-value bold" style="text-transform: capitalize;">
-                                    <span class="emp-role-pill" style="display: inline-block; background: rgba(23, 107, 91,0.08); color: #16443B; border: 1px solid rgba(23, 107, 91,0.2); border-radius: 6px; padding: 2px 10px; font-size: 12px; font-weight: 700;">
+                                    <span class="emp-role-pill" style="display: inline-block; background: rgba(37,99,235,0.08); color: #1E40AF; border: 1px solid rgba(37,99,235,0.2); border-radius: 6px; padding: 2px 10px; font-size: 12px; font-weight: 700;">
                                         <?= e($roleLabel) ?>
                                     </span>
                                 </span>
@@ -702,7 +724,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
                         <div style="display: flex; flex-direction: column; gap: 10px;">
                             <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
                                 <span style="color: #64748B;">License Ref:</span>
-                                <code style="background: #E8F7F0; color: #16443B; padding: 2px 6px; border-radius: 4px; font-weight: 700;"><?= e($employee['license_number'] ?? 'Not Recorded') ?></code>
+                                <code style="background: #EFF6FF; color: #1E40AF; padding: 2px 6px; border-radius: 4px; font-weight: 700;"><?= e($employee['license_number'] ?? 'Not Recorded') ?></code>
                             </div>
                             <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
                                 <span style="color: #64748B;">License Expiry:</span>
@@ -906,7 +928,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
                                 </div>
                             </div>
                             <div class="mb-booking-card-footer">
-                                <div class="mb-booking-price" style="font-size: 12px; font-weight: 600; color: #16443B;">
+                                <div class="mb-booking-price" style="font-size: 12px; font-weight: 600; color: #1E40AF;">
                                     <i class="fa-solid fa-car-side"></i> <?= e($d['vehicle_number'] ?? 'Fleet Vehicle') ?>
                                 </div>
                                 <span class="mb-booking-arrow">View Details <i class="fa-solid fa-chevron-right"></i></span>
@@ -1527,10 +1549,6 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
         }
         const step1 = document.getElementById('deleteStep1Modal');
         const step2 = document.getElementById('deleteStep2Modal');
-        const chk2 = document.getElementById('deleteStep2Checkbox');
-        const finalBtn = document.getElementById('deleteConfirmFinalBtn');
-        if (chk2) chk2.checked = false;
-        if (finalBtn) finalBtn.classList.add('disabled');
         if (step1 && step2) {
             step1.style.display = 'none';
             step2.style.display = 'block';
@@ -1540,7 +1558,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
     function confirmDeleteFinal() {
         const chk2 = document.getElementById('deleteStep2Checkbox');
         const chkWrap2 = document.getElementById('delCheckboxContainer2');
-        if (!chk2 || !chk2.checked) {
+        if (chk2 && !chk2.checked) {
             if (chkWrap2) {
                 chkWrap2.classList.add('shake-error');
                 setTimeout(() => chkWrap2.classList.remove('shake-error'), 450);
@@ -1609,14 +1627,14 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 /* Employee View Root & Executive Theme (Identical to Customer View sm.jpeg) */
 /* ========================================================================= */
 :root {
-    --cv-bg-start: #E8F7F0;
+    --cv-bg-start: #EBF4FC;
     --cv-bg-end: #F8FAFC;
     --cv-card-bg: #FFFFFF;
     --cv-card-border: rgba(226, 232, 240, 0.90);
-    --cv-shadow: 0 4px 20px rgba(23, 107, 91, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
-    --cv-shadow-hover: 0 10px 25px rgba(23, 107, 91, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
-    --cv-primary-blue: #176B5B;
-    --cv-primary-dark: #16443B;
+    --cv-shadow: 0 4px 20px rgba(37, 99, 235, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
+    --cv-shadow-hover: 0 10px 25px rgba(37, 99, 235, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
+    --cv-primary-blue: #2563EB;
+    --cv-primary-dark: #1D4ED8;
     --cv-teal: #176B5B;
     --cv-navy-900: #0F172A;
     --cv-slate-800: #1E293B;
@@ -1637,13 +1655,13 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
     -webkit-font-smoothing: antialiased;
 }
 
-/* 1. Header Bar (App Bar Actions) */
+/* 1. Header Bar (App Bar) */
 .view-header-bar {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.85rem;
-    gap: 0.65rem;
+    margin-bottom: 1.25rem;
+    gap: 1rem;
 }
 
 .view-header-left {
@@ -1674,8 +1692,8 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 
 .view-header-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(23, 107, 91, 0.16);
-    border-color: rgba(23, 107, 91, 0.25);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.16);
+    border-color: #BFDBFE;
     color: var(--cv-primary-dark);
 }
 
@@ -1791,96 +1809,94 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
     margin: 0.35rem 0;
 }
 
-/* 2. Hero Profile Card (Scenic bus & mountains matching Customer View) */
+/* 2. Hero Profile Card */
 .view-hero-card {
-    background: #FFFFFF;
-    border-radius: var(--cv-radius-card);
-    border: 1px solid var(--cv-card-border);
-    box-shadow: 0 8px 30px -8px rgba(23, 107, 91, 0.08), 0 2px 6px rgba(0, 0, 0, 0.02);
     position: relative;
+    border-radius: var(--cv-radius-card);
     overflow: hidden;
-    padding: 1.5rem;
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 8px 30px rgba(30, 58, 138, 0.12);
+    background: linear-gradient(135deg, #1E3A8A 0%, #1E40AF 45%, #2563EB 100%);
+    color: #FFFFFF;
+    min-height: 200px;
 }
 
 .view-hero-scenery {
     position: absolute;
-    right: 0;
     top: 0;
+    right: 0;
     bottom: 0;
-    width: 48%;
-    max-width: 460px;
+    left: 0;
     background-size: cover;
-    background-position: right center;
+    background-position: right 15% center;
     background-repeat: no-repeat;
-    pointer-events: none;
+    opacity: 0.85;
     z-index: 1;
-    mask-image: linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.3) 22%, rgba(0, 0, 0, 0.85) 60%, black 100%);
-    -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.3) 22%, rgba(0, 0, 0, 0.85) 60%, black 100%);
 }
 
 .view-hero-overlay {
     position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.85) 55%, rgba(255, 255, 255, 0.15) 100%);
-    pointer-events: none;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: linear-gradient(90deg, rgba(15, 23, 42, 0.94) 0%, rgba(30, 58, 138, 0.88) 45%, rgba(37, 99, 235, 0.35) 100%);
     z-index: 2;
 }
 
 .view-hero-content {
     position: relative;
     z-index: 3;
+    padding: 1.75rem 2rem;
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 1.75rem;
 }
 
 .view-avatar-wrap {
     position: relative;
-    width: 86px;
-    height: 86px;
-    border-radius: 50%;
+    width: 108px;
+    height: 108px;
     flex-shrink: 0;
-    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.1);
-    border: 3px solid #FFFFFF;
 }
 
-.view-avatar-img {
-    width: 100%;
-    height: 100%;
+.view-avatar-img,
+.view-avatar-initials {
+    width: 108px;
+    height: 108px;
     border-radius: 50%;
     object-fit: cover;
-    display: block;
+    border: 3.5px solid rgba(255, 255, 255, 0.95);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    background: #EFF6FF;
 }
 
 .view-avatar-initials {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #176B5B 0%, #16443B 100%);
-    color: #FFFFFF;
-    font-size: 2.1rem;
-    font-weight: 800;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #2563EB;
+    background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+    letter-spacing: -0.02em;
 }
 
 .view-avatar-camera-badge {
     position: absolute;
-    bottom: -2px;
-    right: -2px;
-    width: 28px;
-    height: 28px;
+    bottom: 2px;
+    right: 2px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
-    background: var(--cv-primary-blue);
+    background: #2563EB;
     color: #FFFFFF;
-    border: 2.5px solid #FFFFFF;
+    border: 2px solid #FFFFFF;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 0.72rem;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .view-hero-info {
@@ -1891,107 +1907,76 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 .view-hero-name-row {
     display: flex;
     align-items: center;
-    gap: 0.65rem;
     flex-wrap: wrap;
-    margin-bottom: 0.45rem;
+    gap: 0.65rem;
+    margin-bottom: 0.6rem;
 }
 
 .view-hero-name {
-    font-size: 1.45rem;
+    font-size: 1.65rem;
     font-weight: 800;
-    color: var(--cv-navy-900);
+    color: #FFFFFF;
     margin: 0;
-    line-height: 1.15;
-}
-
-.view-hero-status-pill {
-    padding: 3px 10px;
-    border-radius: var(--cv-radius-pill);
-    font-size: 0.74rem;
-    font-weight: 700;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    transition: all 0.25s ease;
-}
-
-.view-hero-status-pill.active {
-    background: var(--cv-green-bg);
-    color: var(--cv-green-600);
-}
-
-.view-hero-status-pill.inactive {
-    background: #F1F5F9;
-    color: #64748B;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
 }
 
 .hero-status-toggle-wrapper {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    background: rgba(255, 255, 255, 0.94);
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    padding: 3px 8px 3px 4px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
     border-radius: 9999px;
-    border: 1px solid rgba(226, 232, 240, 0.95);
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
-    transition: all 0.2s ease;
+    padding: 3px 10px 3px 5px;
 }
 
-.hero-status-toggle-wrapper:hover {
-    border-color: #CBD5E1;
-    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.1);
-}
-
-.view-hero-code-pill {
-    background: #E8F7F0;
-    color: var(--cv-primary-blue);
-    font-family: monospace;
-    font-size: 0.74rem;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 6px;
-    border: 1px solid rgba(23, 107, 91, 0.25);
-}
-
-.emp-role-pill {
-    background: #F1F5F9;
-    color: var(--cv-slate-800);
-    border: 1px solid #E2E8F0;
-    border-radius: var(--cv-radius-pill);
+.view-hero-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     padding: 3px 10px;
-    font-size: 0.74rem;
+    border-radius: 9999px;
+    font-size: 0.76rem;
     font-weight: 700;
     text-transform: capitalize;
-    display: inline-block;
+}
+
+.view-hero-status-pill.active {
+    background: rgba(16, 185, 129, 0.28);
+    color: #A7F3D0;
+    border: 1px solid rgba(16, 185, 129, 0.55);
+}
+
+.view-hero-status-pill.inactive {
+    background: rgba(239, 68, 68, 0.25);
+    color: #FECACA;
+    border: 1px solid rgba(239, 68, 68, 0.5);
 }
 
 .status-pulse-dot {
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: var(--cv-green-600);
-    box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.25);
-    animation: pulseDot 2s infinite;
-    transition: background-color 0.25s ease, box-shadow 0.25s ease;
-}
-
-.view-hero-status-pill.inactive .status-pulse-dot {
-    background: #94A3B8;
-    box-shadow: none;
-    animation: none;
-}
-
-.view-hero-status-pill.active .status-pulse-dot {
-    background: var(--cv-green-600);
-    animation: pulseDot 2s infinite;
+    background: currentColor;
+    animation: pulseDot 1.8s infinite;
 }
 
 @keyframes pulseDot {
-    0% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.4); }
-    70% { box-shadow: 0 0 0 6px rgba(5, 150, 105, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0); }
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+.view-hero-code-pill {
+    background: rgba(255, 255, 255, 0.22);
+    color: #FFFFFF;
+    font-family: monospace;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
 }
 
 .view-hero-meta-list {
@@ -1999,85 +1984,62 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
     flex-wrap: wrap;
     align-items: center;
     gap: 1.25rem;
-    margin-top: 0.35rem;
-    margin-bottom: 0.5rem;
+    font-size: 0.88rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 1rem;
 }
 
 .view-hero-meta-item {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.88rem;
-    color: #334155;
-    font-weight: 500;
+    gap: 0.45rem;
 }
 
 .view-hero-meta-item i {
-    color: var(--cv-primary-blue);
+    color: #93C5FD;
     font-size: 0.85rem;
-    width: 15px;
-    text-align: center;
 }
 
 .view-hero-meta-item a {
-    color: inherit;
+    color: #FFFFFF;
     text-decoration: none;
-    transition: color 0.15s ease;
+    font-weight: 600;
 }
 
 .view-hero-meta-item a:hover {
-    color: var(--cv-primary-blue);
+    text-decoration: underline;
 }
 
 .view-hero-quick-actions {
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 0.75rem;
     flex-wrap: wrap;
+    gap: 0.55rem;
 }
 
 .hero-qa-pill {
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;
-    padding: 0.4rem 0.85rem;
+    background: rgba(255, 255, 255, 0.95);
+    color: #1E293B;
+    padding: 6px 14px;
     border-radius: var(--cv-radius-pill);
-    font-size: 0.78rem;
+    font-size: 0.8rem;
     font-weight: 700;
     text-decoration: none;
-    transition: all 0.18s ease;
-    border: 1px solid transparent;
-    -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.hero-qa-pill:active {
-    transform: scale(0.95);
+.hero-qa-pill:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
 }
 
-.hero-qa-pill.qa-call {
-    background: #E8F7F0;
-    color: #16443B;
-    border-color: rgba(23, 107, 91, 0.25);
-}
-
-.hero-qa-pill.qa-wa {
-    background: #DCFCE7;
-    color: #15803D;
-    border-color: #BBF7D0;
-}
-
-.hero-qa-pill.qa-email {
-    background: #F1F5F9;
-    color: #334155;
-    border-color: #E2E8F0;
-}
-
-.hero-qa-pill.qa-book {
-    background: #176B5B;
-    color: #FFFFFF;
-    box-shadow: 0 2px 8px rgba(23, 107, 91, 0.25);
-}
+.hero-qa-pill.qa-call { color: #2563EB; }
+.hero-qa-pill.qa-wa { color: #16A34A; }
+.hero-qa-pill.qa-email { color: #7C3AED; }
+.hero-qa-pill.qa-book { background: #2563EB; color: #FFFFFF; }
 
 /* 3. KPI Cards Grid */
 .view-kpi-grid {
@@ -2101,7 +2063,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 .view-kpi-card:hover {
     transform: translateY(-3px);
     box-shadow: var(--cv-shadow-hover);
-    border-color: rgba(23, 107, 91, 0.25);
+    border-color: #BFDBFE;
 }
 
 .kpi-card-top-row {
@@ -2121,7 +2083,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
     font-size: 1rem;
 }
 
-.kpi-icon-wrap.blue { background: #E8F7F0; color: #176B5B; }
+.kpi-icon-wrap.blue { background: #EFF6FF; color: #2563EB; }
 .kpi-icon-wrap.amber { background: #FEF3C7; color: #D97706; }
 .kpi-icon-wrap.teal { background: #CCFBF1; color: #0D9488; }
 
@@ -2141,8 +2103,8 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
     font-weight: 700;
     padding: 2px 8px;
     border-radius: 9999px;
-    background: #E8F7F0;
-    color: #176B5B;
+    background: #EFF6FF;
+    color: #2563EB;
 }
 
 .kpi-tag-recent.empty {
@@ -2232,9 +2194,9 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 }
 
 .view-nav-pill.active {
-    background: #176B5B;
+    background: #2563EB;
     color: #FFFFFF;
-    box-shadow: 0 4px 12px rgba(23, 107, 91, 0.28);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28);
 }
 
 .pill-count {
@@ -2322,7 +2284,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
     font-size: 0.88rem;
 }
 
-.section-icon-badge.blue { background: #E8F7F0; color: #176B5B; }
+.section-icon-badge.blue { background: #EFF6FF; color: #2563EB; }
 .section-icon-badge.teal { background: #CCFBF1; color: #0D9488; }
 .section-icon-badge.amber { background: #FEF3C7; color: #D97706; }
 .section-icon-badge.purple { background: #F3E8FF; color: #7C3AED; }
@@ -2344,7 +2306,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 .section-header-link-btn {
     font-size: 0.8rem;
     font-weight: 700;
-    color: #176B5B;
+    color: #2563EB;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
@@ -2408,7 +2370,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 }
 
 .view-kv-value a {
-    color: #176B5B;
+    color: #2563EB;
     text-decoration: none;
 }
 
@@ -2459,8 +2421,8 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 }
 
 .doc-code {
-    background: #E8F7F0;
-    color: #16443B;
+    background: #EFF6FF;
+    color: #1E40AF;
     padding: 2px 6px;
     border-radius: 4px;
     font-family: monospace;
@@ -2555,9 +2517,9 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 }
 
 .btn-doc-action.preview:hover {
-    background: #E8F7F0;
+    background: #EFF6FF;
     border-color: #93C5FD;
-    color: #176B5B;
+    color: #2563EB;
 }
 
 .btn-doc-action.download:hover {
@@ -2585,7 +2547,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 }
 
 .doc-empty-state a {
-    color: #176B5B;
+    color: #2563EB;
     font-weight: 700;
     text-decoration: none;
 }
@@ -2623,7 +2585,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 .quick-action-tile:hover {
     background: #FFFFFF;
     border-color: #93C5FD;
-    box-shadow: 0 4px 14px rgba(23, 107, 91, 0.1);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.1);
     transform: translateY(-2px);
 }
 
@@ -2638,7 +2600,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
     margin-bottom: 6px;
 }
 
-.qa-icon-wrap.blue { background: #E8F7F0; color: #176B5B; }
+.qa-icon-wrap.blue { background: #EFF6FF; color: #2563EB; }
 .qa-icon-wrap.whatsapp { background: #DCFCE7; color: #16A34A; }
 .qa-icon-wrap.purple { background: #F3E8FF; color: #7C3AED; }
 .qa-icon-wrap.cyan { background: #E0F2FE; color: #0284C7; }
@@ -2665,19 +2627,19 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: #176B5B;
+    background: #2563EB;
     color: #FFFFFF;
     padding: 6px 14px;
     border-radius: 9999px;
     font-size: 0.8rem;
     font-weight: 700;
     text-decoration: none;
-    box-shadow: 0 2px 8px rgba(23, 107, 91, 0.25);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
     transition: all 0.15s ease;
 }
 
 .btn-primary-compact:hover {
-    background: #16443B;
+    background: #1D4ED8;
     color: #FFFFFF;
 }
 
@@ -2714,8 +2676,8 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 }
 
 .table-code-link code {
-    background: #E8F7F0;
-    color: #16443B;
+    background: #EFF6FF;
+    color: #1E40AF;
     padding: 3px 8px;
     border-radius: 6px;
     font-weight: 700;
@@ -2747,7 +2709,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    color: #176B5B;
+    color: #2563EB;
     font-size: 0.82rem;
     font-weight: 700;
     text-decoration: none;
@@ -2790,7 +2752,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
     font-family: monospace;
     font-size: 0.82rem;
     font-weight: 700;
-    color: #16443B;
+    color: #1E40AF;
 }
 
 .mb-booking-title {
@@ -2820,7 +2782,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 .mb-booking-arrow {
     font-size: 0.78rem;
     font-weight: 700;
-    color: #176B5B;
+    color: #2563EB;
 }
 
 .tab-empty-state {
@@ -2835,8 +2797,8 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
     width: 64px;
     height: 64px;
     border-radius: 50%;
-    background: #E8F7F0;
-    color: #176B5B;
+    background: #EFF6FF;
+    color: #2563EB;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2920,7 +2882,7 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
 
 .toggle-spinner {
     font-size: 10px;
-    color: #176B5B;
+    color: #2563EB;
 }
 
 .cust-status-toggle.sm .toggle-slider-track {
@@ -3030,9 +2992,9 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    background: #E8F7F0;
-    color: #176B5B;
-    border: 1px solid rgba(23, 107, 91, 0.25);
+    background: #EFF6FF;
+    color: #2563EB;
+    border: 1px solid #BFDBFE;
     padding: 6px 12px;
     border-radius: 8px;
     font-size: 0.8rem;
@@ -3359,167 +3321,6 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
     box-shadow: none;
 }
 
-@media (max-width: 640px) {
-    .vg-del-backdrop {
-        padding: 16px !important;
-        background: rgba(15, 23, 42, 0.55) !important;
-        backdrop-filter: blur(10px) !important;
-        -webkit-backdrop-filter: blur(10px) !important;
-    }
-    .vg-del-modal {
-        width: calc(100% - 24px) !important;
-        max-width: 370px !important;
-        margin: 0 auto !important;
-        padding: 24px 20px 20px 20px !important;
-        border-radius: 22px !important;
-        background: linear-gradient(145deg, rgba(255, 255, 255, 0.96) 0%, rgba(240, 247, 255, 0.92) 55%, rgba(224, 242, 254, 0.88) 100%) !important;
-        backdrop-filter: blur(24px) !important;
-        -webkit-backdrop-filter: blur(24px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.85) !important;
-        box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(255, 255, 255, 0.6) inset !important;
-        overflow: hidden !important;
-    }
-    .vg-del-modal::before {
-        content: '' !important;
-        position: absolute !important;
-        bottom: -35px !important;
-        left: -25px !important;
-        width: 220px !important;
-        height: 110px !important;
-        background: radial-gradient(ellipse at center, rgba(186, 230, 253, 0.65) 0%, rgba(219, 234, 254, 0.35) 50%, transparent 75%) !important;
-        border-radius: 50% !important;
-        pointer-events: none !important;
-        z-index: 0 !important;
-    }
-    .vg-del-close-btn {
-        top: 14px !important;
-        right: 14px !important;
-        width: 28px !important;
-        height: 28px !important;
-        font-size: 0.95rem !important;
-        color: #64748B !important;
-    }
-    .vg-del-body {
-        gap: 14px !important;
-        align-items: flex-start !important;
-    }
-    .vg-del-icon-halo {
-        width: 54px !important;
-        height: 54px !important;
-        flex-shrink: 0 !important;
-        background: radial-gradient(circle, rgba(254, 205, 211, 0.95) 0%, rgba(255, 228, 230, 0.55) 60%, rgba(255, 241, 242, 0) 100%) !important;
-        box-shadow: 0 0 20px rgba(244, 63, 94, 0.3) !important;
-    }
-    .vg-del-icon-circle {
-        width: 42px !important;
-        height: 42px !important;
-        font-size: 1.15rem !important;
-        background: linear-gradient(145deg, #FF4D6D 0%, #EF233C 100%) !important;
-        box-shadow: 0 4px 12px rgba(239, 35, 60, 0.35) !important;
-    }
-    .vg-del-icon-halo.warning {
-        background: radial-gradient(circle, rgba(254, 205, 211, 0.9) 0%, rgba(255, 228, 230, 0.5) 60%, rgba(255, 241, 242, 0) 100%) !important;
-        box-shadow: 0 0 22px rgba(244, 63, 94, 0.35) !important;
-    }
-    .vg-del-warning-triangle {
-        width: 42px !important;
-        height: 42px !important;
-        filter: drop-shadow(0 4px 10px rgba(239, 35, 60, 0.4)) !important;
-    }
-    .vg-del-warning-triangle svg {
-        width: 28px !important;
-        height: 28px !important;
-    }
-    .vg-del-title {
-        font-size: 1.25rem !important;
-        font-weight: 700 !important;
-        color: #0F172A !important;
-        margin: 0 0 4px 0 !important;
-        line-height: 1.2 !important;
-    }
-    .vg-del-desc {
-        font-size: 0.85rem !important;
-        color: #475569 !important;
-        line-height: 1.35 !important;
-        margin: 0 !important;
-    }
-    /* Checkbox requirement styled compactly for mobile matching lg device */
-    .vg-del-checkbox-wrap {
-        display: block !important;
-        margin-top: 10px !important;
-        padding: 8px 10px !important;
-        background: rgba(248, 250, 252, 0.9) !important;
-        border: 1px solid #CBD5E1 !important;
-        border-radius: 10px !important;
-        transition: all 0.2s ease !important;
-    }
-    .vg-del-checkbox-wrap:hover {
-        background: #F1F5F9 !important;
-        border-color: #94A3B8 !important;
-    }
-    .vg-del-checkbox-wrap.shake-error {
-        border-color: #EF4444 !important;
-        background: #FEF2F2 !important;
-    }
-    .vg-del-checkbox-label {
-        display: flex !important;
-        align-items: center !important;
-        gap: 8px !important;
-        cursor: pointer !important;
-        margin: 0 !important;
-    }
-    .vg-del-checkbox-box {
-        width: 18px !important;
-        height: 18px !important;
-        border-radius: 5px !important;
-        font-size: 0.68rem !important;
-        flex-shrink: 0 !important;
-    }
-    .vg-del-checkbox-text {
-        font-size: 0.78rem !important;
-        color: #334155 !important;
-        line-height: 1.3 !important;
-        font-weight: 500 !important;
-    }
-    .vg-del-actions {
-        display: flex !important;
-        justify-content: flex-end !important;
-        align-items: center !important;
-        gap: 10px !important;
-        margin-top: 16px !important;
-    }
-    .vg-del-btn-cancel {
-        padding: 7px 20px !important;
-        font-size: 0.88rem !important;
-        border-radius: 9999px !important;
-        background: rgba(255, 255, 255, 0.8) !important;
-        border: 1.5px solid rgba(203, 213, 225, 0.8) !important;
-        color: #334155 !important;
-        font-weight: 600 !important;
-    }
-    .vg-del-btn-delete {
-        padding: 7px 20px !important;
-        font-size: 0.88rem !important;
-        border-radius: 9999px !important;
-        background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%) !important;
-        color: #FFFFFF !important;
-        border: none !important;
-        font-weight: 600 !important;
-        box-shadow: 0 4px 14px rgba(239, 68, 68, 0.45) !important;
-        gap: 6px !important;
-        opacity: 1 !important;
-        cursor: pointer !important;
-    }
-    .vg-del-btn-delete i {
-        font-size: 0.82rem !important;
-    }
-    .vg-del-btn-delete.disabled {
-        opacity: 0.5 !important;
-        cursor: not-allowed !important;
-        box-shadow: none !important;
-    }
-}
-
 /* 10. Responsive Breakpoints */
 @media (max-width: 991px) {
     .view-layout-split {
@@ -3534,37 +3335,21 @@ $statJoiningDate = !empty($employee['joining_date']) ? format_date($employee['jo
     .employee-view-root {
         padding: 0.75rem 0.5rem 2.5rem 0.5rem;
     }
-    .view-hero-card {
-        padding: 1.1rem 1rem;
-        border-radius: 18px;
-        margin-bottom: 0.85rem;
-    }
-    .view-hero-scenery {
-        width: 50%;
-        max-width: 220px;
-        opacity: 0.90;
-        background-position: right center;
-    }
-    .view-hero-overlay {
-        background: linear-gradient(90deg, #FFFFFF 0%, rgba(255, 255, 255, 0.95) 55%, rgba(255, 255, 255, 0.45) 80%, rgba(255, 255, 255, 0.05) 100%);
-    }
     .view-hero-content {
-        gap: 0.85rem;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 1.5rem 1rem;
+        gap: 1rem;
     }
-    .view-avatar-wrap {
-        width: 74px;
-        height: 74px;
+    .view-hero-name-row {
+        justify-content: center;
     }
-    .view-avatar-initials {
-        font-size: 1.75rem;
+    .view-hero-meta-list {
+        justify-content: center;
     }
-    .view-avatar-camera-badge {
-        width: 24px;
-        height: 24px;
-        font-size: 0.65rem;
-    }
-    .view-hero-name {
-        font-size: 1.2rem;
+    .view-hero-quick-actions {
+        justify-content: center;
     }
     .view-kv-grid {
         grid-template-columns: 1fr;

@@ -77,7 +77,7 @@ $res = $router->dispatch($req);
 
 assertCondition($res->getStatusCode() === 200, "GET /office/trips/assign returns HTTP 200 OK");
 $html = $res->getBody();
-assertCondition(strpos($html, 'Assign Trip Duty to Driver') !== false || strpos($html, 'Dispatch & Assign Trip') !== false, "Response body contains page title");
+assertCondition(strpos($html, 'Dispatch & Assign Trip') !== false, "Response body contains page title");
 assertCondition(strpos($html, 'modern-header-centered-card') !== false, "Response body renders modern centered header card");
 assertCondition(strpos($html, 'modern-form-card') !== false, "Response body renders modern form card");
 assertCondition(strpos($html, 'bookingSummaryBox') !== false, "Response body renders bookingSummaryBox");

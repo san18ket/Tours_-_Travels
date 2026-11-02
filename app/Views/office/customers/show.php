@@ -153,6 +153,12 @@ if ($hasRealBookings) {
                     <a href="javascript:void(0)" onclick="window.print()" class="view-dropdown-item">
                         <i class="fa-solid fa-print"></i> Print Profile
                     </a>
+                    <form action="<?= url('/office/customers/' . $customer['id'] . '/resend-welcome') ?>" method="POST" style="margin: 0;" data-no-ajax="true">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="view-dropdown-item" style="background: none; border: none; width: 100%; text-align: left; cursor: pointer; color: inherit; padding: 0.6rem 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fa-solid fa-envelope"></i> Resend Welcome Email
+                        </button>
+                    </form>
                     <div class="view-dropdown-divider"></div>
                     <a href="javascript:void(0)" onclick="openDeleteModal(<?= (int)$customer['id'] ?>, '<?= addslashes(e($customer['name'])) ?>')" class="view-dropdown-item danger">
                         <i class="fa-regular fa-trash-can"></i> Delete Customer

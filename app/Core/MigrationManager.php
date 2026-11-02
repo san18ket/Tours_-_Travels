@@ -7,7 +7,7 @@ use RuntimeException;
 
 class MigrationManager
 {
-    private const LOCK_NAME = 'voyagego_migration_lock';
+    private const LOCK_NAME = 'tours_migration_lock';
     private const LOCK_TIMEOUT = 20;
 
     /**

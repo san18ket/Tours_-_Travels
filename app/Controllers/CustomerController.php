@@ -91,13 +91,10 @@ class CustomerController extends Controller
             $rules = [
                 'title'  => 'required|in:Mr,Mrs,Ms,Dr,Prof',
                 'name'   => 'required|min:2|max:150',
+                'email'  => 'required|email|max:150',
                 'phone'  => 'required|min:8|max:25',
                 'status' => 'required|in:active,inactive',
             ];
-
-            if (!empty($input['email'])) {
-                $rules['email'] = 'email|max:150';
-            }
 
             if (!empty($input['gender'])) {
                 $rules['gender'] = 'in:male,female,non_binary,prefer_not_to_say,other';
@@ -210,7 +207,23 @@ class CustomerController extends Controller
                 ]
             );
 
-            Session::setFlash('success', "Customer profile [{$customerCode}] for {$input['name']} registered successfully!");
+            $emailResult = null;
+            try {
+                $emailService = new \App\Services\EmailService();
+                $fullCust = $this->customerModel->find($customerId);
+                if ($fullCust && !empty($fullCust['email'])) {
+                    $emailResult = $emailService->sendCustomerWelcome($fullCust);
+                }
+            } catch (\Throwable $e) {
+                Logger::warning("Could not dispatch customer welcome email: " . $e->getMessage());
+                $emailResult = ['success' => false, 'error' => $e->getMessage()];
+            }
+
+            if ($emailResult !== null && !$emailResult['success'] && empty($emailResult['duplicate'])) {
+                Session::setFlash('warning', "Customer profile [{$customerCode}] for {$input['name']} registered successfully, but welcome email could not be sent (" . ($emailResult['error'] ?? 'SMTP Error') . "). You can retry anytime from Notification Settings.");
+            } else {
+                Session::setFlash('success', "Customer profile [{$customerCode}] for {$input['name']} registered successfully!");
+            }
             if ($request->isAjax()) {
                 return $this->json([
                     'success'  => true,
@@ -659,5 +672,30 @@ class CustomerController extends Controller
         }
 
         return $savedRelPath;
+    }
+    /**
+     * Re-dispatch customer welcome email without recreating customer
+     */
+    public function resendWelcome(Request $request, int $id): Response
+    {
+        $customer = $this->customerModel->find($id);
+        if (!$customer || empty($customer['email'])) {
+            Session::setFlash('danger', 'Customer or customer email address not found.');
+            return $this->redirect(url('/office/customers/' . $id));
+        }
+
+        try {
+            $emailService = new \App\Services\EmailService();
+            $result = $emailService->sendCustomerWelcome($customer);
+            if (!empty($result['success'])) {
+                Session::setFlash('success', "Welcome email sent successfully to {$customer['email']}!");
+            } else {
+                Session::setFlash('warning', "Welcome email delivery failed: " . ($result['error'] ?? 'SMTP connection error'));
+            }
+        } catch (\Throwable $e) {
+            Session::setFlash('danger', "Failed to dispatch welcome email: " . $e->getMessage());
+        }
+
+        return $this->redirect(url('/office/customers/' . $id));
     }
 }

@@ -1,15 +1,19 @@
 <?php
 /**
  * My Assigned Trips View — Dedicated Driver Portal
- * Executive UI Styled after Owner Dashboard Customer Directory (app/Views/office/customers/index.php)
+ * Executive UI Architecture following Owner Dashboard Customer Directory standard (app/Views/office/customers/index.php)
+ * Aligned with Driver Trip History design tokens and interactive live AJAX filtering engine.
  */
 
-$currStatus = strtolower($status ?? '');
-$totRec     = (int)($total ?? count($trips));
-$currP      = (int)($page ?? 1);
-$pSize      = (int)($perPage ?? 10);
-$from       = $totRec > 0 ? (($currP - 1) * $pSize) + 1 : 0;
-$to         = min($currP * $pSize, $totRec);
+$search         = $search ?? '';
+$status         = $status ?? '';
+$currStatus     = strtolower($status);
+$date           = $date ?? '';
+$totRec         = (int)($total ?? count($trips ?? []));
+$currP          = (int)($page ?? 1);
+$pSize          = (int)($perPage ?? 10);
+$from           = $totRec > 0 ? (($currP - 1) * $pSize) + 1 : 0;
+$to             = min($currP * $pSize, $totRec);
 
 $buildFilterUrl = function(array $overrides = []) use ($search, $status, $date, $pSize) {
     $q = [];
@@ -30,7 +34,7 @@ $buildFilterUrl = function(array $overrides = []) use ($search, $status, $date, 
 ?>
 
 <div class="bookings-page-view">
-    <!-- 1. DESKTOP ONLY: Unified Page Header (Exact Customer Directory Architecture) -->
+    <!-- 1. DESKTOP ONLY: Unified Page Header (Exact Executive Customer Directory Architecture) -->
     <div class="desktop-header-wrapper">
         <?= render_page_header([
             'title'       => __('sidebar.assigned_trips', 'My Assigned Trips'),
@@ -46,8 +50,8 @@ $buildFilterUrl = function(array $overrides = []) use ($search, $status, $date, 
         ]) ?>
     </div>
 
-    <!-- 2. DESKTOP ONLY: Top KPI Summary Cards (Exact Customer Directory Architecture) -->
-    <div class="booking-kpi-grid" id="driverTripsKpiGrid">
+    <!-- 2. DESKTOP ONLY: Top KPI Summary Cards (Exact Driver History Architecture) -->
+    <div class="booking-kpi-grid" id="customersKpiGrid">
         <!-- Card 1: Total Assigned Trips -->
         <div class="booking-kpi-card <?= empty($currStatus) ? 'is-selected' : '' ?>" data-status="" role="button" tabindex="0" title="Click to view all active assignments">
             <div class="booking-kpi-top">
@@ -74,7 +78,7 @@ $buildFilterUrl = function(array $overrides = []) use ($search, $status, $date, 
             <div class="booking-kpi-val" data-count="<?= (int)($totalAssigned ?? 0) ?>"><?= number_format($totalAssigned ?? 0) ?></div>
             <div class="booking-kpi-sub">
                 <span class="pulse-dot"></span>
-                <span>Requires chauffeur confirmation</span>
+                <span>Requires confirmation</span>
                 <span class="kpi-filter-tag"><i class="fa-solid fa-arrow-right"></i></span>
             </div>
         </div>
@@ -89,8 +93,8 @@ $buildFilterUrl = function(array $overrides = []) use ($search, $status, $date, 
             </div>
             <div class="booking-kpi-val" data-count="<?= (int)($totalAccepted ?? 0) ?>"><?= number_format($totalAccepted ?? 0) ?></div>
             <div class="booking-kpi-sub">
-                <span class="pulse-dot" style="background:#10B981;"></span>
-                <span>Staged for passenger pickup</span>
+                <span class="pulse-dot" style="background:#10B981; box-shadow:0 0 0 2px rgba(16,185,129,0.25);"></span>
+                <span>Staged for pickup</span>
                 <span class="kpi-filter-tag"><i class="fa-solid fa-arrow-right"></i></span>
             </div>
         </div>
@@ -111,8 +115,8 @@ $buildFilterUrl = function(array $overrides = []) use ($search, $status, $date, 
         </div>
     </div>
 
-    <!-- 3. DESKTOP ONLY: Compact Filter Bar (Exact Customer Directory Architecture) -->
-    <form method="GET" action="<?= url('/driver/trips') ?>" class="filter-bar-compact" id="driverTripsFilterForm" data-no-ajax="true" onsubmit="event.preventDefault(); return false;">
+    <!-- 3. DESKTOP ONLY: Compact Filter Bar (Exact Architecture from Driver History & Customer Directory) -->
+    <form method="GET" action="<?= url('/driver/trips') ?>" class="filter-bar-compact" id="customerFilterForm" data-no-ajax="true">
         <div class="fbc-search" id="fbcSearchWrapper">
             <i class="fa-solid fa-magnifying-glass fbc-search-icon" id="fbcSearchIcon"></i>
             <input type="text" name="search" id="searchInput" placeholder="Search trips by booking code, passenger, route, vehicle..." value="<?= e($search ?? '') ?>" autocomplete="off">
@@ -128,7 +132,7 @@ $buildFilterUrl = function(array $overrides = []) use ($search, $status, $date, 
             <option value="trip_started" <?= $currStatus === 'trip_started' ? 'selected' : '' ?>>In Transit</option>
         </select>
 
-        <input type="date" name="date" id="dateInput" class="fbc-date" value="<?= e($date ?? '') ?>" title="Filter by Pickup Date">
+        <input type="date" name="date" id="dateInput" class="form-control" value="<?= e($date ?? '') ?>" style="font-size:0.85rem; padding: 0.55rem 0.85rem; border: 1px solid #CBD5E1; border-radius: 8px; color: #1E293B; background: #fff;" title="Filter by Pickup Date">
 
         <select name="per_page" id="perPageInput" title="Records per page">
             <?php foreach ([5, 10, 15, 20, 25, 50, 100] as $opt): ?>
@@ -165,7 +169,7 @@ $buildFilterUrl = function(array $overrides = []) use ($search, $status, $date, 
 
         <!-- Mobile Search Bar & Filter Toggle -->
         <div class="mv-search-bar-wrap">
-            <form method="GET" action="<?= url('/driver/trips') ?>" class="mv-search-form" id="mvSearchForm" data-no-ajax="true" onsubmit="event.preventDefault(); return false;">
+            <form method="GET" action="<?= url('/driver/trips') ?>" class="mv-search-form" id="mvSearchForm" data-no-ajax="true">
                 <div class="mv-search-input-box">
                     <i class="fa-solid fa-magnifying-glass mv-search-ico" id="mvSearchIcon"></i>
                     <input type="text" name="search" id="mvSearchInput" placeholder="Search by code, guest, route..." value="<?= e($search ?? '') ?>" autocomplete="off">
@@ -180,13 +184,13 @@ $buildFilterUrl = function(array $overrides = []) use ($search, $status, $date, 
 
             <!-- Collapsible Mobile Filter Panel -->
             <div class="mv-filter-panel" id="mvFilterPanel" style="display: none;">
-                <div class="mv-filter-row" style="margin-bottom: 0.65rem;">
-                    <label for="mvDateInput">Date:</label>
-                    <input type="date" name="date" id="mvDateInput" value="<?= e($date ?? '') ?>">
+                <div class="mv-filter-row" style="margin-bottom: 0.75rem;">
+                    <label for="mvDateInput" style="font-weight: 600; font-size: 0.82rem; color: #475569;">Date:</label>
+                    <input type="date" name="date" id="mvDateInput" class="form-control" value="<?= e($date ?? '') ?>" style="font-size: 0.85rem; padding: 0.4rem 0.65rem;">
                 </div>
                 <div class="mv-filter-row">
-                    <label for="mvPerPageSelect">Per Page:</label>
-                    <select name="per_page" id="mvPerPageSelect">
+                    <label for="mvPerPageSelect" style="font-weight: 600; font-size: 0.82rem; color: #475569;">Per Page:</label>
+                    <select name="per_page" id="mvPerPageSelect" style="font-size: 0.85rem; padding: 0.4rem 0.65rem; border: 1px solid #CBD5E1; border-radius: 6px;">
                         <?php foreach ([10, 20, 30, 50] as $opt): ?>
                             <option value="<?= $opt ?>" <?= $pSize == $opt ? 'selected' : '' ?>><?= $opt ?> per page</option>
                         <?php endforeach; ?>
@@ -206,7 +210,7 @@ $buildFilterUrl = function(array $overrides = []) use ($search, $status, $date, 
                 return url('/driver/trips' . (!empty($p) ? '?' . http_build_query($p) : ''));
             };
         ?>
-        <div class="mv-status-scroll" id="driverTripsMvStatusScroll">
+        <div class="mv-status-scroll" id="customersMvStatusScroll">
             <a href="<?= $makeStatusUrl('') ?>" class="mv-pill <?= empty($currStatus) ? 'active' : '' ?>" data-status="" data-no-ajax="true">
                 <span>All Active</span>
                 <span class="mv-pill-cnt"><?= (int)($totalAll ?? $totRec) ?></span>
@@ -280,6 +284,7 @@ $buildFilterUrl = function(array $overrides = []) use ($search, $status, $date, 
                                 default           => ucfirst(str_replace('_', ' ', $st))
                             };
                             $initial = strtoupper(mb_substr($t['customer_name'] ?? 'G', 0, 1));
+                            $avatarUrl = customer_avatar_url($t['customer_avatar'] ?? null);
                         ?>
                         <tr>
                             <!-- 1. Serial Number (#) -->
@@ -290,7 +295,12 @@ $buildFilterUrl = function(array $overrides = []) use ($search, $status, $date, 
                             <!-- 2. Profile Image / Monogram -->
                             <td class="text-center">
                                 <div class="cust-table-avatar-wrap">
-                                    <div class="cust-table-monogram"><?= e($initial) ?></div>
+                                    <?php if (!empty($avatarUrl)): ?>
+                                        <img src="<?= e($avatarUrl) ?>" alt="<?= e($t['customer_name'] ?? 'Guest') ?>" class="cust-table-avatar-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="cust-table-monogram" style="display: none;"><?= e($initial) ?></div>
+                                    <?php else: ?>
+                                        <div class="cust-table-monogram"><?= e($initial) ?></div>
+                                    <?php endif; ?>
                                 </div>
                             </td>
 
@@ -416,14 +426,18 @@ $buildFilterUrl = function(array $overrides = []) use ($search, $status, $date, 
                         default           => ucfirst(str_replace('_', ' ', $st))
                     };
                     $initial = strtoupper(mb_substr($t['customer_name'] ?? 'G', 0, 1));
+                    $avatarUrl = customer_avatar_url($t['customer_avatar'] ?? null);
                 ?>
                 <div class="mv-booking-card-wrapper">
                     <a href="<?= url('/driver/trips/' . $t['id']) ?>" class="mv-booking-card">
                         <!-- Left: Avatar Monogram -->
                         <div class="mv-thumb-wrap">
-                            <div class="mv-thumb-avatar">
-                                <?= e($initial) ?>
-                            </div>
+                            <?php if (!empty($avatarUrl)): ?>
+                                <img src="<?= e($avatarUrl) ?>" alt="<?= e($t['customer_name'] ?? 'Guest') ?>" class="mv-thumb-avatar-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="mv-thumb-avatar" style="display: none;"><?= e($initial) ?></div>
+                            <?php else: ?>
+                                <div class="mv-thumb-avatar"><?= e($initial) ?></div>
+                            <?php endif; ?>
                         </div>
 
                         <!-- Middle: Details -->
@@ -493,7 +507,7 @@ $buildFilterUrl = function(array $overrides = []) use ($search, $status, $date, 
         </div>
     </section>
 
-    <!-- Modern Pagination (Exact Customer Directory Architecture) -->
+    <!-- Modern Pagination (Exact Customer Directory & Driver History Architecture) -->
     <?php
         $buildPageUrl = function(int $p) use ($search, $status, $date, $pSize) {
             $q = [];
@@ -534,7 +548,7 @@ $buildFilterUrl = function(array $overrides = []) use ($search, $status, $date, 
 
 <script>
     /* ========================================================================= */
-    /* Complete Live AJAX Filter Engine (Without Page Reload)                     */
+    /* Complete Driver Trips Live AJAX Filter Engine (Without Page Reload)       */
     /* ========================================================================= */
     (function initDriverTripsAjaxFilter() {
         let abortCtrl = null;
@@ -619,17 +633,17 @@ $buildFilterUrl = function(array $overrides = []) use ($search, $status, $date, 
                     currPagination.innerHTML = newPagination.innerHTML;
                 }
 
-                // 3. Update Top KPI Summary Grid
-                const newKpi = doc.getElementById('driverTripsKpiGrid');
-                const currKpi = document.getElementById('driverTripsKpiGrid');
+                // 3. Update Top KPI Summary Grid (Supports both customersKpiGrid and driverTripsKpiGrid)
+                const newKpi = doc.getElementById('customersKpiGrid') || doc.getElementById('driverTripsKpiGrid');
+                const currKpi = document.getElementById('customersKpiGrid') || document.getElementById('driverTripsKpiGrid');
                 if (newKpi && currKpi) {
                     currKpi.innerHTML = newKpi.innerHTML;
                     animateKpiNumbers(currKpi);
                 }
 
                 // 4. Update Mobile Status Scroll Pills
-                const newMvPills = doc.getElementById('driverTripsMvStatusScroll');
-                const currMvPills = document.getElementById('driverTripsMvStatusScroll');
+                const newMvPills = doc.getElementById('customersMvStatusScroll') || doc.getElementById('driverTripsMvStatusScroll');
+                const currMvPills = document.getElementById('customersMvStatusScroll') || document.getElementById('driverTripsMvStatusScroll');
                 if (newMvPills && currMvPills) {
                     currMvPills.innerHTML = newMvPills.innerHTML;
                 }
@@ -662,7 +676,7 @@ $buildFilterUrl = function(array $overrides = []) use ($search, $status, $date, 
             const vals = container.querySelectorAll('.booking-kpi-val[data-count]');
             vals.forEach(el => {
                 const target = parseInt(el.getAttribute('data-count'), 10) || 0;
-                const duration = 300;
+                const duration = 250;
                 const startTime = performance.now();
                 function step(now) {
                     const progress = Math.min((now - startTime) / duration, 1);
@@ -704,27 +718,42 @@ $buildFilterUrl = function(array $overrides = []) use ($search, $status, $date, 
             mvSearchInput.addEventListener('input', (e) => handleSearchInput(e.target.value));
         }
 
-        // Search Clear buttons
-        document.addEventListener('click', function(e) {
-            if (e.target.closest('#searchClearBtn') || e.target.closest('#mvSearchClearBtn')) {
-                if (searchInput) searchInput.value = '';
-                if (mvSearchInput) mvSearchInput.value = '';
-                const searchClearBtn = document.getElementById('searchClearBtn');
-                const mvSearchClearBtn = document.getElementById('mvSearchClearBtn');
-                if (searchClearBtn) searchClearBtn.style.display = 'none';
-                if (mvSearchClearBtn) mvSearchClearBtn.style.display = 'none';
+        // Form Submit listener (prevent full reload when pressing Enter in search field)
+        const filterForm = document.getElementById('customerFilterForm');
+        if (filterForm) {
+            filterForm.addEventListener('submit', function(e) {
+                e.preventDefault();
                 filterTripsAjax(1);
-            }
-        });
+            });
+        }
+        const mvForm = document.getElementById('mvSearchForm');
+        if (mvForm) {
+            mvForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                filterTripsAjax(1);
+            });
+        }
 
         // Dropdown changes
         const statusInput = document.getElementById('statusInput');
         const dateInput = document.getElementById('dateInput');
+        const mvDateInput = document.getElementById('mvDateInput');
         const perPageInput = document.getElementById('perPageInput');
         const mvPerPageSelect = document.getElementById('mvPerPageSelect');
 
         if (statusInput) statusInput.addEventListener('change', () => filterTripsAjax(1));
-        if (dateInput) dateInput.addEventListener('change', () => filterTripsAjax(1));
+        if (dateInput) {
+            dateInput.addEventListener('change', () => {
+                if (mvDateInput) mvDateInput.value = dateInput.value;
+                filterTripsAjax(1);
+            });
+        }
+        if (mvDateInput) {
+            mvDateInput.addEventListener('change', () => {
+                if (dateInput) dateInput.value = mvDateInput.value;
+                filterTripsAjax(1);
+            });
+        }
         if (perPageInput) {
             perPageInput.addEventListener('change', () => {
                 if (mvPerPageSelect) mvPerPageSelect.value = perPageInput.value;
@@ -755,56 +784,69 @@ $buildFilterUrl = function(array $overrides = []) use ($search, $status, $date, 
                 if (mvSearchInput) mvSearchInput.value = '';
                 if (statusInput) statusInput.value = '';
                 if (dateInput) dateInput.value = '';
+                if (mvDateInput) mvDateInput.value = '';
                 if (perPageInput) perPageInput.value = '10';
                 if (mvPerPageSelect) mvPerPageSelect.value = '10';
                 filterTripsAjax(1);
             });
         }
 
-        // KPI Card click delegation
+        // Global Event Delegation for Dynamic Elements (KPI Cards, Status Pills, Pagination, Clear Button)
         document.addEventListener('click', function(e) {
+            // 1. KPI Card Click
             const card = e.target.closest('.booking-kpi-card');
-            if (card && card.closest('#driverTripsKpiGrid')) {
+            if (card && card.closest('#customersKpiGrid, #driverTripsKpiGrid')) {
+                e.preventDefault();
                 const targetStatus = card.getAttribute('data-status') ?? '';
                 if (statusInput) statusInput.value = targetStatus;
                 filterTripsAjax(1);
+                return;
             }
-        });
 
-        // Mobile Status Pills click delegation
-        document.addEventListener('click', function(e) {
+            // 2. Mobile Status Pills
             const pill = e.target.closest('.mv-pill');
-            if (pill && pill.closest('#driverTripsMvStatusScroll')) {
+            if (pill && pill.closest('#customersMvStatusScroll, #driverTripsMvStatusScroll')) {
                 e.preventDefault();
                 const targetStatus = pill.getAttribute('data-status') ?? '';
                 if (statusInput) statusInput.value = targetStatus;
                 filterTripsAjax(1);
+                return;
             }
-        });
 
-        // Pagination delegation
-        document.addEventListener('click', function(e) {
+            // 3. Clear Filters Button
+            const clearBtn = e.target.closest('#filterClearBtn, #searchClearBtn, #mvSearchClearBtn');
+            if (clearBtn) {
+                e.preventDefault();
+                if (clearBtn.id === 'searchClearBtn' || clearBtn.id === 'mvSearchClearBtn') {
+                    if (searchInput) searchInput.value = '';
+                    if (mvSearchInput) mvSearchInput.value = '';
+                } else {
+                    if (searchInput) searchInput.value = '';
+                    if (mvSearchInput) mvSearchInput.value = '';
+                    if (statusInput) statusInput.value = '';
+                    if (dateInput) dateInput.value = '';
+                    if (mvDateInput) mvDateInput.value = '';
+                    if (perPageInput) perPageInput.value = '10';
+                    if (mvPerPageSelect) mvPerPageSelect.value = '10';
+                }
+                filterTripsAjax(1);
+                return;
+            }
+
+            // 4. Pagination Links
             const pageLink = e.target.closest('#tripsPaginationWrapper .pagination a[data-page]');
-            if (pageLink && !pageLink.classList.contains('disabled')) {
+            if (pageLink && !pageLink.classList.contains('disabled') && !pageLink.classList.contains('active')) {
                 e.preventDefault();
                 const p = parseInt(pageLink.getAttribute('data-page'), 10) || 1;
                 filterTripsAjax(p);
                 const section = document.getElementById('tripsSection');
                 if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                return;
             }
         });
 
-        // Clear Filters button delegation
-        document.addEventListener('click', function(e) {
-            if (e.target.closest('#filterClearBtn')) {
-                e.preventDefault();
-                if (searchInput) searchInput.value = '';
-                if (mvSearchInput) mvSearchInput.value = '';
-                if (statusInput) statusInput.value = '';
-                if (dateInput) dateInput.value = '';
-                filterTripsAjax(1);
-            }
-        });
+        // Initialize animated numbers on load
+        animateKpiNumbers(document.getElementById('customersKpiGrid') || document.getElementById('driverTripsKpiGrid'));
     })();
 
     /* ========================================================================= */
@@ -813,17 +855,27 @@ $buildFilterUrl = function(array $overrides = []) use ($search, $status, $date, 
     function toggleActions(btn, e) {
         e.stopPropagation();
         const popup = btn.nextElementSibling;
-        const isOpen = popup.classList.contains('open');
-        document.querySelectorAll('.action-btns-popup.open, .card-btns-popup.open').forEach(p => p.classList.remove('open'));
-        if (!isOpen) popup.classList.add('open');
+        if (!popup) return;
+        const isOpen = popup.classList.contains('open') || popup.classList.contains('show');
+        document.querySelectorAll('.action-btns-popup.open, .action-btns-popup.show, .card-btns-popup.open, .card-btns-popup.show').forEach(p => {
+            p.classList.remove('open', 'show');
+        });
+        if (!isOpen) {
+            popup.classList.add('open', 'show');
+        }
     }
 
     function toggleCardActions(btn, e) {
         e.stopPropagation();
         const popup = btn.nextElementSibling;
-        const isOpen = popup.classList.contains('open');
-        document.querySelectorAll('.action-btns-popup.open, .card-btns-popup.open').forEach(p => p.classList.remove('open'));
-        if (!isOpen) popup.classList.add('open');
+        if (!popup) return;
+        const isOpen = popup.classList.contains('open') || popup.classList.contains('show');
+        document.querySelectorAll('.action-btns-popup.open, .action-btns-popup.show, .card-btns-popup.open, .card-btns-popup.show').forEach(p => {
+            p.classList.remove('open', 'show');
+        });
+        if (!isOpen) {
+            popup.classList.add('open', 'show');
+        }
     }
 
     function toggleMobileFilter() {
@@ -836,18 +888,20 @@ $buildFilterUrl = function(array $overrides = []) use ($search, $status, $date, 
         }
     }
 
+    // Close action popups when clicking outside
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.table-action-buttons') && !e.target.closest('.mv-card-actions')) {
-            document.querySelectorAll('.action-btns-popup.open, .card-btns-popup.open').forEach(p => p.classList.remove('open'));
+            document.querySelectorAll('.action-btns-popup.open, .action-btns-popup.show, .card-btns-popup.open, .card-btns-popup.show').forEach(p => {
+                p.classList.remove('open', 'show');
+            });
         }
     });
 </script>
 
 <style>
 /* ========================================================================= */
-/* Executive Chauffeur Trips UI & Layout Styles (Matching Driver History)   */
+/* Layout & Page Container                                                   */
 /* ========================================================================= */
-
 .bookings-page-view {
     padding: 1.5rem;
     max-width: 1600px;
@@ -855,7 +909,284 @@ $buildFilterUrl = function(array $overrides = []) use ($search, $status, $date, 
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
-/* 1. Sleek AJAX Filtering Animations & Loading State */
+/* ========================================================================= */
+/* Sleek AJAX Filtering Animations & Loading State                           */
+/* ========================================================================= */
+.recent-bookings-section {
+    position: relative;
+    transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), filter 0.22s ease;
+}
+
+.recent-bookings-section.is-filtering {
+    opacity: 0.45;
+    pointer-events: none;
+    filter: grayscale(0.2);
+}
+
+/* ========================================================================= */
+/* Interactive Executive Top KPI Cards (Exact Driver History Architecture)   */
+/* ========================================================================= */
+.booking-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.booking-kpi-card {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid #E2E8F0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.booking-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    border-color: #CBD5E1;
+}
+
+.booking-kpi-card:active {
+    transform: scale(0.985);
+}
+
+.booking-kpi-card.is-selected {
+    border-color: #0EA5E9;
+    box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.15);
+}
+
+.booking-kpi-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.booking-kpi-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #64748B;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.booking-kpi-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-teal { background: #ECFDF5; color: #059669; }
+.icon-emerald { background: #E0F2FE; color: #0284C7; }
+.icon-amber { background: #FEF3C7; color: #D97706; }
+.icon-navy { background: #F1F5F9; color: #475569; }
+
+.booking-kpi-val {
+    font-size: 1.85rem;
+    font-weight: 800;
+    color: #0F172A;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+}
+
+.booking-kpi-sub {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: #64748B;
+}
+
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    background: #F59E0B;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
+}
+
+.booking-kpi-card .kpi-filter-tag {
+    margin-left: auto;
+    font-size: 11px;
+    color: #94A3B8;
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+}
+
+.booking-kpi-card:hover .kpi-filter-tag,
+.booking-kpi-card.is-selected .kpi-filter-tag {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Card Selected Gradients */
+.booking-kpi-card[data-status=""].is-selected {
+    border-color: #0D9488;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.16), 0 8px 18px rgba(13, 148, 136, 0.08);
+    background: linear-gradient(180deg, #FFFFFF 0%, #F0FDFA 100%);
+}
+.booking-kpi-card[data-status=""].is-selected .kpi-filter-tag { color: #0D9488; }
+
+.booking-kpi-card[data-status="assigned"].is-selected {
+    border-color: #F59E0B;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.16), 0 8px 18px rgba(245, 158, 11, 0.08);
+    background: linear-gradient(180deg, #FFFFFF 0%, #FFFBEB 100%);
+}
+.booking-kpi-card[data-status="assigned"].is-selected .kpi-filter-tag { color: #F59E0B; }
+
+.booking-kpi-card[data-status="driver_accepted"].is-selected {
+    border-color: #10B981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.16), 0 8px 18px rgba(16, 185, 129, 0.08);
+    background: linear-gradient(180deg, #FFFFFF 0%, #ECFDF5 100%);
+}
+.booking-kpi-card[data-status="driver_accepted"].is-selected .kpi-filter-tag { color: #10B981; }
+
+.booking-kpi-card[data-status="trip_started"].is-selected {
+    border-color: #0284C7;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.16), 0 8px 18px rgba(2, 132, 199, 0.08);
+    background: linear-gradient(180deg, #FFFFFF 0%, #F0F9FF 100%);
+}
+.booking-kpi-card[data-status="trip_started"].is-selected .kpi-filter-tag { color: #0284C7; }
+
+/* ========================================================================= */
+/* Compact Filter Bar (Exact Customer Directory & Driver History Architecture)*/
+/* ========================================================================= */
+.filter-bar-compact {
+    display: flex;
+    align-items: center;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 0.75rem 1.25rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #E2E8F0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.fbc-search {
+    position: relative;
+    flex: 1;
+    min-width: 260px;
+    display: flex;
+    align-items: center;
+}
+
+.fbc-search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94A3B8;
+    font-size: 0.9rem;
+}
+
+.fbc-search input {
+    width: 100%;
+    padding: 0.55rem 2.25rem 0.55rem 2.25rem;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    outline: none;
+    color: #1E293B;
+    transition: all 0.15s ease;
+}
+
+.fbc-search input:focus {
+    border-color: #0EA5E9;
+    box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.15);
+}
+
+.fbc-search-clear {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #94A3B8;
+    cursor: pointer;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+}
+
+.filter-bar-compact select {
+    padding: 0.55rem 1rem;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    color: #1E293B;
+    background-color: #fff;
+    cursor: pointer;
+    outline: none;
+}
+
+.filter-bar-compact select:focus {
+    border-color: #0EA5E9;
+}
+
+.fbc-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.fbc-btn {
+    padding: 0.55rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #CBD5E1;
+    background: #F8FAFC;
+    color: #334155;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+}
+
+.fbc-btn:hover {
+    background: #F1F5F9;
+    border-color: #94A3B8;
+}
+
+.fbc-btn-clear {
+    background: #FEE2E2;
+    color: #DC2626;
+    border-color: #FECACA;
+}
+
+.fbc-btn-clear:hover {
+    background: #FCA5A5;
+    border-color: #F87171;
+}
+
+/* ========================================================================= */
+/* Modern Table Container & Emerald Forest Gradient Header (100% VISIBLE)    */
+/* ========================================================================= */
 .recent-bookings-section {
     background: #ffffff;
     border-radius: 14px;
@@ -864,13 +1195,6 @@ $buildFilterUrl = function(array $overrides = []) use ($search, $status, $date, 
     overflow: hidden;
     margin-bottom: 1.5rem;
     position: relative;
-    transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), filter 0.22s ease;
-}
-
-.recent-bookings-section.is-filtering {
-    opacity: 0.42;
-    pointer-events: none;
-    filter: grayscale(0.2);
 }
 
 .section-header {
@@ -905,221 +1229,210 @@ $buildFilterUrl = function(array $overrides = []) use ($search, $status, $date, 
     font-size: 0.8rem;
 }
 
-/* 2. Top KPI Summary Cards (Exact Match to Driver History Grid) */
-.booking-kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1.25rem;
-    margin-bottom: 1.5rem;
+.modern-table-container {
+    overflow-x: auto;
 }
 
-.booking-kpi-card {
-    background: #ffffff;
-    border-radius: 14px;
-    padding: 1.25rem 1.5rem;
-    border: 1px solid #E2E8F0;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+.modern-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+    text-align: left;
 }
 
-.booking-kpi-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-    border-color: #CBD5E1;
+/* Emerald Forest Table Header: Guarantees 100% Crisp White Legibility */
+.modern-table thead {
+    background: linear-gradient(135deg, #176B5B, #16443B) !important;
 }
 
-.booking-kpi-card.is-selected {
-    border-color: #0EA5E9;
-    box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.15);
+.modern-table thead th,
+.modern-table th {
+    background: transparent !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    padding: 0.95rem 1rem !important;
+    font-size: 0.78rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.04em !important;
+    border: none !important;
+    white-space: nowrap !important;
+    vertical-align: middle !important;
 }
 
-.booking-kpi-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0.75rem;
+.modern-table tbody td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid #F1F5F9;
+    color: #334155;
+    vertical-align: middle;
 }
 
-.booking-kpi-label {
-    font-size: 0.82rem;
+.modern-table tbody tr:hover {
+    background: #F8FAFC;
+}
+
+/* ========================================================================= */
+/* Table Cell Components (Exact Customer Directory Match)                    */
+/* ========================================================================= */
+.cust-serial-num {
     font-weight: 700;
     color: #64748B;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-}
-
-.booking-kpi-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.icon-teal    { background: #ECFDF5; color: #059669; }
-.icon-emerald { background: #E0F2FE; color: #0284C7; }
-.icon-amber   { background: #FEF3C7; color: #D97706; }
-.icon-navy    { background: #F1F5F9; color: #475569; }
-
-.booking-kpi-val {
-    font-size: 1.85rem;
-    font-weight: 800;
-    color: #0F172A;
-    line-height: 1.2;
-    margin-bottom: 0.5rem;
-}
-
-.booking-kpi-sub {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 0.8rem;
-    color: #64748B;
-}
-
-.pulse-dot {
-    width: 8px;
-    height: 8px;
-    background: #10B981;
-    border-radius: 50%;
-    display: inline-block;
-    margin-right: 6px;
-    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-}
-
-.kpi-filter-tag {
-    color: #94A3B8;
-    font-size: 0.75rem;
-}
-
-/* 3. Compact Filter Bar (Exact Match to Driver History Architecture) */
-.filter-bar-compact {
-    display: flex;
-    align-items: center;
-    background: #ffffff;
-    border-radius: 12px;
-    padding: 0.75rem 1.25rem;
-    margin-bottom: 1.5rem;
-    border: 1px solid #E2E8F0;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-    gap: 0.75rem;
-    flex-wrap: wrap;
-}
-
-.fbc-search {
-    position: relative;
-    flex: 1;
-    min-width: 260px;
-}
-
-.fbc-search-icon {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #94A3B8;
-    font-size: 0.9rem;
-}
-
-.fbc-search input {
-    width: 100%;
-    padding: 0.55rem 2.25rem 0.55rem 2.25rem;
-    border: 1px solid #CBD5E1;
-    border-radius: 8px;
-    font-size: 0.88rem;
-    outline: none;
-    color: #1E293B;
-    transition: all 0.15s ease;
-    box-sizing: border-box;
-}
-
-.fbc-search input:focus {
-    border-color: #0EA5E9;
-    box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.15);
-}
-
-.fbc-search-clear {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: transparent;
-    border: none;
-    color: #94A3B8;
-    cursor: pointer;
     font-size: 0.85rem;
 }
 
-.filter-bar-compact select,
-.filter-bar-compact .fbc-date {
-    padding: 0.55rem 1rem;
-    border: 1px solid #CBD5E1;
-    border-radius: 8px;
-    font-size: 0.88rem;
-    color: #1E293B;
-    background-color: #fff;
-    cursor: pointer;
-    outline: none;
-    height: 38px;
-    box-sizing: border-box;
-    transition: all 0.15s ease;
+.cust-table-avatar-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 42px;
+    height: 42px;
 }
 
-.filter-bar-compact select:focus,
-.filter-bar-compact .fbc-date:focus {
-    border-color: #0EA5E9;
-    box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.15);
+.cust-table-avatar-img {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #176B5B;
+    box-shadow: 0 2px 8px rgba(23, 107, 91, 0.18);
+    background: #E8F4F0;
 }
 
-.fbc-actions {
+.cust-table-monogram {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #176B5B 0%, #0F493E 100%);
+    color: #FFFFFF;
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 8px rgba(23, 107, 91, 0.25);
+    text-transform: uppercase;
+}
+
+.cust-client-details-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.cust-name-row {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
-.fbc-btn {
-    padding: 0.55rem 1rem;
-    border-radius: 8px;
-    border: 1px solid #CBD5E1;
-    background: #F8FAFC;
-    color: #334155;
-    font-size: 0.88rem;
-    font-weight: 600;
-    cursor: pointer;
+.cust-full-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #0C2B52;
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+.cust-full-name:hover {
+    color: #176B5B;
+    text-decoration: underline;
+}
+
+.cust-code-pill {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    transition: all 0.15s ease;
-    height: 38px;
-    box-sizing: border-box;
+    background: #E8F4F0;
+    color: #176B5B;
+    border: 1px solid #B2D8CF;
+    border-radius: 6px;
+    padding: 1px 7px;
+    font-family: monospace;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
 }
 
-.fbc-btn:hover {
-    background: #F1F5F9;
-    border-color: #94A3B8;
+.cust-email-row {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.82rem;
+    color: #64748B;
 }
 
-.fbc-btn-clear {
-    background: #FEE2E2;
-    color: #DC2626;
-    border-color: #FECACA;
+.cust-email-icon {
+    font-size: 0.78rem;
+    color: #94A3B8;
 }
 
-.fbc-btn-clear:hover {
-    background: #FCA5A5;
-    border-color: #F87171;
+.cust-phone-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
 }
 
-.fbc-actions-end {
-    margin-left: auto;
+.cust-primary-phone {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #0F172A;
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+.cust-primary-phone:hover {
+    color: #176B5B;
 }
 
-/* 4. Table Elements & Status Pills */
+.cust-phone-icon {
+    font-size: 0.76rem;
+    color: #176B5B;
+}
+
+.cust-bookings-cell {
+    display: flex;
+    flex-direction: column;
+}
+
+.cust-bookings-lbl {
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: #64748B;
+}
+
+.cust-address-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+    color: #334155;
+    max-width: 280px;
+}
+
+.cust-address-line {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    font-weight: 600;
+    color: #0F172A;
+    line-height: 1.35;
+    white-space: normal;
+    word-break: break-word;
+}
+
+.cust-address-sub {
+    font-size: 0.78rem;
+    color: #64748B;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    line-height: 1.3;
+}
+
+/* Status Pills with Glowing Pulse Dots */
 .cust-toggle-pill {
     display: inline-flex;
     align-items: center;
@@ -1177,517 +1490,474 @@ $buildFilterUrl = function(array $overrides = []) use ($search, $status, $date, 
     background: #94A3B8;
 }
 
-.modern-table-container {
-    overflow-x: auto;
-}
-
-.modern-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.88rem;
-    text-align: left;
-}
-
-.modern-table thead th {
-    background: #F8FAFC;
-    color: #475569;
-    font-weight: 700;
-    padding: 0.85rem 1rem;
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    border-bottom: 1px solid #E2E8F0;
-}
-
-.modern-table tbody td {
-    padding: 0.85rem 1rem;
-    border-bottom: 1px solid #F1F5F9;
-    color: #334155;
-    vertical-align: middle;
-}
-
-.modern-table tbody tr:hover {
-    background: #F8FAFC;
-}
-
-.cust-serial-num {
-    font-weight: 700;
-    color: #64748B;
-    font-size: 0.88rem;
-    padding: 3px 6px;
-}
-
-.cust-table-avatar-wrap {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+/* ========================================================================= */
+/* 3-Dots Action Popups & Buttons                                            */
+/* ========================================================================= */
+.table-action-buttons {
     position: relative;
-    width: 44px;
-    height: 44px;
-}
-
-.cust-table-avatar-img {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid #176B5B;
-    box-shadow: 0 2px 8px rgba(23, 107, 91, 0.18);
-    background: #E8F4F0;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.cust-table-monogram {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #176B5B 0%, #0F493E 100%);
-    color: #FFFFFF;
-    font-size: 1rem;
-    font-weight: 800;
-    letter-spacing: 0.02em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid rgba(255, 255, 255, 0.9);
-    box-shadow: 0 2px 8px rgba(23, 107, 91, 0.25);
-    text-transform: uppercase;
-}
-
-.cust-client-details-cell {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.cust-name-row {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-.cust-full-name {
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: #0C2B52;
-    text-decoration: none;
-    transition: color 0.15s ease;
-}
-
-.cust-full-name:hover {
-    color: #176B5B;
-    text-decoration: underline;
-}
-
-.cust-code-pill {
     display: inline-flex;
     align-items: center;
-    background: #E8F4F0;
-    color: #176B5B;
-    border: 1px solid #B2D8CF;
+    justify-content: center;
+}
+
+.action-toggle-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid #CBD5E1;
+    background: #fff;
+    color: #475569;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.action-toggle-btn:hover {
+    background: #F1F5F9;
+    color: #0F172A;
+    border-color: #94A3B8;
+}
+
+.action-btns-popup {
+    position: absolute;
+    top: 50%;
+    right: calc(100% + 8px);
+    transform: translateY(-50%) scale(0.85);
+    background: #fff;
+    border: 1px solid #CBD5E1;
+    border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
+    padding: 6px 8px;
+    display: none;
+    gap: 6px;
+    align-items: center;
+    z-index: 100;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.action-btns-popup.open,
+.action-btns-popup.show {
+    display: flex !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    transform: translateY(-50%) scale(1) !important;
+}
+
+.action-btn-table {
+    width: 30px;
+    height: 30px;
     border-radius: 6px;
-    padding: 1px 7px;
-    font-family: monospace;
-    font-size: 0.74rem;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-}
-
-.cust-phone-cell {
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-}
-
-.cust-primary-phone {
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
+    justify-content: center;
+    text-decoration: none;
+    font-size: 0.82rem;
+    transition: all 0.15s ease;
+}
+
+.action-btn-table.view { background: #E0F2FE; color: #0284C7; }
+.action-btn-table.view:hover { background: #BAE6FD; }
+
+.action-btn-table.dispatch { background: #DCFCE7; color: #16A34A; }
+.action-btn-table.dispatch:hover { background: #BBF7D0; }
+
+.action-btn-table.edit { background: #FEF3C7; color: #D97706; }
+.action-btn-table.edit:hover { background: #FDE68A; }
+
+/* Empty state message */
+.no-data-message {
+    padding: 3rem 1.5rem;
+    text-align: center;
+}
+
+.no-data-icon {
+    font-size: 2.5rem;
+    color: #94A3B8;
+    margin-bottom: 0.75rem;
+}
+
+/* ========================================================================= */
+/* Pagination Architecture (Exact Customer Directory & History Match)        */
+/* ========================================================================= */
+.pagination-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    border-top: 1px solid #E2E8F0;
+    background: #fff;
+    border-radius: 0 0 14px 14px;
+    margin-bottom: 2rem;
+}
+
+.pagination-info {
     font-size: 0.88rem;
+    color: #64748B;
+}
+
+.pagination-info span {
     font-weight: 700;
     color: #0F172A;
-    text-decoration: none;
-    transition: color 0.15s ease;
 }
 
-.cust-primary-phone:hover {
-    color: #176B5B;
-}
-
-.cust-phone-icon {
-    font-size: 0.76rem;
-    color: #176B5B;
-}
-
-.cust-bookings-cell {
+.pagination {
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.pagination a {
+    min-width: 34px;
+    height: 34px;
+    padding: 0 8px;
+    border-radius: 8px;
+    border: 1px solid #E2E8F0;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-}
-
-.cust-bookings-lbl {
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: #64748B;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-}
-
-.cust-address-cell {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
     font-size: 0.85rem;
-    color: #334155;
-    max-width: 280px;
-}
-
-.cust-address-line {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.4rem;
     font-weight: 600;
-    color: #0F172A;
-    line-height: 1.35;
-    white-space: normal;
-    word-break: break-word;
+    color: #334155;
+    text-decoration: none;
+    transition: all 0.15s ease;
 }
 
-.cust-address-sub {
-    font-size: 0.78rem;
-    color: #64748B;
+.pagination a:hover:not(.disabled):not(.active) {
+    background: #F1F5F9;
+    border-color: #CBD5E1;
+}
+
+.pagination a.active {
+    background: #0F172A;
+    color: #fff;
+    border-color: #0F172A;
+}
+
+.pagination a.disabled {
+    color: #CBD5E1;
+    cursor: not-allowed;
+    border-color: #E2E8F0;
+}
+
+.pagination .dots {
+    color: #94A3B8;
+    padding: 0 4px;
+}
+
+/* ========================================================================= */
+/* Mobile Specific Styles (< 769px)                                          */
+/* ========================================================================= */
+.mv-bookings-header {
+    display: none;
+    margin-bottom: 12px;
+}
+
+.mv-top-bar {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
-    line-height: 1.3;
+    justify-content: space-between;
+    padding: 4px 0 12px 0;
 }
 
-/* 5. RESPONSIVE BREAKPOINTS (Exact Match to Driver History LG vs SM) */
-.mv-bookings-header,
-.cards-grid {
+.mv-top-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.mv-back-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: #F1F5F9;
+    color: #334155;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.mv-page-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #0F172A;
+    margin: 0;
+}
+
+.mv-add-btn {
+    padding: 0.45rem 0.85rem;
+    background: #0F172A;
+    color: #fff;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.82rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mv-search-bar-wrap {
+    margin-bottom: 10px;
+}
+
+.mv-search-form {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.mv-search-input-box {
+    position: relative;
+    flex: 1;
+}
+
+.mv-search-ico {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94A3B8;
+    font-size: 0.85rem;
+}
+
+.mv-search-input-box input {
+    width: 100%;
+    padding: 0.5rem 2rem 0.5rem 2rem;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    outline: none;
+}
+
+.mv-search-clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #94A3B8;
+    cursor: pointer;
+}
+
+.mv-filter-toggle {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    background: #fff;
+    color: #334155;
+    cursor: pointer;
+}
+
+.mv-filter-panel {
+    background: #fff;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.mv-filter-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.mv-status-scroll {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+}
+
+.mv-status-scroll::-webkit-scrollbar {
     display: none;
 }
 
-@media (max-width: 991px) {
+.mv-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    background: #fff;
+    border: 1px solid #E2E8F0;
+    color: #475569;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.mv-pill.active {
+    background: #0EA5E9;
+    color: #fff;
+    border-color: #0EA5E9;
+}
+
+.mv-pill-cnt {
+    background: rgba(0,0,0,0.06);
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+}
+
+.mv-pill.active .mv-pill-cnt {
+    background: rgba(255,255,255,0.25);
+}
+
+.cards-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.75rem;
+}
+
+.mv-booking-card-wrapper {
+    position: relative;
+    background: #fff;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.mv-booking-card {
+    display: flex;
+    align-items: flex-start;
+    padding: 0.85rem;
+    text-decoration: none;
+    gap: 10px;
+}
+
+.mv-thumb-wrap {
+    flex-shrink: 0;
+}
+
+.mv-thumb-avatar-img, .mv-thumb-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    object-fit: cover;
+}
+
+.mv-thumb-avatar {
+    background: linear-gradient(135deg, #176B5B 0%, #0F493E 100%);
+    color: #FFFFFF;
+    font-size: 1.05rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    box-shadow: 0 2px 8px rgba(23, 107, 91, 0.2);
+}
+
+.mv-details {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.mv-tour-title {
+    font-weight: 700;
+    color: #0F172A;
+    font-size: 0.92rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mv-date-duration, .mv-passenger, .mv-vehicle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: #475569;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mv-right-col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.mv-price {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748B;
+}
+
+.mv-card-actions {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+}
+
+.mv-action-dots-btn {
+    background: transparent;
+    border: none;
+    color: #94A3B8;
+    font-size: 0.95rem;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.card-btns-popup {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    background: #fff;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: none;
+    gap: 4px;
+    padding: 6px;
+    z-index: 50;
+}
+
+.card-btns-popup.open,
+.card-btns-popup.show {
+    display: flex !important;
+}
+
+@media (max-width: 1024px) {
     .booking-kpi-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 }
 
 @media (max-width: 768px) {
-    .bookings-page-view {
-        padding: 0.75rem;
-    }
-
     .desktop-header-wrapper,
     .booking-kpi-grid,
     .filter-bar-compact,
-    .modern-table-container,
-    .section-header {
+    .modern-table-container {
         display: none !important;
     }
-
     .mv-bookings-header {
         display: block !important;
-        margin-bottom: 1rem;
     }
-
-    .mv-top-bar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 0.75rem;
-    }
-
-    .mv-top-bar-left {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .mv-back-btn {
-        width: 34px;
-        height: 34px;
-        border-radius: 8px;
-        background: #fff;
-        border: 1px solid #E2E8F0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #1E293B;
-        text-decoration: none;
-    }
-
-    .mv-page-title {
-        font-size: 1.15rem;
-        font-weight: 800;
-        margin: 0;
-        color: #0F172A;
-    }
-
-    .mv-add-btn {
-        background: #0EA5E9;
-        color: #fff;
-        padding: 0.45rem 0.85rem;
-        border-radius: 8px;
-        font-size: 0.8rem;
-        font-weight: 700;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .mv-search-form {
-        display: flex;
-        gap: 6px;
-        margin-bottom: 0.75rem;
-    }
-
-    .mv-search-input-box {
-        position: relative;
-        flex: 1;
-    }
-
-    .mv-search-ico {
-        position: absolute;
-        left: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #94A3B8;
-        font-size: 0.85rem;
-    }
-
-    .mv-search-input-box input {
-        width: 100%;
-        padding: 0.5rem 2rem 0.5rem 2rem;
-        border: 1px solid #CBD5E1;
-        border-radius: 8px;
-        font-size: 0.85rem;
-        box-sizing: border-box;
-    }
-
-    .mv-search-clear {
-        position: absolute;
-        right: 8px;
-        top: 50%;
-        transform: translateY(-50%);
-        background: transparent;
-        border: none;
-        color: #94A3B8;
-        cursor: pointer;
-    }
-
-    .mv-filter-toggle {
-        padding: 0.5rem 0.75rem;
-        border: 1px solid #CBD5E1;
-        border-radius: 8px;
-        background: #fff;
-        color: #334155;
-        cursor: pointer;
-    }
-
-    .mv-filter-toggle.active {
-        background: #0EA5E9;
-        color: #fff;
-        border-color: #0EA5E9;
-    }
-
-    .mv-filter-panel {
-        background: #fff;
-        border: 1px solid #E2E8F0;
-        border-radius: 8px;
-        padding: 0.75rem;
-        margin-bottom: 0.75rem;
-    }
-
-    .mv-filter-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .mv-filter-row label {
-        font-size: 0.82rem;
-        font-weight: 700;
-        color: #475569;
-    }
-
-    .mv-filter-row select,
-    .mv-filter-row input {
-        padding: 0.35rem 0.65rem;
-        border: 1px solid #CBD5E1;
-        border-radius: 6px;
-        font-size: 0.82rem;
-        color: #1E293B;
-        background: #fff;
-    }
-
-    .mv-status-scroll {
-        display: flex;
-        gap: 6px;
-        overflow-x: auto;
-        padding-bottom: 4px;
-        scrollbar-width: none;
-    }
-
-    .mv-status-scroll::-webkit-scrollbar {
-        display: none;
-    }
-
-    .mv-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 0.35rem 0.75rem;
-        border-radius: 20px;
-        background: #fff;
-        border: 1px solid #E2E8F0;
-        color: #475569;
-        font-size: 0.78rem;
-        font-weight: 600;
-        text-decoration: none;
-        white-space: nowrap;
-    }
-
-    .mv-pill.active {
-        background: #0EA5E9;
-        color: #fff;
-        border-color: #0EA5E9;
-    }
-
-    .mv-pill-cnt {
-        background: rgba(0,0,0,0.06);
-        padding: 1px 6px;
-        border-radius: 10px;
-        font-size: 0.7rem;
-    }
-
-    .mv-pill.active .mv-pill-cnt {
-        background: rgba(255,255,255,0.25);
-    }
-
     .cards-grid {
         display: flex !important;
         flex-direction: column;
-        gap: 0.75rem;
-        padding: 0.75rem;
+        gap: 12px;
     }
-
-    .mv-booking-card-wrapper {
-        position: relative;
-        background: #fff;
-        border: 1px solid #E2E8F0;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    }
-
-    .mv-booking-card {
-        display: flex;
-        align-items: flex-start;
-        padding: 0.85rem;
-        text-decoration: none;
-        gap: 10px;
-    }
-
-    .mv-thumb-wrap {
-        flex-shrink: 0;
-    }
-
-    .mv-thumb-avatar {
-        width: 44px;
-        height: 44px;
-        border-radius: 12px;
-        background: #E2E8F0;
-        color: #334155;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.05rem;
-    }
-
-    .mv-details {
-        flex: 1;
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-    }
-
-    .mv-tour-title {
-        font-weight: 700;
-        color: #0F172A;
-        font-size: 0.92rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .mv-date-duration,
-    .mv-passenger,
-    .mv-vehicle {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.78rem;
-        color: #475569;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .mv-right-col {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 6px;
-        flex-shrink: 0;
-    }
-
-    .mv-price {
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: #64748B;
-    }
-
-    .mv-card-actions {
-        position: absolute;
-        bottom: 8px;
-        right: 8px;
-    }
-
-    .mv-action-dots-btn {
-        background: transparent;
-        border: none;
-        color: #94A3B8;
-        font-size: 0.95rem;
-        cursor: pointer;
-        padding: 4px;
-    }
-
-    .card-btns-popup {
-        position: absolute;
-        bottom: 100%;
-        right: 0;
-        background: #fff;
-        border: 1px solid #CBD5E1;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        display: none;
-        gap: 4px;
-        padding: 6px;
-        z-index: 50;
-    }
-
-    .card-btns-popup.open,
-    .card-btns-popup.show {
-        display: flex;
-    }
-
     .pagination-wrapper {
         flex-direction: column;
         gap: 0.75rem;
@@ -1703,8 +1973,7 @@ $buildFilterUrl = function(array $overrides = []) use ($search, $status, $date, 
     .desktop-header-wrapper,
     .booking-kpi-grid,
     .filter-bar-compact,
-    .modern-table-container,
-    .section-header {
+    .modern-table-container {
         display: block !important;
     }
 }

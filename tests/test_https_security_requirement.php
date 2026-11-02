@@ -60,4 +60,3 @@ test("Subdirectory API is correctly prefixed", url('/api/push/status') === '/All
 echo "\n============================================================\n";
 echo "TEST SUMMARY: ALL HTTPS SECURITY CHECKS PASSED\n";
 echo "============================================================\n";
-

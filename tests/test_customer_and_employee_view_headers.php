@@ -45,7 +45,7 @@ $custHtml = (string)$custRes->getContent();
 
 assertCheck($custRes->getStatusCode() === 200, "Customer view returns 200");
 assertCheck(strpos($custHtml, 'class="view-header-bar"') !== false, "Customer has .view-header-bar");
-assertCheck(strpos($custHtml, 'class="view-header-title"') === false, "Customer Details title removed from header");
+assertCheck(strpos($custHtml, 'Customer Details') === false, "Customer Details title removed from header");
 assertCheck(strpos($custHtml, 'back-btn') === false, "Customer back button removed from header");
 assertCheck(strpos($custHtml, 'Customer Information &amp; Travel History') === false, "Customer subtitle removed from header");
 assertCheck(strpos($custHtml, 'btnCustomerMore') !== false, "Customer action buttons retained (#btnCustomerMore)");

@@ -165,8 +165,7 @@ $actionsHtml = '<button type="button" class="btn btn-primary" onclick="openAdvan
                     <tr>
                         <th class="text-center" style="width: 50px;">#</th>
                         <th style="width: 110px;">Date</th>
-                        <th style="min-width: 180px;">Employee</th>
-                        <th style="min-width: 140px;">Employee Role</th>
+                        <th style="min-width: 200px;">Employee</th>
                         <th style="min-width: 220px;">Reason / Purpose</th>
                         <th style="text-align: right; width: 130px;">Amount</th>
                         <th style="text-align: right; width: 130px;">Recovered</th>
@@ -177,7 +176,7 @@ $actionsHtml = '<button type="button" class="btn btn-primary" onclick="openAdvan
                 <tbody>
                     <?php if (empty($advances)): ?>
                     <tr>
-                        <td colspan="9">
+                        <td colspan="8">
                             <div class="no-data-message" style="text-align: center; padding: 2.5rem;">
                                 <div class="no-data-icon"><i class="fa-regular fa-folder-open"></i></div>
                                 <h4 style="font-weight:700;color:#1e293b;margin-bottom:6px;">No advance requests found</h4>
@@ -206,10 +205,6 @@ $actionsHtml = '<button type="button" class="btn btn-primary" onclick="openAdvan
                                 $statusText = 'PENDING';
                                 $isApproved = false;
                             }
-
-                            // Role resolution matching office/employees architecture
-                            $role = !empty($adv['linked_role']) ? $adv['linked_role'] : (!empty($adv['designation']) ? $adv['designation'] : ($adv['department'] === 'fleet_chauffeur' ? 'driver' : strtolower($adv['department'] ?? 'staff')));
-                            $roleText = ucwords(str_replace('_', ' ', $role));
                         ?>
                         <tr id="advRow-<?= (int)$adv['id'] ?>">
                             <!-- 1. # Index (Serial No.) -->
@@ -222,7 +217,7 @@ $actionsHtml = '<button type="button" class="btn btn-primary" onclick="openAdvan
                                 <div style="font-weight: 600; color: #1E293B;"><?= format_date($adv['requested_date']) ?></div>
                             </td>
 
-                            <!-- 3. Employee (Show ONLY employee name) -->
+                            <!-- 3. Employee -->
                             <td>
                                 <div style="font-weight: 700; color: var(--vg-navy-900); font-size: 0.88rem; display: flex; align-items: center; gap: 8px;">
                                     <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 7px; background: rgba(23, 107, 91, 0.08); color: #176B5B; font-size: 0.8rem; flex-shrink: 0;">
@@ -232,18 +227,12 @@ $actionsHtml = '<button type="button" class="btn btn-primary" onclick="openAdvan
                                         <?= e($adv['employee_name']) ?>
                                     </a>
                                 </div>
-                            </td>
-
-                            <!-- 4. Employee Role (Matching office/employees) -->
-                            <td>
-                                <div class="emp-role-cell">
-                                    <span class="emp-role-pill" style="display: inline-block; background: rgba(23, 107, 91,0.08); color: #16443B; border: 1px solid rgba(23, 107, 91,0.2); border-radius: 6px; padding: 4px 12px; font-size: 12.5px; font-weight: 700; text-transform: capitalize;">
-                                        <?= e($roleText) ?>
-                                    </span>
+                                <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 2px;">
+                                    <strong style="font-family: monospace; color: var(--brand-primary);"><?= e($adv['advance_code']) ?></strong> • <?= e($adv['employee_code']) ?> • <?= e($adv['designation'] ?? 'Staff') ?>
                                 </div>
                             </td>
 
-                            <!-- 5. Reason / Purpose -->
+                            <!-- 4. Reason / Purpose -->
                             <td>
                                 <div style="font-size: 0.85rem; color: var(--vg-navy-900);"><?= e($adv['reason']) ?></div>
                             </td>
@@ -356,8 +345,6 @@ $actionsHtml = '<button type="button" class="btn btn-primary" onclick="openAdvan
                     $statusText = 'Pending';
                     $isApproved = false;
                 }
-                $role = !empty($adv['linked_role']) ? $adv['linked_role'] : (!empty($adv['designation']) ? $adv['designation'] : ($adv['department'] === 'fleet_chauffeur' ? 'driver' : strtolower($adv['department'] ?? 'staff')));
-                $roleText = ucwords(str_replace('_', ' ', $role));
             ?>
             <div class="mv-booking-card-wrapper" id="mvAdvCard-<?= (int)$adv['id'] ?>">
                 <a href="<?= url('/office/finance/advances/' . $adv['id']) ?>" class="mv-booking-card">
@@ -372,11 +359,13 @@ $actionsHtml = '<button type="button" class="btn btn-primary" onclick="openAdvan
                     <div class="mv-details">
                         <div class="mv-code-row">
                             <span class="mv-code"><?= e($adv['advance_code']) ?></span>
-                            <span class="emp-role-pill" style="display: inline-block; background: rgba(23, 107, 91,0.08); color: #16443B; border: 1px solid rgba(23, 107, 91,0.2); border-radius: 5px; padding: 2px 8px; font-size: 11px; font-weight: 700; text-transform: capitalize;">
-                                <?= e($roleText) ?>
-                            </span>
+                            <span class="mv-tx-badge debit">ADVANCE</span>
                         </div>
                         <div class="mv-tour-title" title="<?= e($adv['employee_name']) ?>"><?= e($adv['employee_name']) ?></div>
+                        <div class="mv-date-duration">
+                            <i class="fa-solid fa-id-badge"></i>
+                            <span><?= e($adv['employee_code']) ?> • <?= e($adv['designation'] ?? 'Staff') ?></span>
+                        </div>
                         <div class="mv-passenger">
                             <i class="fa-regular fa-calendar"></i>
                             <span><?= format_date($adv['requested_date']) ?></span>
@@ -1235,22 +1224,5 @@ $actionsHtml = '<button type="button" class="btn btn-primary" onclick="openAdvan
     justify-content: center;
     font-size: 1.1rem;
     margin-right: 0.65rem;
-}
-
-/* Employee Role Pill (Matching office/employees) */
-.emp-role-cell {
-    display: flex;
-    align-items: center;
-}
-.emp-role-pill {
-    display: inline-block;
-    background: rgba(23, 107, 91, 0.08);
-    color: #16443B;
-    border: 1px solid rgba(23, 107, 91, 0.2);
-    border-radius: 6px;
-    padding: 4px 12px;
-    font-size: 12.5px;
-    font-weight: 700;
-    text-transform: capitalize;
 }
 </style>

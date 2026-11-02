@@ -11,20 +11,20 @@ class SalaryStructure extends Model
         'medical_allowance', 'special_allowance', 'pf_deduction',
         'esi_deduction', 'professional_tax', 'tds_deduction',
         'other_deductions', 'gross_salary', 'net_salary',
-        'effective_date', 'status'
+        'effective_date', 'status', 'created_at', 'updated_at'
     ];
 
-    public function findByEmployeeId(int $employeeId): ?array
+    public function getByEmployee(int $employeeId): ?array
     {
         return $this->findBy('employee_id', $employeeId);
     }
 
-    public function getAllWithEmployeeDetails(): array
+    public function allWithEmployee(): array
     {
-        $sql = "SELECT s.*, e.employee_code, CONCAT(e.first_name, ' ', e.last_name) as employee_name, e.designation, e.department
+        $sql = "SELECT s.*, e.employee_code, e.first_name, e.last_name, e.department, e.designation, e.phone
                 FROM `salary_structures` s
                 JOIN `employees` e ON s.employee_id = e.id
-                ORDER BY e.first_name ASC, e.last_name ASC";
+                ORDER BY e.first_name ASC";
         $stmt = $this->getPdo()->query($sql);
         return $stmt->fetchAll();
     }

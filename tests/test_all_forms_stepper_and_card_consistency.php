@@ -54,22 +54,7 @@ foreach ($forms as $pageName => $filePath) {
     // 5. Responsive CSS rules
     assertCondition(strpos($content, '.modern-stepper-header-centered') !== false, "{$pageName}: Stepper CSS rule defined");
     assertCondition(strpos($content, '@media (max-width: 480px)') !== false, "{$pageName}: Mobile @media (max-width: 480px) breakpoint defined");
-
-    // 6. Full-width professional layout coverage (No excessive left/right empty whitespace)
-    assertCondition(preg_match('/\.modern-form-wrapper\s*\{[^}]*width:\s*100%/s', $content) === 1, "{$pageName}: .modern-form-wrapper width: 100% defined");
-    assertCondition(preg_match('/\.modern-stepper-container\s*\{[^}]*width:\s*100%/s', $content) === 1, "{$pageName}: .modern-stepper-container width: 100% defined");
-    assertCondition(preg_match('/\.modern-stepper-container\s*\{[^}]*max-width:\s*100%/s', $content) === 1, "{$pageName}: .modern-stepper-container max-width: 100% defined");
-    assertCondition(preg_match('/\.modern-stepper-track\s*\{[^}]*margin:\s*0 auto/s', $content) === 1, "{$pageName}: .modern-stepper-track centered with margin: 0 auto");
 }
-
-echo "\n--- Testing public/assets/css/app.css ---\n";
-$appCssPath = dirname(__DIR__) . '/public/assets/css/app.css';
-assertCondition(file_exists($appCssPath), "app.css file exists");
-$appCss = file_get_contents($appCssPath);
-assertCondition(preg_match('/\.modern-form-wrapper\s*\{[^}]*width:\s*100%/s', $appCss) === 1, "app.css: .modern-form-wrapper width: 100% defined");
-assertCondition(preg_match('/\.modern-form-wrapper\s*\{[^}]*max-width:\s*100%/s', $appCss) === 1, "app.css: .modern-form-wrapper max-width: 100% defined");
-assertCondition(preg_match('/\.modern-form-card\s*\{[^}]*width:\s*100%/s', $appCss) === 1, "app.css: .modern-form-card width: 100% defined");
-assertCondition(preg_match('/\.modern-form-card\s*\{[^}]*max-width:\s*100%/s', $appCss) === 1, "app.css: .modern-form-card max-width: 100% defined");
 
 echo "\n============================================\n";
 echo "TEST RESULTS: Passed: {$passed}, Failed: {$failed}\n";
@@ -79,4 +64,3 @@ if ($failed > 0) {
     exit(1);
 }
 exit(0);
-

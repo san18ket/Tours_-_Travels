@@ -98,4 +98,3 @@ if ($allPassed) {
     echo "\nSome checks failed.\n";
     exit(1);
 }
-

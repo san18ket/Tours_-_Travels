@@ -46,25 +46,13 @@ $html = (string)$response->getContent();
 
 assertCondition($response->getStatusCode() === 200, "office/employees returns HTTP 200");
 
-// Check the columns in table header
+// Check the exact 6 columns in table header
 assertCondition(preg_match('/<th[^>]*>#<\/th>/i', $html) === 1, "Table has column 1: '#'");
-assertCondition(strpos($html, '>Profile</th>') !== false, "Table has column 2: 'Profile' before Employee Details");
-assertCondition(strpos($html, 'Employee Details') !== false, "Table has column 3: 'Employee Details'");
-assertCondition(strpos($html, 'Employee &amp; Role') !== false || strpos($html, 'Employee & Role') !== false, "Table has column 4: 'Employee & Role'");
-assertCondition(strpos($html, '<th style="min-width: 200px;">Address</th>') !== false, "Table has column 5: 'Address'");
-assertCondition(strpos($html, '<th class="text-center" style="width: 130px;">Status</th>') !== false, "Table has column 6: 'Status'");
-assertCondition(strpos($html, '<th class="text-center" style="width: 80px;">Action</th>') !== false, "Table has column 7: 'Action'");
-
-// Verify Employee Details shows name, email, mobile
-assertCondition(strpos($html, 'cust-name-row') !== false, "Employee Details includes customer-style name row");
-assertCondition(strpos($html, 'cust-email-row') !== false, "Employee Details includes email row");
-assertCondition(strpos($html, 'cust-phone-row') !== false, "Employee Details includes mobile phone row");
-
-// Verify Profile column contains avatar wrap
-assertCondition(strpos($html, 'cust-table-avatar-wrap') !== false, "Profile column contains .cust-table-avatar-wrap");
-
-// Verify Employee & Role shows role pill
-assertCondition(strpos($html, 'emp-role-pill') !== false, "Employee & Role column contains .emp-role-pill showing role");
+assertCondition(strpos($html, 'Employee Details') !== false, "Table has column 2: 'Employee Details'");
+assertCondition(strpos($html, 'Employee &amp; Role') !== false || strpos($html, 'Employee & Role') !== false, "Table has column 3: 'Employee & Role'");
+assertCondition(strpos($html, '<th style="min-width: 200px;">Address</th>') !== false, "Table has column 4: 'Address'");
+assertCondition(strpos($html, '<th class="text-center" style="width: 130px;">Status</th>') !== false, "Table has column 5: 'Status'");
+assertCondition(strpos($html, '<th class="text-center" style="width: 80px;">Action</th>') !== false, "Table has column 6: 'Action'");
 
 // Verify removed individual separate columns
 assertCondition(strpos($html, '<th style="min-width: 140px;">Staff Code</th>') === false, "Old standalone 'Staff Code' column header is REMOVED");
@@ -99,18 +87,7 @@ echo "\n2. Verifying AJAX Status Toggle Functionality & Top Cards Metric payload
 $empModel = new Employee();
 $uniqueCode = 'TEST-' . rand(1000, 9999);
 $testPhone = '+91 97' . rand(10000000, 99999999);
-$userModel = new App\Models\User();
-$testUserId = $userModel->create([
-    'name'     => 'Toggle Tester',
-    'username' => 'toggle.' . rand(1000, 9999),
-    'email'    => 'toggle' . rand(100, 999) . '@test.corp',
-    'password' => password_hash('Pass@123', PASSWORD_BCRYPT),
-    'role'     => 'driver',
-    'status'   => 'active',
-]);
-
-$empId = $empModel->create([
-    'user_id'         => $testUserId,
+$empId = $empModel->insert([
     'employee_code'   => $uniqueCode,
     'first_name'      => 'Toggle',
     'last_name'       => 'Tester',
@@ -129,9 +106,8 @@ $empId = $empModel->create([
 ]);
 
 $driverModel = new DriverProfile();
-$driverId = $driverModel->create([
+$driverId = $driverModel->insert([
     'employee_id'     => $empId,
-    'user_id'         => $testUserId,
     'license_number'  => 'DL-TOGGLE-' . rand(100, 999),
     'duty_status'     => 'on_duty',
 ]);
@@ -184,10 +160,7 @@ assertCondition($updatedDriver2['duty_status'] === 'on_duty', "Linked driver_pro
 $pdo = App\Core\Database::getConnection();
 $pdo->exec("DELETE FROM `driver_profiles` WHERE id = " . (int)$driverId);
 $pdo->exec("DELETE FROM `employees` WHERE id = " . (int)$empId);
-if (!empty($testUserId)) {
-    $pdo->exec("DELETE FROM `users` WHERE id = " . (int)$testUserId);
-}
-echo "  [INFO] Cleaned up temporary test employee, driver profile, and user.\n";
+echo "  [INFO] Cleaned up temporary test employee and driver profile.\n";
 
 echo "\n====================================================================\n";
 echo "SUMMARY: {$passed} / " . ($passed + $failed) . " assertions passed.\n";

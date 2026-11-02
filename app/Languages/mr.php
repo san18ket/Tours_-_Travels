@@ -4,10 +4,10 @@
  */
 return [
     // Brand & Meta
-    'app.name' => 'VoyageGo',
+    'app.name' => function_exists('company_name') ? company_name() : 'Tours & Travels',
     'app.tagline' => 'एंटरप्राइझ फ्लीट व टूर डिस्पॅच प्रणाली',
     'app.tagline_short' => 'लक्झरी प्रवास संचालन',
-    'app.copyright' => 'VoyageGo सिस्टीम्स. AES-256 आणि TLS सह सुरक्षित.',
+    'app.copyright' => (function_exists('company_name') ? company_name() : 'Tours & Travels') . ' सिस्टीम्स. AES-256 आणि TLS सह सुरक्षित.',
 
     // Language Selector
     'lang.language' => 'भाषा',

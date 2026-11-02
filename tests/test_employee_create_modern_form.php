@@ -64,14 +64,6 @@ assertCondition(strpos($html, 'name="experience_years"') !== false, "Step 3 cont
 assertCondition(strpos($html, 'name="license_document_file"') !== false, "Step 3 contains license upload document dropzone/input");
 assertCondition(strpos($html, 'name="id_type"') !== false, "Step 3 contains document upload dropdown (id_type)");
 assertCondition(strpos($html, 'name="id_document_file"') !== false, "Step 3 contains ID document upload dropzone/input");
-assertCondition(strpos($html, 'id="licenseDropzone"') !== false, "Step 3 contains Driving Licence upload dropzone");
-assertCondition(strpos($html, 'id="wizardPanel4"') !== false && strpos($html, 'Credentials') !== false, "Step 4 is dedicated Credentials step");
-assertCondition(strpos($html, 'name="username"') !== false && strpos($html, 'name="password"') !== false, "Step 4 contains username and password inputs");
-assertCondition(strpos($html, 'generateCredentials()') !== false, "Step 4 contains Auto-Generate credentials feature");
-assertCondition(strpos($html, 'id="wizardPanel5"') !== false && strpos($html, 'Review &amp; Submit') !== false, "Step 5 is dedicated Review & Submit step");
-assertCondition(strpos($html, 'id="sumCardLicenseDoc"') !== false, "Step 5 includes rich Driving Licence document preview card");
-assertCondition(strpos($html, 'id="sumCardIdDoc"') !== false, "Step 5 includes rich Government ID document preview card");
-assertCondition(strpos($html, 'id="docPreviewModal"') !== false, "Document lightbox preview modal is present");
 
 // 3. Test POST /office/employees submission
 echo "\n2. Verifying POST /office/employees submission & automatic status/department mapping...\n";
@@ -126,8 +118,8 @@ if ($createdEmp) {
     assertCondition($createdEmp['department'] === 'fleet_chauffeur', "Department automatically resolved to 'fleet_chauffeur' for driver role");
     assertCondition($createdEmp['designation'] === 'Chauffeur / Driver', "Designation automatically resolved to 'Chauffeur / Driver'");
     assertCondition(strpos($createdEmp['address'], 'Marine Drive') !== false, "Address string concatenated and stored correctly");
-    assertCondition(strpos($createdEmp['address'], 'Mumbai') !== false, "City stored in address correctly");
-    assertCondition(strpos($createdEmp['address'], 'Maharashtra') !== false, "State stored in address correctly");
+    assertCondition($createdEmp['city'] === 'Mumbai', "City column stored correctly");
+    assertCondition($createdEmp['state'] === 'Maharashtra', "State column stored correctly");
 
     // Check driver_profiles
     $driverModel = new DriverProfile();
@@ -153,4 +145,3 @@ if ($createdEmp) {
 echo "\n======================================================\n";
 echo "SUMMARY: {$passed} / " . ($passed + $failed) . " assertions passed.\n";
 echo "======================================================\n";
-

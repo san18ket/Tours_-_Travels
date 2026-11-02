@@ -1,4 +1,4 @@
-# VoyageGo Apache URL Rewriting and Security Directives
+# Enterprise Tours & Travels Apache URL Rewriting and Security Directives
 <IfModule mod_rewrite.c>
     RewriteEngine On
     # RewriteBase omitted to allow automatic subdirectory resolution

@@ -56,4 +56,16 @@ class Config
 
         $current = $value;
     }
+
+    /**
+     * Clear loaded config cache
+     */
+    public static function reset(?string $file = null): void
+    {
+        if ($file !== null) {
+            unset(self::$configs[$file]);
+        } else {
+            self::$configs = [];
+        }
+    }
 }

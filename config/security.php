@@ -5,7 +5,7 @@
 
 return [
     'session' => [
-        'name'            => 'VOYAGEGO_SESSID',
+        'name'            => 'TOURS_SESSID',
         'lifetime'        => 7200, // 2 hours
         'idle_timeout'    => 1800, // 30 minutes idle timeout
         'cookie_httponly' => true,

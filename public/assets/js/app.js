@@ -1,5 +1,5 @@
 /**
- * VoyageGo Tours & Travels - Core Client JavaScript
+ * Tours & Travels - Core Client JavaScript
  * Vanilla JS with PWA integration, Telemetry, and Offline handling
  */
 
@@ -701,7 +701,7 @@
     }
 
     // =========================================================================
-    // VoyageGo Full AJAX SPA & Form Engine
+    // Full AJAX SPA & Form Engine
     // All buttons, forms, table filters, actions & navigation operate via AJAX
     // =========================================================================
     const VoyageAjax = {
@@ -895,7 +895,7 @@
                     }
                 })
                 .catch((err) => {
-                    console.error('VoyageGo Form AJAX error:', err);
+                    console.error('Form AJAX error:', err);
                     this.toast('Request failed. Please check network connection.', 'error');
                 })
                 .finally(() => {
@@ -1023,7 +1023,7 @@
                         }
                     })
                     .catch((err) => {
-                        console.error('VoyageGo Action AJAX error:', err);
+                        console.error('Action AJAX error:', err);
                         this.toast('Action could not be completed.', 'error');
                     })
                     .finally(() => {
@@ -1058,7 +1058,7 @@
                     this.applyHtml(htmlText, finalUrl, options.pushState !== false);
                 })
                 .catch((err) => {
-                    console.error('VoyageGo Navigation Error:', err);
+                    console.error('Navigation Error:', err);
                     this.toast('Failed to load page. Please try again.', 'error');
                 })
                 .finally(() => {
@@ -1165,7 +1165,7 @@
 
             // Broadcast page load event
             try {
-                window.dispatchEvent(new CustomEvent('voyagego:pageLoaded', { detail: { url } }));
+                window.dispatchEvent(new CustomEvent('app:pageLoaded', { detail: { url } }));
             } catch (e) { }
         },
 
@@ -1524,7 +1524,7 @@
 
     window.VoyageValidation = VoyageValidation;
 
-    function initVoyageGoApp() {
+    function initToursApp() {
         setupNetworkListener();
         setupAlertAutoDismiss();
         initSidebarState();
@@ -1537,11 +1537,11 @@
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
             setupLanguageDropdown();
-            initVoyageGoApp();
+            initToursApp();
         });
     } else {
         setupLanguageDropdown();
-        initVoyageGoApp();
+        initToursApp();
     }
 })();
 

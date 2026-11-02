@@ -7,15 +7,15 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <?= csrf_meta() ?>
-    <title><?= e($title ?? 'Sign In') ?> - <?= e($app['name'] ?? 'MANASWI Tours & Travels') ?></title>
+    <title><?= e($title ?? 'Sign In') ?> - <?= e(company_name()) ?></title>
     
     <?php
-        $cssVer = @filemtime(dirname(__DIR__, 2) . '/public/assets/css/app.css') ?: time();
-        $jsVer  = @filemtime(dirname(__DIR__, 2) . '/public/assets/js/app.js') ?: time();
-        $imgLgVer = @filemtime(dirname(__DIR__, 2) . '/public/assets/images/login-scenic-desktop.jpg') ?: time();
-        $imgSmVer = @filemtime(dirname(__DIR__, 2) . '/public/assets/images/login-scenic-mobile.jpg') ?: time();
-        $emblemVer = @filemtime(dirname(__DIR__, 2) . '/public/assets/images/manaswi-emblem.png') ?: time();
-        $iconVer = @filemtime(dirname(__DIR__, 2) . '/public/assets/images/manaswi-icon.png') ?: time();
+        $cssVer = @filemtime(dirname(__DIR__, 3) . '/public/assets/css/app.css') ?: time();
+        $jsVer  = @filemtime(dirname(__DIR__, 3) . '/public/assets/js/app.js') ?: time();
+        $imgLgVer = @filemtime(dirname(__DIR__, 3) . '/public/assets/images/login-scenic-desktop.jpg') ?: time();
+        $imgSmVer = @filemtime(dirname(__DIR__, 3) . '/public/assets/images/login-scenic-mobile.jpg') ?: time();
+        $emblemVer = @filemtime(dirname(__DIR__, 3) . '/public/assets/images/manaswi-emblem.png') ?: time();
+        $iconVer = @filemtime(dirname(__DIR__, 3) . '/public/assets/images/manaswi-icon.png') ?: time();
     ?>
 
     <!-- Favicon & PWA Manifest -->
@@ -536,7 +536,7 @@
                     <span>Our Priority</span>
                 </h2>
                 <p class="hero-description">
-                    Book your next adventure with Manaswi Tours &amp; Travels and explore the world with comfort and safety.
+                    Book your next adventure with <?= e(company_name()) ?> and explore the world with comfort and safety.
                 </p>
             </section>
 

@@ -21,7 +21,7 @@ class Session
         ini_set('session.use_only_cookies', '1');
         ini_set('session.cookie_httponly', '1');
 
-        session_name($sessionConfig['name'] ?? 'VOYAGEGO_SESSID');
+        session_name($sessionConfig['name'] ?? 'TOURS_SESSID');
 
         $cookieDomain = '';
         if (!empty($_SERVER['HTTP_HOST'])) {

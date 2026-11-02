@@ -5,7 +5,6 @@ use App\Models\Notification;
 use App\Models\AuditLog;
 use App\Models\Employee;
 use App\Models\User;
-use App\Services\WebPushService;
 use App\Core\Logger;
 use App\Core\Database;
 use PDO;
@@ -16,7 +15,6 @@ class NotificationService
     private AuditLog $auditLog;
     private Employee $employeeModel;
     private User $userModel;
-    private WebPushService $webPushService;
 
     public function __construct()
     {
@@ -24,7 +22,6 @@ class NotificationService
         $this->auditLog = new AuditLog();
         $this->employeeModel = new Employee();
         $this->userModel = new User();
-        $this->webPushService = new WebPushService();
     }
 
     /**
@@ -119,33 +116,6 @@ class NotificationService
             'data'           => json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
             'is_read'        => 0,
         ]);
-
-        // 3.5. Dispatch Real-Time Web Push Notification to Chauffeur's Devices
-        if ($driverUserId) {
-            try {
-                $pushTitle = "New Trip Duty: {$dispatchCode}";
-                $pushBody  = "Reporting: {$formattedDate} • {$pickupLoc} → {$dropLoc} ({$vehicleInfo})";
-                $tripUrl   = "/driver/trips/" . ($dispatch['id'] ?? '');
-
-                $this->webPushService->sendToUser(
-                    (int)$driverUserId,
-                    $pushTitle,
-                    $pushBody,
-                    $tripUrl,
-                    [
-                        'tag' => "trip-duty-" . ($dispatch['id'] ?? 'new'),
-                        'data' => [
-                            'dispatch_id' => (int)($dispatch['id'] ?? 0),
-                            'booking_id'  => (int)($booking['id'] ?? 0),
-                            'type'        => 'trip_assigned',
-                            'url'         => $tripUrl,
-                        ]
-                    ]
-                );
-            } catch (\Throwable $pe) {
-                Logger::warning("Push notification dispatch failed for chauffeur user #{$driverUserId}: " . $pe->getMessage());
-            }
-        }
 
         // 4. Build Professional SMS / WhatsApp Dispatch Text
         $smsText = "MANASWI TOURS & TRAVELS — TRIP DUTY DISPATCH\n"
@@ -252,120 +222,4 @@ class NotificationService
     {
         return $this->notificationModel->markAllAsRead($userId, $employeeId);
     }
-
-    /**
-     * Get paginated notifications for driver notifications page
-     */
-    public function getPaginatedNotifications(int $userId, ?int $employeeId = null, ?string $search = null, ?string $status = null, int $page = 1, int $perPage = 10): array
-    {
-        return $this->notificationModel->getPaginatedForRecipient($userId, $employeeId, $search, $status, $page, $perPage);
-    }
-
-    /**
-     * Count filtered notifications
-     */
-    public function countFiltered(int $userId, ?int $employeeId = null, ?string $search = null, ?string $status = null): int
-    {
-        return $this->notificationModel->countFiltered($userId, $employeeId, $search, $status);
-    }
-
-    /**
-     * Get KPI Summary counts
-     */
-    public function getKpiStats(int $userId, ?int $employeeId = null): array
-    {
-        return $this->notificationModel->getKpiStats($userId, $employeeId);
-    }
-
-    /**
-     * Dispatch notification when a trip assignment is cancelled
-     */
-    public function notifyDriverTripCancelled(array $dispatch, array $driverProfile, ?string $reason = null): void
-    {
-        $driverUserId = !empty($driverProfile['user_id']) ? (int)$driverProfile['user_id'] : null;
-        $driverEmployeeId = !empty($driverProfile['employee_id']) ? (int)$driverProfile['employee_id'] : null;
-        $dispatchCode = $dispatch['dispatch_code'] ?? 'DSP-TRIP';
-
-        $title = "Trip Cancelled: {$dispatchCode}";
-        $message = "Trip assignment [{$dispatchCode}] has been cancelled." . ($reason ? " Reason: {$reason}" : '');
-
-        $this->notificationModel->create([
-            'user_id'        => $driverUserId,
-            'employee_id'    => $driverEmployeeId,
-            'title'          => $title,
-            'message'        => $message,
-            'type'           => 'trip_cancelled',
-            'reference_type' => 'dispatches',
-            'reference_id'   => (int)($dispatch['id'] ?? 0),
-            'channel'        => 'in_app',
-            'data'           => json_encode(['dispatch_id' => (int)($dispatch['id'] ?? 0), 'reason' => $reason]),
-            'is_read'        => 0,
-        ]);
-
-        if ($driverUserId) {
-            try {
-                $this->webPushService->sendToUser(
-                    $driverUserId,
-                    $title,
-                    $message,
-                    '/driver/trips',
-                    ['tag' => "trip-cancelled-" . ($dispatch['id'] ?? '0')]
-                );
-            } catch (\Throwable $e) {
-                Logger::warning("Push cancellation notice failed for driver #{$driverUserId}: " . $e->getMessage());
-            }
-        }
-    }
-
-    /**
-     * Dispatch notification to Office Admins & Dispatchers when driver updates duty status
-     */
-    public function notifyOfficeDriverAction(string $action, array $dispatch, array $driverProfile): void
-    {
-        $dispatchCode = $dispatch['dispatch_code'] ?? 'DSP-TRIP';
-        $driverName = $driverProfile['name'] ?? 'Chauffeur';
-
-        $actionLabels = [
-            'accepted'  => 'accepted trip assignment',
-            'started'   => 'started trip duty',
-            'completed' => 'completed trip duty',
-        ];
-        $label = $actionLabels[$action] ?? $action;
-
-        $title = "Driver Update: {$dispatchCode}";
-        $body = "Chauffeur {$driverName} has {$label} for [{$dispatchCode}].";
-
-        try {
-            $officeUsers = $this->userModel->where("role IN ('admin', 'dispatcher') AND status = 'active'");
-            $officeUserIds = array_column($officeUsers, 'id');
-
-            foreach ($officeUsers as $admin) {
-                $this->notificationModel->create([
-                    'user_id'        => (int)$admin['id'],
-                    'employee_id'    => null,
-                    'title'          => $title,
-                    'message'        => $body,
-                    'type'           => 'driver_' . $action,
-                    'reference_type' => 'dispatches',
-                    'reference_id'   => (int)($dispatch['id'] ?? 0),
-                    'channel'        => 'in_app',
-                    'data'           => json_encode(['dispatch_id' => (int)($dispatch['id'] ?? 0), 'action' => $action]),
-                    'is_read'        => 0,
-                ]);
-            }
-
-            if (!empty($officeUserIds)) {
-                $this->webPushService->sendToUsers(
-                    $officeUserIds,
-                    $title,
-                    $body,
-                    '/office/tracking',
-                    ['tag' => "driver-action-" . ($dispatch['id'] ?? '0') . "-{$action}"]
-                );
-            }
-        } catch (\Throwable $e) {
-            Logger::warning("Office notification for driver action '{$action}' failed: " . $e->getMessage());
-        }
-    }
 }
-

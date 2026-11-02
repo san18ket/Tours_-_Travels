@@ -108,16 +108,13 @@ foreach ($requiredSnippets as $needle => $label) {
 
 // Verify employee 2's specific data appears in pre-filled fields
 $emp2Values = [
-    $employee['first_name'] => 'Employee First Name pre-filled',
-    $employee['last_name'] => 'Employee Last Name pre-filled',
-    $employee['phone'] => 'Employee Phone pre-filled',
-    $employee['email'] => 'Employee Email pre-filled',
-    $employee['employee_code'] => 'Employee Code badge rendered'
+    'virat' => 'Employee First Name pre-filled',
+    'kholi' => 'Employee Last Name pre-filled',
+    '8799845236' => 'Employee Phone pre-filled',
+    'virat@gmail.com' => 'Employee Email pre-filled',
+    'SFDSDF123123' => 'Employee License Number pre-filled',
+    'VG-EMP-0002' => 'Employee Code badge rendered'
 ];
-
-if (!empty($employee['license_number'])) {
-    $emp2Values[$employee['license_number']] = 'Employee License Number pre-filled';
-}
 
 foreach ($emp2Values as $val => $label) {
     if (strpos($html, (string)$val) === false) {

@@ -1,6 +1,6 @@
 <?php
 /**
- * VoyageGo Language Selector Component
+ * Language Selector Component
  * Modern, accessible AJAX dropdown for English, Hindi, and Marathi
  */
 
@@ -546,7 +546,7 @@ $returnUrl = $_SERVER['REQUEST_URI'] ?? url('/');
             }
         })
         .catch(function(err) {
-            console.warn('VoyageGo AJAX Language Switch fallback:', err);
+            console.warn('AJAX Language Switch fallback:', err);
             // Fallback: If network error or unsupported, perform standard form submit
             if (form) {
                 form.submit();
@@ -738,7 +738,7 @@ $returnUrl = $_SERVER['REQUEST_URI'] ?? url('/');
 
         // Notify client app of language change event
         try {
-            document.dispatchEvent(new CustomEvent('voyagego:languageChanged', { detail: data }));
+            document.dispatchEvent(new CustomEvent('app:languageChanged', { detail: data }));
         } catch (e) {}
     }
 

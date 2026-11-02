@@ -478,4 +478,3 @@ $actionsHtml = '<button type="button" class="btn btn-primary" onclick="openExpen
     background: var(--page-background);
 }
 </style>
-

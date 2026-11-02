@@ -7,6 +7,20 @@
 
 <div class="modern-form-wrapper">
 
+    <!-- Top Action Breadcrumbs & Direct Admin Panel Navigation -->
+    <div class="customer-create-top-bar">
+        <div class="create-topbar-left">
+            <a href="<?= url('/office/vehicles') ?>" class="create-topbar-back-btn" title="Back to Fleet Directory">
+                <i class="fa-solid fa-arrow-left"></i> <span>Fleet Directory</span>
+            </a>
+        </div>
+        <div class="create-topbar-right">
+            <a href="<?= url('/office/dashboard') ?>" class="create-topbar-admin-btn" title="Open Admin Panel">
+                <i class="fa-solid fa-gauge-high"></i> <span>Admin Panel</span>
+            </a>
+        </div>
+    </div>
+
     <!-- Centered Professional 4-Step Stepper Header -->
     <div class="modern-stepper-header-centered">
         <div class="modern-stepper-container">
@@ -68,12 +82,21 @@
         <!-- Default status saved as available -->
         <input type="hidden" name="status" value="available">
 
-        <div class="modern-form-card">
-
-            <!-- ========================================================================= -->
-            <!-- STEP 1: Vehicle Specifications & Fleet Photo                              -->
-            <!-- ========================================================================= -->
-            <div class="modern-step-panel" id="wizardPanel1">
+        <!-- ========================================================================= -->
+        <!-- STEP 1: Vehicle Specifications & Fleet Photo                              -->
+        <!-- ========================================================================= -->
+        <div class="modern-step-panel" id="wizardPanel1">
+            <div class="modern-form-card">
+                <!-- Section Header -->
+                <div class="modern-section-header">
+                    <div class="modern-section-badge">
+                        <i class="fa-solid fa-car-side"></i>
+                    </div>
+                    <div class="modern-section-meta">
+                        <h2 class="modern-section-title">Vehicle Specifications</h2>
+                        <p class="modern-section-sub">Official registration plate number, make &amp; model name, fleet photo, and passenger seating.</p>
+                    </div>
+                </div>
 
                 <!-- Professional Vehicle Photo Upload Component (Exact Customer Avatar Architecture) -->
                 <div class="customer-avatar-upload-card">
@@ -136,7 +159,7 @@
                     </div>
                 </div>
 
-                <!-- Row 2: Seating Capacity & Fuel Type -->
+                <!-- Row 2: Seating Capacity & Fuel Type (NO Classification Type) -->
                 <div class="modern-form-grid-2">
                     <!-- Seating Capacity -->
                     <div class="modern-form-group">
@@ -182,11 +205,23 @@
                     </button>
                 </div>
             </div>
+        </div>
 
-            <!-- ========================================================================= -->
-            <!-- STEP 2: Operations, Odometer & Expiry Dates                               -->
-            <!-- ========================================================================= -->
-            <div class="modern-step-panel" id="wizardPanel2" style="display: none;">
+        <!-- ========================================================================= -->
+        <!-- STEP 2: Operations, Odometer & Expiry Dates                               -->
+        <!-- ========================================================================= -->
+        <div class="modern-step-panel" id="wizardPanel2" style="display: none;">
+            <div class="modern-form-card">
+                <div class="modern-section-header">
+                    <div class="modern-section-badge">
+                        <i class="fa-solid fa-gauge-high"></i>
+                    </div>
+                    <div class="modern-section-meta">
+                        <h2 class="modern-section-title">Operations &amp; Odometer</h2>
+                        <p class="modern-section-sub">Initial odometer reading, operational readiness status, and statutory expiry dates.</p>
+                    </div>
+                </div>
+
                 <div class="modern-form-grid-3">
                     <!-- Initial Odometer -->
                     <div class="modern-form-group">
@@ -248,15 +283,27 @@
                     </button>
                 </div>
             </div>
+        </div>
 
-            <!-- ========================================================================= -->
-            <!-- STEP 3: Documents & Compliance Upload                                     -->
-            <!-- ========================================================================= -->
-            <div class="modern-step-panel" id="wizardPanel3" style="display: none;">
+        <!-- ========================================================================= -->
+        <!-- STEP 3: Documents & Compliance Upload                                     -->
+        <!-- ========================================================================= -->
+        <div class="modern-step-panel" id="wizardPanel3" style="display: none;">
+            <div class="modern-form-card">
+                <div class="modern-section-header">
+                    <div class="modern-section-badge">
+                        <i class="fa-solid fa-file-shield"></i>
+                    </div>
+                    <div class="modern-section-meta">
+                        <h2 class="modern-section-title">Documents &amp; Compliance</h2>
+                        <p class="modern-section-sub">Upload commercial vehicle documentation (Registration Certificate RC Book, Insurance Policy, or Commercial Permit).</p>
+                    </div>
+                </div>
+
                 <div class="modern-form-grid-2">
                     <div class="modern-form-group">
                         <label class="modern-form-label" for="document_type">
-                            Document Category / Type
+                            Document Classification Type
                         </label>
                         <div class="modern-input-wrapper">
                             <span class="modern-input-icon"><i class="fa-solid fa-folder-closed"></i></span>
@@ -355,11 +402,22 @@
                     </button>
                 </div>
             </div>
+        </div>
 
-            <!-- ========================================================================= -->
-            <!-- STEP 4: Review & Save                                                     -->
-            <!-- ========================================================================= -->
-            <div class="modern-step-panel" id="wizardPanel4" style="display: none;">
+        <!-- ========================================================================= -->
+        <!-- STEP 4: Review & Save                                                     -->
+        <!-- ========================================================================= -->
+        <div class="modern-step-panel" id="wizardPanel4" style="display: none;">
+            <div class="modern-form-card">
+                <div class="modern-section-header">
+                    <div class="modern-section-badge" style="background: #E8F8F0; color: #10B981;">
+                        <i class="fa-solid fa-clipboard-check"></i>
+                    </div>
+                    <div class="modern-section-meta">
+                        <h2 class="modern-section-title">Review &amp; Save</h2>
+                        <p class="modern-section-sub">Comprehensive vehicle dossier verification prior to commissioning into active fleet inventory.</p>
+                    </div>
+                </div>
 
                 <!-- Live Executive Dossier Container (Matching customers/create) -->
                 <div class="review-dossier-wrapper">
@@ -529,7 +587,7 @@
                 </div>
             </div>
             <div class="doc-lightbox-footer">
-                <span class="doc-lightbox-hint"><i class="fa-solid fa-circle-info"></i> VoyageGo Fleet Compliance Archive</span>
+                <span class="doc-lightbox-hint"><i class="fa-solid fa-circle-info"></i> <?= e(company_name()) ?> Fleet Compliance Archive</span>
                 <a id="docLightboxDownloadBtn" href="#" download="document" class="btn btn-sm" style="background: #E8F4F0; color: #176B5B; border: 1px solid #B2D8CF; font-weight: 700; border-radius: 8px; padding: 0.4rem 1rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;">
                     <i class="fa-solid fa-download"></i> Download File
                 </a>
@@ -1217,150 +1275,102 @@ document.addEventListener('DOMContentLoaded', function() {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-bottom: 2rem;
-    padding: 0;
-    width: 100%;
+    margin-bottom: 1.5rem;
+    padding: 0 0.5rem;
 }
 .modern-stepper-container {
     width: 100%;
-    max-width: 100%;
+    max-width: 860px;
     background: #FFFFFF;
-    border: 1.5px solid #E2E8F0;
+    border: 1px solid #E2E8F0;
     border-radius: 20px;
-    padding: 1.1rem 2rem;
-    box-shadow: 0 4px 20px rgba(12, 43, 82, 0.04);
+    padding: 1rem 1.75rem;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
 }
 .modern-stepper-track {
     display: flex;
     align-items: center;
     justify-content: space-between;
     position: relative;
-    width: 100%;
-    max-width: 960px;
-    margin: 0 auto;
 }
 .modern-step-item {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    background: transparent !important;
-    border: none !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: transparent;
+    border: none;
     cursor: pointer;
-    padding: 0.35rem 0.6rem !important;
-    border-radius: 12px !important;
-    transition: all 0.2s ease !important;
+    padding: 0.35rem 0.6rem;
+    border-radius: 12px;
+    transition: all 0.2s ease;
     z-index: 2;
-    color: #64748B !important;
-    outline: none !important;
-    text-decoration: none !important;
+    color: #64748B;
 }
 .modern-step-item:hover {
-    color: #0C2B52 !important;
-    transform: translateY(-1px);
+    color: #0C2B52;
 }
 .modern-step-circle {
-    width: 38px !important;
-    height: 38px !important;
-    min-width: 38px !important;
-    border-radius: 50% !important;
-    background: #FFFFFF !important;
-    color: #64748B !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-size: 0.95rem !important;
-    font-weight: 700 !important;
-    border: 2px solid #CBD5E1 !important;
-    margin-bottom: 0.45rem !important;
-    transition: all 0.25s ease !important;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #F1F5F9;
+    color: #64748B;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    font-weight: 700;
+    border: 2px solid #CBD5E1;
+    margin-bottom: 0.4rem;
+    transition: all 0.25s ease;
 }
 .modern-step-label {
-    font-size: 0.82rem !important;
-    font-weight: 600 !important;
-    color: #64748B !important;
-    margin-top: 0 !important;
-    white-space: nowrap !important;
-    transition: color 0.2s ease !important;
+    font-size: 0.82rem;
+    font-weight: 600;
+    white-space: nowrap;
 }
 .modern-step-item.active .modern-step-circle {
-    background: #176B5B !important;
-    border-color: #176B5B !important;
-    color: #FFFFFF !important;
-    box-shadow: 0 0 0 4px rgba(23, 107, 91, 0.18), 0 4px 12px rgba(23, 107, 91, 0.25) !important;
-    transform: scale(1.08) !important;
+    background: #176B5B;
+    border-color: #176B5B;
+    color: #FFFFFF;
+    box-shadow: 0 0 0 4px rgba(23, 107, 91, 0.18);
+    transform: scale(1.08);
 }
 .modern-step-item.active .modern-step-label {
-    color: #176B5B !important;
-    font-weight: 700 !important;
+    color: #176B5B;
+    font-weight: 700;
 }
 .modern-step-item.completed .modern-step-circle {
-    background: #10B981 !important;
-    border-color: #10B981 !important;
-    color: #FFFFFF !important;
+    background: #E8F4F0;
+    border-color: #176B5B;
+    color: #176B5B;
 }
 .modern-step-item.completed .modern-step-label {
-    color: #10B981 !important;
+    color: #176B5B;
 }
 .modern-step-connector {
-    flex: 1 !important;
-    height: 3px !important;
-    background: #E2E8F0 !important;
-    margin: -1.2rem 0.5rem 0 0.5rem !important;
-    transition: background 0.3s ease !important;
-    border-radius: 4px !important;
+    flex: 1;
+    height: 3px;
+    background: #E2E8F0;
+    margin: -1.2rem 0.5rem 0 0.5rem;
+    transition: background 0.3s ease;
+    border-radius: 4px;
 }
 .modern-step-connector.completed {
-    background: #10B981 !important;
+    background: #176B5B;
 }
 
-@media (max-width: 768px) {
-    .modern-stepper-header-centered {
-        margin-bottom: 1.5rem;
-    }
+@media (max-width: 640px) {
     .modern-stepper-container {
-        padding: 0.85rem 1rem;
-        border-radius: 18px;
-    }
-    .modern-step-circle {
-        width: 34px !important;
-        height: 34px !important;
-        min-width: 34px !important;
-        font-size: 0.88rem !important;
-        margin-bottom: 0.35rem !important;
+        padding: 0.85rem 0.75rem;
     }
     .modern-step-label {
-        font-size: 0.76rem !important;
-    }
-    .modern-step-connector {
-        margin: -1.1rem 0.35rem 0 0.35rem !important;
-    }
-}
-
-@media (max-width: 480px) {
-    .modern-stepper-container {
-        padding: 0.75rem 0.65rem;
-        border-radius: 16px;
-    }
-    .modern-step-item {
-        padding: 0.2rem 0.35rem !important;
+        font-size: 0.72rem;
     }
     .modern-step-circle {
-        width: 30px !important;
-        height: 30px !important;
-        min-width: 30px !important;
-        font-size: 0.82rem !important;
-        margin-bottom: 0.25rem !important;
-    }
-    .modern-step-connector {
-        margin: -0.95rem 0.25rem 0 0.25rem !important;
-    }
-    .modern-step-item:not(.active) .modern-step-label {
-        display: none !important;
-    }
-    .modern-step-item.active .modern-step-label {
-        display: inline-block !important;
-        font-size: 0.72rem !important;
+        width: 32px;
+        height: 32px;
+        font-size: 0.85rem;
     }
 }
 
@@ -1368,14 +1378,11 @@ document.addEventListener('DOMContentLoaded', function() {
 /* Form Cards & Section Headers                                             */
 /* ========================================================================= */
 .modern-form-wrapper {
-    width: 100%;
-    max-width: 100%;
-    margin: 0;
-    padding: 0.25rem 0 3.5rem 0;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 1.25rem 1rem 3rem 1rem;
 }
 .modern-form-card {
-    width: 100%;
-    max-width: 100%;
     background: #FFFFFF;
     border: 1px solid #E2E8F0;
     border-radius: 20px;
@@ -1383,9 +1390,6 @@ document.addEventListener('DOMContentLoaded', function() {
     box-shadow: 0 6px 24px rgba(15, 23, 42, 0.05);
 }
 @media (max-width: 768px) {
-    .modern-form-wrapper {
-        padding: 0 0 2rem;
-    }
     .modern-form-card {
         padding: 1.5rem 1.25rem;
         border-radius: 16px;

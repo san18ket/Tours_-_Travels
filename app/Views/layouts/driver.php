@@ -7,9 +7,13 @@
     <meta name="base-url" content="<?= url('/') ?>">
     <meta name="sw-url" content="<?= url('/sw.js') ?>">
     <meta name="gps-update-url" content="<?= url('/api/gps/update') ?>">
-    <title><?= e($title ?? 'Chauffeur Console') ?> - <?= e($app['name'] ?? 'VoyageGo') ?></title>
-    <link rel="stylesheet" href="<?= asset('css/app.css') ?>?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/css/app.css') ?: '2.2' ?>">
-    <link rel="stylesheet" href="<?= asset('css/tours-pwa.css') ?>?v=5.0">
+    <title><?= e($title ?? 'Chauffeur Console') ?> - <?= e(company_name()) ?></title>
+    <?php
+        $cssVer = @filemtime(dirname(__DIR__, 3) . '/public/assets/css/app.css') ?: time();
+        $pwaCssVer = @filemtime(dirname(__DIR__, 3) . '/public/assets/css/tours-pwa.css') ?: time();
+    ?>
+    <link rel="stylesheet" href="<?= asset('css/app.css') ?>?v=<?= $cssVer ?>">
+    <link rel="stylesheet" href="<?= asset('css/tours-pwa.css') ?>?v=<?= $pwaCssVer ?>">
     <link rel="manifest" href="<?= url('/manifest.json') ?>">
     <link rel="icon" type="image/svg+xml" href="<?= asset('icons/icon.svg') ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">

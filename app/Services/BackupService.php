@@ -23,14 +23,14 @@ class BackupService
         }
 
         $timestamp = date('Y-m-d_H-i-s');
-        $filename = "backup_voyagego_{$timestamp}.sql";
+        $filename = "backup_{$timestamp}.sql";
         $filepath = $backupDir . '/' . $filename;
 
         // Fetch all tables
         $tablesStmt = $pdo->query("SHOW TABLES");
         $tables = $tablesStmt->fetchAll(PDO::FETCH_COLUMN);
 
-        $out = "-- VoyageGo Database Backup\n";
+        $out = "-- Database Backup\n";
         $out .= "-- Created: " . date('Y-m-d H:i:s') . "\n";
         $out .= "-- Host: " . Config::get('database.default.host') . "\n\n";
         $out .= "SET FOREIGN_KEY_CHECKS=0;\n\n";
@@ -91,7 +91,7 @@ class BackupService
      */
     private function enforceRetentionPolicy(string $backupDir): void
     {
-        $files = glob($backupDir . '/backup_voyagego_*.sql');
+        $files = glob($backupDir . '/backup_*.sql');
         if (count($files) > self::MAX_RETENTION_COUNT) {
             usort($files, fn($a, $b) => filemtime($a) <=> filemtime($b));
             $toDelete = count($files) - self::MAX_RETENTION_COUNT;
@@ -112,7 +112,7 @@ class BackupService
         }
 
         $content = file_get_contents($filepath);
-        if (empty($content) || !str_contains($content, 'VoyageGo Database Backup')) {
+        if (empty($content) || !str_contains($content, 'Database Backup')) {
             throw new RuntimeException("Invalid backup file signature. Restoration halted for safety.");
         }
 
@@ -141,7 +141,7 @@ class BackupService
     public function listBackups(): array
     {
         $backupDir = Config::get('paths.backups', dirname(dirname(__DIR__)) . '/storage/backups');
-        $files = glob($backupDir . '/backup_voyagego_*.sql') ?: [];
+        $files = glob($backupDir . '/backup_*.sql') ?: [];
         $result = [];
 
         foreach ($files as $f) {

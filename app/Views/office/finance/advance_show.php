@@ -2027,4 +2027,3 @@ $approverDisplay = $adv['approver_name'] ?? (!empty($adv['approved_at']) ? 'Auth
     .fab-item-icon.purple  { color: #7C3AED; }
 }
 </style>
-

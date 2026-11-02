@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\AuditLog;
 use App\Core\Database;
 use App\Core\Logger;
+use App\Services\EmailService;
 use RuntimeException;
 
 class BillingService
@@ -15,6 +16,7 @@ class BillingService
     private Payment $paymentModel;
     private Booking $bookingModel;
     private AuditLog $auditLog;
+    public EmailService $emailService;
 
     public function __construct()
     {
@@ -22,6 +24,7 @@ class BillingService
         $this->paymentModel = new Payment();
         $this->bookingModel = new Booking();
         $this->auditLog = new AuditLog();
+        $this->emailService = new EmailService();
     }
 
     /**
@@ -47,7 +50,8 @@ class BillingService
             $invoiceId = $this->invoiceModel->create([
                 'invoice_number'  => $invoiceNumber,
                 'booking_id'      => $bookingId,
-                'customer_id'     => $booking['customer_id'],
+                'customer_id'         => $booking['customer_id'],
+                'customer_profile_id' => $booking['customer_profile_id'] ?? null,
                 'subtotal'        => $booking['subtotal'],
                 'tax_rate'        => 5.00,
                 'tax_amount'      => $booking['tax_amount'],
@@ -137,7 +141,13 @@ class BillingService
             ]);
 
             $pdo->commit();
-            return $this->paymentModel->find($paymentId);
+            $payment = $this->paymentModel->find($paymentId);
+            try {
+                $this->emailService->sendPaymentSuccessful($payment, $invoice);
+            } catch (\Throwable $e) {
+                Logger::warning("Could not send payment successful email: " . $e->getMessage());
+            }
+            return $payment;
         } catch (\Throwable $e) {
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();

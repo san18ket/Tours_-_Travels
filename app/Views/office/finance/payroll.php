@@ -315,4 +315,3 @@ $actionsHtml = '<button type="button" class="btn btn-primary" onclick="openPayro
     background: var(--page-background);
 }
 </style>
-

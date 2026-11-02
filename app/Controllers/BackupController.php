@@ -42,7 +42,7 @@ class BackupController extends Controller
     public function restore(Request $request): Response
     {
         $filename = $request->input('filename');
-        if (empty($filename) || !str_starts_with($filename, 'backup_voyagego_') || !str_ends_with($filename, '.sql')) {
+        if (empty($filename) || !str_starts_with($filename, 'backup_') || !str_ends_with($filename, '.sql')) {
             Session::setFlash('danger', 'Invalid backup filename specified.');
             return $this->redirect(url('/office/backups'));
         }

@@ -19,7 +19,7 @@
 
 // Define application root and environment
 define('APP_ROOT', dirname(__DIR__));
-require_once APP_ROOT . '/app/bootstrap.php';
+require_once APP_ROOT . '/app/Core/autoload.php';
 
 use App\Core\Database;
 use App\Core\Session;

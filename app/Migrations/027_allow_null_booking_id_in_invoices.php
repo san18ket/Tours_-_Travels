@@ -32,4 +32,3 @@ return new class {
         $pdo->exec("ALTER TABLE `invoices` ADD CONSTRAINT `fk_invoice_booking` FOREIGN KEY (`booking_id`) REFERENCES `bookings` (`id`) ON DELETE RESTRICT");
     }
 };
-

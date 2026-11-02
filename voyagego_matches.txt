@@ -1,0 +1,264 @@
+.\.env:2:# VoyageGo Tours & Travels — Local Environment Configuration
+.\.env:5:APP_NAME="VoyageGo Tours & Travels"
+.\.env:18:MAIL_FROM_NAME="VoyageGo Tours & Travels"
+.\.env.example:2:# VoyageGo Tours & Travels — Environment Configuration Template
+.\.env.example:6:APP_NAME="VoyageGo Tours & Travels"
+.\.env.example:21:MAIL_FROM_NAME="VoyageGo Tours & Travels"
+.\.env.example:22:MAIL_ADMIN_ADDRESS=admin@voyagegotravels.com
+.\DEPLOYMENT.md:1:# VoyageGo Production Deployment & Operations Runbook
+.\DEPLOYMENT.md:30:CREATE USER 'voyagego_setup'@'localhost' IDENTIFIED BY 'STRONG_SETUP_PASSWORD';
+.\DEPLOYMENT.md:31:GRANT CREATE, ALTER, INDEX, REFERENCES, SELECT, INSERT, UPDATE, DELETE, DROP ON tours_travels_db.* TO 'voyagego_setup'@'localhost';
+.\DEPLOYMENT.md:37:CREATE USER 'voyagego_app'@'localhost' IDENTIFIED BY 'STRONG_RUNTIME_PASSWORD';
+.\DEPLOYMENT.md:39:GRANT SELECT, INSERT, UPDATE, DELETE ON tours_travels_db.* TO 'voyagego_app'@'localhost';
+.\DEPLOYMENT.md:46:'username' => 'voyagego_app',
+.\DEPLOYMENT.md:50:'username' => 'voyagego_setup',
+.\DEPLOYMENT.md:63:chown -R www-data:www-data /var/www/voyagego
+.\DEPLOYMENT.md:66:find /var/www/voyagego -type f -exec chmod 644 {} \;
+.\DEPLOYMENT.md:67:find /var/www/voyagego -type d -exec chmod 755 {} \;
+.\DEPLOYMENT.md:70:chmod -R 775 /var/www/voyagego/storage
+.\DEPLOYMENT.md:71:chmod 775 /var/www/voyagego/config
+.\DEPLOYMENT.md:93:root /var/www/voyagego/public;
+.\DEPLOYMENT.md:140:0 2 * * * php /var/www/voyagego/tests/run_all.php > /dev/null 2>&1
+.\router.php:3:* VoyageGo Built-in PHP Server Router
+.\SECURITY.md:1:# VoyageGo Security Policy & Threat Verification Matrix
+.\SECURITY.md:5:VoyageGo implements a defense-in-depth posture adhering to the OWASP Top 10 guidelines and strict financial compliance standards.
+.\SECURITY.md:28:If you discover a security vulnerability in VoyageGo, please email `security@voyagego.internal`. All security advisories are reviewed promptly by the security engineering team.
+.\app\routes.php:3:* Application Routes Definition — VoyageGo Luxury Transport & Chauffeur Suite
+.\app\Controllers\BackupController.php:45:if (empty($filename) || !str_starts_with($filename, 'backup_voyagego_') || !str_ends_with($filename, '.sql')) {
+.\app\Controllers\EmailTestController.php:40:'fromName'    => Config::get('mail.from.name', 'VoyageGo Tours & Travels'),
+.\app\Controllers\EmployeeController.php:157:$userEmail = !empty($input['email']) ? strtolower(trim($input['email'])) : ($username . '@voyagego.internal');
+.\app\Controllers\EmployeeController.php:244:$driverEmail = !empty($input['email']) ? strtolower(trim($input['email'])) : ($driverUsername . '@voyagego.internal');
+.\app\Core\Language.php:38:public const COOKIE_NAME = 'voyagego_locale';
+.\app\Core\MigrationManager.php:10:private const LOCK_NAME = 'voyagego_migration_lock';
+.\app\Core\Session.php:24:session_name($sessionConfig['name'] ?? 'VOYAGEGO_SESSID');
+.\app\Languages\en.php:3:* VoyageGo Localization Dictionary - English (Default Master)
+.\app\Languages\en.php:7:'app.name' => 'VoyageGo',
+.\app\Languages\en.php:10:'app.copyright' => 'VoyageGo Systems. Secured with AES-256 and TLS.',
+.\app\Languages\en.php:775:'customer_form.isolation_desc' => 'This registration strictly adds a customer profile to VoyageGo. No staff credentials or administrative access to the office dashboard are generated.',
+.\app\Languages\hi.php:3:* VoyageGo Localization Dictionary - Hindi (हिन्दी)
+.\app\Languages\hi.php:7:'app.name' => 'VoyageGo',
+.\app\Languages\hi.php:10:'app.copyright' => 'VoyageGo सिस्टम्स। AES-256 और TLS द्वारा सुरक्षित।',
+.\app\Languages\mr.php:3:* VoyageGo Localization Dictionary - Marathi (मराठी)
+.\app\Languages\mr.php:7:'app.name' => 'VoyageGo',
+.\app\Languages\mr.php:10:'app.copyright' => 'VoyageGo सिस्टीम्स. AES-256 आणि TLS सह सुरक्षित.',
+.\app\Migrations\009_add_username_to_users_table.php:34:if ($u['email'] === 'admin@voyagego.com') {
+.\app\Migrations\009_add_username_to_users_table.php:36:} elseif ($u['email'] === 'dispatcher@voyagego.com') {
+.\app\Migrations\009_add_username_to_users_table.php:38:} elseif ($u['email'] === 'owner@voyagego.com') {
+.\app\Migrations\009_add_username_to_users_table.php:61:$ownerStmt = $pdo->prepare("SELECT `id`, `password` FROM `users` WHERE `username` = 'owner' OR `email` = 'owner@voyagego.com'");
+.\app\Migrations\009_add_username_to_users_table.php:68:VALUES ('System Owner', 'owner', 'owner@voyagego.com', '+91 98000 00000', ?, 'admin', 'active', NOW(), NOW())");
+.\app\Seeders\DatabaseSeeder.php:18:$ownerStmt = $pdo->prepare("SELECT id FROM users WHERE username = 'owner' OR email = 'owner@voyagego.com'");
+.\app\Seeders\DatabaseSeeder.php:24:VALUES ('System Owner', 'owner', 'owner@voyagego.com', '+91 98000 00000', ?, 'admin', 'active', NOW(), NOW())");
+.\app\Services\BackupService.php:26:$filename = "backup_voyagego_{$timestamp}.sql";
+.\app\Services\BackupService.php:33:$out = "-- VoyageGo Database Backup\n";
+.\app\Services\BackupService.php:94:$files = glob($backupDir . '/backup_voyagego_*.sql');
+.\app\Services\BackupService.php:115:if (empty($content) || !str_contains($content, 'VoyageGo Database Backup')) {
+.\app\Services\BackupService.php:144:$files = glob($backupDir . '/backup_voyagego_*.sql') ?: [];
+.\app\Services\CompanySettingsService.php:55:$appName = env('COMPANY_NAME', env('APP_NAME', Config::get('app.name', 'VoyageGo Tours & Travels')));
+.\app\Services\CompanySettingsService.php:57:$email = env('COMPANY_EMAIL', env('MAIL_FROM_ADDRESS', Config::get('app.support_email', 'contact@voyagegotravels.com')));
+.\app\Services\CompanySettingsService.php:59:$website = env('COMPANY_WEBSITE', Config::get('app.url', 'https://www.voyagegotravels.com'));
+.\app\Services\CompanySettingsService.php:83:return !empty($p['company_name']) ? (string)$p['company_name'] : 'VoyageGo Tours & Travels';
+.\app\Services\CompanySettingsService.php:123:$baseUrl = rtrim(Config::get('app.url', env('APP_URL', 'https://www.voyagegotravels.com')), '/');
+.\app\Services\CompanySettingsService.php:136:return !empty($p['email']) ? (string)$p['email'] : env('MAIL_FROM_ADDRESS', 'contact@voyagegotravels.com');
+.\app\Services\CompanySettingsService.php:154:return !empty($p['website']) ? (string)$p['website'] : 'www.voyagegotravels.com';
+.\app\Services\EmailService.php:58:if (empty($toEmail) || !filter_var($toEmail, FILTER_VALIDATE_EMAIL) || str_ends_with(strtolower($toEmail), '@voyagego.internal')) {
+.\app\Services\EmailService.php:125:$fromAddress = Config::get('mail.from.address', Config::get('mail.username', 'contact@voyagegotravels.com'));
+.\app\Services\EmailService.php:126:$fromName    = Config::get('mail.from.name', 'VoyageGo Tours & Travels');
+.\app\Services\EmailService.php:224:$subject = $data['subject'] ?? 'VoyageGo Notification';
+.\app\Services\EmailService.php:256:if (empty($customer['email']) || str_ends_with(strtolower($customer['email']), '@voyagego.internal')) {
+.\app\Services\EmailService.php:261:$subject = "Booking Received: {$booking['booking_code']} — VoyageGo Tours & Travels";
+.\app\Services\EmailService.php:295:$subject = "✓ Booking Confirmed: {$booking['booking_code']} — VoyageGo Tours & Travels";
+.\app\Services\EmailService.php:324:$subject = "Notice: Booking {$booking['booking_code']} Cancelled — VoyageGo";
+.\app\Services\EmailService.php:406:$subject = "Payment Receipt: {$payment['payment_reference']} ({$formattedAmt}) — VoyageGo";
+.\app\Services\EmailService.php:447:$driverSubject = "🚍 New Trip Assignment: {$dispatch['dispatch_code']} — VoyageGo";
+.\app\Services\EmailService.php:477:$custSubject = "Chauffeur & Fleet Assigned: {$booking['booking_code']} — VoyageGo";
+.\app\Services\EmailService.php:518:$subject = "⏰ Reminder: Your VoyageGo Departure is Approaching ({$booking['booking_code']})";
+.\app\Services\EmailService.php:587:$subject = "🚀 Your Journey Has Commenced: {$booking['booking_code']} — VoyageGo";
+.\app\Services\EmailService.php:625:$subject = "✓ Journey Completed: {$booking['booking_code']} — Thank You for Choosing VoyageGo";
+.\app\Services\EmailService.php:633:'previewText' => "Thank you for traveling with VoyageGo! Your journey recap is ready."
+.\app\Services\EmailService.php:660:$subject = "Security Notice: Password Reset for {$user['username']} — VoyageGo";
+.\app\Services\EmailService.php:665:'previewText'       => "Your VoyageGo account credentials have been reset."
+.\app\Services\EmailService.php:688:$subject = "VoyageGo SMTP Test Message — " . date('d M Y, h:i A');
+.\app\Services\EmailService.php:695:'previewText'    => "Diagnostic verification test message from VoyageGo SMTP system."
+.\app\Services\EmailService.php:724:$subject = "Welcome to " . (function_exists('company_name') ? company_name() : 'VoyageGo') . " [{$code}]";
+.\app\Services\EmailService.php:761:$subject = "Welcome to " . (function_exists('company_name') ? company_name() : 'VoyageGo') . " Operations Team [{$code}]";
+.\app\Services\PaymentGatewayService.php:25:'key_id'         => 'rzp_test_VoyageGoTest2026',
+.\app\Services\PaymentGatewayService.php:26:'key_secret'     => 'VoyageGoTestSecretKey2026',
+.\app\Services\PaymentGatewayService.php:27:'webhook_secret' => 'VoyageGoWebhookSecret2026',
+.\app\Services\PermissionRegistry.php:12:* Complete catalog of all VoyageGo system categories, pages, and their header & row actions.
+.\app\Views\components\language_switcher.php:3:* VoyageGo Language Selector Component
+.\app\Views\components\language_switcher.php:549:console.warn('VoyageGo AJAX Language Switch fallback:', err);
+.\app\Views\components\language_switcher.php:741:document.dispatchEvent(new CustomEvent('voyagego:languageChanged', { detail: data }));
+.\app\Views\driver\dashboard.php:3:* VoyageGo / MANASWI Tours & Travels — Dedicated Chauffeur Command Dashboard
+.\app\Views\driver\profile.php:35:VoyageGo Licensed Chauffeur
+.\app\Views\driver\vehicle.php:55:VoyageGo Luxury Fleet
+.\app\Views\driver\vehicle.php:160:<span>Vehicle assignment is managed by VoyageGo fleet dispatch operations. Any mechanical defects or maintenance requests should be reported directly to office operations.</span>
+.\app\Views\emails\test.php:9:$subheading = 'VoyageGo Gmail SSL SMTP subsystem is properly configured and verified.';
+.\app\Views\emails\test.php:11:$greetingLead = 'This diagnostic test confirms that your VoyageGo professional SMTP notification system is operational.';
+.\app\Views\emails\test.php:15:$fromSender = !empty($sender) ? $sender : 'notifications@voyagegotravels.com';
+.\app\Views\emails\test.php:16:$targetRecipient = !empty($recipientEmail) ? $recipientEmail : 'admin@voyagegotravels.com';
+.\app\Views\emails\account\password-reset.php:9:$subheading = 'Your VoyageGo account security credentials have been updated.';
+.\app\Views\emails\account\password-reset.php:74:Sign In to VoyageGo &rarr;
+.\app\Views\emails\account\password-reset.php:84:<strong style="color: #DC2626;">Security Advisory:</strong> If you did not authorize this password reset, please contact your VoyageGo system administrator immediately to protect your account.
+.\app\Views\emails\booking\cancelled.php:60:<strong>Refund &amp; Settlement:</strong> If you have already made advance or partial payment towards this booking, our accounts team will initiate your refund or credit note in accordance with VoyageGo terms. Please contact our support team if you require assistance or wish to reschedule.
+.\app\Views\emails\booking\confirmed.php:9:Your VoyageGo Journey is Officially Confirmed
+.\app\Views\emails\booking\created.php:9:Your VoyageGo Reservation is Confirmed in System
+.\app\Views\emails\booking\created.php:12:Dear <?= e($customer['name'] ?? 'Valued Guest') ?>, thank you for booking with VoyageGo. We have received your travel itinerary and our operations team is preparing your dispatch.
+.\app\Views\emails\customer\welcome.php:8:$heading = 'Welcome to VoyageGo Travels!';
+.\app\Views\emails\customer\welcome.php:11:$greetingLead = 'Thank you for choosing VoyageGo Tours & Travels. Your customer membership account has been successfully created.';
+.\app\Views\emails\customer\welcome.php:91:<strong style="color: #17233F;">VoyageGo Privileges:</strong> Enjoy pristine verified luxury vehicles, top-tier vetted chauffeurs, guaranteed on-time pickup, and 24/7 concierge assistance for all your corporate and holiday travel.
+.\app\Views\emails\employee\welcome.php:8:$heading = 'Welcome to the VoyageGo Operations Team!';
+.\app\Views\emails\layouts\master.php:118:<?php if (!empty($companyName) && !str_contains(strtolower($companyName), 'voyagego')): ?>
+.\app\Views\emails\layouts\master.php:288:<?php if (!empty($companyName) && !str_contains(strtolower($companyName), 'voyagego')): ?>
+.\app\Views\emails\trip\completed.php:9:Thank You for Traveling with VoyageGo
+.\app\Views\layouts\driver.php:10:<title><?= e($title ?? 'Chauffeur Console') ?> - <?= e($app['name'] ?? 'VoyageGo') ?></title>
+.\app\Views\layouts\setup.php:18:<h2 style="color: #FFF; margin: 0; font-size: 1.35rem;">VoyageGo Installation Wizard</h2>
+.\app\Views\office\bookings\create.php:3:* VoyageGo / MANASWI Tours & Travels — Create Booking Reservation
+.\app\Views\office\company\create.php:3:* VoyageGo Tours & Travels — Master Add Company Profile Form
+.\app\Views\office\company\edit.php:3:* VoyageGo Tours & Travels — Master Edit Company Profile Form
+.\app\Views\office\company\edit.php:104:<input type="text" id="company_name" name="company_name" class="modern-input-pill <?= !empty($errors['company_name']) ? 'is-invalid' : '' ?>" required value="<?= e($old['company_name'] ?? $company['company_name'] ?? '') ?>" placeholder="e.g. VoyageGo Tours & Travels" style="width: 100%; padding-left: 2.75rem; height: 46px; border-radius: 10px; border: 1.5px solid #CBD5E1; font-size: 0.95rem;">
+.\app\Views\office\company\edit.php:137:<input type="email" id="email" name="email" class="modern-input-pill <?= !empty($errors['email']) ? 'is-invalid' : '' ?>" required value="<?= e($old['email'] ?? $company['email'] ?? '') ?>" placeholder="e.g. contact@voyagegotravels.com" style="width: 100%; padding-left: 2.75rem; height: 46px; border-radius: 10px; border: 1.5px solid #CBD5E1; font-size: 0.95rem;">
+.\app\Views\office\company\edit.php:171:<input type="text" id="website" name="website" class="modern-input-pill <?= !empty($errors['website']) ? 'is-invalid' : '' ?>" value="<?= e($old['website'] ?? $company['website'] ?? '') ?>" placeholder="e.g. https://www.voyagegotravels.com" style="width: 100%; padding-left: 2.75rem; height: 46px; border-radius: 10px; border: 1.5px solid #CBD5E1; font-size: 0.95rem;">
+.\app\Views\office\company\index.php:3:* VoyageGo Tours & Travels — List Companies & Installation Profile Overview
+.\app\Views\office\company\show.php:3:* VoyageGo Tours & Travels — Company Profile Details View
+.\app\Views\office\customers\create.php:3:* VoyageGo / MANASWI Tours & Travels — Master Modern Customer Registration Form
+.\app\Views\office\customers\edit.php:3:* VoyageGo / MANASWI Tours & Travels — Edit Customer Profile
+.\app\Views\office\email\test.php:10:Secure administrative telemetry, live testing, and audit trail for VoyageGo outgoing email notifications.
+.\app\Views\office\email\test.php:111:<li>Enter App name as <code>VoyageGo</code> and click <strong>Create</strong>.</li>
+.\app\Views\office\email\test.php:117:MAIL_FROM_NAME="VoyageGo Tours &amp; Travels"
+.\app\Views\office\employees\create.php:3:* VoyageGo / MANASWI Tours & Travels — Master Modern Employee Registration Form
+.\app\Views\office\employees\edit.php:3:* VoyageGo / MANASWI Tours & Travels — Edit Employee / Staff Profile
+.\app\Views\office\fleet\create_vehicle.php:3:* VoyageGo / MANASWI Tours & Travels — Register Fleet Vehicle
+.\app\Views\office\tours\create.php:3:* VoyageGo / MANASWI Tours & Travels — Create Tour Package
+.\app\Views\office\tours\edit.php:3:* VoyageGo / MANASWI Tours & Travels — Edit Holiday Tour Package
+.\app\Views\office\tracking\index.php:3:* VoyageGo / MANASWI Tours & Travels — Live Fleet Radar & Track Location
+.\app\Views\office\trips\assign.php:3:* VoyageGo / MANASWI Tours & Travels — Dispatch & Assign Trip
+.\app\Views\office\users\create.php:3:* VoyageGo / MANASWI Tours & Travels — Master Modern User Creation Form
+.\app\Views\office\users\edit.php:3:* VoyageGo / MANASWI Tours & Travels — Edit User Account
+.\app\Views\office\vehicles\create.php:3:* VoyageGo / MANASWI Tours & Travels — Master Commercial Vehicle Registration Form
+.\app\Views\office\vehicles\create.php:590:<span class="doc-lightbox-hint"><i class="fa-solid fa-circle-info"></i> VoyageGo Fleet Compliance Archive</span>
+.\app\Views\setup\locked.php:10:VoyageGo has already been successfully installed and configured. To prevent unauthorized schema tampering or replay attacks, the installation endpoint has been permanently sealed via <code>config/installed.lock</code>.
+.\config\finance.php:15:'key_id'         => getenv('RAZORPAY_KEY_ID') ?: 'rzp_test_VoyageGoTest2026',
+.\config\finance.php:16:'key_secret'     => getenv('RAZORPAY_KEY_SECRET') ?: 'VoyageGoTestSecretKey2026',
+.\config\finance.php:17:'webhook_secret' => getenv('RAZORPAY_WEBHOOK_SECRET') ?: 'VoyageGoWebhookSecret2026',
+.\config\mail.php:3:* VoyageGo Tours & Travels — Professional SMTP Email Configuration
+.\config\mail.php:20:'address' => class_exists('\App\Services\CompanySettingsService') ? \App\Services\CompanySettingsService::getCompanyEmail() : env('MAIL_FROM_ADDRESS', env('MAIL_USERNAME', 'contact@voyagegotravels.com')),
+.\config\mail.php:21:'name'    => class_exists('\App\Services\CompanySettingsService') ? \App\Services\CompanySettingsService::getCompanyName() : env('MAIL_FROM_NAME', 'VoyageGo Tours & Travels'),
+.\config\mail.php:25:'admin_address' => class_exists('\App\Services\CompanySettingsService') ? \App\Services\CompanySettingsService::getCompanyEmail() : env('MAIL_ADMIN_ADDRESS', 'admin@voyagegotravels.com'),
+.\config\security.php:8:'name'            => 'VOYAGEGO_SESSID',
+.\mobile-driver\App.js:2:* VoyageGo Chauffeur Application Entry Point
+.\mobile-driver\app.json:2:"name": "VoyageGoDriver",
+.\mobile-driver\app.json:3:"displayName": "VoyageGo Driver",
+.\mobile-driver\app.json:5:"name": "VoyageGo Driver",
+.\mobile-driver\app.json:6:"slug": "voyagego-driver",
+.\mobile-driver\app.json:18:"bundleIdentifier": "com.voyagego.driver",
+.\mobile-driver\app.json:21:"NSLocationAlwaysAndWhenInUseUsageDescription": "VoyageGo requires continuous background location access during active passenger trips and authorized duty shifts to transmit live telemetry to dispatch operations.",
+.\mobile-driver\app.json:22:"NSLocationWhenInUseUsageDescription": "VoyageGo requires location access to track trip routes and estimate pickup arrivals."
+.\mobile-driver\app.json:26:"package": "com.voyagego.driver",
+.\mobile-driver\README.md:1:# VoyageGo Chauffeur Mobile Application (React Native)
+.\mobile-driver\README.md:49:- **Production Server**: Use your HTTPS production domain (e.g., `https://api.voyagego.com/api/mobile/v1`).
+.\mobile-driver\src\config.js:2:* VoyageGo Chauffeur Mobile Application Configuration
+.\mobile-driver\src\api\client.js:2:* VoyageGo API Client with Automatic Token Injection & Refresh Interceptors
+.\mobile-driver\src\api\client.js:8:ACCESS_TOKEN: '@voyagego_access_token',
+.\mobile-driver\src\api\client.js:9:REFRESH_TOKEN: '@voyagego_refresh_token',
+.\mobile-driver\src\api\client.js:10:DRIVER_DATA: '@voyagego_driver_profile',
+.\mobile-driver\src\api\client.js:11:DEVICE_UUID: '@voyagego_device_uuid',
+.\mobile-driver\src\context\AuthContext.js:2:* VoyageGo Authentication Context for React Native Driver App
+.\mobile-driver\src\navigation\AppNavigator.js:2:* Navigation Hierarchy for VoyageGo Chauffeur Mobile Application
+.\mobile-driver\src\navigation\AppNavigator.js:92:<Text style={styles.splashText}>VoyageGo Chauffeur Suite</Text>
+.\mobile-driver\src\screens\ActiveTrackingScreen.js:2:* VoyageGo Live Active Telemetry & Background Tracking Radar Screen
+.\mobile-driver\src\screens\DashboardScreen.js:2:* VoyageGo Chauffeur Dashboard Screen
+.\mobile-driver\src\screens\DashboardScreen.js:62:Alert.alert('Tracking Active', 'Live telemetry is now broadcasting to VoyageGo central fleet dispatch.');
+.\mobile-driver\src\screens\LoginScreen.js:2:* VoyageGo Chauffeur Mobile Login Screen
+.\mobile-driver\src\screens\LoginScreen.js:41:setErrorMessage(e.message || 'Unable to connect to VoyageGo dispatch server.');
+.\mobile-driver\src\screens\LoginScreen.js:58:<Text style={styles.brandTitle}>VoyageGo</Text>
+.\mobile-driver\src\screens\LoginScreen.js:79:placeholder="e.g. driver1 or user@voyagego.com"
+.\mobile-driver\src\screens\ProfileScreen.js:2:* VoyageGo Chauffeur Profile & Settings Screen
+.\mobile-driver\src\screens\ProfileScreen.js:40:<Text style={styles.roleTitle}>Executive Chauffeur • VoyageGo Fleet</Text>
+.\mobile-driver\src\screens\TripDetailScreen.js:2:* VoyageGo Trip Detail & Execution Screen
+.\mobile-driver\src\screens\TripsScreen.js:2:* VoyageGo Chauffeur Trips List Screen
+.\mobile-driver\src\services\BackgroundLocationService.js:2:* VoyageGo Native Background Tracking Service
+.\mobile-driver\src\services\BackgroundLocationService.js:46:title: 'VoyageGo Location Permission',
+.\mobile-driver\src\services\BackgroundLocationService.js:47:message: 'VoyageGo requires precise GPS location to track trip routes and chauffeur dispatch status.',
+.\mobile-driver\src\services\BackgroundLocationService.js:64:message: 'VoyageGo needs continuous location while navigating trips with screen locked or in the background.',
+.\mobile-driver\src\services\LocationQueueService.js:9:const QUEUE_STORAGE_KEY = '@voyagego_offline_location_queue';
+.\public\index.php:3:* VoyageGo Tours & Travels
+.\public\router.php:3:* VoyageGo Built-in PHP Server Router (Inside public/)
+.\public\assets\css\app.css:7872:VoyageGo Language Selector Dropdown System (.vg-lang-dropdown)
+.\public\assets\js\app.js:2:* VoyageGo Tours & Travels - Core Client JavaScript
+.\public\assets\js\app.js:704:// VoyageGo Full AJAX SPA & Form Engine
+.\public\assets\js\app.js:898:console.error('VoyageGo Form AJAX error:', err);
+.\public\assets\js\app.js:1026:console.error('VoyageGo Action AJAX error:', err);
+.\public\assets\js\app.js:1061:console.error('VoyageGo Navigation Error:', err);
+.\public\assets\js\app.js:1168:window.dispatchEvent(new CustomEvent('voyagego:pageLoaded', { detail: { url } }));
+.\public\assets\js\app.js:1527:function initVoyageGoApp() {
+.\public\assets\js\app.js:1540:initVoyageGoApp();
+.\public\assets\js\app.js:1544:initVoyageGoApp();
+.\tests\run_all.php:93:$sqliAttempt = "admin@voyagego.com' OR '1'='1";
+.\tests\run_all.php:253:$t->assert(str_contains($content, 'VoyageGo Database Backup'), 'Backup archive contains authorized VoyageGo header');
+.\tests\run_all.php:272:// 2. Login with existing user email ('admin@voyagego.com')
+.\tests\run_all.php:273:$adminUser = $userModel->findBy('email', 'admin@voyagego.com');
+.\tests\run_all.php:278:'email'      => 'admin@voyagego.com',
+.\tests\run_all.php:287:$adminEmailLogin = $authService->login('admin@voyagego.com', 'Admin@12345');
+.\tests\run_all.php:288:$t->assert($adminEmailLogin['email'] === 'admin@voyagego.com', 'Login with existing user email succeeds');
+.\tests\run_all.php:305:$testEmail = 'ops.lead.' . uniqid() . '@voyagego.com';
+.\tests\run_all.php:328:'email'      => 'another_' . uniqid() . '@voyagego.com',
+.\tests\run_all.php:420:'email'      => 'temp_admin_' . uniqid() . '@voyagego.com',
+.\tests\run_all.php:574:$noDuplicates = $customerModel->findPotentialDuplicates('9999900000', 'unique.guest@voyagego.com');
+.\tests\run_all.php:627:$testEmpEmail = 'test.chauffeur.' . uniqid() . '@voyagego.com';
+.\tests\run_all.php:830:$driverUserEmail = 'test.driver.' . uniqid() . '@voyagego.com';
+.\tests\run_all.php:1118:$drv1Email = 'driver.suite19.1.' . uniqid() . '@voyagego.com';
+.\tests\run_all.php:1141:$drv2Email = 'driver.suite19.2.' . uniqid() . '@voyagego.com';
+.\tests\run_all.php:1462:'email'    => 'fresh.' . uniqid() . '@voyagego.com',
+.\tests\run_all.php:1506:$adminUser = $userModel->findBy('role', 'admin') ?? $userModel->findBy('email', 'admin@voyagego.com');
+.\tests\run_all.php:1643:'email'      => $testUsername . '@voyagego.internal',
+.\tests\TestRunner.php:3:* VoyageGo Automated Test Suite Runner
+.\tests\test_ajax_language_switcher.php:136:$app = ['name' => 'VoyageGo'];
+.\tests\test_dynamic_email_recipients.php:4:* Comprehensive automated verification for VoyageGo Tours & Travels
+.\tests\test_dynamic_email_recipients.php:92:assertTest("No fake '@voyagego.internal' generated for user", !str_contains($createdUser['email'] ?? '', '@voyagego.internal'));
+.\tests\test_dynamic_email_recipients.php:419:// Legacy fake email (@voyagego.internal) skips delivery
+.\tests\test_dynamic_email_recipients.php:422:'customer_email' => 'driver123@voyagego.internal',
+.\tests\test_dynamic_email_recipients.php:425:assertTest("Notification to '@voyagego.internal' is rejected and skips delivery", $skipFakeResult['success'] === false);
+.\tests\test_email_notification_system.php:3:* Test Suite: VoyageGo Professional Email Notification System & Push Removal Verification
+.\tests\test_email_notification_system.php:106:$testHash = EmailLog::makeHash('test_event', 'booking', 99999, 'guest@voyagego.com');
+.\tests\test_email_notification_system.php:110:'guest@voyagego.com',
+.\tests\test_email_notification_system.php:123:$dummyHash = EmailLog::makeHash('other_event', 'booking', 88888, 'nobody@voyagego.com');
+.\tests\test_email_notification_system.php:148:$htmlSample = "<h1>Welcome to VoyageGo</h1><p>Your journey is scheduled.<br>Thank you!</p>";
+.\tests\test_email_notification_system.php:150:assertTest("htmlToPlainText converts HTML headings & paragraphs", str_contains($plainSample, "Welcome to VoyageGo"));
+.\tests\test_email_notification_system.php:174:$dummyDriver = ['id' => 2, 'name' => 'Sanket Sidurkar', 'email' => 'sanket@voyagego.com', 'phone' => '+91 98220 99999'];
+.\tests\test_email_notification_system.php:208:'test' => ['recipientEmail' => 'admin@voyagegotravels.com', 'smtpHost' => 'smtp.gmail.com', 'smtpPort' => 465, 'sender' => 'contact@voyagego.com'],
+.\tests\test_email_notification_system.php:214:assertTest("Template '{$tmpl}' renders valid HTML", str_contains($html, '<!DOCTYPE html>') && str_contains($html, 'VoyageGo'));
+.\tests\test_form_localization.php:116:'email' => 'rajesh@voyagego.com'
+.\tests\test_form_validation_red_border.php:99:it("2k. VoyageValidation is initialized inside initVoyageGoApp",
+.\tests\test_gps_full_workflow.php:47:$_SERVER['SCRIPT_NAME'] = '/voyagego/public/index.php';
+.\tests\test_gps_full_workflow.php:49:assertTest($subUrl === '/voyagego/public/api/gps/update', '1a. url() helper correctly prefixes subdirectory path', "Got: {$subUrl}");
+.\tests\test_gps_full_workflow.php:68:$testEmail = 'gps.test.driver.' . uniqid() . '@voyagego.com';
+.\tests\test_language_switcher.php:3:* VoyageGo Tours & Travels - Comprehensive Language Switcher Test Suite
+.\tests\test_language_switcher.php:20:$runner = new TestRunner('VoyageGo Multi-Language Switcher (EN, HI, MR)');
+.\tests\test_language_switcher.php:181:$testEmail = 'lang.user.' . uniqid() . '@voyagego.com';
+.\tests\test_language_switcher.php:279:$app = ['name' => 'VoyageGo'];
+.\tests\test_mobile_api_workflow.php:44:'email'      => $testUsername . '@voyagego.internal',
+.\tests\test_mobile_onboarding_responsiveness.js:90:check('Branding remains Tours', !js.includes('VoyageGo PWA') && js.includes('Tours'));
+.\tests\test_pwa_install_notification_flow.js:315:!js.includes('VoyageGo PWA') &&
+.\tests\test_rendered_views_no_voyagego.php:28:if (strpos($officeHtml, 'VoyageGo') !== false) {
+.\tests\test_rendered_views_no_voyagego.php:29:$errors[] = "VoyageGo found in office layout!";
+.\tests\test_rendered_views_no_voyagego.php:39:if (strpos($authHtml, 'VoyageGo') !== false) {
+.\tests\test_rendered_views_no_voyagego.php:40:$errors[] = "VoyageGo found in auth layout!";
+.\tests\test_rendered_views_no_voyagego.php:50:if (strpos($driverHtml, 'VoyageGo') !== false) {
+.\tests\test_rendered_views_no_voyagego.php:51:$errors[] = "VoyageGo found in driver layout!";
+.\tests\test_rendered_views_no_voyagego.php:61:if (strpos($setupHtml, 'VoyageGo') !== false) {
+.\tests\test_rendered_views_no_voyagego.php:62:$errors[] = "VoyageGo found in setup layout!";
+.\tests\test_rendered_views_no_voyagego.php:80:if (strpos($driverProfileHtml, 'VoyageGo') !== false) {
+.\tests\test_rendered_views_no_voyagego.php:81:$errors[] = "VoyageGo found in driver/profile.php!";
+.\tests\test_rendered_views_no_voyagego.php:98:if (strpos($driverVehicleHtml, 'VoyageGo') !== false) {
+.\tests\test_rendered_views_no_voyagego.php:99:$errors[] = "VoyageGo found in driver/vehicle.php!";
+.\tests\test_rendered_views_no_voyagego.php:106:if (strpos($officeVehiclesHtml, 'VoyageGo') !== false) {
+.\tests\test_rendered_views_no_voyagego.php:107:$errors[] = "VoyageGo found in office/vehicles/create.php!";
+.\tests\test_rendered_views_no_voyagego.php:111:echo "SUCCESS: All tested layouts and views cleanly render dynamic company name ('manaswi') with ZERO instances of 'VoyageGo'!\n";
+.\tests\test_voyagego_email_ui.php:3:* Test Suite: VoyageGo Professional Email UI Verification
+.\tests\test_voyagego_email_ui.php:75:assertUiTest("Section 1: Brand Header contains VoyageGo branding", str_contains($masterContent, 'Voyage</span><span style="color: #5520D8;">Go</span>'));
+.\tests\test_voyagego_email_ui.php:97:assertUiTest("Section 10: Footer contains VoyageGo Tours & Travels", str_contains($masterContent, 'Voyage<span style="color: #7655F5;">Go</span>'));
+.\tests\test_voyagego_email_ui.php:218:'expected' => ['MEMBERSHIP WELCOME', 'Account Active', 'ACCOUNT INFORMATION', 'Explore Travel Destinations &rarr;', 'VoyageGo Privileges:']
+.\tests\test_voyagego_email_ui.php:227:'expected' => ['SECURITY NOTIFICATION', 'Password Updated', 'SECURITY CREDENTIALS', 'Sign In to VoyageGo &rarr;', 'Security Advisory:']
+.\tests\test_voyagego_email_ui.php:232:'sender' => 'contact@voyagegotravels.com',
+.\tests\test_voyagego_email_ui.php:233:'recipientEmail' => 'admin@voyagegotravels.com',
+.\tests\test_voyagego_email_ui.php:256:echo "VOYAGEGO EMAIL UI TEST SUMMARY: {$passed} PASSED, {$failed} FAILED\n";

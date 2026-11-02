@@ -52,7 +52,7 @@
                     </div>
                     <div>
                         <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--vg-gold-400); font-weight: 700;">
-                            VoyageGo Luxury Fleet
+                            <?= e(company_name()) ?> Fleet
                         </div>
                         <h2 style="font-size: 1.5rem; font-weight: 800; color: #FFF; margin: 0.2rem 0; letter-spacing: -0.01em;">
                             <?= e($vehicle['vehicle_number']) ?>
@@ -157,7 +157,7 @@
             <!-- Operational Notice -->
             <div style="margin-top: 1.25rem; background: var(--vg-pearl-100); border-radius: var(--vg-radius-md); padding: 0.85rem 1rem; font-size: 0.82rem; color: var(--vg-text-secondary); display: flex; align-items: center; gap: 0.65rem;">
                 <i class="fa-solid fa-circle-info" style="color: var(--vg-blue-500); font-size: 1rem;"></i>
-                <span>Vehicle assignment is managed by VoyageGo fleet dispatch operations. Any mechanical defects or maintenance requests should be reported directly to office operations.</span>
+                <span>Vehicle assignment is managed by <?= e(company_name()) ?> fleet dispatch operations. Any mechanical defects or maintenance requests should be reported directly to office operations.</span>
             </div>
         </div>
     </div>

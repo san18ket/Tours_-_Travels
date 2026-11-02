@@ -66,8 +66,8 @@ class FinanceAccount extends Model
         $whereSql = implode(' AND ', $where);
 
         $sql = "SELECT a.*,
-                       (SELECT COUNT(*) FROM `finance_ledger` t WHERE t.account_id = a.id) as tx_count,
-                       (SELECT MAX(transacted_at) FROM `finance_ledger` t WHERE t.account_id = a.id) as last_activity
+                       (SELECT COUNT(*) FROM `finance_transactions` t WHERE t.account_id = a.id) as tx_count,
+                       (SELECT MAX(transacted_at) FROM `finance_transactions` t WHERE t.account_id = a.id) as last_activity
                 FROM `finance_accounts` a
                 WHERE {$whereSql}
                 ORDER BY a.status ASC, a.account_type ASC, a.current_balance DESC
@@ -108,42 +108,5 @@ class FinanceAccount extends Model
         $stmt = $this->getPdo()->prepare($sql);
         $stmt->execute($params);
         return (int)$stmt->fetchColumn();
-    }
-
-    public function findByIdWithStats(int $id): ?array
-    {
-        $account = $this->find($id);
-        if (!$account) {
-            return null;
-        }
-
-        $pdo = $this->getPdo();
-
-        // Inflows
-        $stmt = $pdo->prepare("SELECT COALESCE(SUM(amount), 0) FROM `finance_ledger` WHERE `account_id` = ? AND `transaction_type` = 'credit'");
-        $stmt->execute([$id]);
-        $account['total_inflow'] = (float)$stmt->fetchColumn();
-
-        // Outflows
-        $stmt = $pdo->prepare("SELECT COALESCE(SUM(amount), 0) FROM `finance_ledger` WHERE `account_id` = ? AND `transaction_type` = 'debit'");
-        $stmt->execute([$id]);
-        $account['total_outflow'] = (float)$stmt->fetchColumn();
-
-        // Total count
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM `finance_ledger` WHERE `account_id` = ?");
-        $stmt->execute([$id]);
-        $account['total_transactions'] = (int)$stmt->fetchColumn();
-
-        // Recent 30 transactions
-        $stmt = $pdo->prepare("SELECT t.*, u.name as created_by_name FROM `finance_ledger` t LEFT JOIN `users` u ON t.created_by = u.id WHERE t.`account_id` = ? ORDER BY t.`transacted_at` DESC, t.`id` DESC LIMIT 30");
-        $stmt->execute([$id]);
-        $account['recent_transactions'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-
-        // Recent transfers
-        $stmt = $pdo->prepare("SELECT t.*, a2.account_name as related_account_name FROM `finance_ledger` t LEFT JOIN `finance_accounts` a2 ON t.reference_id = a2.id WHERE t.`account_id` = ? AND t.`reference_type` = 'finance_transfer' ORDER BY t.`transacted_at` DESC, t.`id` DESC LIMIT 15");
-        $stmt->execute([$id]);
-        $account['recent_transfers'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-
-        return $account;
     }
 }

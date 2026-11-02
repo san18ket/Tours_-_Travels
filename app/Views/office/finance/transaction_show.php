@@ -278,7 +278,7 @@ $initial = strtoupper(mb_substr($tx['category'] ?? 'T', 0, 1));
                     </div>
                     <div class="section-card-body">
                         <div class="view-kv-grid">
-                            <!-- Row 1: Identification -->
+                            <!-- Row 1 -->
                             <div class="view-kv-item">
                                 <span class="view-kv-label">Voucher Identifier</span>
                                 <span class="view-kv-value bold" style="font-family: monospace; font-size: 0.95rem; color: #176B5B;">
@@ -293,33 +293,6 @@ $initial = strtoupper(mb_substr($tx['category'] ?? 'T', 0, 1));
                                         <span><?= $typeName ?></span>
                                     </span>
                                 </span>
-                            </div>
-
-                            <!-- Row 2: Bank & Account Details -->
-                            <div class="view-kv-item">
-                                <span class="view-kv-label">Banking Institution (Bank)</span>
-                                <span class="view-kv-value bold" style="color: #176B5B;">
-                                    <i class="fa-solid fa-building-columns" style="margin-right: 5px;"></i>
-                                    <?= !empty($tx['bank_name']) ? e($tx['bank_name']) : (!empty($tx['account_name']) ? e($tx['account_name']) : 'Internal Cash Drawer') ?>
-                                </span>
-                            </div>
-                            <div class="view-kv-item">
-                                <span class="view-kv-label">Target Account</span>
-                                <span class="view-kv-value bold">
-                                    <a href="<?= url('/office/finance/accounts/' . $tx['account_id']) ?>" style="color: inherit; text-decoration: underline;" title="View Vault Details">
-                                        <?= e($tx['account_name']) ?>
-                                    </a>
-                                    <span style="font-size: 0.75rem; color: #64748B; font-weight: 600;">(<?= strtoupper($tx['account_type'] ?? 'Account') ?>)</span>
-                                </span>
-                            </div>
-
-                            <div class="view-kv-item">
-                                <span class="view-kv-label">Account Number</span>
-                                <span class="view-kv-value monospace bold"><?= !empty($tx['account_number']) ? e($tx['account_number']) : 'Internal Drawer' ?></span>
-                            </div>
-                            <div class="view-kv-item">
-                                <span class="view-kv-label">IFSC Code / Branch</span>
-                                <span class="view-kv-value monospace bold" style="color: #176B5B;"><?= !empty($tx['ifsc_code']) ? e($tx['ifsc_code']) : 'N/A' ?></span>
                             </div>
 
                             <!-- Row 2 -->
@@ -2143,4 +2116,3 @@ $initial = strtoupper(mb_substr($tx['category'] ?? 'T', 0, 1));
     }
 }
 </style>
-

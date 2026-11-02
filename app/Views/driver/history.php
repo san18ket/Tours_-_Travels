@@ -1,13 +1,13 @@
 <?php
 /**
  * Driver Trip History View — Dedicated Driver Portal
- * Executive UI Architecture following Owner Dashboard Customer Directory standard (app/Views/office/customers/index.php)
+ * Exact Visual, Structural & Interactive Match of Owner Dashboard Customer Directory (app/Views/office/customers/index.php)
  */
 
 $search         = $search ?? '';
 $selectedStatus = $selectedStatus ?? $status ?? '';
 $currStatus     = strtolower($selectedStatus);
-$totRec         = (int)($totalHistoryAll ?? $totalAll ?? $totalCustomers ?? $total ?? count($history ?? $trips ?? []));
+$totRec         = (int)($totalCustomers ?? $totalAll ?? $totalHistoryAll ?? $total ?? count($history ?? $trips ?? $customers ?? []));
 $currP          = (int)($currentPage ?? $page ?? 1);
 $pSize          = (int)($perPage ?? 10);
 $from           = $totRec > 0 ? (($currP - 1) * $pSize) + 1 : 0;
@@ -24,105 +24,106 @@ $buildPageUrl = function(int $p) use ($search, $selectedStatus, $pSize) {
 ?>
 
 <div class="bookings-page-view">
-    <!-- 1. DESKTOP ONLY: Unified Page Header (Exact Executive Customer Directory Architecture) -->
+    <!-- 1. DESKTOP ONLY: Unified Page Header (Exact Customer Directory Architecture) -->
     <div class="desktop-header-wrapper">
         <?= render_page_header([
-            'title'       => 'Trip History & Archives',
-            'description' => 'Comprehensive verified digital ledger of completed chauffeur missions, passenger transit manifests, route itineraries, and odometer telemetry.',
-            'image'       => 'header-dispatch.jpg',
-            'badge'       => 'Archive Ledger',
+            'title'       => __('sidebar.customers', 'Customer Directory'),
+            'description' => __('nav.customers', 'Verified guest profiles, corporate client accounts, contact history, and reservation statistics.'),
+            'image'       => 'header-customers.jpg',
+            'badge'       => 'Verified Clients',
             'breadcrumbs' => [
                 ['label' => __('sidebar.dashboard', 'Dashboard'), 'url' => url('/driver/dashboard')],
-                ['label' => 'Trip History', 'url' => ''],
+                ['label' => __('sidebar.trip_history', 'Trip History'), 'url' => ''],
             ],
             'actions'     => '<a href="' . url('/driver/trips') . '" class="btn btn-primary" style="border-radius:10px; font-weight:700;"><i class="fa-solid fa-calendar-check" style="margin-right:6px;"></i><span>Active Trips</span></a>' .
-                             '<a href="' . url('/driver/dashboard') . '" class="btn btn-outline" style="margin-left:8px; border-radius:10px; font-weight:700;"><i class="fa-solid fa-gauge" style="margin-right:6px;"></i><span>Console</span></a>',
+                             '<a href="' . url('/driver/dashboard') . '" class="btn btn-outline" style="margin-left:8px; border-radius:10px; font-weight:700;"><i class="fa-solid fa-gauge" style="margin-right:6px;"></i><span>Dashboard</span></a>',
         ]) ?>
     </div>
 
-    <!-- 2. DESKTOP ONLY: Top KPI Summary Cards (Exact 4-Card Executive Grid) -->
+    <!-- 2. DESKTOP ONLY: Top KPI Summary Cards (Exact Bookings Architecture) -->
     <div class="booking-kpi-grid" id="customersKpiGrid">
-        <!-- Card 1: Total History Records -->
-        <div class="booking-kpi-card <?= empty($selectedStatus) ? 'is-selected' : '' ?>" data-status="" role="button" tabindex="0" title="Click to view all archived journeys">
+        <!-- Card 1: Total Clients -->
+        <div class="booking-kpi-card <?= empty($selectedStatus) ? 'is-selected' : '' ?>" data-status="" role="button" tabindex="0" title="Click to view all registered customers">
             <div class="booking-kpi-top">
-                <span class="booking-kpi-label">Total History</span>
+                <span class="booking-kpi-label"><?= e(__('card.total_clients', 'Total Clients')) ?></span>
                 <span class="booking-kpi-icon icon-teal">
-                    <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                 </span>
             </div>
-            <div class="booking-kpi-val" data-count="<?= (int)($totalHistoryAll ?? $totalAll ?? $totRec) ?>"><?= number_format($totalHistoryAll ?? $totalAll ?? $totRec) ?></div>
+            <div class="booking-kpi-val" data-count="<?= (int)($totalAll ?? $totRec) ?>"><?= number_format($totalAll ?? $totRec) ?></div>
             <div class="booking-kpi-sub">
-                <span>All past logged journeys</span>
+                <span><?= e(__('common.all_manifests', 'All registered guest accounts')) ?></span>
                 <span class="kpi-filter-tag"><i class="fa-solid fa-arrow-right"></i></span>
             </div>
         </div>
 
-        <!-- Card 2: Completed Journeys -->
-        <div class="booking-kpi-card <?= ($selectedStatus ?? '') === 'completed' || ($selectedStatus ?? '') === 'active' ? 'is-selected' : '' ?>" data-status="completed" role="button" tabindex="0" title="Click to filter completed journeys">
+        <!-- Card 2: Active Profiles -->
+        <div class="booking-kpi-card <?= ($selectedStatus ?? '') === 'active' || ($selectedStatus ?? '') === 'completed' ? 'is-selected' : '' ?>" data-status="active" role="button" tabindex="0" title="Click to filter verified active customers">
             <div class="booking-kpi-top">
-                <span class="booking-kpi-label">Completed Missions</span>
+                <span class="booking-kpi-label"><?= e(__('card.active_profiles', 'Active Profiles')) ?></span>
                 <span class="booking-kpi-icon icon-emerald">
                     <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </span>
             </div>
-            <div class="booking-kpi-val" data-count="<?= (int)($totalCompleted ?? $totalActive ?? 0) ?>"><?= number_format($totalCompleted ?? $totalActive ?? 0) ?></div>
+            <div class="booking-kpi-val" data-count="<?= (int)($totalActive ?? $totalCompleted ?? 0) ?>"><?= number_format($totalActive ?? $totalCompleted ?? 0) ?></div>
             <div class="booking-kpi-sub">
                 <span class="pulse-dot"></span>
-                <span>Successfully executed</span>
+                <span><?= e(__('status.active', 'Verified & in good standing')) ?></span>
                 <span class="kpi-filter-tag"><i class="fa-solid fa-arrow-right"></i></span>
             </div>
         </div>
 
-        <!-- Card 3: Total Distance Driven -->
-        <div class="booking-kpi-card" data-status="" role="button" tabindex="0" title="Total distance driven across completed missions">
+        <!-- Card 3: Booking Guests -->
+        <div class="booking-kpi-card <?= ($selectedStatus ?? '') === 'with_bookings' ? 'is-selected' : '' ?>" data-status="with_bookings" role="button" tabindex="0" title="Click to filter active travelers with reservations">
             <div class="booking-kpi-top">
-                <span class="booking-kpi-label">Distance Driven</span>
+                <span class="booking-kpi-label"><?= e(__('table.bookings', 'Active Travelers')) ?></span>
                 <span class="booking-kpi-icon icon-amber">
-                    <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                    <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 </span>
             </div>
-            <div class="booking-kpi-val" data-count="<?= (int)($totalDistanceKm ?? 0) ?>"><?= number_format($totalDistanceKm ?? 0) ?> <span style="font-size:0.95rem; font-weight:700; color:#64748B;">km</span></div>
+            <div class="booking-kpi-val" data-count="<?= (int)($totalWithBookings ?? $totalDistanceKm ?? 0) ?>"><?= number_format($totalWithBookings ?? $totalDistanceKm ?? 0) ?></div>
             <div class="booking-kpi-sub">
-                <span>Verified telemetry logs</span>
-                <span class="kpi-filter-tag"><i class="fa-solid fa-road"></i></span>
+                <span><?= e(__('status.in_progress', 'Guests with past reservations')) ?></span>
+                <span class="kpi-filter-tag"><i class="fa-solid fa-arrow-right"></i></span>
             </div>
         </div>
 
-        <!-- Card 4: Cancelled Records -->
-        <div class="booking-kpi-card <?= ($selectedStatus ?? '') === 'cancelled' || ($selectedStatus ?? '') === 'inactive' ? 'is-selected' : '' ?>" data-status="cancelled" role="button" tabindex="0" title="Click to filter cancelled trip records">
+        <!-- Card 4: Inactive Accounts -->
+        <div class="booking-kpi-card <?= ($selectedStatus ?? '') === 'inactive' || ($selectedStatus ?? '') === 'cancelled' ? 'is-selected' : '' ?>" data-status="inactive" role="button" tabindex="0" title="Click to filter dormant inactive clients">
             <div class="booking-kpi-top">
-                <span class="booking-kpi-label">Cancelled Records</span>
+                <span class="booking-kpi-label"><?= e(__('card.inactive_accounts', 'Inactive Accounts')) ?></span>
                 <span class="booking-kpi-icon icon-navy">
                     <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
                 </span>
             </div>
-            <div class="booking-kpi-val" data-count="<?= (int)($totalCancelled ?? $totalInactive ?? 0) ?>"><?= number_format($totalCancelled ?? $totalInactive ?? 0) ?></div>
+            <div class="booking-kpi-val" data-count="<?= (int)($totalInactive ?? $totalCancelled ?? 0) ?>"><?= number_format($totalInactive ?? $totalCancelled ?? 0) ?></div>
             <div class="booking-kpi-sub">
-                <span>Voided or aborted trips</span>
+                <span><?= e(__('status.archived', 'Dormant or paused clients')) ?></span>
                 <span class="kpi-filter-tag"><i class="fa-solid fa-arrow-right"></i></span>
             </div>
         </div>
     </div>
 
-    <!-- 3. DESKTOP ONLY: Compact Filter Bar (Exact Architecture from Customer Directory) -->
+    <!-- 3. DESKTOP ONLY: Compact Filter Bar (Exact Bookings Architecture) -->
     <form method="GET" action="<?= url('/driver/history') ?>" class="filter-bar-compact" id="customerFilterForm" data-no-ajax="true" onsubmit="event.preventDefault(); return false;">
         <div class="fbc-search" id="fbcSearchWrapper">
             <i class="fa-solid fa-magnifying-glass fbc-search-icon" id="fbcSearchIcon"></i>
-            <input type="text" name="search" id="searchInput" placeholder="Search by booking code, route, passenger, vehicle..." value="<?= e($search ?? '') ?>" autocomplete="off">
+            <input type="text" name="search" id="searchInput" placeholder="Search customers by code, name, phone, email, city..." value="<?= e($search ?? '') ?>" autocomplete="off">
             <button type="button" class="fbc-search-clear" id="searchClearBtn" style="<?= empty($search) ? 'display:none;' : '' ?>" title="Clear search">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
 
         <select name="status" id="statusInput">
-            <option value="" <?= empty($selectedStatus) ? 'selected' : '' ?>>All Past Statuses</option>
-            <option value="completed" <?= ($selectedStatus ?? '') === 'completed' || ($selectedStatus ?? '') === 'active' ? 'selected' : '' ?>>Completed</option>
-            <option value="cancelled" <?= ($selectedStatus ?? '') === 'cancelled' || ($selectedStatus ?? '') === 'inactive' ? 'selected' : '' ?>>Cancelled</option>
+            <option value="" <?= empty($selectedStatus) ? 'selected' : '' ?>><?= e(__('filter.all_status', 'All Statuses')) ?></option>
+            <option value="active" <?= ($selectedStatus ?? '') === 'active' || ($selectedStatus ?? '') === 'completed' ? 'selected' : '' ?>><?= e(__('status.active', 'Active')) ?></option>
+            <option value="with_bookings" <?= ($selectedStatus ?? '') === 'with_bookings' ? 'selected' : '' ?>><?= e(__('table.bookings', 'Active Travelers')) ?></option>
+            <option value="inactive" <?= ($selectedStatus ?? '') === 'inactive' || ($selectedStatus ?? '') === 'cancelled' ? 'selected' : '' ?>><?= e(__('status.inactive', 'Inactive')) ?></option>
         </select>
 
         <select name="per_page" id="perPageInput" title="Records per page">
             <?php foreach ([5, 10, 15, 20, 25, 50, 100] as $opt): ?>
-                <option value="<?= $opt ?>" <?= ($perPage ?? 10) == $opt ? 'selected' : '' ?>><?= $opt ?> per page</option>
+                <option value="<?= $opt ?>" <?= ($perPage ?? 10) == $opt ? 'selected' : '' ?>><?= e(__('filter.per_page', ['count' => $opt])) ?></option>
             <?php endforeach; ?>
         </select>
 
@@ -145,11 +146,11 @@ $buildPageUrl = function(int $p) use ($search, $selectedStatus, $pSize) {
                 <a href="<?= url('/driver/dashboard') ?>" class="mv-back-btn" title="<?= e(__('btn.back', 'Back')) ?>">
                     <i class="fa-solid fa-arrow-left"></i>
                 </a>
-                <h2 class="mv-page-title">Trip History</h2>
+                <h2 class="mv-page-title"><?= e(__('sidebar.customers', 'Customers')) ?></h2>
             </div>
             <a href="<?= url('/driver/trips') ?>" class="mv-add-btn">
                 <i class="fa-solid fa-calendar-check"></i>
-                <span>Active Trips</span>
+                <span><?= e(__('sidebar.my_trips', 'Trips')) ?></span>
             </a>
         </div>
 
@@ -158,7 +159,7 @@ $buildPageUrl = function(int $p) use ($search, $selectedStatus, $pSize) {
             <form method="GET" action="<?= url('/driver/history') ?>" class="mv-search-form" id="mvSearchForm" data-no-ajax="true" onsubmit="event.preventDefault(); return false;">
                 <div class="mv-search-input-box">
                     <i class="fa-solid fa-magnifying-glass mv-search-ico" id="mvSearchIcon"></i>
-                    <input type="text" name="search" id="mvSearchInput" placeholder="Search by code, guest, route..." value="<?= e($search ?? '') ?>" autocomplete="off">
+                    <input type="text" name="search" id="mvSearchInput" placeholder="Search by name, code, phone..." value="<?= e($search ?? '') ?>" autocomplete="off">
                     <button type="button" class="mv-search-clear" id="mvSearchClearBtn" style="<?= empty($search) ? 'display:none;' : '' ?>" title="Clear search">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
@@ -193,27 +194,31 @@ $buildPageUrl = function(int $p) use ($search, $selectedStatus, $pSize) {
         ?>
         <div class="mv-status-scroll" id="customersMvStatusScroll">
             <a href="<?= $makeStatusUrl('') ?>" class="mv-pill <?= empty($currStatus) ? 'active' : '' ?>" data-status="" data-no-ajax="true">
-                <span>All Past</span>
-                <span class="mv-pill-cnt"><?= (int)($totalHistoryAll ?? $totalAll ?? $totRec) ?></span>
+                <span><?= e(__('filter.all', 'All')) ?></span>
+                <span class="mv-pill-cnt"><?= (int)($totalAll ?? $totRec) ?></span>
             </a>
-            <a href="<?= $makeStatusUrl('completed') ?>" class="mv-pill <?= $currStatus === 'completed' || $currStatus === 'active' ? 'active' : '' ?>" data-status="completed" data-no-ajax="true">
-                <span>Completed</span>
-                <span class="mv-pill-cnt"><?= (int)($totalCompleted ?? $totalActive ?? 0) ?></span>
+            <a href="<?= $makeStatusUrl('active') ?>" class="mv-pill <?= $currStatus === 'active' || $currStatus === 'completed' ? 'active' : '' ?>" data-status="active" data-no-ajax="true">
+                <span><?= e(__('status.active', 'Active')) ?></span>
+                <span class="mv-pill-cnt"><?= (int)($totalActive ?? $totalCompleted ?? 0) ?></span>
             </a>
-            <a href="<?= $makeStatusUrl('cancelled') ?>" class="mv-pill <?= $currStatus === 'cancelled' || $currStatus === 'inactive' ? 'active' : '' ?>" data-status="cancelled" data-no-ajax="true">
-                <span>Cancelled</span>
-                <span class="mv-pill-cnt"><?= (int)($totalCancelled ?? $totalInactive ?? 0) ?></span>
+            <a href="<?= $makeStatusUrl('with_bookings') ?>" class="mv-pill <?= $currStatus === 'with_bookings' ? 'active' : '' ?>" data-status="with_bookings" data-no-ajax="true">
+                <span><?= e(__('table.bookings', 'Travelers')) ?></span>
+                <span class="mv-pill-cnt"><?= (int)($totalWithBookings ?? 0) ?></span>
+            </a>
+            <a href="<?= $makeStatusUrl('inactive') ?>" class="mv-pill <?= $currStatus === 'inactive' || $currStatus === 'cancelled' ? 'active' : '' ?>" data-status="inactive" data-no-ajax="true">
+                <span><?= e(__('status.inactive', 'Inactive')) ?></span>
+                <span class="mv-pill-cnt"><?= (int)($totalInactive ?? $totalCancelled ?? 0) ?></span>
             </a>
         </div>
     </div>
 
-    <!-- 5. All History Section: Desktop PMS Modern Table + Mobile App Cards -->
+    <!-- 5. All Customers Section: Desktop PMS Modern Table + Mobile App Cards -->
     <section class="recent-bookings-section" id="customersSection">
         <div class="section-header">
-            <h3 class="section-title">Archived Transit Manifests</h3>
+            <h3 class="section-title"><?= e(__('sidebar.customers', 'All Customers')) ?></h3>
             <div class="total-records-box">
                 <i class="fa-solid fa-layer-group"></i>
-                <span class="total-records-label">Total Records:</span>
+                <span class="total-records-label"><?= e(__('table.total_records', 'Total Records:')) ?></span>
                 <span class="total-records-badge" id="totalRecordsPill"><?= number_format($totRec) ?></span>
             </div>
         </div>
@@ -224,25 +229,28 @@ $buildPageUrl = function(int $p) use ($search, $selectedStatus, $pSize) {
                 <thead>
                     <tr>
                         <th class="text-center" style="width: 50px;">#</th>
-                        <th class="text-center" style="width: 80px;">Guest</th>
-                        <th style="min-width: 220px;">Trip &amp; Passenger</th>
-                        <th style="min-width: 160px;">Contact</th>
-                        <th style="min-width: 240px;">Route Itinerary</th>
-                        <th class="text-center" style="width: 140px;">Assigned Fleet</th>
-                        <th class="text-center" style="width: 140px;">Status &amp; Telemetry</th>
-                        <th class="text-center" style="width: 75px;">Actions</th>
+                        <th class="text-center" style="width: 80px;"><?= e(__('table.profile', 'Profile')) ?></th>
+                        <th style="min-width: 220px;"><?= e(__('table.client_details', 'Client Details')) ?></th>
+                        <th style="min-width: 160px;"><?= e(__('table.mobile_no', 'Mobile No.')) ?></th>
+                        <th style="min-width: 200px;"><?= e(__('table.address', 'Address')) ?></th>
+                        <th class="text-center" style="width: 100px;"><?= e(__('sidebar.bookings', 'Bookings')) ?></th>
+                        <th class="text-center" style="width: 110px;"><?= e(__('table.status', 'Status')) ?></th>
+                        <th class="text-center" style="width: 75px;"><?= e(__('table.actions', 'Actions')) ?></th>
                     </tr>
                 </thead>
                 <tbody id="customersTableBody">
                     <?php foreach (($history ?? []) as $i => $c):
                         $serial = (($currP - 1) * $pSize) + $i + 1;
                         $st = strtolower($c['status'] ?? 'completed');
-                        $isActive = ($st === 'completed');
+                        $isActive = in_array($st, ['completed', 'active']);
                         $statusClass = $isActive ? 'completed' : 'cancelled';
                         $statusText = match($st) {
-                            'completed' => 'Completed',
-                            'cancelled' => 'Cancelled',
-                            default     => ucfirst($st)
+                            'completed'       => 'Completed',
+                            'cancelled'       => 'Cancelled',
+                            'driver_accepted' => 'Accepted',
+                            'trip_started'    => 'In Transit',
+                            'assigned'        => 'Assigned',
+                            default           => ucfirst($st)
                         };
                         $custName = $c['customer_name'] ?? 'VIP Guest';
                         $initial = strtoupper(mb_substr($custName, 0, 1));
@@ -255,9 +263,6 @@ $buildPageUrl = function(int $p) use ($search, $selectedStatus, $pSize) {
                         $dropAddress = $c['drop_address'] ?? 'Drop point';
                         $vehicleNumber = $c['vehicle_number'] ?? 'Fleet';
                         $makeModel = $c['make_model'] ?? 'Vehicle';
-                        $startOdo = (int)($c['start_odometer'] ?? 0);
-                        $endOdo   = (int)($c['end_odometer'] ?? 0);
-                        $diff     = ($endOdo >= $startOdo && $startOdo > 0) ? ($endOdo - $startOdo) : 0;
                     ?>
                     <tr>
                         <!-- 1. Serial Number (#) -->
@@ -277,90 +282,102 @@ $buildPageUrl = function(int $p) use ($search, $selectedStatus, $pSize) {
                             </div>
                         </td>
 
-                        <!-- 3. Trip & Passenger Details -->
+                        <!-- 3. Client Details (Salutation, Full Name, and Email - Code Removed) -->
                         <td>
                             <div class="cust-client-details-cell">
                                 <div class="cust-name-row">
-                                    <a href="<?= url('/driver/trips/' . $c['id']) ?>" class="cust-full-name" title="View trip manifest">
+                                    <a href="<?= url('/driver/trips/' . $c['id']) ?>" class="cust-full-name" title="View customer profile">
                                         <?= e($custName) ?>
                                     </a>
-                                    <span class="cust-code-pill" title="Booking Reference Code"><?= e($bookingCode) ?></span>
+                                    <span class="cust-code-pill"><?= e($bookingCode) ?></span>
                                 </div>
                                 <div class="cust-email-row">
-                                    <i class="fa-solid fa-hashtag" style="font-size:0.75rem; color:#94A3B8;"></i>
-                                    <span class="cust-dispatch-tag"><?= e($dispatchCode) ?></span>
-                                    <span class="cust-date-tag">&bull; <?= format_date($c['start_date'] ?? date('Y-m-d')) ?></span>
+                                    <i class="fa-regular fa-envelope cust-email-icon"></i>
+                                    <?php if (!empty($email)): ?>
+                                        <a href="mailto:<?= e($email) ?>" class="cust-email-link"><?= e($email) ?></a>
+                                    <?php else: ?>
+                                        <span class="cust-no-email"><?= e($dispatchCode) ?> &bull; <?= format_date($c['start_date'] ?? date('Y-m-d')) ?></span>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </td>
 
-                        <!-- 4. Contact & Passengers -->
+                        <!-- 4. Mobile No. (Primary + Optional Alternate) -->
                         <td>
                             <div class="cust-phone-cell">
                                 <?php if (!empty($phone)): ?>
-                                    <a href="tel:<?= e($phone) ?>" class="cust-primary-phone" title="Call passenger">
+                                    <a href="tel:<?= e($phone) ?>" class="cust-primary-phone" title="Call customer">
                                         <i class="fa-solid fa-phone cust-phone-icon"></i>
                                         <span><?= e($phone) ?></span>
                                     </a>
                                 <?php else: ?>
                                     <span class="cust-no-email">No phone on record</span>
                                 <?php endif; ?>
-                                <div class="cust-alt-phone" title="Passenger Capacity">
-                                    <i class="fa-solid fa-users" style="font-size:0.75rem; color:#64748B;"></i>
-                                    <span><?= (int)($c['passenger_count'] ?? 1) ?> Passenger<?= ((int)($c['passenger_count'] ?? 1) > 1) ? 's' : '' ?></span>
-                                </div>
+                                <?php if (!empty($dispatchCode)): ?>
+                                    <div class="cust-alt-phone" title="Dispatch Reference">
+                                        <i class="fa-solid fa-hashtag"></i> <?= e($dispatchCode) ?>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </td>
 
-                        <!-- 5. Route Itinerary -->
+                        <!-- 5. Address (Street, City, State, Pincode) -->
                         <td>
                             <div class="cust-address-cell">
-                                <div class="cust-address-line" title="Pickup: <?= e($pickupAddress) ?>">
-                                    <i class="fa-solid fa-location-dot" style="color: #10B981; font-size: 0.82rem; flex-shrink: 0;"></i>
+                                <div class="cust-address-line" title="<?= e($pickupAddress) ?>">
+                                    <i class="fa-solid fa-location-dot cust-address-icon"></i>
                                     <span><?= e($pickupAddress) ?></span>
                                 </div>
-                                <div class="cust-address-sub" title="Destination: <?= e($dropAddress) ?>">
-                                    <i class="fa-solid fa-flag-checkered" style="color: #EF4444; font-size: 0.76rem; flex-shrink: 0;"></i>
+                                <div class="cust-address-sub" title="<?= e($dropAddress) ?>">
+                                    <i class="fa-solid fa-flag-checkered" style="font-size:0.72rem; color:#64748B;"></i>
                                     <span><?= e($dropAddress) ?></span>
                                 </div>
                             </div>
                         </td>
 
-                        <!-- 6. Assigned Fleet -->
+                        <!-- 6. Bookings Count -->
                         <td class="text-center">
                             <div class="cust-bookings-cell">
-                                <span class="fleet-plate-badge"><?= e($vehicleNumber) ?></span>
+                                <span class="cust-bookings-num" style="font-size:0.95rem;"><?= e($vehicleNumber) ?></span>
                                 <span class="cust-bookings-lbl"><?= e($makeModel) ?></span>
                             </div>
                         </td>
 
-                        <!-- 7. Status & Telemetry Badge -->
+                        <!-- 7. Status Toggle Switch -->
                         <td class="text-center">
-                            <div class="history-status-cell">
-                                <span class="history-status-pill <?= $statusClass ?>">
-                                    <span class="history-pulse-dot <?= $statusClass ?>"></span>
-                                    <?= $statusText ?>
-                                </span>
-                                <?php if ($diff > 0): ?>
-                                    <span class="telemetry-distance-pill" title="Verified trip distance">
-                                        <i class="fa-solid fa-road"></i> <?= number_format($diff) ?> km
+                            <div class="cust-toggle-cell" id="custToggleWrap-<?= (int)$c['id'] ?>">
+                                <button type="button" 
+                                        class="cust-status-toggle <?= $isActive ? 'is-active' : '' ?>" 
+                                        role="switch" 
+                                        aria-checked="<?= $isActive ? 'true' : 'false' ?>" 
+                                        data-id="<?= (int)$c['id'] ?>"
+                                        data-name="<?= addslashes(e($custName)) ?>"
+                                        title="Status: <?= $statusText ?>">
+                                    <span class="toggle-slider-track">
+                                        <span class="toggle-slider-thumb">
+                                            <span class="toggle-spinner" style="display: none;"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+                                        </span>
                                     </span>
-                                <?php endif; ?>
+                                </button>
+                                <span class="cust-toggle-pill <?= $statusClass ?>">
+                                    <span class="toggle-pulse-dot <?= $statusClass ?>"></span>
+                                    <span class="toggle-label-text"><?= $statusText ?></span>
+                                </span>
                             </div>
                         </td>
 
-                        <!-- 8. Actions Menu -->
+                        <!-- 8. Actions Menu (View, Edit, Dispatch, Delete) -->
                         <td class="text-center">
                             <div class="table-action-buttons">
                                 <button type="button" class="action-toggle-btn" onclick="toggleActions(this, event)" title="Actions">
                                     <i class="fa-solid fa-ellipsis"></i>
                                 </button>
                                 <div class="action-btns-popup">
-                                    <a href="<?= url('/driver/trips/' . $c['id']) ?>" class="action-btn-table view" title="View Full Trip Manifest">
+                                    <a href="<?= url('/driver/trips/' . $c['id']) ?>" class="action-btn-table view" title="View Profile & Bookings">
                                         <i class="fa-solid fa-eye"></i>
                                     </a>
                                     <?php if (!empty($phone)): ?>
-                                        <a href="tel:<?= e($phone) ?>" class="action-btn-table edit" title="Call Passenger">
+                                        <a href="tel:<?= e($phone) ?>" class="action-btn-table edit" title="Call Customer">
                                             <i class="fa-solid fa-phone"></i>
                                         </a>
                                     <?php endif; ?>
@@ -373,9 +390,9 @@ $buildPageUrl = function(int $p) use ($search, $selectedStatus, $pSize) {
                     <tr>
                         <td colspan="8">
                             <div class="no-data-message">
-                                <div class="no-data-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
-                                <h4 style="font-weight:700;color:#1e293b;margin-bottom:6px;">No trip history records found</h4>
-                                <p class="text-muted" style="margin:0;">Once you accept and complete assigned journeys, your verified telemetry and itinerary archive will appear here.</p>
+                                <div class="no-data-icon"><i class="fa-regular fa-folder-open"></i></div>
+                                <h4 style="font-weight:700;color:#1e293b;margin-bottom:6px;">No customers found</h4>
+                                <p class="text-muted" style="margin:0;">Try adjusting your search or filter parameters.</p>
                             </div>
                         </td>
                     </tr>
@@ -384,25 +401,26 @@ $buildPageUrl = function(int $p) use ($search, $selectedStatus, $pSize) {
             </table>
         </div>
 
-        <!-- Mobile Booking Cards List (Exact Responsive Design) -->
+        <!-- Mobile Booking Cards List (Exact Screen 3 Design Architecture) -->
         <div class="cards-grid" id="customersCards">
             <?php foreach (($history ?? []) as $c):
                 $st = strtolower($c['status'] ?? 'completed');
-                $isActive = ($st === 'completed');
-                $statusClass = $isActive ? 'completed' : 'cancelled';
+                $isActive = in_array($st, ['completed', 'active']);
+                $statusClass = $isActive ? 'active' : 'inactive';
                 $statusText = match($st) {
-                    'completed' => 'Completed',
-                    'cancelled' => 'Cancelled',
-                    default     => ucfirst($st)
+                    'completed'       => 'Completed',
+                    'cancelled'       => 'Cancelled',
+                    'driver_accepted' => 'Accepted',
+                    'trip_started'    => 'In Transit',
+                    'assigned'        => 'Assigned',
+                    default           => ucfirst($st)
                 };
                 $custName = $c['customer_name'] ?? 'VIP Guest';
                 $initial = strtoupper(mb_substr($custName, 0, 1));
                 $avatarUrl = !empty($c['customer_avatar']) ? customer_avatar_url($c['customer_avatar']) : null;
                 $bookingCode = $c['booking_code'] ?? '';
                 $phone = $c['customer_phone'] ?? '';
-                $startOdo = (int)($c['start_odometer'] ?? 0);
-                $endOdo   = (int)($c['end_odometer'] ?? 0);
-                $diff     = ($endOdo >= $startOdo && $startOdo > 0) ? ($endOdo - $startOdo) : 0;
+                $email = $c['customer_email'] ?? '';
             ?>
             <div class="mv-booking-card-wrapper">
                 <a href="<?= url('/driver/trips/' . $c['id']) ?>" class="mv-booking-card">
@@ -410,53 +428,56 @@ $buildPageUrl = function(int $p) use ($search, $selectedStatus, $pSize) {
                     <div class="mv-thumb-wrap">
                         <?php if (!empty($avatarUrl)): ?>
                             <img src="<?= e($avatarUrl) ?>" alt="<?= e($custName) ?>" class="mv-thumb-avatar-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <div class="mv-thumb-avatar" style="display: none;"><?= e($initial) ?></div>
+                            <div class="mv-thumb-avatar" style="display: none;">
+                                <?= e($initial) ?>
+                            </div>
                         <?php else: ?>
-                            <div class="mv-thumb-avatar"><?= e($initial) ?></div>
+                            <div class="mv-thumb-avatar">
+                                <?= e($initial) ?>
+                            </div>
                         <?php endif; ?>
                     </div>
 
-                    <!-- Middle: Details -->
+                    <!-- Middle: Name, Phone, Email, Address -->
                     <div class="mv-details">
                         <div class="mv-tour-title" title="<?= e($custName) ?>">
                             <?= e($custName) ?>
                         </div>
-                        <div class="mv-passenger">
-                            <span class="cust-code-pill"><?= e($bookingCode) ?></span>
-                            <span style="color:#94A3B8;">&bull;</span>
-                            <span style="font-size:0.75rem; color:#64748B; font-weight:600;"><?= e($c['dispatch_code'] ?? '') ?></span>
-                        </div>
                         <?php if (!empty($phone)): ?>
                         <div class="mv-date-duration">
-                            <i class="fa-solid fa-phone" style="font-size:0.75rem; color:#0EA5E9;"></i>
+                            <i class="fa-solid fa-phone"></i>
                             <span><?= e($phone) ?></span>
                         </div>
                         <?php endif; ?>
-                        <div class="mv-passenger" style="color: #475569;">
-                            <i class="fa-solid fa-location-dot" style="color: #10B981;"></i>
-                            <span><?= e($c['pickup_address'] ?? '') ?></span>
+                        <div class="mv-passenger">
+                            <i class="fa-solid fa-ticket"></i>
+                            <span><?= e($bookingCode) ?> &bull; <?= e($c['dispatch_code'] ?? '') ?></span>
                         </div>
-                        <div class="mv-passenger" style="color: #475569;">
-                            <i class="fa-solid fa-flag-checkered" style="color: #EF4444;"></i>
-                            <span><?= e($c['drop_address'] ?? '') ?></span>
+                        <div class="mv-passenger" style="color: #64748B;">
+                            <i class="fa-solid fa-location-dot" style="color: #EF4444;"></i>
+                            <span><?= e($c['pickup_address'] ?? '') ?> &rarr; <?= e($c['drop_address'] ?? '') ?></span>
                         </div>
                         <div class="mv-vehicle">
-                            <i class="fa-solid fa-car" style="color:#64748B;"></i>
+                            <i class="fa-solid fa-car"></i>
                             <span><?= e($c['vehicle_number'] ?? '') ?> &bull; <?= e($c['make_model'] ?? 'Fleet') ?></span>
                         </div>
                     </div>
 
-                    <!-- Right: Status, Telemetry & Date -->
+                    <!-- Right: Status toggle top, Total bookings bottom -->
                     <div class="mv-right-col">
-                        <span class="history-status-pill sm <?= $statusClass ?>">
-                            <span class="history-pulse-dot <?= $statusClass ?>"></span>
-                            <?= $statusText ?>
-                        </span>
-                        <?php if ($diff > 0): ?>
-                            <span class="telemetry-distance-pill sm">
-                                <?= number_format($diff) ?> km
-                            </span>
-                        <?php endif; ?>
+                        <div class="mv-status-toggle-wrap" onclick="event.stopPropagation()">
+                            <button type="button" 
+                                    class="cust-status-toggle sm <?= $isActive ? 'is-active' : '' ?>" 
+                                    role="switch" 
+                                    aria-checked="<?= $isActive ? 'true' : 'false' ?>" 
+                                    data-id="<?= (int)$c['id'] ?>"
+                                    title="Toggle status">
+                                <span class="toggle-slider-track">
+                                    <span class="toggle-slider-thumb"></span>
+                                </span>
+                            </button>
+                            <span class="mv-toggle-label-text <?= $statusClass ?>"><?= $statusText ?></span>
+                        </div>
                         <div class="mv-price"><?= format_date($c['start_date'] ?? date('Y-m-d')) ?></div>
                     </div>
                 </a>
@@ -467,11 +488,11 @@ $buildPageUrl = function(int $p) use ($search, $selectedStatus, $pSize) {
                         <i class="fa-solid fa-ellipsis-vertical"></i>
                     </button>
                     <div class="card-btns-popup">
-                        <a href="<?= url('/driver/trips/' . $c['id']) ?>" class="action-btn-table view" title="View Full Itinerary">
+                        <a href="<?= url('/driver/trips/' . $c['id']) ?>" class="action-btn-table view" title="View Profile">
                             <i class="fa-solid fa-eye"></i>
                         </a>
                         <?php if (!empty($phone)): ?>
-                            <a href="tel:<?= e($phone) ?>" class="action-btn-table edit" title="Call Passenger">
+                            <a href="tel:<?= e($phone) ?>" class="action-btn-table edit" title="Call">
                                 <i class="fa-solid fa-phone"></i>
                             </a>
                         <?php endif; ?>
@@ -481,18 +502,18 @@ $buildPageUrl = function(int $p) use ($search, $selectedStatus, $pSize) {
             <?php endforeach; ?>
             <?php if (empty($history)): ?>
             <div class="no-data-message">
-                <div class="no-data-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
-                <h4 style="font-weight:700;color:#1e293b;margin-bottom:6px;">No trip history records found</h4>
-                <p class="text-muted" style="margin:0;">Once you accept and complete assigned journeys, your verified telemetry and itinerary archive will appear here.</p>
+                <div class="no-data-icon"><i class="fa-regular fa-folder-open"></i></div>
+                <h4 style="font-weight:700;color:#1e293b;margin-bottom:6px;">No customers found</h4>
+                <p class="text-muted" style="margin:0;">Try adjusting your search or filter parameters.</p>
             </div>
             <?php endif; ?>
         </div>
     </section>
 
-    <!-- Modern Pagination (Exact Architecture from Customer Directory) -->
+    <!-- Modern Pagination (Exact Bookings Architecture) -->
     <div id="customersPaginationWrapper">
         <div class="pagination-wrapper">
-            <div class="pagination-info">Showing <span><?= $from ?>&ndash;<?= $to ?></span> of <span><?= $totRec ?></span> archived record(s)</div>
+            <div class="pagination-info">Showing <span><?= $from ?>&ndash;<?= $to ?></span> of <span><?= $totRec ?></span> customer(s)</div>
             <div class="pagination">
                 <a href="<?= $buildPageUrl(max(1, $currP - 1)) ?>" class="<?= $currP <= 1 ? 'disabled' : '' ?>" title="Previous Page" data-page="<?= max(1, $currP - 1) ?>" data-no-ajax="true">&#10094;</a>
                 <?php
@@ -517,7 +538,7 @@ $buildPageUrl = function(int $p) use ($search, $selectedStatus, $pSize) {
 
 <script>
     /* ========================================================================= */
-    /* Complete Driver History Live AJAX Filter Engine (Without Page Reload)    */
+    /* Complete Customer Directory Live AJAX Filter Engine (Without Page Reload) */
     /* ========================================================================= */
     (function initCustomerAjaxFilter() {
         let abortCtrl = null;
@@ -638,7 +659,7 @@ $buildPageUrl = function(int $p) use ($search, $selectedStatus, $pSize) {
             })
             .catch(err => {
                 if (err.name === 'AbortError') return;
-                console.error('AJAX Driver history filter error:', err);
+                console.error('AJAX Customer filter error:', err);
             })
             .finally(() => {
                 if (section) section.classList.remove('is-filtering');
@@ -826,7 +847,7 @@ $buildPageUrl = function(int $p) use ($search, $selectedStatus, $pSize) {
 
 <style>
 /* ========================================================================= */
-/* Executive Chauffeur Trip History UI & Layout Styles                       */
+/* Exact CSS Styles Directly from app/Views/office/customers/index.php       */
 /* ========================================================================= */
 
 .bookings-page-view {
@@ -836,36 +857,118 @@ $buildPageUrl = function(int $p) use ($search, $selectedStatus, $pSize) {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
-/* KPI Summary Grid */
+/* 1. Sleek Modern Table Container & Gradient Thead */
+.modern-table-container {
+    display: block !important;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    padding: 16px 20px;
+    overflow-x: auto;
+    overflow-y: visible;
+    border: 1px solid rgba(22, 68, 59, 0.08);
+    margin-bottom: 24px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.modern-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: auto;
+    min-width: 100%;
+}
+
+.modern-table thead {
+    background: linear-gradient(135deg, #176B5B, #16443B) !important;
+}
+
+.modern-table thead tr th:first-child {
+    border-top-left-radius: 10px !important;
+    border-bottom-left-radius: 10px !important;
+}
+
+.modern-table thead tr th:last-child {
+    border-top-right-radius: 10px !important;
+    border-bottom-right-radius: 10px !important;
+}
+
+/* Ensure ALL Table Headers are Crisp, White, and 100% Visible */
+.modern-table th,
+.modern-table thead th {
+    padding: 14px 14px !important;
+    text-align: left;
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    border: none !important;
+    white-space: nowrap !important;
+    background: transparent !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25) !important;
+}
+
+.modern-table th.text-center,
+.modern-table thead th.text-center {
+    text-align: center !important;
+}
+
+.modern-table tbody tr {
+    transition: all 0.25s ease;
+    border-radius: 8px;
+}
+
+.modern-table tbody tr:hover {
+    background: linear-gradient(135deg, rgba(23, 107, 91, 0.04), rgba(214, 183, 122, 0.05));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(22, 68, 59, 0.08);
+}
+
+.modern-table tbody td {
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    vertical-align: middle;
+    font-size: 13.5px;
+    color: #334155;
+}
+
+/* 2. Top KPI Cards Grid */
 .booking-kpi-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 1.25rem;
-    margin-bottom: 1.5rem;
+    gap: 16px;
+    margin-bottom: 24px;
 }
 
 .booking-kpi-card {
-    background: #ffffff;
-    border-radius: 14px;
-    padding: 1.25rem 1.5rem;
-    border: 1px solid #E2E8F0;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    background: #FFFFFF;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 16px;
+    padding: 18px 20px;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), 
+                box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), 
+                border-color 0.22s ease,
+                background-color 0.22s ease;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
 }
 
 .booking-kpi-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    transform: translateY(-4px);
+    box-shadow: 0 14px 28px -6px rgba(15, 23, 42, 0.09), 0 4px 10px -2px rgba(15, 23, 42, 0.04);
     border-color: #CBD5E1;
 }
 
-.booking-kpi-card.is-selected {
-    border-color: #0EA5E9;
-    box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.15);
+.booking-kpi-card:active {
+    transform: scale(0.985);
 }
 
 .booking-kpi-top {
@@ -876,11 +979,11 @@ $buildPageUrl = function(int $p) use ($search, $selectedStatus, $pSize) {
 }
 
 .booking-kpi-label {
-    font-size: 0.82rem;
-    font-weight: 700;
+    font-size: 0.85rem;
+    font-weight: 600;
     color: #64748B;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.03em;
 }
 
 .booking-kpi-icon {
@@ -898,19 +1001,62 @@ $buildPageUrl = function(int $p) use ($search, $selectedStatus, $pSize) {
 .icon-navy { background: #F1F5F9; color: #475569; }
 
 .booking-kpi-val {
-    font-size: 1.85rem;
+    font-size: 26px;
     font-weight: 800;
     color: #0F172A;
     line-height: 1.2;
-    margin-bottom: 0.5rem;
+    margin: 8px 0 4px;
+    letter-spacing: -0.02em;
+    transition: color 0.2s ease;
 }
 
 .booking-kpi-sub {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    font-size: 0.8rem;
+    gap: 6px;
+    font-size: 12.5px;
     color: #64748B;
+}
+
+.booking-kpi-card .kpi-filter-tag {
+    margin-left: auto;
+    font-size: 11px;
+    color: #94A3B8;
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+}
+
+.booking-kpi-card:hover .kpi-filter-tag {
+    opacity: 1;
+    transform: translateX(0);
+    color: #0284c7;
+}
+
+.booking-kpi-card[data-status=""].is-selected {
+    border-color: #0D9488;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.16), 0 10px 24px rgba(13, 148, 136, 0.08);
+    background: linear-gradient(180deg, #FFFFFF 0%, #F0FDFA 100%);
+}
+
+.booking-kpi-card[data-status="active"].is-selected {
+    border-color: #10B981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.16), 0 10px 24px rgba(16, 185, 129, 0.08);
+    background: linear-gradient(180deg, #FFFFFF 0%, #ECFDF5 100%);
+}
+
+.booking-kpi-card[data-status="with_bookings"].is-selected {
+    border-color: #F59E0B;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.16), 0 10px 24px rgba(245, 158, 11, 0.08);
+    background: linear-gradient(180deg, #FFFFFF 0%, #FFFBEB 100%);
+}
+
+.booking-kpi-card[data-status="inactive"].is-selected {
+    border-color: #64748B;
+    box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.16), 0 10px 24px rgba(100, 116, 139, 0.08);
+    background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
 }
 
 .pulse-dot {
@@ -919,16 +1065,10 @@ $buildPageUrl = function(int $p) use ($search, $selectedStatus, $pSize) {
     background: #10B981;
     border-radius: 50%;
     display: inline-block;
-    margin-right: 6px;
     box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
 }
 
-.kpi-filter-tag {
-    color: #94A3B8;
-    font-size: 0.75rem;
-}
-
-/* Compact Filter Bar */
+/* 3. Compact Filter Bar */
 .filter-bar-compact {
     display: flex;
     align-items: center;
@@ -945,14 +1085,14 @@ $buildPageUrl = function(int $p) use ($search, $selectedStatus, $pSize) {
 .fbc-search {
     position: relative;
     flex: 1;
-    min-width: 260px;
+    min-width: 240px;
+    display: flex;
+    align-items: center;
 }
 
 .fbc-search-icon {
     position: absolute;
     left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
     color: #94A3B8;
     font-size: 0.9rem;
 }
@@ -975,14 +1115,23 @@ $buildPageUrl = function(int $p) use ($search, $selectedStatus, $pSize) {
 
 .fbc-search-clear {
     position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
+    right: 12px;
     background: transparent;
     border: none;
     color: #94A3B8;
     cursor: pointer;
-    font-size: 0.85rem;
+    padding: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    border-radius: 50%;
+    transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.fbc-search-clear:hover {
+    color: #0F172A;
+    background: rgba(0, 0, 0, 0.06);
 }
 
 .filter-bar-compact select {
@@ -1037,336 +1186,329 @@ $buildPageUrl = function(int $p) use ($search, $selectedStatus, $pSize) {
     border-color: #F87171;
 }
 
-/* Modern PMS Table Container */
-.recent-bookings-section {
-    background: #ffffff;
-    border-radius: 14px;
-    border: 1px solid #E2E8F0;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    overflow: hidden;
-    margin-bottom: 1.5rem;
-    position: relative;
-}
-
-.recent-bookings-section.is-filtering {
-    opacity: 0.6;
-    pointer-events: none;
-}
-
-.section-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid #E2E8F0;
-}
-
-.section-title {
-    font-size: 1.15rem;
-    font-weight: 800;
-    color: #0F172A;
-    margin: 0;
-}
-
-.total-records-box {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.85rem;
-    color: #64748B;
-}
-
-.total-records-badge {
-    background: #0F172A;
-    color: #fff;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-weight: 700;
-    font-size: 0.8rem;
-}
-
-.modern-table-container {
-    overflow-x: auto;
-}
-
-.modern-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.88rem;
-    text-align: left;
-}
-
-.modern-table thead th {
-    background: #F8FAFC;
-    color: #475569;
-    font-weight: 700;
-    padding: 0.85rem 1rem;
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    border-bottom: 1px solid #E2E8F0;
-}
-
-.modern-table tbody td {
-    padding: 0.85rem 1rem;
-    border-bottom: 1px solid #F1F5F9;
-    color: #334155;
-    vertical-align: middle;
-}
-
-.modern-table tbody tr:hover {
-    background: #F8FAFC;
-}
-
-/* Table Cells */
+/* 4. Customer Directory Cells */
 .cust-serial-num {
     font-weight: 700;
     color: #64748B;
-    font-size: 0.82rem;
+    font-size: 0.88rem;
+    padding: 3px 6px;
 }
 
 .cust-table-avatar-wrap {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    width: 44px;
+    height: 44px;
 }
 
 .cust-table-avatar-img {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     object-fit: cover;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border: 2px solid #176B5B;
+    box-shadow: 0 2px 8px rgba(23, 107, 91, 0.18);
+    background: #E8F4F0;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .cust-table-monogram {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
-    background: #E2E8F0;
-    color: #1E293B;
-    font-weight: 700;
-    font-size: 0.9rem;
+    background: linear-gradient(135deg, #176B5B 0%, #0F493E 100%);
+    color: #FFFFFF;
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
     display: flex;
     align-items: center;
     justify-content: center;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 8px rgba(23, 107, 91, 0.25);
+    text-transform: uppercase;
 }
 
 .cust-client-details-cell {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 0.25rem;
 }
 
 .cust-name-row {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 0.5rem;
     flex-wrap: wrap;
 }
 
 .cust-full-name {
+    font-size: 0.95rem;
     font-weight: 700;
-    color: #0F172A;
+    color: #0C2B52;
     text-decoration: none;
-    font-size: 0.92rem;
+    transition: color 0.15s ease;
 }
 
 .cust-full-name:hover {
-    color: #0EA5E9;
+    color: #176B5B;
+    text-decoration: underline;
 }
 
 .cust-code-pill {
-    background: #E8F7F0;
-    color: #16443B;
-    border: 1px solid #DBEAFE;
+    display: inline-flex;
+    align-items: center;
+    background: #E8F4F0;
+    color: #176B5B;
+    border: 1px solid #B2D8CF;
+    border-radius: 6px;
+    padding: 1px 7px;
+    font-family: monospace;
     font-size: 0.74rem;
     font-weight: 700;
-    padding: 2px 7px;
-    border-radius: 6px;
     letter-spacing: 0.02em;
 }
 
 .cust-email-row {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 0.8rem;
+    gap: 0.35rem;
+    font-size: 0.82rem;
     color: #64748B;
 }
 
-.cust-dispatch-tag {
-    font-weight: 600;
-    color: #475569;
+.cust-email-icon {
+    font-size: 0.78rem;
+    color: #94A3B8;
 }
 
-.cust-date-tag {
+.cust-email-link {
+    color: #475569;
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.cust-email-link:hover {
+    color: #176B5B;
+    text-decoration: underline;
+}
+
+.cust-no-email {
     color: #94A3B8;
+    font-style: italic;
+    font-size: 0.78rem;
 }
 
 .cust-phone-cell {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    font-size: 0.84rem;
+    gap: 0.2rem;
 }
 
 .cust-primary-phone {
-    font-weight: 600;
-    color: #1E293B;
-    text-decoration: none;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 0.4rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #0F172A;
+    text-decoration: none;
+    transition: color 0.15s ease;
 }
 
 .cust-primary-phone:hover {
-    color: #0EA5E9;
+    color: #176B5B;
 }
 
 .cust-phone-icon {
-    font-size: 0.75rem;
-    color: #0EA5E9;
+    font-size: 0.76rem;
+    color: #176B5B;
 }
 
 .cust-alt-phone {
-    font-size: 0.76rem;
+    font-size: 0.78rem;
     color: #64748B;
     display: flex;
     align-items: center;
-    gap: 6px;
-}
-
-.cust-no-email {
-    color: #94A3B8;
+    gap: 0.35rem;
 }
 
 .cust-address-cell {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    font-size: 0.82rem;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+    color: #334155;
+    max-width: 250px;
 }
 
 .cust-address-line {
     display: flex;
-    align-items: center;
-    gap: 6px;
-    color: #1E293B;
-    font-weight: 500;
-    max-width: 280px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    align-items: flex-start;
+    gap: 0.4rem;
+    font-weight: 600;
+    color: #0F172A;
+    line-height: 1.35;
+    white-space: normal;
+    word-break: break-word;
+}
+
+.cust-address-icon {
+    font-size: 0.78rem;
+    color: #EF4444;
+    margin-top: 3px;
+    flex-shrink: 0;
 }
 
 .cust-address-sub {
+    font-size: 0.78rem;
+    color: #64748B;
     display: flex;
     align-items: center;
-    gap: 6px;
-    color: #64748B;
-    font-size: 0.78rem;
-    max-width: 280px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    gap: 0.35rem;
+    line-height: 1.3;
 }
 
 .cust-bookings-cell {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 3px;
+    justify-content: center;
 }
 
-.fleet-plate-badge {
-    background: #F1F5F9;
-    border: 1px solid #CBD5E1;
-    color: #0F172A;
+.cust-bookings-num {
+    font-size: 1.05rem;
     font-weight: 800;
-    font-size: 0.82rem;
-    padding: 2px 7px;
-    border-radius: 6px;
-    letter-spacing: 0.04em;
+    color: #16443B;
+    line-height: 1.1;
 }
 
 .cust-bookings-lbl {
-    font-size: 0.73rem;
+    font-size: 0.72rem;
+    font-weight: 600;
     color: #64748B;
-    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
 
-/* Status & Telemetry */
-.history-status-cell {
-    display: flex;
-    flex-direction: column;
+/* 5. Status Toggle Switch Component */
+.cust-toggle-cell {
+    display: inline-flex;
     align-items: center;
-    gap: 4px;
+    justify-content: center;
+    gap: 8px;
 }
 
-.history-status-pill {
+.cust-status-toggle {
+    border: none;
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+    outline: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.15s ease;
+}
+
+.cust-status-toggle:hover {
+    transform: scale(1.06);
+}
+
+.toggle-slider-track {
+    width: 44px;
+    height: 24px;
+    border-radius: 9999px;
+    background: #CBD5E1;
+    position: relative;
+    display: block;
+    transition: background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.cust-status-toggle.is-active .toggle-slider-track {
+    background: #10B981;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
+}
+
+.toggle-slider-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    position: absolute;
+    left: 3px;
+    top: 3px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.22);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), width 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cust-status-toggle.is-active .toggle-slider-thumb {
+    transform: translateX(20px);
+}
+
+.cust-status-toggle.sm .toggle-slider-track {
+    width: 36px;
+    height: 20px;
+}
+
+.cust-status-toggle.sm .toggle-slider-thumb {
+    width: 14px;
+    height: 14px;
+    left: 3px;
+    top: 3px;
+}
+
+.cust-status-toggle.sm.is-active .toggle-slider-thumb {
+    transform: translateX(16px);
+}
+
+.cust-toggle-pill {
     display: inline-flex;
     align-items: center;
     gap: 5px;
     padding: 3px 8px;
-    border-radius: 6px;
-    font-size: 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.74rem;
     font-weight: 700;
-    letter-spacing: 0.02em;
+    transition: all 0.2s ease;
 }
 
-.history-status-pill.completed {
-    background: #ECFDF5;
+.cust-toggle-pill.completed {
+    background: #E8F7F0;
     color: #059669;
-    border: 1px solid #A7F3D0;
 }
 
-.history-status-pill.cancelled {
-    background: #FEF2F2;
-    color: #DC2626;
-    border: 1px solid #FECACA;
+.cust-toggle-pill.cancelled {
+    background: #F1F5F9;
+    color: #64748B;
 }
 
-.history-status-pill.sm {
-    padding: 2px 6px;
-    font-size: 0.7rem;
-}
-
-.history-pulse-dot {
+.toggle-pulse-dot {
     width: 6px;
     height: 6px;
     border-radius: 50%;
+    transition: background-color 0.2s ease;
 }
 
-.history-pulse-dot.completed {
-    background: #10B981;
-    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
+.toggle-pulse-dot.completed {
+    background: #059669;
+    box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.25);
 }
 
-.history-pulse-dot.cancelled {
-    background: #EF4444;
-    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25);
+.toggle-pulse-dot.cancelled {
+    background: #94A3B8;
 }
 
-.telemetry-distance-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    background: #FEF3C7;
-    color: #B45309;
-    border: 1px solid #FDE68A;
-    padding: 2px 6px;
-    border-radius: 6px;
-    font-size: 0.72rem;
-    font-weight: 700;
-}
-
-.telemetry-distance-pill.sm {
-    font-size: 0.68rem;
-    padding: 1px 5px;
-}
-
-/* Actions Menu */
+/* 6. Action Popup Menu */
 .table-action-buttons {
     position: relative;
     display: flex;
@@ -1384,12 +1526,10 @@ $buildPageUrl = function(int $p) use ($search, $selectedStatus, $pSize) {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.15s ease;
 }
 
 .action-toggle-btn:hover {
     background: #E2E8F0;
-    color: #0F172A;
 }
 
 .action-btns-popup {
@@ -1423,7 +1563,6 @@ $buildPageUrl = function(int $p) use ($search, $selectedStatus, $pSize) {
     color: #475569;
     background: #F8FAFC;
     border: 1px solid #E2E8F0;
-    transition: all 0.15s ease;
 }
 
 .action-btn-table:hover {
@@ -1432,19 +1571,7 @@ $buildPageUrl = function(int $p) use ($search, $selectedStatus, $pSize) {
     border-color: #0EA5E9;
 }
 
-/* Empty State */
-.no-data-message {
-    padding: 3rem 1.5rem;
-    text-align: center;
-}
-
-.no-data-icon {
-    font-size: 2.5rem;
-    color: #94A3B8;
-    margin-bottom: 0.75rem;
-}
-
-/* Modern Pagination Wrapper */
+/* 7. Modern Pagination Wrapper */
 .pagination-wrapper {
     display: flex;
     align-items: center;
@@ -1484,7 +1611,6 @@ $buildPageUrl = function(int $p) use ($search, $selectedStatus, $pSize) {
     color: #475569;
     text-decoration: none;
     border: 1px solid transparent;
-    transition: all 0.15s ease;
 }
 
 .pagination a:hover:not(.disabled) {
@@ -1508,7 +1634,19 @@ $buildPageUrl = function(int $p) use ($search, $selectedStatus, $pSize) {
     color: #94A3B8;
 }
 
-/* Responsive Mobile Layout */
+/* 8. Empty State */
+.no-data-message {
+    padding: 3rem 1.5rem;
+    text-align: center;
+}
+
+.no-data-icon {
+    font-size: 2.5rem;
+    color: #94A3B8;
+    margin-bottom: 0.75rem;
+}
+
+/* 9. Mobile Responsive Layout */
 .mv-bookings-header, .cards-grid {
     display: none;
 }
@@ -1565,7 +1703,7 @@ $buildPageUrl = function(int $p) use ($search, $selectedStatus, $pSize) {
 
     .mv-page-title {
         font-size: 1.15rem;
-        font-weight: 800;
+        font-weight: 700;
         margin: 0;
         color: #0F172A;
     }
@@ -1772,6 +1910,20 @@ $buildPageUrl = function(int $p) use ($search, $selectedStatus, $pSize) {
         gap: 6px;
         flex-shrink: 0;
     }
+
+    .mv-status-toggle-wrap {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .mv-toggle-label-text {
+        font-size: 0.72rem;
+        font-weight: 700;
+    }
+
+    .mv-toggle-label-text.active { color: #059669; }
+    .mv-toggle-label-text.inactive { color: #DC2626; }
 
     .mv-price {
         font-size: 0.75rem;

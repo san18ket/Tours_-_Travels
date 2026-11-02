@@ -6,6 +6,7 @@ use App\Models\Tour;
 use App\Models\AuditLog;
 use App\Core\Database;
 use App\Core\Logger;
+use App\Services\EmailService;
 use RuntimeException;
 
 class BookingService
@@ -13,12 +14,14 @@ class BookingService
     private Booking $bookingModel;
     private Tour $tourModel;
     private AuditLog $auditLog;
+    public EmailService $emailService;
 
     public function __construct()
     {
         $this->bookingModel = new Booking();
         $this->tourModel = new Tour();
         $this->auditLog = new AuditLog();
+        $this->emailService = new EmailService();
     }
 
     /**
@@ -100,7 +103,7 @@ class BookingService
                 'pickup_address'    => $data['pickup_address'],
                 'drop_address'      => $data['drop_address'],
                 'start_date'        => $data['start_date'],
-                'end_date'          => $data['end_date'],
+                'end_date'          => $data['end_date'] ?? $data['start_date'],
                 'pickup_time'       => $data['pickup_time'] ?? '09:00:00',
                 'passenger_count'   => $passengers,
                 'special_requests'  => $data['special_requests'] ?? null,
@@ -118,7 +121,13 @@ class BookingService
             ]);
 
             $pdo->commit();
-            return $this->bookingModel->find($bookingId);
+            $created = $this->bookingModel->find($bookingId);
+            try {
+                $this->emailService->sendBookingCreated($created);
+            } catch (\Throwable $e) {
+                Logger::warning("Could not dispatch booking_created email: " . $e->getMessage());
+            }
+            return $created;
         } catch (\Throwable $e) {
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
@@ -145,6 +154,16 @@ class BookingService
 
         if ($updated) {
             $this->auditLog->record('booking_status_updated', 'bookings', $bookingId, ['status' => $oldStatus], ['status' => $status, 'reason' => $reason]);
+            try {
+                $refreshed = $this->bookingModel->find($bookingId);
+                if ($status === 'confirmed') {
+                    $this->emailService->sendBookingConfirmed($refreshed);
+                } elseif ($status === 'cancelled') {
+                    $this->emailService->sendBookingCancelled($refreshed, $reason);
+                }
+            } catch (\Throwable $e) {
+                Logger::warning("Could not dispatch booking status update email: " . $e->getMessage());
+            }
         }
 
         return $updated;

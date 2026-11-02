@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?= csrf_meta() ?>
-    <title><?= e($title ?? 'Database Setup') ?> - <?= e($app['name']) ?></title>
-    <link rel="stylesheet" href="<?= asset('css/app.css') ?>">
+    <title><?= e($title ?? 'Database Setup') ?> - <?= e(company_name()) ?></title>
+    <link rel="stylesheet" href="<?= asset('css/app.css') ?>?v=<?= @filemtime(dirname(__DIR__, 3) . '/public/assets/css/app.css') ?: time() ?>">
     <link rel="icon" type="image/svg+xml" href="<?= asset('icons/icon.svg') ?>">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
@@ -13,9 +13,9 @@
     <div style="max-width: 720px; margin: 0 auto;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
             <div style="display: flex; align-items: center; gap: 1rem;">
-                <div class="brand-icon" style="width: 44px; height: 44px; font-size: 1.1rem;">VG</div>
+                <div class="brand-icon" style="width: 44px; height: 44px; font-size: 1.1rem;"><?= e(strtoupper(mb_substr(company_name(), 0, 2))) ?></div>
                 <div>
-                    <h2 style="color: #FFF; margin: 0; font-size: 1.35rem;">VoyageGo Installation Wizard</h2>
+                    <h2 style="color: #FFF; margin: 0; font-size: 1.35rem;"><?= e(company_name()) ?> Installation Wizard</h2>
                     <p style="color: #94A3B8; font-size: 0.85rem; margin: 0;">Automated Schema Migration & Diagnostic Initializer</p>
                 </div>
             </div>

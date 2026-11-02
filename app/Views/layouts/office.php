@@ -5,9 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?= csrf_meta() ?>
     <meta name="base-url" content="<?= url('/') ?>">
-    <title><?= e($title ?? 'Admin Dashboard') ?> - <?= e($app['name'] ?? 'MANASWI Tours & Travels') ?></title>
-    <link rel="stylesheet" href="<?= asset('css/app.css') ?>?v=<?= @filemtime(dirname(__DIR__, 2) . '/public/assets/css/app.css') ?: '2.2' ?>">
-    <link rel="stylesheet" href="<?= asset('css/tours-pwa.css') ?>?v=5.0">
+    <title><?= e($title ?? 'Admin Dashboard') ?> - <?= e(company_name()) ?></title>
+    <?php
+        $cssVer = @filemtime(dirname(__DIR__, 3) . '/public/assets/css/app.css') ?: time();
+        $pwaCssVer = @filemtime(dirname(__DIR__, 3) . '/public/assets/css/tours-pwa.css') ?: time();
+    ?>
+    <link rel="stylesheet" href="<?= asset('css/app.css') ?>?v=<?= $cssVer ?>">
+    <link rel="stylesheet" href="<?= asset('css/tours-pwa.css') ?>?v=<?= $pwaCssVer ?>">
     <link rel="manifest" href="<?= url('/manifest.json') ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -36,9 +40,9 @@
                 <a href="<?= url('/office/dashboard') ?>" class="brand-logo" title="MANASWI Tours & Travels">
                     <img src="<?= asset('images/manaswi-logo.svg') ?>" alt="Manaswi Logo" class="brand-logo-img">
                     <div class="brand-name">
-                        <span class="brand-title">MANASWI</span>
+                        <span class="brand-title"><?= e(company_name()) ?></span>
                         <span class="brand-subtitle-main"><?= e(__('app.tours_travels', 'Tours & Travels')) ?></span>
-                        <span class="brand-tagline"><?= e(__('app.safe_journey_tagline', 'Safe Journey • Happy Memories')) ?></span>
+                        <span class="brand-tagline"><?= e(company_tagline()) ?></span>
                     </div>
                 </a>
                 <button type="button" class="sidebar-close-btn" onclick="closeSidebar()" aria-label="<?= e(__('sidebar.close_navigation', 'Close Navigation')) ?>">&times;</button>
@@ -332,6 +336,39 @@
                     </a>
                 </div>
 
+                <!-- Company Management Dropdown -->
+                <?php if ($role === 'admin'): ?>
+                <div class="sidebar-category" id="cat-company">
+                    <button type="button" class="category-header <?= str_contains($uri, '/office/company') ? 'has-active open' : '' ?>" id="cat-company-header" data-title="Company Management" onclick="toggleCategory('cat-company')" aria-expanded="<?= str_contains($uri, '/office/company') ? 'true' : 'false' ?>">
+                        <span class="category-label">
+                            <span class="category-icon-wrap">
+                                <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                            </span>
+                            <span class="category-title">Company Management</span>
+                        </span>
+                        <span class="category-header-right">
+                            <svg class="category-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </span>
+                    </button>
+                    <div class="sidebar-category-items <?= str_contains($uri, '/office/company') ? 'expanded' : '' ?>" id="cat-company-items">
+                        <div class="category-items-inner">
+                            <a href="<?= url('/office/company') ?>" class="nav-link <?= ($uri === '/office/company' || $uri === '/office/company/') ? 'active' : '' ?>">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                                    <span class="nav-text">List Companies</span>
+                                </span>
+                            </a>
+                            <a href="<?= url('/office/company/create') ?>" class="nav-link <?= str_contains($uri, '/office/company/create') ? 'active' : '' ?>">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                    <span class="nav-text">Add Company</span>
+                                </span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+
                 <!-- 10. Settings & Access -->
                 <?php if ($role === 'admin'): ?>
                 <div class="sidebar-category" id="cat-settings">
@@ -531,7 +568,7 @@
             <!-- Branded Clean Light Footer -->
             <footer class="app-footer">
                 <div>
-                    &copy; <?= date('Y') ?> <strong>MANASWI <?= e(__('app.tours_travels', 'Tours & Travels')) ?></strong>. <?= e(__('footer.all_rights_reserved', 'All rights reserved.')) ?>
+                    &copy; <?= date('Y') ?> <strong><?= e(company_name()) ?></strong>. <?= e(__('footer.all_rights', 'All rights reserved.')) ?> <?= e(__('footer.all_rights_reserved', 'All rights reserved.')) ?>
                 </div>
                 <div>
                     <a href="#privacy"><?= e(__('footer.privacy', 'Privacy Policy')) ?></a>

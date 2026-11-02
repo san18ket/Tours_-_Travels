@@ -14,11 +14,13 @@ class Request
         ?array $get = null,
         ?array $post = null,
         ?array $server = null,
-        ?array $files = null
+        ?array $files = null,
+        ?array $extraServer = null
     ) {
         $this->get = $get ?? $_GET;
         $this->post = $post ?? $_POST;
-        $this->server = $server ?? $_SERVER;
+        $srv = !empty($extraServer) ? array_merge($server ?? [], $extraServer) : ($server ?? $_SERVER);
+        $this->server = $srv;
         $this->files = $files ?? $_FILES;
     }
 

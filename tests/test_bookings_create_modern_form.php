@@ -161,6 +161,7 @@ if (!empty($createdBooking)) {
     assertCondition((float)$createdBooking['discount_amount'] === 1800.00, "10% discount calculated as 1800.00 (Actual: {$createdBooking['discount_amount']})", $passed, $failed);
 
     // Clean up created test booking
+    $pdo->exec("DELETE FROM `booking_itinerary` WHERE `booking_id` = {$createdBooking['id']}");
     $pdo->exec("DELETE FROM `invoices` WHERE `booking_id` = {$createdBooking['id']}");
     $pdo->exec("DELETE FROM `dispatches` WHERE `booking_id` = {$createdBooking['id']}");
     $pdo->exec("DELETE FROM `bookings` WHERE `id` = {$createdBooking['id']}");

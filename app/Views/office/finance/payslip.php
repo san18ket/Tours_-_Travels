@@ -68,16 +68,16 @@ $isPaid = $payslip['payment_status'] === 'paid';
             <div>
                 <table style="width: 100%; font-size: 0.86rem; border-collapse: collapse;">
                     <tr>
-                        <td style="color: var(--text-muted); padding: 3px 0; width: 120px;">Disbursal Mode:</td>
-                        <td style="font-weight: 600; color: var(--vg-navy-900); padding: 3px 0;"><?= e($payslip['payment_method'] ?? 'Direct Bank Transfer') ?></td>
+                        <td style="color: var(--text-muted); padding: 3px 0; width: 120px;">Bank Name:</td>
+                        <td style="font-weight: 600; color: var(--vg-navy-900); padding: 3px 0;"><?= e($payslip['bank_name'] ?: 'Official Corporate Current A/C') ?></td>
                     </tr>
                     <tr>
-                        <td style="color: var(--text-muted); padding: 3px 0;">Payment Ref:</td>
-                        <td style="font-weight: 600; color: var(--vg-navy-900); padding: 3px 0;"><?= e($payslip['payment_ref'] ?? 'Pending') ?></td>
+                        <td style="color: var(--text-muted); padding: 3px 0;">Bank A/C No:</td>
+                        <td style="font-weight: 600; color: var(--vg-navy-900); padding: 3px 0;"><?= e($payslip['bank_account_no'] ?: 'Direct Bank Transfer') ?></td>
                     </tr>
                     <tr>
-                        <td style="color: var(--text-muted); padding: 3px 0;">Staff Mobile:</td>
-                        <td style="color: var(--vg-navy-900); padding: 3px 0;"><?= e($payslip['employee_phone'] ?? '—') ?></td>
+                        <td style="color: var(--text-muted); padding: 3px 0;">IFSC Code:</td>
+                        <td style="color: var(--vg-navy-900); padding: 3px 0;"><?= e($payslip['bank_ifsc'] ?: '—') ?></td>
                     </tr>
                     <tr>
                         <td style="color: var(--text-muted); padding: 3px 0;">Payment Date:</td>

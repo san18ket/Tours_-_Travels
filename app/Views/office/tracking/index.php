@@ -86,14 +86,7 @@
             <!-- 2. Trip Information Card (Desktop) -->
             <div class="track-card track-info-card" id="tripInfoCardDesktop">
                 <div class="track-info-header">
-                    <svg class="track-info-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#176B5B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="6" cy="6" r="2.8"></circle>
-                        <circle cx="6" cy="18" r="2.8"></circle>
-                        <line x1="6" y1="8.8" x2="6" y2="15.2"></line>
-                        <circle cx="18" cy="6" r="2.8"></circle>
-                        <circle cx="18" cy="18" r="2.8"></circle>
-                        <line x1="18" y1="8.8" x2="18" y2="15.2"></line>
-                    </svg>
+                    <i class="fa-solid fa-compass track-info-icon"></i>
                     <h3 class="track-info-title">Trip Information</h3>
                 </div>
 
@@ -249,14 +242,7 @@
             <!-- Mobile Trip Information Card (Visible only on screens <= 960px below map) -->
             <div class="track-card track-mobile-info-card" id="tripInfoCardMobile">
                 <div class="track-info-header">
-                    <svg class="track-info-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#176B5B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="6" cy="6" r="2.8"></circle>
-                        <circle cx="6" cy="18" r="2.8"></circle>
-                        <line x1="6" y1="8.8" x2="6" y2="15.2"></line>
-                        <circle cx="18" cy="6" r="2.8"></circle>
-                        <circle cx="18" cy="18" r="2.8"></circle>
-                        <line x1="18" y1="8.8" x2="18" y2="15.2"></line>
-                    </svg>
+                    <i class="fa-solid fa-shapes track-info-icon"></i>
                     <h3 class="track-info-title">Trip Information</h3>
                 </div>
 
@@ -695,7 +681,7 @@
 
         // Draw Highway Route Polyline
         currentRouteLine = L.polyline(bus.waypoints, {
-            color: '#176B5B',
+            color: '#2563EB',
             weight: 5,
             opacity: 0.9,
             lineJoin: 'round',
@@ -972,13 +958,13 @@
     height: 48px;
     min-width: 48px;
     border-radius: 16px;
-    background: #176B5B;
+    background: #2563EB;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #FFFFFF;
     font-size: 1.35rem;
-    box-shadow: 0 4px 14px rgba(23, 107, 91, 0.28);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.28);
 }
 
 .track-header-text {
@@ -1023,7 +1009,7 @@
 }
 
 .track-cal-icon {
-    color: #176B5B;
+    color: #2563EB;
     font-size: 1rem;
 }
 
@@ -1048,8 +1034,8 @@
 }
 
 .track-refresh-btn:hover {
-    border-color: #176B5B;
-    color: #176B5B;
+    border-color: #2563EB;
+    color: #2563EB;
     background: #F8FAFD;
     transform: translateY(-1px);
 }
@@ -1114,8 +1100,8 @@
 
 .track-search-box input:focus {
     background: #FFFFFF;
-    border-color: #176B5B;
-    box-shadow: 0 0 0 3px rgba(23, 107, 91, 0.12);
+    border-color: #2563EB;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
 .track-bus-list {
@@ -1143,8 +1129,8 @@
 
 .track-bus-item.active {
     background: #EDF6FF;
-    border-color: rgba(23, 107, 91, 0.25);
-    box-shadow: 0 2px 8px rgba(23, 107, 91, 0.08);
+    border-color: #BFDBFE;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
 }
 
 .track-bus-thumb-wrap {
@@ -1224,7 +1210,7 @@
 }
 
 .track-bus-item.active .track-bus-chevron {
-    color: #176B5B;
+    color: #2563EB;
     transform: translateX(2px);
 }
 
@@ -1244,10 +1230,8 @@
 }
 
 .track-info-icon {
-    color: #176B5B;
+    color: #2563EB;
     font-size: 1.15rem;
-    display: inline-block;
-    flex-shrink: 0;
 }
 
 .track-info-title {
@@ -1398,7 +1382,7 @@
     height: 38px;
     border-radius: 50%;
     background: #EDF6FF;
-    color: #176B5B;
+    color: #2563EB;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1468,9 +1452,9 @@
 }
 
 .type-btn.active {
-    background: #176B5B;
+    background: #2563EB;
     color: #FFFFFF;
-    box-shadow: 0 2px 8px rgba(23, 107, 91, 0.25);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
 }
 
 /* Floating Live Location Badge (Bottom Left) */
@@ -1493,7 +1477,7 @@
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: #176B5B;
+    background: #2563EB;
     color: #FFFFFF;
     display: flex;
     align-items: center;
@@ -1548,8 +1532,8 @@
 
 .zoom-btn:hover {
     background: #F8FAFD;
-    border-color: #176B5B;
-    color: #176B5B;
+    border-color: #2563EB;
+    color: #2563EB;
     transform: scale(1.05);
 }
 
@@ -1615,14 +1599,14 @@
     width: 38px;
     height: 38px;
     border-radius: 50%;
-    background: #176B5B;
+    background: #2563EB;
     color: #FFFFFF;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1rem;
     border: 3px solid #FFFFFF;
-    box-shadow: 0 4px 14px rgba(23, 107, 91, 0.45);
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.45);
     z-index: 2;
 }
 
@@ -1633,7 +1617,7 @@
     width: 38px;
     height: 38px;
     border-radius: 50%;
-    background: rgba(23, 107, 91, 0.35);
+    background: rgba(37, 99, 235, 0.35);
     animation: bus-radar-pulse 1.8s ease-out infinite;
     z-index: 1;
 }
@@ -1714,7 +1698,7 @@
 
     .track-mobile-selected-bus-card:active {
         background: #F8FAFD;
-        border-color: #176B5B;
+        border-color: #2563EB;
     }
 
     /* Show Mobile Header Overlay Inside Map */
@@ -1838,7 +1822,7 @@
         min-width: 32px;
         border-radius: 50%;
         background: #EDF6FF;
-        color: #176B5B;
+        color: #2563EB;
         display: flex;
         align-items: center;
         justify-content: center;
