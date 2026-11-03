@@ -15,6 +15,7 @@ class BookingService
     private Tour $tourModel;
     private AuditLog $auditLog;
     public EmailService $emailService;
+    private BillingService $billingService;
 
     public function __construct()
     {
@@ -22,6 +23,7 @@ class BookingService
         $this->tourModel = new Tour();
         $this->auditLog = new AuditLog();
         $this->emailService = new EmailService();
+        $this->billingService = new BillingService();
     }
 
     /**
@@ -120,6 +122,31 @@ class BookingService
                 'total_amount' => $pricing['total_amount']
             ]);
 
+            // Automatically generate one immutable tax invoice for this booking
+            $invoice = $this->billingService->generateInvoice($bookingId);
+
+            // If advance payment was received (> 0), atomically record the advance payment
+            $advanceAmount = round((float)($data['advance_amount'] ?? 0.0), 2);
+            if ($advanceAmount > 0.0) {
+                $paymentMethod  = !empty($data['payment_method']) ? strtolower(trim((string)$data['payment_method'])) : 'cash';
+                $transactionId  = !empty($data['transaction_id']) ? trim((string)$data['transaction_id']) : null;
+                $accountId      = !empty($data['account_id']) ? (int)$data['account_id'] : null;
+                $receivedDate   = !empty($data['received_date']) ? trim((string)$data['received_date']) : date('Y-m-d');
+                $paymentNotes   = !empty($data['payment_notes']) ? trim((string)$data['payment_notes']) : "Advance payment received during booking reservation";
+                $idempotencyKey = 'ADV-' . $bookingId . '-' . bin2hex(random_bytes(8));
+
+                $this->billingService->recordPayment(
+                    (int)$invoice['id'],
+                    $advanceAmount,
+                    $paymentMethod,
+                    $transactionId,
+                    $idempotencyKey,
+                    $paymentNotes,
+                    $accountId,
+                    $receivedDate
+                );
+            }
+
             $pdo->commit();
             $created = $this->bookingModel->find($bookingId);
             try {
@@ -133,7 +160,7 @@ class BookingService
                 $pdo->rollBack();
             }
             Logger::error("Failed to create booking: " . $e->getMessage());
-            throw new RuntimeException("Could not create booking reservation. Please try again.");
+            throw new RuntimeException("Could not create booking reservation: " . $e->getMessage(), 0, $e);
         }
     }
 

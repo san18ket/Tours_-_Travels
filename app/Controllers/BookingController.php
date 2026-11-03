@@ -112,9 +112,13 @@ class BookingController extends Controller
             $customers = $this->userModel->where("`role` = 'customer' AND `status` = 'active'", [], 'name ASC');
         }
 
+        $financeAccountModel = new \App\Models\FinanceAccount();
+        $accounts = $financeAccountModel->getActiveAccounts();
+
         return $this->render('office/bookings/create', [
             'tours'     => $tours,
             'customers' => $customers,
+            'accounts'  => $accounts,
             'title'     => 'Create New Booking',
         ], 'layouts/office');
     }
@@ -171,9 +175,52 @@ class BookingController extends Controller
             }
             $data['gst_rate'] = $data['include_gst'] ? (float)$request->input('gst_rate', 5.0) : 0.0;
 
+            // Advance payment validation and parameters
+            $advanceAmount = round((float)$request->input('advance_amount', 0.0), 2);
+            if ($advanceAmount < 0.0) {
+                throw new \RuntimeException("Advance payment cannot be a negative amount.");
+            }
+
+            $tourId = !empty($data['tour_id']) ? (int)$data['tour_id'] : null;
+            $passengers = max(1, (int)($data['passenger_count'] ?? 1));
+            $pricing = $this->bookingService->calculatePricing(
+                $tourId,
+                $passengers,
+                $data['custom_subtotal'],
+                $data['discount_amount'],
+                $data['gst_rate']
+            );
+
+            if ($advanceAmount > ($pricing['total_amount'] + 0.01)) {
+                throw new \RuntimeException("Advance payment cannot be greater than the booking amount.");
+            }
+
+            $data['advance_amount'] = $advanceAmount;
+            $data['payment_method'] = $request->input('payment_method', 'cash');
+            $data['received_date']  = $request->input('received_date', date('Y-m-d'));
+            $data['account_id']     = (int)$request->input('account_id', 0) ?: null;
+            $data['transaction_id'] = $request->input('transaction_id');
+            $data['payment_notes']  = $request->input('payment_notes');
+
             $booking = $this->bookingService->createBooking($data);
 
-            Session::setFlash('success', "Booking {$booking['booking_code']} created successfully.");
+            // Fetch auto-generated invoice details for friendly flash confirmation
+            $invoiceModel = new \App\Models\Invoice();
+            $invoice = $invoiceModel->findByBookingId((int)$booking['id']);
+            $totalAmount = (float)($invoice['total_amount'] ?? $booking['total_amount']);
+            $paidAmount = (float)($invoice['paid_amount'] ?? $advanceAmount);
+            $remainingAmount = max(0.0, $totalAmount - $paidAmount);
+            $invNum = $invoice['invoice_number'] ?? 'INV';
+
+            if ($advanceAmount <= 0.0) {
+                $flashMsg = "Booking {$booking['booking_code']} created successfully. Invoice {$invNum} generated. ₹" . number_format($totalAmount, 2) . " remaining (Unpaid).";
+            } elseif ($remainingAmount <= 0.0) {
+                $flashMsg = "Booking {$booking['booking_code']} created successfully. Invoice {$invNum} generated. ₹" . number_format($advanceAmount, 2) . " received in full. Invoice is fully paid.";
+            } else {
+                $flashMsg = "Booking {$booking['booking_code']} created successfully. Invoice {$invNum} generated. ₹" . number_format($advanceAmount, 2) . " received. ₹" . number_format($remainingAmount, 2) . " remaining.";
+            }
+
+            Session::setFlash('success', $flashMsg);
             return $this->redirect(url("/office/bookings/{$booking['id']}"));
         } catch (Throwable $e) {
             Session::setFlash('danger', $e->getMessage());
@@ -198,11 +245,14 @@ class BookingController extends Controller
 
         $availableVehicles = $this->vehicleModel->getAvailable();
         $availableDrivers = $this->driverModel->getAvailableDrivers();
+        $financeAccountModel = new \App\Models\FinanceAccount();
+        $accounts = $financeAccountModel->getActiveAccounts();
 
         return $this->render('office/bookings/show', [
             'booking'           => $booking,
             'availableVehicles' => $availableVehicles,
             'availableDrivers'  => $availableDrivers,
+            'accounts'          => $accounts,
             'title'             => "Booking {$booking['booking_code']}",
         ], 'layouts/office');
     }

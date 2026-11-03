@@ -410,6 +410,116 @@
                     </div>
                 </div>
 
+                <!-- Customer Payment (Optional Advance) -->
+                <div class="payment-advance-card" style="margin-top: 1.75rem; background: #FFFFFF; border: 1.5px solid #DCE6F2; border-radius: 18px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(12, 43, 82, 0.04);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; padding-bottom: 0.85rem; border-bottom: 1px solid #EDF3FA; flex-wrap: wrap; gap: 0.75rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div style="width: 38px; height: 38px; border-radius: 10px; background: #E8F4F0; color: #176B5B; display: flex; align-items: center; justify-content: center; font-size: 1.15rem;">
+                                <i class="fa-solid fa-money-bill-wave"></i>
+                            </div>
+                            <div>
+                                <h3 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #0C2B52;">Customer Payment (Optional Advance)</h3>
+                                <p style="margin: 2px 0 0; font-size: 0.82rem; color: #64748B;">Collect money received now, or leave at ₹0 if the customer will pay later.</p>
+                            </div>
+                        </div>
+                        <span id="livePaymentBadge" class="modern-badge" style="background: #FEF3C7; color: #92400E; font-weight: 700; font-size: 0.75rem; padding: 4px 12px; border-radius: 50px;">Unpaid (₹0.00 Received)</span>
+                    </div>
+
+                    <!-- Live Calculation Ribbon -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.35rem; background: #F8FAFD; border: 1px solid #E2E8F0; border-radius: 14px; padding: 1rem 1.25rem;">
+                        <div>
+                            <div style="font-size: 0.75rem; color: #64748B; font-weight: 600; text-transform: uppercase;">Booking Amount</div>
+                            <div id="lblPayTotal" style="font-size: 1.15rem; font-weight: 800; color: #0C2B52;">₹ 0.00</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.75rem; color: #64748B; font-weight: 600; text-transform: uppercase;">Money Received</div>
+                            <div id="lblPayReceived" style="font-size: 1.15rem; font-weight: 800; color: #176B5B;">₹ 0.00</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.75rem; color: #64748B; font-weight: 600; text-transform: uppercase;">Remaining Amount</div>
+                            <div id="lblPayRemaining" style="font-size: 1.15rem; font-weight: 800; color: #D97706;">₹ 0.00</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.75rem; color: #64748B; font-weight: 600; text-transform: uppercase;">Payment Status</div>
+                            <div id="lblPayStatus" style="margin-top: 2px;"><span class="modern-badge" style="background: #FEF3C7; color: #92400E; font-weight: 700; font-size: 0.8rem; padding: 3px 10px; border-radius: 50px;">Unpaid</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Client validation error notice -->
+                    <div id="advanceAlertError" style="display: none; margin-bottom: 1rem; padding: 0.75rem 1rem; background: #FEE2E2; border: 1px solid #F87171; border-radius: 10px; color: #991B1B; font-size: 0.85rem; font-weight: 600;">
+                        <i class="fa-solid fa-circle-exclamation" style="margin-right: 0.4rem;"></i>
+                        Advance payment cannot be greater than the booking amount.
+                    </div>
+
+                    <!-- Advance Inputs Grid -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; align-items: start;">
+                        <div class="modern-form-group">
+                            <label class="modern-form-label" for="advance_amount">
+                                Advance Amount Received (₹)
+                            </label>
+                            <div class="modern-input-wrapper">
+                                <span class="modern-input-icon"><i class="fa-solid fa-indian-rupee-sign"></i></span>
+                                <input type="number" step="0.01" min="0" id="advance_amount" name="advance_amount" class="modern-input-pill" value="0.00" onkeyup="calculateAdvance(); syncReviewData();" onchange="calculateAdvance(); syncReviewData();" style="font-weight: 700; font-size: 1.05rem; color: #176B5B;">
+                            </div>
+                            <div style="margin-top: 0.35rem; font-size: 0.78rem; color: #64748B;">Enter 0 if the customer will pay later.</div>
+
+                            <!-- Quick Presets -->
+                            <div class="booking-preset-group" style="margin-top: 0.65rem;">
+                                <span class="booking-preset-label">Presets:</span>
+                                <button type="button" class="booking-preset-pill adv-pill is-active" data-ratio="0" onclick="setAdvancePreset(0)">₹0 (Later)</button>
+                                <button type="button" class="booking-preset-pill adv-pill" data-ratio="0.25" onclick="setAdvancePreset(0.25)">25%</button>
+                                <button type="button" class="booking-preset-pill adv-pill" data-ratio="0.50" onclick="setAdvancePreset(0.50)">50%</button>
+                                <button type="button" class="booking-preset-pill adv-pill" data-ratio="1.00" onclick="setAdvancePreset(1.00)">100% (Full)</button>
+                            </div>
+                        </div>
+
+                        <!-- Advance Payment Details Section -->
+                        <div id="advanceDetailsSection" style="display: flex; flex-direction: column; gap: 1rem; transition: opacity 0.2s ease;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem;">
+                                <div class="modern-form-group">
+                                    <label class="modern-form-label" for="payment_method">Payment Method</label>
+                                    <select id="payment_method" name="payment_method" class="modern-input-pill" onchange="syncReviewData()">
+                                        <option value="cash">Cash</option>
+                                        <option value="upi">UPI (GPay / PhonePe / Paytm)</option>
+                                        <option value="bank_transfer">Bank Transfer / NEFT / RTGS</option>
+                                        <option value="card">Credit / Debit Card</option>
+                                    </select>
+                                </div>
+                                <div class="modern-form-group">
+                                    <label class="modern-form-label" for="received_date">Payment Date</label>
+                                    <input type="date" id="received_date" name="received_date" class="modern-input-pill" value="<?= date('Y-m-d') ?>" onchange="syncReviewData()">
+                                </div>
+                            </div>
+
+                            <div class="modern-form-group">
+                                <label class="modern-form-label" for="account_id">Received Into Account (Cash / Bank)</label>
+                                <select id="account_id" name="account_id" class="modern-input-pill" onchange="syncReviewData()">
+                                    <?php if (!empty($accounts)): ?>
+                                        <?php foreach ($accounts as $acc): ?>
+                                            <option value="<?= e($acc['id']) ?>">
+                                                <?= e($acc['account_name']) ?> (<?= e(ucfirst(str_replace('_', ' ', $acc['account_type'] ?? 'bank'))) ?> - Bal: <?= format_currency((float)($acc['current_balance'] ?? 0)) ?>)
+                                            </option>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <option value="">Default Business Account</option>
+                                    <?php endif; ?>
+                                </select>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem;">
+                                <div class="modern-form-group">
+                                    <label class="modern-form-label" for="transaction_id">Ref / UTR / Cheque (Optional)</label>
+                                    <input type="text" id="transaction_id" name="transaction_id" class="modern-input-pill" placeholder="e.g. UPI-987654 or Cheque #" onchange="syncReviewData()">
+                                </div>
+                                <div class="modern-form-group">
+                                    <label class="modern-form-label" for="payment_notes">Notes / Remarks (Optional)</label>
+                                    <input type="text" id="payment_notes" name="payment_notes" class="modern-input-pill" placeholder="e.g. Booking advance received" onchange="syncReviewData()">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="modern-form-actions">
                     <button type="button" class="modern-btn-prev" onclick="wizardGoToStep(2)">
                         <i class="fa-solid fa-arrow-left"></i> Previous
@@ -560,6 +670,22 @@
                                     <span class="review-label">Grand Total</span>
                                     <span class="review-value font-bold highlight-teal" style="font-size: 1.15rem;" id="sumCardGrandTotal">₹ 0.00</span>
                                 </div>
+                                <div class="review-info-row" style="border-top: 1px dashed #DCE6F2; padding-top: 0.5rem; margin-top: 0.5rem;">
+                                    <span class="review-label">Money Received</span>
+                                    <span class="review-value font-bold" style="color: #176B5B;" id="sumCardAdvance">₹ 0.00</span>
+                                </div>
+                                <div class="review-info-row">
+                                    <span class="review-label">Remaining Amount</span>
+                                    <span class="review-value font-bold" style="color: #D97706;" id="sumCardRemaining">₹ 0.00</span>
+                                </div>
+                                <div class="review-info-row">
+                                    <span class="review-label">Payment Status</span>
+                                    <span class="review-value" id="sumCardPaymentStatus"><span class="modern-badge" style="background:#FEF3C7; color:#92400E; font-size: 0.75rem; padding: 2px 8px; border-radius: 50px;">Unpaid</span></span>
+                                </div>
+                                <div class="review-info-row" id="sumCardAccountRow" style="display: none;">
+                                    <span class="review-label">Deposited Account</span>
+                                    <span class="review-value" id="sumCardAccount">—</span>
+                                </div>
                             </div>
                         </div>
 
@@ -692,6 +818,24 @@ function wizardValidateCurrentStep(stepNum) {
             window.vgNotify('Please fill in all required fields marked with *', 'error');
         }
         return false;
+    }
+
+    if (stepNum === 3) {
+        const total = getGrandTotal();
+        const adv = parseFloat(document.getElementById('advance_amount')?.value || 0) || 0;
+        if (adv > total + 0.001) {
+            if (typeof window.vgNotify === 'function') {
+                window.vgNotify('Advance payment cannot be greater than the booking amount.', 'error');
+            } else {
+                alert('Advance payment cannot be greater than the booking amount.');
+            }
+            const advInput = document.getElementById('advance_amount');
+            if (advInput) {
+                advInput.focus();
+                advInput.style.borderColor = '#EF4444';
+            }
+            return false;
+        }
     }
 
     return true;
@@ -838,6 +982,41 @@ function populateSummaryDossier() {
 
     const cardTotalEl = document.getElementById('sumCardGrandTotal');
     if (cardTotalEl) cardTotalEl.textContent = totalText;
+
+    // Card 3 additions: Advance, Remaining, Status, Account
+    const advInput = document.getElementById('advance_amount');
+    const advanceVal = parseFloat(advInput ? advInput.value : 0) || 0;
+    const cardAdvanceEl = document.getElementById('sumCardAdvance');
+    if (cardAdvanceEl) cardAdvanceEl.textContent = '₹ ' + advanceVal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+    const totalNum = parseFloat((totalText.replace(/[^\d.]/g, '') || 0));
+    const remainingVal = Math.max(0, Math.round((totalNum - advanceVal) * 100) / 100);
+    const cardRemEl = document.getElementById('sumCardRemaining');
+    if (cardRemEl) cardRemEl.textContent = '₹ ' + remainingVal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+    const cardStatusEl = document.getElementById('sumCardPaymentStatus');
+    if (cardStatusEl) {
+        if (advanceVal <= 0.001) {
+            cardStatusEl.innerHTML = '<span class="modern-badge" style="background:#FEF3C7; color:#92400E; font-size:0.75rem; padding:2px 8px; border-radius:50px;">Unpaid</span>';
+        } else if (remainingVal <= 0.001 && totalNum > 0) {
+            cardStatusEl.innerHTML = '<span class="modern-badge" style="background:#D1FAE5; color:#065F46; font-size:0.75rem; padding:2px 8px; border-radius:50px;">Paid</span>';
+        } else {
+            cardStatusEl.innerHTML = '<span class="modern-badge" style="background:#DBEAFE; color:#1E40AF; font-size:0.75rem; padding:2px 8px; border-radius:50px;">Partially Paid</span>';
+        }
+    }
+
+    const cardAccRow = document.getElementById('sumCardAccountRow');
+    const cardAccEl = document.getElementById('sumCardAccount');
+    const accSelect = document.getElementById('account_id');
+    if (cardAccRow && cardAccEl && accSelect) {
+        if (advanceVal > 0) {
+            const selOpt = accSelect.options[accSelect.selectedIndex];
+            cardAccEl.textContent = selOpt ? selOpt.textContent.trim() : 'Default Account';
+            cardAccRow.style.display = 'flex';
+        } else {
+            cardAccRow.style.display = 'none';
+        }
+    }
 }
 
 function syncReviewData() {
@@ -1048,6 +1227,122 @@ function calculateFare() {
         }
         footnote.innerText = fnText;
     }
+
+    calculateAdvance();
+}
+
+function getGrandTotal() {
+    const lblTotal = document.getElementById('lblTotal');
+    if (!lblTotal) return 0;
+    const cleaned = lblTotal.innerText.replace(/[^\d.]/g, '');
+    return parseFloat(cleaned) || 0;
+}
+
+function setAdvancePreset(ratio) {
+    const total = getGrandTotal();
+    const advInput = document.getElementById('advance_amount');
+    if (advInput) {
+        advInput.value = (Math.round(total * ratio * 100) / 100).toFixed(2);
+    }
+    document.querySelectorAll('.booking-preset-pill.adv-pill').forEach(btn => {
+        const r = parseFloat(btn.getAttribute('data-ratio'));
+        if (Math.abs(r - ratio) < 0.01) {
+            btn.classList.add('is-active');
+        } else {
+            btn.classList.remove('is-active');
+        }
+    });
+    calculateAdvance();
+    syncReviewData();
+}
+
+function calculateAdvance() {
+    const total = getGrandTotal();
+    const advInput = document.getElementById('advance_amount');
+    let advance = parseFloat(advInput ? advInput.value : 0) || 0;
+    if (advance < 0) {
+        advance = 0;
+        if (advInput) advInput.value = '0.00';
+    }
+
+    const errBox = document.getElementById('advanceAlertError');
+    const nextBtnStep3 = document.querySelector('#wizardPanel3 .modern-btn-next');
+    const submitBtn = document.getElementById('btnSubmitBooking');
+
+    // Overpayment check
+    const isOverpaid = advance > (total + 0.001);
+    if (isOverpaid) {
+        if (errBox) errBox.style.display = 'block';
+        if (advInput) {
+            advInput.style.borderColor = '#EF4444';
+            advInput.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.15)';
+        }
+        if (nextBtnStep3) nextBtnStep3.disabled = true;
+        if (submitBtn) submitBtn.disabled = true;
+    } else {
+        if (errBox) errBox.style.display = 'none';
+        if (advInput) {
+            advInput.style.borderColor = '';
+            advInput.style.boxShadow = '';
+        }
+        if (nextBtnStep3) nextBtnStep3.disabled = false;
+        if (submitBtn) submitBtn.disabled = false;
+    }
+
+    const remaining = Math.max(0, Math.round((total - advance) * 100) / 100);
+
+    const lblPayTotal = document.getElementById('lblPayTotal');
+    const lblPayReceived = document.getElementById('lblPayReceived');
+    const lblPayRemaining = document.getElementById('lblPayRemaining');
+    const lblPayStatus = document.getElementById('lblPayStatus');
+    const livePaymentBadge = document.getElementById('livePaymentBadge');
+    const detailsSection = document.getElementById('advanceDetailsSection');
+
+    if (lblPayTotal) lblPayTotal.innerText = '₹ ' + total.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    if (lblPayReceived) lblPayReceived.innerText = '₹ ' + advance.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    if (lblPayRemaining) lblPayRemaining.innerText = '₹ ' + remaining.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+    let statusBadgeHtml = '<span class="modern-badge" style="background:#FEF3C7; color:#92400E; font-weight:700; font-size:0.8rem; padding:3px 10px; border-radius:50px;">Unpaid</span>';
+    let topBadgeHtml = 'Unpaid (₹0.00 Received)';
+    let topBadgeStyle = 'background: #FEF3C7; color: #92400E; font-weight: 700; font-size: 0.75rem; padding: 4px 12px; border-radius: 50px;';
+
+    if (advance > 0.001) {
+        if (remaining <= 0.001 && total > 0) {
+            statusBadgeHtml = '<span class="modern-badge" style="background:#D1FAE5; color:#065F46; font-weight:700; font-size:0.8rem; padding:3px 10px; border-radius:50px;">Paid (Full)</span>';
+            topBadgeHtml = 'Paid (Full Advance)';
+            topBadgeStyle = 'background: #D1FAE5; color: #065F46; font-weight: 700; font-size: 0.75rem; padding: 4px 12px; border-radius: 50px;';
+        } else {
+            statusBadgeHtml = '<span class="modern-badge" style="background:#DBEAFE; color:#1E40AF; font-weight:700; font-size:0.8rem; padding:3px 10px; border-radius:50px;">Partially Paid</span>';
+            topBadgeHtml = 'Partially Paid (₹' + advance.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ')';
+            topBadgeStyle = 'background: #DBEAFE; color: #1E40AF; font-weight: 700; font-size: 0.75rem; padding: 4px 12px; border-radius: 50px;';
+        }
+    }
+
+    if (lblPayStatus) lblPayStatus.innerHTML = statusBadgeHtml;
+    if (livePaymentBadge) {
+        livePaymentBadge.innerText = topBadgeHtml;
+        livePaymentBadge.setAttribute('style', topBadgeStyle);
+    }
+
+    if (detailsSection) {
+        if (advance > 0.001) {
+            detailsSection.style.opacity = '1';
+            detailsSection.style.pointerEvents = 'auto';
+        } else {
+            detailsSection.style.opacity = '0.7';
+        }
+    }
+
+    // Update active state on preset pills
+    document.querySelectorAll('.booking-preset-pill.adv-pill').forEach(btn => {
+        const r = parseFloat(btn.getAttribute('data-ratio'));
+        const targetVal = Math.round(total * r * 100) / 100;
+        if (Math.abs(targetVal - advance) < 0.01) {
+            btn.classList.add('is-active');
+        } else {
+            btn.classList.remove('is-active');
+        }
+    });
 }
 
 document.addEventListener('DOMContentLoaded', () => {

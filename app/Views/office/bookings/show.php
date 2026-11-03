@@ -3,10 +3,12 @@ $bookingActions = '<div style="display:flex;gap:0.65rem;flex-wrap:wrap;align-ite
     . '<a href="' . url('/office/bookings') . '" class="btn btn-outline btn-sm">Back to List</a>';
 if ($booking['invoice_id']) {
     $bookingActions .= '<a href="' . url('/office/invoices/' . $booking['invoice_id']) . '" class="btn btn-primary btn-sm">'
-        . 'View Tax Invoice ' . e($booking['invoice_number']) . '</a>';
+        . '<i class="fa-solid fa-file-invoice" style="margin-right:4px;"></i> View Invoice ' . e($booking['invoice_number']) . '</a>';
+    $bookingActions .= '<a href="' . url('/office/invoices/' . $booking['invoice_id'] . '/print') . '" target="_blank" class="btn btn-outline btn-sm">'
+        . '<i class="fa-solid fa-print" style="margin-right:4px;"></i> Print Invoice</a>';
 } elseif (in_array(auth_role(), ['admin', 'dispatcher'], true)) {
     $bookingActions .= '<form action="' . url('/office/invoices/generate/' . $booking['id']) . '" method="POST" style="margin:0;">'
-        . csrf_field() . '<button type="submit" class="btn btn-navy btn-sm">Generate Tax Invoice</button></form>';
+        . csrf_field() . '<button type="submit" class="btn btn-navy btn-sm"><i class="fa-solid fa-file-invoice" style="margin-right:4px;"></i> Generate Invoice</button></form>';
 }
 $bookingActions .= '</div>';
 ?>
@@ -168,14 +170,33 @@ $bookingActions .= '</div>';
                     <span><?= format_currency((float)$booking['tax_amount']) ?></span>
                 </div>
                 <div style="display: flex; justify-content: space-between; padding-top: 0.75rem; border-top: 2px solid var(--vg-pearl-200); font-size: 1.15rem; font-weight: 800; color: var(--vg-navy-900); margin-top: 0.5rem;">
-                    <span>Total Fare:</span>
+                    <span>Booking Amount:</span>
                     <span style="color: var(--vg-blue-500);"><?= format_currency((float)$booking['total_amount']) ?></span>
                 </div>
 
-                <?php if ($booking['invoice_id']): ?>
-                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--vg-pearl-200); display: flex; justify-content: space-between; font-size: 0.9rem;">
-                        <span style="color: var(--vg-text-muted);">Amount Collected:</span>
-                        <strong style="color: var(--vg-success);"><?= format_currency((float)$booking['paid_amount']) ?></strong>
+                <?php 
+                    $totFare = (float)$booking['total_amount'];
+                    $recFare = (float)($booking['paid_amount'] ?? 0);
+                    $remFare = max(0.0, $totFare - $recFare);
+                ?>
+                <div style="display: flex; justify-content: space-between; margin-top: 0.65rem; font-size: 0.92rem;">
+                    <span style="color: var(--vg-text-muted);">Money Received:</span>
+                    <strong style="color: var(--vg-success);"><?= format_currency($recFare) ?></strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 0.65rem; font-size: 0.92rem;">
+                    <span style="color: var(--vg-text-muted);">Remaining Amount:</span>
+                    <strong style="color: <?= $remFare > 0.001 ? '#dc2626' : 'var(--vg-success)' ?>;"><?= format_currency($remFare) ?></strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.65rem; font-size: 0.92rem;">
+                    <span style="color: var(--vg-text-muted);">Payment Status:</span>
+                    <?= render_status_badge($booking['payment_status'] ?? 'unpaid') ?>
+                </div>
+
+                <?php if ($booking['invoice_id'] && $remFare > 0.001 && in_array(auth_role(), ['admin', 'dispatcher'], true)): ?>
+                    <div style="margin-top: 1.1rem; padding-top: 0.85rem; border-top: 1px dashed var(--vg-pearl-200);">
+                        <a href="<?= url('/office/invoices/' . $booking['invoice_id']) ?>" class="btn btn-primary btn-sm btn-block" style="text-align:center; display:block;">
+                            <i class="fa-solid fa-money-bill-wave" style="margin-right:5px;"></i> Record Remaining Payment
+                        </a>
                     </div>
                 <?php endif; ?>
             </div>

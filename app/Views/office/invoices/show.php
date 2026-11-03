@@ -23,9 +23,48 @@ $invoiceActions = '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-item
 ]) ?>
 
 <!-- Manaswi Official Invoice Banner -->
-<div style="background: rgba(23, 107, 91, 0.08); border: 1px solid rgba(23, 107, 91, 0.25); border-radius: var(--vg-radius-md); padding: 0.95rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; font-size: 0.88rem; color: var(--vg-deep-blue); box-shadow: var(--vg-shadow-sm);">
+<div style="background: rgba(23, 107, 91, 0.08); border: 1px solid rgba(23, 107, 91, 0.25); border-radius: var(--vg-radius-md); padding: 0.95rem 1.25rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem; font-size: 0.88rem; color: var(--vg-deep-blue); box-shadow: var(--vg-shadow-sm);">
     <svg width="22" height="22" fill="none" stroke="var(--vg-primary-blue)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-    <span><strong>MANASWI Official Billing Receipt:</strong> Verified against statutory tax records. Financial records sealed for audit compliance.</span>
+    <span><strong>Official Billing Receipt:</strong> Verified against statutory tax records. Financial records sealed for audit compliance.</span>
+</div>
+
+<!-- Top Payment Summary Ribbon -->
+<div class="invoice-summary-ribbon" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; background: #FFFFFF; border: 1.5px solid #DCE6F2; border-radius: 16px; padding: 1.25rem 1.5rem; box-shadow: 0 4px 15px rgba(12, 43, 82, 0.04);">
+    <div>
+        <div style="font-size: 0.75rem; color: #64748B; font-weight: 700; text-transform: uppercase;">Booking Amount</div>
+        <div style="font-size: 1.35rem; font-weight: 800; color: #0C2B52;"><?= format_currency((float)$invoice['total_amount']) ?></div>
+        <div style="font-size: 0.78rem; color: #64748B;">Total fare invoiced</div>
+    </div>
+    <div>
+        <div style="font-size: 0.75rem; color: #64748B; font-weight: 700; text-transform: uppercase;">Money Received</div>
+        <div style="font-size: 1.35rem; font-weight: 800; color: #10B981;"><?= format_currency((float)$invoice['paid_amount']) ?></div>
+        <div style="font-size: 0.78rem; color: #10B981;"><?= count($payments) ?> payment record(s)</div>
+    </div>
+    <div>
+        <div style="font-size: 0.75rem; color: #64748B; font-weight: 700; text-transform: uppercase;">Remaining Amount</div>
+        <div style="font-size: 1.35rem; font-weight: 800; color: <?= $balance > 0.001 ? '#DC2626' : '#10B981' ?>;">
+            <?= format_currency($balance) ?>
+        </div>
+        <div style="font-size: 0.78rem; color: <?= $balance > 0.001 ? '#DC2626' : '#10B981' ?>;">
+            <?= $balance > 0.001 ? 'Balance due from client' : 'Zero balance remaining' ?>
+        </div>
+    </div>
+    <div>
+        <div style="font-size: 0.75rem; color: #64748B; font-weight: 700; text-transform: uppercase;">Payment Status</div>
+        <div style="margin-top: 4px;">
+            <?php
+                $st = strtolower($invoice['payment_status'] ?? 'unpaid');
+                if ($st === 'paid') {
+                    echo '<span class="modern-badge" style="background:#D1FAE5; color:#065F46; font-weight:700; font-size:0.85rem; padding:4px 12px; border-radius:50px;"><i class="fa-solid fa-circle-check" style="margin-right:4px;"></i> Paid in Full</span>';
+                } elseif ($st === 'partial') {
+                    echo '<span class="modern-badge" style="background:#DBEAFE; color:#1E40AF; font-weight:700; font-size:0.85rem; padding:4px 12px; border-radius:50px;"><i class="fa-solid fa-clock-rotate-left" style="margin-right:4px;"></i> Partially Paid</span>';
+                } else {
+                    echo '<span class="modern-badge" style="background:#FEE2E2; color:#991B1B; font-weight:700; font-size:0.85rem; padding:4px 12px; border-radius:50px;"><i class="fa-solid fa-circle-exclamation" style="margin-right:4px;"></i> Unpaid</span>';
+                }
+            ?>
+        </div>
+        <div style="font-size: 0.78rem; color: #64748B; margin-top: 2px;">Due: <?= format_date($invoice['due_date']) ?></div>
+    </div>
 </div>
 
 <div class="vg-detail-grid">
@@ -159,45 +198,97 @@ $invoiceActions = '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-item
             </div>
         </div>
 
-        <?php if ($balance > 0 && in_array(auth_role(), ['admin', 'dispatcher'], true)): ?>
-        <div class="vg-card">
-            <div class="card-header">
-                <span class="card-title"><?= e(__('invoice_form.allocate_payment')) ?></span>
+        <?php if ($balance > 0.001 && in_array(auth_role(), ['admin', 'dispatcher'], true)): ?>
+        <div class="vg-card" style="border: 1.5px solid #B2D8CF;">
+            <div class="card-header" style="background: #E8F4F0; border-bottom: 1px solid #B2D8CF;">
+                <span class="card-title" style="color: #125748; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-money-bill-wave"></i> Record Customer Payment
+                </span>
             </div>
             <div class="card-body">
-                <form action="<?= url('/office/invoices/' . $invoice['id'] . '/payment') ?>" method="POST">
+                <form action="<?= url('/office/invoices/' . $invoice['id'] . '/payment') ?>" method="POST" id="recordPaymentForm">
                     <?= csrf_field() ?>
                     <input type="hidden" name="idempotency_key" value="<?= bin2hex(random_bytes(16)) ?>">
 
                     <div class="form-group">
-                        <label class="form-label" for="amount"><?= e(__('invoice_form.payment_amount')) ?></label>
-                        <input type="number" id="amount" name="amount" class="form-control" step="0.01" min="1" max="<?= $balance ?>" value="<?= $balance ?>" required>
+                        <label class="form-label" for="pay_amount">Amount Received (₹) <span class="req" style="color:#dc2626;">*</span></label>
+                        <input type="number" id="pay_amount" name="amount" class="form-control" step="0.01" min="0.01" max="<?= $balance ?>" value="<?= $balance ?>" required oninput="updateRemainingCalculation()" style="font-weight: 700; font-size: 1.05rem; color: #176B5B;">
+                        <div id="remainingCalcNotice" style="margin-top: 4px; font-size: 0.82rem; color: #10b981; font-weight: 600;">
+                            Remaining after payment: ₹ 0.00
+                        </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="payment_method"><?= e(__('invoice_form.payment_method')) ?></label>
+                        <label class="form-label" for="payment_method">Payment Method <span class="req" style="color:#dc2626;">*</span></label>
                         <select id="payment_method" name="payment_method" class="form-select" required>
-                            <option value="upi"><?= e(__('invoice_form.method_upi')) ?></option>
-                            <option value="net_banking"><?= e(__('invoice_form.method_netbanking')) ?></option>
-                            <option value="card"><?= e(__('invoice_form.method_card')) ?></option>
-                            <option value="cash"><?= e(__('invoice_form.method_cash')) ?></option>
+                            <option value="cash">Cash</option>
+                            <option value="upi">UPI (GPay / PhonePe / Paytm)</option>
+                            <option value="bank_transfer">Bank Transfer / NEFT / RTGS</option>
+                            <option value="card">Credit / Debit Card</option>
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="transaction_id"><?= e(__('invoice_form.transaction_id')) ?></label>
-                        <input type="text" id="transaction_id" name="transaction_id" class="form-control" placeholder="<?= e(__('invoice_form.transaction_placeholder')) ?>">
+                        <label class="form-label" for="received_date">Payment Date</label>
+                        <input type="date" id="received_date" name="received_date" class="form-control" value="<?= date('Y-m-d') ?>">
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="notes"><?= e(__('invoice_form.internal_remarks')) ?></label>
-                        <input type="text" id="notes" name="notes" class="form-control" placeholder="<?= e(__('invoice_form.internal_placeholder')) ?>">
+                        <label class="form-label" for="account_id">Received Into Account (Cash / Bank)</label>
+                        <select id="account_id" name="account_id" class="form-select">
+                            <?php if (!empty($accounts)): ?>
+                                <?php foreach ($accounts as $acc): ?>
+                                    <option value="<?= e($acc['id']) ?>">
+                                        <?= e($acc['account_name']) ?> (<?= e(ucfirst(str_replace('_', ' ', $acc['account_type'] ?? 'bank'))) ?> - Bal: <?= format_currency((float)($acc['current_balance'] ?? 0)) ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <option value="">Default Business Account</option>
+                            <?php endif; ?>
+                        </select>
                     </div>
 
-                    <button type="submit" class="btn btn-primary btn-block">
-                        <?= e(__('invoice_form.record_payment_btn')) ?>
+                    <div class="form-group">
+                        <label class="form-label" for="transaction_id">Ref / UTR / Cheque (Optional)</label>
+                        <input type="text" id="transaction_id" name="transaction_id" class="form-control" placeholder="e.g. UPI-987654 or Cheque #">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="notes">Notes / Remarks (Optional)</label>
+                        <input type="text" id="notes" name="notes" class="form-control" placeholder="e.g. Final balance settlement received">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block" style="padding: 0.75rem 1rem; font-weight: 700;">
+                        <i class="fa-solid fa-circle-check" style="margin-right: 6px;"></i> Record Payment
                     </button>
                 </form>
+            </div>
+        </div>
+        <script>
+            function updateRemainingCalculation() {
+                const totalDue = <?= (float)$balance ?>;
+                const input = document.getElementById('pay_amount');
+                const notice = document.getElementById('remainingCalcNotice');
+                if (!input || !notice) return;
+                const amt = parseFloat(input.value) || 0;
+                const rem = Math.max(0, totalDue - amt);
+                if (amt > totalDue) {
+                    notice.style.color = '#dc2626';
+                    notice.innerText = 'Amount cannot exceed remaining due of ₹ ' + totalDue.toFixed(2);
+                } else {
+                    notice.style.color = '#10b981';
+                    notice.innerText = 'Remaining after payment: ₹ ' + rem.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                }
+            }
+        </script>
+        <?php else: ?>
+        <div class="vg-card" style="border: 1.5px solid #A7F3D0; background: #ECFDF5;">
+            <div class="card-body" style="text-align: center; padding: 2rem 1.5rem;">
+                <div style="width: 48px; height: 48px; border-radius: 50%; background: #D1FAE5; color: #065F46; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem auto; font-size: 1.5rem;">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <h4 style="margin: 0 0 0.4rem 0; color: #065F46; font-weight: 700;">Fully Settled</h4>
+                <p style="margin: 0; color: #047857; font-size: 0.88rem;">This invoice has been settled in full. No remaining balance due.</p>
             </div>
         </div>
         <?php endif; ?>

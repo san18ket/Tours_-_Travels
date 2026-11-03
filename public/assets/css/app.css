@@ -4236,6 +4236,12 @@ textarea.form-control {
     color: #b45309;
 }
 
+.action-btn-table.pay {
+    background-color: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
 .action-btn-table.delete {
     background-color: #fee2e2;
     color: #dc2626;
@@ -4257,6 +4263,13 @@ textarea.form-control {
 
 .action-btn-table.dispatch:hover {
     background-color: #fde68a;
+}
+
+.action-btn-table.pay:hover {
+    background-color: #10b981 !important;
+    color: #ffffff !important;
+    border-color: #059669;
+    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.35);
 }
 
 .action-btn-table.delete:hover {

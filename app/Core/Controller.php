@@ -7,8 +7,14 @@ abstract class Controller
 {
     protected function render(string $viewPath, array $data = [], ?string $layout = 'layouts/main'): Response
     {
-        $html = View::render($viewPath, $data, $layout);
+        $normalizedLayout = ($layout === 'office') ? 'layouts/office' : $layout;
+        $html = View::render($viewPath, $data, $normalizedLayout);
         return Response::make($html);
+    }
+
+    protected function view(string $viewPath, array $data = [], ?string $layout = 'layouts/office'): Response
+    {
+        return $this->render($viewPath, $data, $layout);
     }
 
     protected function json(mixed $data, int $status = 200): Response

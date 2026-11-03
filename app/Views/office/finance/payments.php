@@ -187,8 +187,9 @@ $currP          = $currentPage ?? 1;
 
                             <!-- 2. Payment Date -->
                             <td>
-                                <div style="font-weight: 600; color: var(--vg-navy-900); font-size: 0.86rem;"><?= format_date($p['payment_date']) ?></div>
-                                <div style="font-size: 0.72rem; color: var(--text-muted);"><?= format_time($p['created_at']) ?></div>
+                                <?php $payDate = $p['payment_date'] ?? $p['paid_at'] ?? $p['created_at'] ?? null; ?>
+                                <div style="font-weight: 600; color: var(--vg-navy-900); font-size: 0.86rem;"><?= format_date($payDate) ?></div>
+                                <div style="font-size: 0.72rem; color: var(--text-muted);"><?= !empty($p['created_at']) ? date('h:i A', strtotime($p['created_at'])) : '' ?></div>
                             </td>
 
                             <!-- 3. Customer Name -->
@@ -275,7 +276,7 @@ $currP          = $currentPage ?? 1;
                 <div class="mv-booking-card" style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
                         <strong style="display: block; font-size: 0.92rem; color: var(--vg-navy-900);"><?= e($p['customer_name'] ?? 'Direct Customer') ?></strong>
-                        <span style="font-size: 0.78rem; color: var(--text-muted);"><?= format_date($p['payment_date']) ?> &bull; <?= strtoupper($p['payment_method']) ?></span>
+                        <span style="font-size: 0.78rem; color: var(--text-muted);"><?= format_date($p['payment_date'] ?? $p['paid_at'] ?? $p['created_at'] ?? null) ?> &bull; <?= strtoupper($p['payment_method']) ?></span>
                         <?php if (!empty($p['booking_code'])): ?>
                             <div style="font-size: 0.75rem; color: var(--brand-primary); font-weight: 600; margin-top: 2px;"><?= e($p['booking_code']) ?></div>
                         <?php endif; ?>

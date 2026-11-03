@@ -97,6 +97,12 @@
             <option value="unpaid" <?= ($selectedStatus ?? '') === 'unpaid' ? 'selected' : '' ?>>Unpaid</option>
         </select>
 
+        <div class="fbc-date-group" style="display: flex; align-items: center; gap: 6px;">
+            <input type="date" name="date_from" id="dateFromInput" value="<?= e($dateFrom ?? '') ?>" class="fbc-input-date" title="Invoice Date From" style="height: 38px; border: 1.5px solid #DCE6F2; border-radius: 10px; padding: 0 8px; font-size: 0.82rem; color: #0C2B52; background: #fff;">
+            <span style="font-size: 11px; color: #94A3B8; font-weight: 600;">to</span>
+            <input type="date" name="date_to" id="dateToInput" value="<?= e($dateTo ?? '') ?>" class="fbc-input-date" title="Invoice Date To" style="height: 38px; border: 1.5px solid #DCE6F2; border-radius: 10px; padding: 0 8px; font-size: 0.82rem; color: #0C2B52; background: #fff;">
+        </div>
+
         <select name="per_page" id="perPageInput" title="Records per page">
             <?php foreach ([10, 25, 50, 100] as $opt): ?>
                 <option value="<?= $opt ?>" <?= ($perPage ?? 10) == $opt ? 'selected' : '' ?>><?= $opt ?> per page</option>
@@ -109,7 +115,7 @@
         </div>
 
         <div class="fbc-actions-end" id="fbcClearWrapper">
-            <?php if (!empty($search) || !empty($selectedStatus)): ?>
+            <?php if (!empty($search) || !empty($selectedStatus) || !empty($dateFrom) || !empty($dateTo)): ?>
                 <button type="button" class="fbc-btn fbc-btn-clear" id="filterClearBtn" title="Clear Filters" data-no-ajax="true"><i class="fa-solid fa-xmark"></i> <span>Clear</span></button>
             <?php endif; ?>
         </div>
@@ -206,13 +212,12 @@
                 <thead>
                     <tr>
                         <th class="text-center" style="width: 48px;">#</th>
-                        <th style="width: 18%;">Invoice & Issued Date</th>
-                        <th style="width: 15%;">Booking Manifest</th>
-                        <th style="width: 22%;">Client Name & Account</th>
-                        <th class="text-center" style="width: 14%;">Total / Paid</th>
-                        <th class="text-center" style="width: 12%;">Balance Due</th>
+                        <th style="width: 24%;">Invoice & Issued Date</th>
+                        <th style="width: 26%;">Client Name & Account</th>
+                        <th class="text-center" style="width: 16%;">Total / Paid</th>
+                        <th class="text-center" style="width: 14%;">Balance Due</th>
                         <th class="text-center" style="width: 12%;">Status</th>
-                        <th class="text-center" style="width: 55px;">Actions</th>
+                        <th class="text-center" style="width: 58px;">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="invoicesTableBody">
@@ -236,19 +241,10 @@
                                 <?= e($inv['invoice_number']) ?>
                             </div>
                             <div style="margin-top: 3px;">
-                                <small class="text-muted" style="font-size:11px;">
-                                    Issued <?= format_date($inv['issued_at']) ?>
+                                <small class="text-muted" style="font-size:11.5px;">
+                                    <?= format_date($inv['issued_at'] ?? $inv['created_at']) ?>
                                 </small>
                             </div>
-                        </td>
-                        <td>
-                            <?php if (!empty($inv['booking_id']) && !empty($inv['booking_code'])): ?>
-                                <a href="<?= url('/office/bookings/' . $inv['booking_id']) ?>" style="font-weight:700;color:var(--brand-primary, #176B5B);text-decoration:none;">
-                                    #<?= e($inv['booking_code']) ?>
-                                </a>
-                            <?php else: ?>
-                                <span class="text-muted" style="font-size:12px; color:#64748B;">—</span>
-                            <?php endif; ?>
                         </td>
                         <td>
                             <div class="client-cell">
@@ -281,18 +277,33 @@
                                 <span class="status-badge bg-<?= $statusClass ?>"><?= $statusText ?></span>
                             </div>
                         </td>
-                        <td>
+                        <td class="text-center">
                             <div class="table-action-buttons">
                                 <button type="button" class="action-toggle-btn" onclick="toggleActions(this, event)" title="Actions">
                                     <i class="fa-solid fa-ellipsis"></i>
                                 </button>
                                 <div class="action-btns-popup">
+                                    <!-- View Full Invoice -->
                                     <a href="<?= url('/office/invoices/' . $inv['id']) ?>" class="action-btn-table view" title="View Full Invoice">
                                         <i class="fa-solid fa-eye"></i>
                                     </a>
+                                    <!-- Print Tax Invoice -->
                                     <a href="<?= url('/office/invoices/' . $inv['id'] . '/print') ?>" target="_blank" class="action-btn-table dispatch" title="Print Tax Invoice">
                                         <i class="fa-solid fa-print"></i>
                                     </a>
+                                    <!-- Record Payment (Only when balance > 0.001) -->
+                                    <?php if ($balance > 0.001): ?>
+                                    <button type="button" class="action-btn-table pay" title="Record Payment" onclick='openRecordPaymentModal(<?= htmlspecialchars(json_encode([
+                                        'id' => (int)$inv['id'],
+                                        'invoice_number' => $inv['invoice_number'],
+                                        'customer_name' => $inv['customer_name'] ?? 'Customer',
+                                        'total_amount' => (float)$inv['total_amount'],
+                                        'paid_amount' => (float)$inv['paid_amount'],
+                                    ]), ENT_QUOTES, 'UTF-8') ?>)'>
+                                        <i class="fa-solid fa-credit-card"></i>
+                                    </button>
+                                    <?php endif; ?>
+                                    <!-- View Linked Booking -->
                                     <?php if (!empty($inv['booking_id'])): ?>
                                     <a href="<?= url('/office/bookings/' . $inv['booking_id']) ?>" class="action-btn-table edit" title="View Linked Booking">
                                         <i class="fa-solid fa-calendar-check"></i>
@@ -305,11 +316,14 @@
                     <?php endforeach; ?>
                     <?php if (empty($invoices)): ?>
                     <tr>
-                        <td colspan="8">
-                            <div class="no-data-message">
-                                <div class="no-data-icon"><i class="fa-regular fa-folder-open"></i></div>
-                                <h4 style="font-weight:700;color:#1e293b;margin-bottom:6px;">No invoices found</h4>
-                                <p class="text-muted" style="margin:0;">Try adjusting your search or filter parameters.</p>
+                        <td colspan="7">
+                            <div class="no-data-message" style="padding: 2.5rem 1.5rem; text-align: center;">
+                                <div class="no-data-icon" style="font-size: 2.2rem; color: #94A3B8; margin-bottom: 0.5rem;"><i class="fa-regular fa-folder-open"></i></div>
+                                <h4 style="font-weight: 700; color: #1e293b; margin-bottom: 6px;">No invoices found</h4>
+                                <p class="text-muted" style="margin: 0 0 1rem 0; font-size: 0.88rem;">Create a booking to generate an invoice automatically.</p>
+                                <a href="<?= url('/office/bookings/create') ?>" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.55rem 1.15rem; border-radius: 8px; text-decoration: none; font-size: 0.85rem;">
+                                    <i class="fa-solid fa-plus"></i> Create New Booking
+                                </a>
                             </div>
                         </td>
                     </tr>
@@ -366,27 +380,64 @@
                     </div>
                 </a>
 
-                <!-- 3-Dots Quick Action Popup -->
-                <div class="mv-card-actions">
-                    <button type="button" class="mv-action-dots-btn" onclick="toggleCardActions(this, event)" title="Actions">
-                        <i class="fa-solid fa-ellipsis-vertical"></i>
-                    </button>
-                    <div class="card-btns-popup">
-                        <a href="<?= url('/office/invoices/' . $inv['id']) ?>" class="action-btn-table view" title="View Invoice">
-                            <i class="fa-solid fa-eye"></i>
-                        </a>
-                        <a href="<?= url('/office/invoices/' . $inv['id'] . '/print') ?>" target="_blank" class="action-btn-table dispatch" title="Print Invoice">
-                            <i class="fa-solid fa-print"></i>
-                        </a>
+                <!-- Dedicated Mobile Card Action Strip -->
+                <div class="mv-card-actions-bar">
+                    <div class="mv-card-actions-bar-left">
+                        <?php if (!empty($inv['booking_id']) && !empty($inv['booking_code'])): ?>
+                            <a href="<?= url('/office/bookings/' . $inv['booking_id']) ?>" class="mv-card-ref-link" title="Linked Booking #<?= e($inv['booking_code']) ?>">
+                                <i class="fa-solid fa-ticket"></i> #<?= e($inv['booking_code']) ?>
+                            </a>
+                        <?php else: ?>
+                            <span class="mv-card-ref-text"><i class="fa-regular fa-file-lines"></i> Direct Invoice</span>
+                        <?php endif; ?>
+                    </div>
+                    <div class="mv-card-actions-bar-right">
+                        <!-- Floating Action Button Menu for Mobile -->
+                        <div class="mv-card-more-actions">
+                            <button type="button" class="action-toggle-btn mv-action-dots-btn" onclick="toggleCardActions(this, event)" title="Actions">
+                                <i class="fa-solid fa-ellipsis"></i>
+                            </button>
+                            <div class="card-btns-popup">
+                                <!-- View Full Invoice -->
+                                <a href="<?= url('/office/invoices/' . $inv['id']) ?>" class="action-btn-table view" title="View Full Invoice">
+                                    <i class="fa-solid fa-eye"></i>
+                                </a>
+                                <!-- Print Tax Invoice -->
+                                <a href="<?= url('/office/invoices/' . $inv['id'] . '/print') ?>" target="_blank" class="action-btn-table dispatch" title="Print Tax Invoice">
+                                    <i class="fa-solid fa-print"></i>
+                                </a>
+                                <!-- Record Payment (Only when balance > 0.001) -->
+                                <?php if ($balance > 0.001): ?>
+                                <button type="button" class="action-btn-table pay" title="Record Payment" onclick='openRecordPaymentModal(<?= htmlspecialchars(json_encode([
+                                    'id' => (int)$inv['id'],
+                                    'invoice_number' => $inv['invoice_number'],
+                                    'customer_name' => $inv['customer_name'] ?? 'Customer',
+                                    'total_amount' => (float)$inv['total_amount'],
+                                    'paid_amount' => (float)$inv['paid_amount'],
+                                ]), ENT_QUOTES, 'UTF-8') ?>)'>
+                                    <i class="fa-solid fa-credit-card"></i>
+                                </button>
+                                <?php endif; ?>
+                                <!-- View Linked Booking (if present) -->
+                                <?php if (!empty($inv['booking_id'])): ?>
+                                <a href="<?= url('/office/bookings/' . $inv['booking_id']) ?>" class="action-btn-table edit" title="View Linked Booking">
+                                    <i class="fa-solid fa-calendar-check"></i>
+                                </a>
+                                <?php endif; ?>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
             <?php endforeach; ?>
             <?php if (empty($invoices)): ?>
-            <div class="no-data-message">
-                <div class="no-data-icon"><i class="fa-regular fa-folder-open"></i></div>
-                <h4 style="font-weight:700;color:#1e293b;margin-bottom:6px;">No invoices found</h4>
-                <p class="text-muted" style="margin:0;">Try adjusting your search or filter parameters.</p>
+            <div class="no-data-message" style="padding: 2.5rem 1.5rem; text-align: center;">
+                <div class="no-data-icon" style="font-size: 2.2rem; color: #94A3B8; margin-bottom: 0.5rem;"><i class="fa-regular fa-folder-open"></i></div>
+                <h4 style="font-weight: 700; color: #1e293b; margin-bottom: 6px;">No invoices found</h4>
+                <p class="text-muted" style="margin: 0 0 1rem 0; font-size: 0.88rem;">Create a booking to generate an invoice automatically.</p>
+                <a href="<?= url('/office/bookings/create') ?>" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.55rem 1.15rem; border-radius: 8px; text-decoration: none; font-size: 0.85rem;">
+                    <i class="fa-solid fa-plus"></i> Create New Booking
+                </a>
             </div>
             <?php endif; ?>
         </div>
@@ -433,6 +484,108 @@
     </div>
     <?php endif; ?>
     </div>
+
+    <!-- Record Payment Modal -->
+    <div id="recordPaymentModal" class="record-payment-modal-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(12, 43, 82, 0.45); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center; padding: 1rem;">
+        <div class="record-payment-modal-card" style="background: #FFFFFF; border-radius: 18px; width: 100%; max-width: 520px; box-shadow: 0 20px 45px rgba(0, 0, 0, 0.2); border: 1.5px solid #DCE6F2; overflow: hidden;">
+            <!-- Header -->
+            <div style="background: #0C2B52; color: #FFFFFF; padding: 1.15rem 1.4rem; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                    <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(255, 255, 255, 0.15); display: flex; align-items: center; justify-content: center; font-size: 1.05rem;">
+                        <i class="fa-solid fa-money-bill-wave"></i>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #FFFFFF;">Record Customer Payment</h3>
+                        <div style="font-size: 0.8rem; color: #93C5FD;" id="rpmInvoiceTitle">Invoice #</div>
+                    </div>
+                </div>
+                <button type="button" onclick="closeRecordPaymentModal()" style="background: none; border: none; color: #FFFFFF; font-size: 1.2rem; cursor: pointer; padding: 4px;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Summary Ribbon -->
+            <div style="background: #F8FAFD; border-bottom: 1px solid #EDF3FA; padding: 0.85rem 1.25rem; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; text-align: center;">
+                <div>
+                    <div style="font-size: 0.7rem; color: #64748B; font-weight: 700; text-transform: uppercase;">Booking Amount</div>
+                    <div id="rpmTotalAmount" style="font-size: 0.95rem; font-weight: 800; color: #0C2B52;">₹ 0.00</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.7rem; color: #64748B; font-weight: 700; text-transform: uppercase;">Money Received</div>
+                    <div id="rpmPaidAmount" style="font-size: 0.95rem; font-weight: 800; color: #10B981;">₹ 0.00</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.7rem; color: #64748B; font-weight: 700; text-transform: uppercase;">Remaining Amount</div>
+                    <div id="rpmRemainingAmount" style="font-size: 0.95rem; font-weight: 800; color: #DC2626;">₹ 0.00</div>
+                </div>
+            </div>
+
+            <!-- Form Body -->
+            <form id="rpmForm" method="POST" action="" style="padding: 1.25rem 1.4rem; display: flex; flex-direction: column; gap: 0.9rem;">
+                <?= csrf_field() ?>
+                <input type="hidden" name="idempotency_key" value="<?= bin2hex(random_bytes(16)) ?>">
+                <input type="hidden" name="redirect_to" value="<?= url('/office/invoices') ?>">
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" for="rpmAmount" style="font-size: 0.85rem; font-weight: 700; color: #0C2B52; margin-bottom: 4px;">Amount Received (₹) <span style="color:#dc2626;">*</span></label>
+                    <input type="number" step="0.01" min="0.01" id="rpmAmount" name="amount" class="form-control" required oninput="updateRpmRemaining()" style="font-weight: 700; font-size: 1.05rem; color: #176B5B;">
+                    <div id="rpmNewRemainingNotice" style="margin-top: 4px; font-size: 0.8rem; color: #10B981; font-weight: 600;">
+                        Remaining after payment: <span id="rpmNewRemaining">₹ 0.00</span>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" for="rpmPaymentMethod" style="font-size: 0.82rem; margin-bottom: 4px;">Payment Method <span style="color:#dc2626;">*</span></label>
+                        <select id="rpmPaymentMethod" name="payment_method" class="form-select" required style="font-size: 0.88rem;">
+                            <option value="cash">Cash</option>
+                            <option value="upi">UPI (GPay / PhonePe / Paytm)</option>
+                            <option value="bank_transfer">Bank Transfer / NEFT / RTGS</option>
+                            <option value="card">Credit / Debit Card</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" for="rpmReceivedDate" style="font-size: 0.82rem; margin-bottom: 4px;">Payment Date</label>
+                        <input type="date" id="rpmReceivedDate" name="received_date" class="form-control" value="<?= date('Y-m-d') ?>" style="font-size: 0.88rem;">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" for="rpmAccountId" style="font-size: 0.82rem; margin-bottom: 4px;">Received Into Account (Cash / Bank)</label>
+                    <select id="rpmAccountId" name="account_id" class="form-select" style="font-size: 0.88rem;">
+                        <?php if (!empty($accounts)): ?>
+                            <?php foreach ($accounts as $acc): ?>
+                                <option value="<?= e($acc['id']) ?>">
+                                    <?= e($acc['account_name']) ?> (<?= e(ucfirst(str_replace('_', ' ', $acc['account_type'] ?? 'bank'))) ?> - Bal: <?= format_currency((float)($acc['current_balance'] ?? 0)) ?>)
+                                </option>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <option value="">Default Business Account</option>
+                        <?php endif; ?>
+                    </select>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" for="rpmTransactionId" style="font-size: 0.82rem; margin-bottom: 4px;">Ref / UTR / Cheque</label>
+                        <input type="text" id="rpmTransactionId" name="transaction_id" class="form-control" placeholder="e.g. UPI-987654" style="font-size: 0.88rem;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" for="rpmNotes" style="font-size: 0.82rem; margin-bottom: 4px;">Notes / Remarks</label>
+                        <input type="text" id="rpmNotes" name="notes" class="form-control" placeholder="e.g. Remaining payment" style="font-size: 0.88rem;">
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 0.5rem; padding-top: 0.75rem; border-top: 1px solid #EDF3FA;">
+                    <button type="button" onclick="closeRecordPaymentModal()" class="btn btn-outline" style="border-radius: 8px; padding: 0.5rem 1rem;">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="border-radius: 8px; font-weight: 700; padding: 0.5rem 1.25rem;">
+                        <i class="fa-solid fa-check" style="margin-right: 5px;"></i> Save Payment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -449,20 +602,26 @@
             const searchInput = document.getElementById('searchInput');
             const mvSearchInput = document.getElementById('mvSearchInput');
             const statusInput = document.getElementById('statusInput');
+            const dateFromInput = document.getElementById('dateFromInput');
+            const dateToInput = document.getElementById('dateToInput');
             const perPageInput = document.getElementById('perPageInput');
             const mvPerPageSelect = document.getElementById('mvPerPageSelect');
 
             const sVal = (searchInput ? searchInput.value : (mvSearchInput ? mvSearchInput.value : '')).trim();
             const stVal = statusInput ? statusInput.value : '';
+            const dfVal = dateFromInput ? dateFromInput.value : '';
+            const dtVal = dateToInput ? dateToInput.value : '';
             const ppVal = perPageInput ? perPageInput.value : (mvPerPageSelect ? mvPerPageSelect.value : '10');
 
             const p = new URLSearchParams();
             if (sVal) p.set('search', sVal);
             if (stVal) p.set('status', stVal);
+            if (dfVal) p.set('date_from', dfVal);
+            if (dtVal) p.set('date_to', dtVal);
             if (ppVal && ppVal !== '10') p.set('per_page', ppVal);
             if (page && page > 1) p.set('page', page);
 
-            return { params: p, searchVal: sVal, statusVal: stVal, perPageVal: ppVal, pageNum: page };
+            return { params: p, searchVal: sVal, statusVal: stVal, dateFromVal: dfVal, dateToVal: dtVal, perPageVal: ppVal, pageNum: page };
         }
 
         function filterInvoicesAjax(page = 1, options = {}) {
@@ -615,6 +774,12 @@
             stInput.addEventListener('change', () => filterInvoicesAjax(1));
         }
 
+        // Date Inputs
+        const dfInput = document.getElementById('dateFromInput');
+        if (dfInput) dfInput.addEventListener('change', () => filterInvoicesAjax(1));
+        const dtInput = document.getElementById('dateToInput');
+        if (dtInput) dtInput.addEventListener('change', () => filterInvoicesAjax(1));
+
         // Per Page Dropdowns
         const ppInput = document.getElementById('perPageInput');
         if (ppInput) {
@@ -698,9 +863,13 @@
                     const s = document.getElementById('searchInput');
                     const ms = document.getElementById('mvSearchInput');
                     const st = document.getElementById('statusInput');
+                    const df = document.getElementById('dateFromInput');
+                    const dt = document.getElementById('dateToInput');
                     if (s) s.value = '';
                     if (ms) ms.value = '';
                     if (st) st.value = '';
+                    if (df) df.value = '';
+                    if (dt) dt.value = '';
                 }
                 filterInvoicesAjax(1);
                 return;
@@ -795,10 +964,63 @@
     }
 
     document.addEventListener('click', function(e) {
-        if (!e.target.closest('.table-action-buttons') && !e.target.closest('.mv-card-actions')) {
+        if (!e.target.closest('.table-action-buttons') && !e.target.closest('.mv-card-actions') && !e.target.closest('.mv-card-more-actions') && !e.target.closest('#recordPaymentModal')) {
             document.querySelectorAll('.action-btns-popup.open, .card-btns-popup.open').forEach(p => p.classList.remove('open'));
         }
+        if (e.target.id === 'recordPaymentModal') {
+            closeRecordPaymentModal();
+        }
     });
+
+    let currentModalMax = 0;
+
+    function openRecordPaymentModal(inv) {
+        const modal = document.getElementById('recordPaymentModal');
+        if (!modal) return;
+        const total = parseFloat(inv.total_amount) || 0;
+        const paid = parseFloat(inv.paid_amount) || 0;
+        const remaining = Math.max(0, Math.round((total - paid) * 100) / 100);
+        currentModalMax = remaining;
+
+        document.getElementById('rpmForm').action = '<?= url('/office/invoices') ?>/' + inv.id + '/payment';
+        document.getElementById('rpmInvoiceTitle').textContent = 'Invoice ' + inv.invoice_number + ' • ' + (inv.customer_name || 'Customer');
+        document.getElementById('rpmTotalAmount').textContent = '₹ ' + total.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        document.getElementById('rpmPaidAmount').textContent = '₹ ' + paid.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        document.getElementById('rpmRemainingAmount').textContent = '₹ ' + remaining.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+        const amountInput = document.getElementById('rpmAmount');
+        if (amountInput) {
+            amountInput.value = remaining.toFixed(2);
+            amountInput.max = remaining.toFixed(2);
+        }
+        updateRpmRemaining();
+        modal.style.display = 'flex';
+    }
+
+    function closeRecordPaymentModal() {
+        const modal = document.getElementById('recordPaymentModal');
+        if (modal) modal.style.display = 'none';
+    }
+
+    function updateRpmRemaining() {
+        const amountInput = document.getElementById('rpmAmount');
+        const entered = parseFloat(amountInput ? amountInput.value : 0) || 0;
+        const newRemaining = Math.max(0, Math.round((currentModalMax - entered) * 100) / 100);
+        const remLabel = document.getElementById('rpmNewRemaining');
+        const notice = document.getElementById('rpmNewRemainingNotice');
+        if (remLabel) {
+            remLabel.textContent = '₹ ' + newRemaining.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+        if (notice) {
+            if (entered > currentModalMax + 0.001) {
+                notice.style.color = '#dc2626';
+                notice.innerHTML = 'Amount cannot exceed remaining balance of ₹ ' + currentModalMax.toFixed(2);
+            } else {
+                notice.style.color = '#10B981';
+                notice.innerHTML = 'Remaining after payment: <span id="rpmNewRemaining">₹ ' + newRemaining.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</span>';
+            }
+        }
+    }
 </script>
 
 <style>
@@ -864,5 +1086,228 @@
 }
 .fbc-search-clear:hover, .mv-search-clear:hover {
     color: #0F172A;
+}
+
+/* ========================================================================= */
+/* Floating Action Button & Popup Menu Styling (PMS Standard)                */
+/* ========================================================================= */
+.table-action-buttons {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.table-action-buttons .action-toggle-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    padding: 0;
+}
+
+.table-action-buttons .action-toggle-btn:hover {
+    background: #eef2f6;
+    color: #0f172a;
+    transform: scale(1.08);
+    box-shadow: 0 4px 12px rgba(23, 107, 91, 0.22);
+    border-color: rgba(23, 107, 91, 0.3);
+}
+
+.table-action-buttons .action-btns-popup {
+    display: flex;
+    position: absolute;
+    top: 50%;
+    right: calc(100% + 8px);
+    left: auto;
+    transform: translateY(-50%) scale(0.75);
+    transform-origin: right center;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.16), 0 2px 8px rgba(0, 0, 0, 0.04);
+    padding: 6px 10px;
+    gap: 6px;
+    align-items: center;
+    z-index: 9999;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.table-action-buttons .action-btns-popup.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(-50%) scale(1);
+}
+
+.action-btn-table.pay {
+    background-color: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.action-btn-table.pay:hover {
+    background-color: #10b981 !important;
+    color: #ffffff !important;
+    border-color: #059669;
+    transform: scale(1.1);
+    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.35);
+}
+
+/* ========================================================================= */
+/* Mobile Invoice Cards Clean Footer Action Strip                            */
+/* ========================================================================= */
+#invoicesCards .mv-booking-card-wrapper {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #edf2f7;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+}
+
+#invoicesCards .mv-booking-card {
+    border: none;
+    box-shadow: none;
+    border-radius: 16px 16px 0 0;
+    padding-right: 14px;
+    padding-bottom: 10px;
+    background: transparent;
+}
+
+#invoicesCards .mv-card-actions-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 9px 14px 10px 14px;
+    background: #fafcfa;
+    border-top: 1px dashed #e2e8f0;
+    border-radius: 0 0 16px 16px;
+}
+
+#invoicesCards .mv-card-actions-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    color: #64748b;
+    min-width: 0;
+    overflow: hidden;
+}
+
+#invoicesCards .mv-card-ref-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--brand-primary, #176B5B);
+    background: #e8f7f0;
+    padding: 3px 8px;
+    border-radius: 6px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+#invoicesCards .mv-card-ref-link:hover {
+    background: #d1fae5;
+}
+
+#invoicesCards .mv-card-ref-text {
+    font-size: 11px;
+    color: #94a3b8;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+#invoicesCards .mv-card-actions-bar-right {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+#invoicesCards .mv-card-actions-bar-right .action-btn-table,
+#invoicesCards .mv-card-actions-bar-right .action-toggle-btn {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#invoicesCards .mv-card-actions-bar-right .action-toggle-btn {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+}
+
+#invoicesCards .mv-card-actions-bar-right .action-toggle-btn:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+#invoicesCards .mv-card-more-actions {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+#invoicesCards .mv-card-more-actions .card-btns-popup {
+    display: flex;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    right: 0;
+    top: auto;
+    transform: scale(0.75);
+    transform-origin: bottom right;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.16), 0 2px 8px rgba(0, 0, 0, 0.04);
+    padding: 6px 10px;
+    gap: 6px;
+    align-items: center;
+    z-index: 9999;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#invoicesCards .mv-card-more-actions .card-btns-popup.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: scale(1);
 }
 </style>

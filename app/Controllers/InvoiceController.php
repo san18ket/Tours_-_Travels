@@ -7,6 +7,7 @@ use App\Core\Response;
 use App\Core\Session;
 use App\Models\Invoice;
 use App\Models\Payment;
+use App\Models\FinanceAccount;
 use App\Services\BillingService;
 use Throwable;
 
@@ -34,12 +35,26 @@ class InvoiceController extends Controller
 
         $search = trim((string)$request->get('search', (string)$request->get('q', '')));
         $status = trim((string)$request->get('status', ''));
+        $dateFrom = trim((string)$request->get('date_from', ''));
+        $dateTo = trim((string)$request->get('date_to', ''));
         $page = max(1, (int)$request->get('page', 1));
         $perPage = in_array((int)$request->get('per_page'), [5, 10, 15, 20, 25, 50, 100], true) ? (int)$request->get('per_page') : 10;
 
-        $filtered = array_filter($allInvoices, function($inv) use ($search, $status) {
+        $filtered = array_filter($allInvoices, function($inv) use ($search, $status, $dateFrom, $dateTo) {
             if ($status !== '' && strtolower($inv['payment_status'] ?? '') !== strtolower($status)) {
                 return false;
+            }
+            if ($dateFrom !== '') {
+                $invDate = substr((string)($inv['invoice_date'] ?? ''), 0, 10);
+                if ($invDate !== '' && $invDate < $dateFrom) {
+                    return false;
+                }
+            }
+            if ($dateTo !== '') {
+                $invDate = substr((string)($inv['invoice_date'] ?? ''), 0, 10);
+                if ($invDate !== '' && $invDate > $dateTo) {
+                    return false;
+                }
             }
             if ($search !== '') {
                 $needle = strtolower($search);
@@ -78,8 +93,11 @@ class InvoiceController extends Controller
         }
         $totalOutstanding = max(0.0, $totalInvoiced - $totalPaid);
 
+        $accounts = (new FinanceAccount())->getActiveAccounts();
+
         return $this->render('office/invoices/index', [
             'invoices'         => $paginatedInvoices,
+            'accounts'         => $accounts,
             'totalRecords'     => $totalRecords,
             'totalAll'         => count($allInvoices),
             'totalInvoiced'    => $totalInvoiced,
@@ -93,6 +111,8 @@ class InvoiceController extends Controller
             'perPage'          => $perPage,
             'search'           => $search,
             'selectedStatus'   => $status,
+            'dateFrom'         => $dateFrom,
+            'dateTo'           => $dateTo,
             'title'            => 'Invoices & Billing Ledger',
         ], 'layouts/office');
     }
@@ -112,10 +132,12 @@ class InvoiceController extends Controller
         }
 
         $payments = $this->paymentModel->getPaymentsByInvoice($id);
+        $accounts = (new FinanceAccount())->getActiveAccounts();
 
         return $this->render('office/invoices/show', [
             'invoice'  => $invoice,
             'payments' => $payments,
+            'accounts' => $accounts,
             'title'    => "Tax Invoice {$invoice['invoice_number']}",
         ], 'layouts/office');
     }
@@ -147,6 +169,12 @@ class InvoiceController extends Controller
             $transactionId = $request->input('transaction_id') ?: ('TXN-' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8)));
             $accountId = (int)$request->input('account_id', 0) ?: null;
 
+            $receivedDate = $request->input('received_date') ?: $request->input('paid_at');
+            $paidAt = null;
+            if ($receivedDate) {
+                $paidAt = strlen($receivedDate) === 10 ? $receivedDate . ' ' . date('H:i:s') : $receivedDate;
+            }
+
             $payment = $this->billingService->recordPayment(
                 $invoiceId,
                 (float)$data['amount'],
@@ -154,10 +182,14 @@ class InvoiceController extends Controller
                 $transactionId,
                 $idempotencyKey,
                 $request->input('notes'),
-                $accountId
+                $accountId,
+                $paidAt
             );
 
-            $msg = "Payment {$payment['payment_reference']} of " . format_currency((float)$data['amount']) . " recorded successfully.";
+            $updatedInvoice = $this->invoiceModel->find($invoiceId);
+            $remaining = max(0.0, (float)($updatedInvoice['total_amount'] ?? 0) - (float)($updatedInvoice['paid_amount'] ?? 0));
+            $statusText = $remaining <= 0.001 ? "Invoice is now fully paid." : "Remaining amount: " . format_currency($remaining) . ".";
+            $msg = "Payment of " . format_currency((float)$data['amount']) . " recorded successfully. {$statusText}";
             Session::setFlash('success', $msg);
 
             if ($request->isAjax()) {

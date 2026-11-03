@@ -43,25 +43,46 @@ class BillingService
         }
 
         $invoiceNumber = 'INV-' . date('Y') . '-' . str_pad((string)($bookingId + 100), 5, '0', STR_PAD_LEFT);
+        $cnt = 1;
+        while ($this->invoiceModel->findBy('invoice_number', $invoiceNumber)) {
+            $invoiceNumber = 'INV-' . date('Y') . '-' . str_pad((string)($bookingId + 100 + $cnt), 5, '0', STR_PAD_LEFT);
+            $cnt++;
+        }
+
+        // Safely resolve customer id for foreign key constraints
+        $customerId = !empty($booking['customer_id']) ? (int)$booking['customer_id'] : null;
+        if (!$customerId && !empty($booking['customer_profile_id'])) {
+            $custModel = new \App\Models\Customer();
+            $cp = $custModel->find((int)$booking['customer_profile_id']);
+            if (!empty($cp['user_id'])) {
+                $customerId = (int)$cp['user_id'];
+            }
+        }
+        if (!$customerId) {
+            $customerId = 1; // Default to admin/office user
+        }
 
         $pdo = Database::getConnection();
-        $pdo->beginTransaction();
+        $inTx = $pdo->inTransaction();
+        if (!$inTx) {
+            $pdo->beginTransaction();
+        }
         try {
             $invoiceId = $this->invoiceModel->create([
-                'invoice_number'  => $invoiceNumber,
-                'booking_id'      => $bookingId,
-                'customer_id'         => $booking['customer_id'],
+                'invoice_number'      => $invoiceNumber,
+                'booking_id'          => $bookingId,
+                'customer_id'         => $customerId,
                 'customer_profile_id' => $booking['customer_profile_id'] ?? null,
-                'subtotal'        => $booking['subtotal'],
-                'tax_rate'        => 5.00,
-                'tax_amount'      => $booking['tax_amount'],
-                'discount_amount' => $booking['discount_amount'],
-                'total_amount'    => $booking['total_amount'],
-                'paid_amount'     => 0.00,
-                'payment_status'  => 'unpaid',
-                'due_date'        => $booking['start_date'],
-                'is_immutable'    => 1,
-                'issued_at'       => date('Y-m-d H:i:s'),
+                'subtotal'            => $booking['subtotal'],
+                'tax_rate'            => 5.00,
+                'tax_amount'          => $booking['tax_amount'],
+                'discount_amount'     => $booking['discount_amount'],
+                'total_amount'        => $booking['total_amount'],
+                'paid_amount'         => 0.00,
+                'payment_status'      => 'unpaid',
+                'due_date'            => $booking['start_date'] ?? date('Y-m-d'),
+                'is_immutable'        => 1,
+                'issued_at'           => date('Y-m-d H:i:s'),
             ]);
 
             $this->auditLog->record('invoice_issued', 'invoices', $invoiceId, null, [
@@ -69,10 +90,12 @@ class BillingService
                 'total_amount'   => $booking['total_amount']
             ]);
 
-            $pdo->commit();
+            if (!$inTx) {
+                $pdo->commit();
+            }
             return $this->invoiceModel->find($invoiceId);
         } catch (\Throwable $e) {
-            if ($pdo->inTransaction()) {
+            if (!$inTx && $pdo->inTransaction()) {
                 $pdo->rollBack();
             }
             Logger::error("Failed to issue invoice: " . $e->getMessage());
@@ -83,11 +106,15 @@ class BillingService
     /**
      * Record payment allocation with strict idempotency and transaction locking
      */
-    public function recordPayment(int $invoiceId, float $amount, string $paymentMethod, ?string $transactionId, string $idempotencyKey, ?string $notes = null, ?int $accountId = null): array
+    public function recordPayment(int $invoiceId, float $amount, string $paymentMethod, ?string $transactionId = null, ?string $idempotencyKey = null, ?string $notes = null, ?int $accountId = null, ?string $paidAt = null): array
     {
+        $amount = round($amount, 2);
         if ($amount <= 0.0) {
             throw new RuntimeException("Payment amount must be greater than zero.");
         }
+
+        $idempotencyKey = $idempotencyKey ?: bin2hex(random_bytes(16));
+        $transactionId  = $transactionId ?: ('TXN-' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8)));
 
         // Duplicate-request check using idempotency key
         $existingPayment = $this->paymentModel->findByIdempotencyKey($idempotencyKey);
@@ -103,10 +130,16 @@ class BillingService
 
         $currentPaid = (float)$invoice['paid_amount'];
         $total = (float)$invoice['total_amount'];
+        $remaining = round(max(0.0, $total - $currentPaid), 2);
+
+        if ($amount > ($remaining + 0.01)) {
+            throw new RuntimeException("Payment amount of " . format_currency($amount) . " cannot exceed the remaining balance of " . format_currency($remaining) . ".");
+        }
+
         $newPaid = round($currentPaid + $amount, 2);
 
         $newStatus = 'unpaid';
-        if ($newPaid >= $total) {
+        if ($newPaid >= ($total - 0.01)) {
             $newStatus = 'paid';
         } elseif ($newPaid > 0) {
             $newStatus = 'partially_paid';
@@ -129,8 +162,13 @@ class BillingService
             }
         }
 
+        $paidAtTimestamp = $paidAt ? (strlen($paidAt) === 10 ? $paidAt . ' ' . date('H:i:s') : $paidAt) : date('Y-m-d H:i:s');
+
         $pdo = Database::getConnection();
-        $pdo->beginTransaction();
+        $inTx = $pdo->inTransaction();
+        if (!$inTx) {
+            $pdo->beginTransaction();
+        }
         try {
             $paymentId = $this->paymentModel->create([
                 'payment_reference' => $paymentRef,
@@ -142,7 +180,7 @@ class BillingService
                 'status'            => 'success',
                 'idempotency_key'   => $idempotencyKey,
                 'notes'             => $notes,
-                'paid_at'           => date('Y-m-d H:i:s'),
+                'paid_at'           => $paidAtTimestamp,
             ]);
 
             $this->invoiceModel->update($invoiceId, [
@@ -164,7 +202,7 @@ class BillingService
                     'transaction_ref'  => $paymentRef,
                     'notes'            => "Payment for Invoice #{$invoice['invoice_number']}. " . ($notes ?? ''),
                     'created_by'       => \App\Core\Session::getUserId(),
-                    'transacted_at'    => date('Y-m-d H:i:s'),
+                    'transacted_at'    => $paidAtTimestamp,
                 ]);
             }
 
@@ -174,7 +212,9 @@ class BillingService
                 'method'     => $paymentMethod
             ]);
 
-            $pdo->commit();
+            if (!$inTx) {
+                $pdo->commit();
+            }
             $payment = $this->paymentModel->find($paymentId);
             try {
                 $this->emailService->sendPaymentSuccessful($payment, $invoice);
@@ -183,7 +223,7 @@ class BillingService
             }
             return $payment;
         } catch (\Throwable $e) {
-            if ($pdo->inTransaction()) {
+            if (!$inTx && $pdo->inTransaction()) {
                 $pdo->rollBack();
             }
             Logger::error("Payment allocation failed: " . $e->getMessage());
