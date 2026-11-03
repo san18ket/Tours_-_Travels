@@ -108,7 +108,7 @@ class CompanyController extends Controller
             'city'            => !empty($input['city']) ? trim($input['city']) : null,
             'state'           => !empty($input['state']) ? trim($input['state']) : null,
             'pin_code'        => !empty($input['pin_code']) ? trim($input['pin_code']) : null,
-            'status'          => in_array($input['status'] ?? 'active', ['active', 'inactive']) ? $input['status'] : 'active',
+            'status'          => in_array($input['status'] ?? 'active', ['active', 'inactive'], true) ? ($input['status'] ?? 'active') : 'active',
             'updated_at'      => date('Y-m-d H:i:s'),
         ];
 

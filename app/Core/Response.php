@@ -129,5 +129,18 @@ class Response
         if ($this->content !== null) {
             echo $this->content;
         }
+
+        // Fast-finish client connection if possible so background tasks / shutdown handlers don't delay client redirect
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        } elseif (php_sapi_name() !== 'cli') {
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                @session_write_close();
+            }
+            if (ob_get_level() > 0) {
+                @ob_end_flush();
+            }
+            @flush();
+        }
     }
 }

@@ -666,7 +666,7 @@ $initial = strtoupper(mb_substr($tx['category'] ?? 'T', 0, 1));
         </div>
         <form action="<?= url('/office/finance/transactions/' . $tx['id']) ?>" method="POST" id="editTxForm">
             <?= csrf_field() ?>
-            <input type="hidden" name="redirect_to" value="<?= url('/office/finance/transactions/' . $tx['id']) ?>">
+            <input type="hidden" name="redirect_to" value="<?= url('/office/finance/transactions') ?>">
             <div class="modal-body-custom">
                 <div class="edit-locked-alert">
                     <i class="fa-solid fa-shield-halved" style="color: #176B5B;"></i>

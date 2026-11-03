@@ -351,23 +351,26 @@ class EmployeeController extends Controller
                 Session::getUserId()
             );
 
-            $emailResult = null;
             try {
                 $emailService = new \App\Services\EmailService();
                 $fullEmp = $this->employeeModel->find($employeeId);
                 if ($fullEmp && !empty($fullEmp['email'])) {
-                    $emailResult = $emailService->sendEmployeeWelcome($fullEmp);
+                    $emailService->queueEmployeeWelcome($fullEmp);
                 }
             } catch (\Throwable $e) {
-                Logger::warning("Could not dispatch employee welcome email: " . $e->getMessage());
-                $emailResult = ['success' => false, 'error' => $e->getMessage()];
+                Logger::warning("Could not queue employee welcome email: " . $e->getMessage());
             }
 
-            if ($emailResult !== null && !$emailResult['success'] && empty($emailResult['duplicate'])) {
-                return $this->redirect(url('/office/employees'), 'warning', "Employee [{$employeeCode}] {$data['first_name']} {$data['last_name']} successfully registered, but onboarding email delivery failed (" . ($emailResult['error'] ?? 'SMTP Error') . "). You can retry anytime from Notification Settings.");
+            $successMsg = "Employee [{$employeeCode}] {$data['first_name']} {$data['last_name']} successfully registered.";
+            Session::setFlash('success', $successMsg);
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success'  => true,
+                    'message'  => $successMsg,
+                    'redirect' => url('/office/employees'),
+                ]);
             }
-
-            return $this->redirect(url('/office/employees'), 'success', "Employee [{$employeeCode}] {$data['first_name']} {$data['last_name']} successfully registered.");
+            return $this->redirect(url('/office/employees'), 'success', $successMsg);
 
         } catch (ValidationException $e) {
             if ($request->isAjax()) {
@@ -690,14 +693,36 @@ class EmployeeController extends Controller
                 Session::getUserId()
             );
 
-            return $this->redirect(url("/office/employees/{$id}"), 'success', "Employee record [{$employee['employee_code']}] successfully updated.");
+            $msg = "Employee record [{$employee['employee_code']}] successfully updated.";
+            Session::setFlash('success', $msg);
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success'  => true,
+                    'message'  => $msg,
+                    'redirect' => url('/office/employees'),
+                ]);
+            }
+            return $this->redirect(url('/office/employees'), 'success', $msg);
 
         } catch (ValidationException $e) {
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                    'errors'  => $e->getErrors(),
+                ], 422);
+            }
             Session::setFlash('form_errors', $e->getErrors());
             Session::setFlash('form_old', $request->all());
             Session::setFlash('danger', $e->getMessage());
             return $this->redirect(url("/office/employees/{$id}/edit"));
         } catch (Throwable $e) {
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Error updating employee: ' . $e->getMessage(),
+                ], 500);
+            }
             Session::setFlash('form_old', $request->all());
             Session::setFlash('danger', 'Error updating employee: ' . $e->getMessage());
             return $this->redirect(url("/office/employees/{$id}/edit"));

@@ -162,14 +162,36 @@ class VehicleController extends Controller
                 Session::getUserId()
             );
 
-            return $this->redirect(url('/office/vehicles'), 'success', "Vehicle {$cleanNumber} ({$data['make_model']}) registered successfully into fleet.");
+            $msg = "Vehicle {$cleanNumber} ({$data['make_model']}) registered successfully into fleet.";
+            Session::setFlash('success', $msg);
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success'  => true,
+                    'message'  => $msg,
+                    'redirect' => url('/office/vehicles'),
+                ]);
+            }
+            return $this->redirect(url('/office/vehicles'), 'success', $msg);
 
         } catch (ValidationException $e) {
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                    'errors'  => $e->getErrors(),
+                ], 422);
+            }
             Session::setFlash('form_errors', $e->getErrors());
             Session::setFlash('form_old', $request->all());
             Session::setFlash('danger', $e->getMessage());
             return $this->redirect(url('/office/vehicles/create'));
         } catch (Throwable $e) {
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Error registering vehicle: ' . $e->getMessage(),
+                ], 500);
+            }
             Session::setFlash('form_old', $request->all());
             Session::setFlash('danger', 'Error registering vehicle: ' . $e->getMessage());
             return $this->redirect(url('/office/vehicles/create'));

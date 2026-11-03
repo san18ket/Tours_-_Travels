@@ -751,7 +751,7 @@ $approverDisplay = $adv['approver_name'] ?? (!empty($adv['approved_at']) ? 'Auth
         </div>
         <form action="<?= url('/office/finance/advances/' . $adv['id']) ?>" method="POST" id="editAdvForm">
             <?= csrf_field() ?>
-            <input type="hidden" name="redirect_to" value="<?= url('/office/finance/advances/' . $adv['id']) ?>">
+            <input type="hidden" name="redirect_to" value="<?= url('/office/finance/advances') ?>">
             <div class="modal-body-custom">
                 <div class="form-group" style="margin-bottom: 1rem;">
                     <label class="form-label">Employee</label>

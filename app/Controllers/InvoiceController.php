@@ -147,18 +147,35 @@ class InvoiceController extends Controller
         $bookingId = (int)($params['booking_id'] ?? 0);
         try {
             $invoice = $this->billingService->generateInvoice($bookingId);
-            Session::setFlash('success', "Invoice {$invoice['invoice_number']} generated successfully.");
-            return $this->redirect(url("/office/invoices/{$invoice['id']}"));
+            $msg = "Invoice {$invoice['invoice_number']} generated successfully.";
+            Session::setFlash('success', $msg);
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success'  => true,
+                    'message'  => $msg,
+                    'redirect' => url('/office/invoices'),
+                ]);
+            }
+            return $this->redirect(url('/office/invoices'));
         } catch (Throwable $e) {
             Session::setFlash('danger', $e->getMessage());
-            return $this->redirect(url("/office/bookings/{$bookingId}"));
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                ], 422);
+            }
+            return $this->redirect(url('/office/invoices'));
         }
     }
 
     public function recordPayment(Request $request, array $params): Response
     {
         $invoiceId = (int)($params['id'] ?? $request->input('invoice_id', 0));
-        $redirectTo = $request->input('redirect_to') ?: url("/office/invoices/{$invoiceId}");
+        $redirectTo = $request->input('redirect_to');
+        if (empty($redirectTo) || preg_match('#/office/invoices/\d+#', $redirectTo)) {
+            $redirectTo = url('/office/invoices');
+        }
         try {
             $data = $this->validate($request->all(), [
                 'amount'         => 'required|numeric',

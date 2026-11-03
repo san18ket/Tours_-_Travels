@@ -82,7 +82,7 @@ class EmailLog extends Model
             $sanitizedError = substr($sanitizedError, 0, 1000);
         }
 
-        $validStatus = in_array($status, ['sent', 'failed', 'skipped'], true) ? $status : ($status === 'sent' ? 'sent' : 'failed');
+        $validStatus = in_array($status, ['sent', 'failed', 'skipped', 'pending'], true) ? $status : ($status === 'sent' ? 'sent' : 'failed');
 
         return $this->create([
             'recipient_email'  => strtolower(trim($recipientEmail)),
@@ -113,9 +113,26 @@ class EmailLog extends Model
             $sanitizedError = substr($sanitizedError, 0, 1000);
         }
 
-        $validStatus = in_array($status, ['sent', 'failed', 'skipped'], true) ? $status : 'failed';
+        $validStatus = in_array($status, ['sent', 'failed', 'skipped', 'pending'], true) ? $status : 'failed';
 
         $stmt = $this->getPdo()->prepare("UPDATE `{$this->table}` SET `status` = ?, `retry_count` = `retry_count` + 1, `last_attempt_at` = NOW(), `error_message` = ? WHERE `id` = ?");
+        return $stmt->execute([$validStatus, $sanitizedError, $logId]);
+    }
+
+    /**
+     * Update status and error message on an existing log (e.g. from pending to sent/failed)
+     */
+    public function updateStatus(int $logId, string $status, ?string $errorMessage = null): bool
+    {
+        $sanitizedError = null;
+        if (!empty($errorMessage)) {
+            $sanitizedError = preg_replace('/password[=\s:]+[^\s&]+/i', 'password=[REDACTED]', $errorMessage);
+            $sanitizedError = substr($sanitizedError, 0, 1000);
+        }
+
+        $validStatus = in_array($status, ['sent', 'failed', 'skipped', 'pending'], true) ? $status : 'failed';
+
+        $stmt = $this->getPdo()->prepare("UPDATE `{$this->table}` SET `status` = ?, `last_attempt_at` = NOW(), `error_message` = ? WHERE `id` = ?");
         return $stmt->execute([$validStatus, $sanitizedError, $logId]);
     }
 

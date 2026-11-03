@@ -310,7 +310,7 @@ class FinanceController extends Controller
     public function updateTransaction(Request $request, array $params): Response
     {
         $id = (int)($params['id'] ?? 0);
-        $redirectTo = $request->post('redirect_to') ?: url('/office/finance/transactions');
+        $redirectTo = url('/office/finance/transactions');
         try {
             $category = trim((string)$request->post('category', ''));
             $paymentMethod = trim((string)$request->post('payment_method', 'bank_transfer'));
@@ -340,7 +340,7 @@ class FinanceController extends Controller
             $msg = 'Transaction voucher successfully updated.';
             Session::setFlash('success', $msg);
             if ($request->isAjax()) {
-                return $this->json(['success' => true, 'message' => $msg]);
+                return $this->json(['success' => true, 'message' => $msg, 'redirect' => $redirectTo]);
             }
             return $this->redirect($redirectTo);
         } catch (\Throwable $e) {
@@ -374,7 +374,7 @@ class FinanceController extends Controller
             $msg = 'Transaction voucher deleted and account balance reconciled.';
             Session::setFlash('success', $msg);
             if ($request->isAjax()) {
-                return $this->json(['success' => true, 'message' => $msg]);
+                return $this->json(['success' => true, 'message' => $msg, 'redirect' => $redirectTo]);
             }
             return $this->redirect($redirectTo);
         } catch (\Throwable $e) {
@@ -634,7 +634,7 @@ class FinanceController extends Controller
     public function updateAccount(Request $request, array $params): Response
     {
         $id = (int)($params['id'] ?? 0);
-        $redirectTo = $request->post('redirect_to') ?: url('/office/finance/accounts/' . $id);
+        $redirectTo = url('/office/finance/accounts');
 
         try {
             $account = $this->accountModel->find($id);
@@ -1086,7 +1086,7 @@ class FinanceController extends Controller
 
             $msg = "Payroll batch {$payrollCode} drafted with " . count($employees) . " employee payslips.";
             Session::setFlash('success', $msg);
-            $target = url('/office/finance/payroll/' . $payrollId);
+            $target = url('/office/finance/payroll');
 
             if ($request->isAjax()) {
                 return $this->json([
@@ -1220,7 +1220,7 @@ class FinanceController extends Controller
                     return $this->json(['success' => false, 'message' => $err], 422);
                 }
                 Session::setFlash('error', $err);
-                return $this->redirect(url('/office/finance/payroll/' . $id));
+                return $this->redirect(url('/office/finance/payroll'));
             }
 
             $userId = Session::getUserId();
@@ -1233,7 +1233,7 @@ class FinanceController extends Controller
                     return $this->json(['success' => false, 'message' => $err], 422);
                 }
                 Session::setFlash('error', $err);
-                return $this->redirect(url('/office/finance/payroll/' . $id));
+                return $this->redirect(url('/office/finance/payroll'));
             }
 
             // 1. Debit total payroll amount from selected account
@@ -1274,17 +1274,17 @@ class FinanceController extends Controller
                 return $this->json([
                     'success'  => true,
                     'message'  => $msg,
-                    'redirect' => url('/office/finance/payroll/' . $id),
+                    'redirect' => url('/office/finance/payroll'),
                 ]);
             }
-            return $this->redirect(url('/office/finance/payroll/' . $id));
+            return $this->redirect(url('/office/finance/payroll'));
         } catch (Throwable $e) {
             $err = 'Failed to disburse payroll: ' . $e->getMessage();
             if ($request->isAjax()) {
                 return $this->json(['success' => false, 'message' => $err], 500);
             }
             Session::setFlash('error', $err);
-            return $this->redirect(url('/office/finance/payroll/' . $id));
+            return $this->redirect(url('/office/finance/payroll'));
         }
     }
 
@@ -1560,7 +1560,7 @@ class FinanceController extends Controller
     public function updateAdvance(Request $request, array $params): Response
     {
         $id = (int)($params['id'] ?? 0);
-        $redirectTo = $request->post('redirect_to') ?: url('/office/finance/advances');
+        $redirectTo = url('/office/finance/advances');
         try {
             $adv = $this->advanceModel->find($id);
             if (!$adv) {
@@ -1629,7 +1629,7 @@ class FinanceController extends Controller
             Session::setFlash('success', $msg);
 
             if ($request->isAjax()) {
-                return $this->json(['success' => true, 'message' => $msg]);
+                return $this->json(['success' => true, 'message' => $msg, 'redirect' => $redirectTo]);
             }
             return $this->redirect($redirectTo);
         } catch (\Throwable $e) {
@@ -1667,7 +1667,7 @@ class FinanceController extends Controller
             Session::setFlash('success', $msg);
 
             if ($request->isAjax()) {
-                return $this->json(['success' => true, 'message' => $msg]);
+                return $this->json(['success' => true, 'message' => $msg, 'redirect' => $redirectTo]);
             }
             return $this->redirect($redirectTo);
         } catch (\Throwable $e) {

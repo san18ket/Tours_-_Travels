@@ -113,10 +113,21 @@ class TourController extends Controller
             ]);
 
             $this->auditLog->record('tour_created', 'tours', $tourId, null, ['title' => $data['title']]);
-            Session::setFlash('success', 'Tour package created successfully.');
+            $msg = 'Tour package created successfully.';
+            Session::setFlash('success', $msg);
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success'  => true,
+                    'message'  => $msg,
+                    'redirect' => url('/office/tours'),
+                ]);
+            }
             return $this->redirect(url('/office/tours'));
         } catch (Throwable $e) {
             Session::setFlash('danger', $e->getMessage());
+            if ($request->isAjax()) {
+                return $this->json(['success' => false, 'message' => $e->getMessage()], 422);
+            }
             return $this->redirect(url('/office/tours/create'));
         }
     }
@@ -173,10 +184,21 @@ class TourController extends Controller
             ]);
 
             $this->auditLog->record('tour_updated', 'tours', $id, $tour, $data);
-            Session::setFlash('success', 'Tour package updated successfully.');
+            $msg = 'Tour package updated successfully.';
+            Session::setFlash('success', $msg);
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success'  => true,
+                    'message'  => $msg,
+                    'redirect' => url('/office/tours'),
+                ]);
+            }
             return $this->redirect(url('/office/tours'));
         } catch (Throwable $e) {
             Session::setFlash('danger', $e->getMessage());
+            if ($request->isAjax()) {
+                return $this->json(['success' => false, 'message' => $e->getMessage()], 422);
+            }
             return $this->redirect(url("/office/tours/{$id}/edit"));
         }
     }

@@ -97,82 +97,9 @@ class EmailService
             }
         }
 
-        // 3. Configure PHPMailer
+        // 3. Configure and transmit via PHPMailer
         try {
-            $mail = new PHPMailer(true);
-
-            // SMTP Relay configuration
-            $mail->isSMTP();
-            $mail->Host       = Config::get('mail.host', 'smtp.gmail.com');
-            $mail->Port       = (int)Config::get('mail.port', 465);
-            $mail->SMTPAuth   = (bool)Config::get('mail.auth', true);
-            $mail->Username   = Config::get('mail.username', '');
-            $mail->Password   = Config::get('mail.password', '');
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-            $mail->Timeout    = (int)Config::get('mail.timeout', 15);
-            $mail->CharSet    = 'UTF-8';
-
-            // Port & Encryption handling (SSL on 465, TLS on 587)
-            $port = (int)Config::get('mail.port', 465);
-            $encryption = strtolower((string)Config::get('mail.encryption', 'ssl'));
-            if ($port === 465 || $encryption === 'ssl' || $encryption === 'smtps') {
-                $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-            } elseif ($port === 587 || $encryption === 'tls' || $encryption === 'starttls') {
-                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            } else {
-                $mail->SMTPSecure = '';
-                $mail->SMTPAutoTLS = false;
-            }
-
-            // Restore proper SSL certificate verification
-            $verifyPeer = (bool)Config::get('mail.verify_peer', true);
-            $mail->SMTPOptions = [
-                'ssl' => [
-                    'verify_peer'       => $verifyPeer,
-                    'verify_peer_name'  => $verifyPeer,
-                    'allow_self_signed' => !$verifyPeer
-                ]
-            ];
-
-            // Sender Identity: Default to authenticated SMTP username, or authorized alias
-            $smtpUsername = Config::get('mail.username', '');
-            $configuredFrom = Config::get('mail.from.address', '');
-            $fromAddress = (!empty($configuredFrom) && filter_var($configuredFrom, FILTER_VALIDATE_EMAIL))
-                ? $configuredFrom
-                : ($smtpUsername ?: 'noreply@example.com');
-            $fromName = Config::get('mail.from.name', CompanySettingsService::getCompanyName());
-            $mail->setFrom($fromAddress, $fromName);
-
-            // Dynamic Reply-To resolution: Company Profile official email or MAIL_REPLY_TO
-            $replyToAddress = Config::get('mail.reply_to.address', CompanySettingsService::getCompanyEmail());
-            if (!empty($replyToAddress) && filter_var($replyToAddress, FILTER_VALIDATE_EMAIL)) {
-                $replyToName = Config::get('mail.reply_to.name', $fromName);
-                $mail->addReplyTo($replyToAddress, $replyToName);
-            }
-
-            // Recipient
-            $mail->addAddress($toEmail, $toName ?? '');
-
-            // Optional CC / BCC
-            foreach ($cc as $ccEmail) {
-                if (filter_var($ccEmail, FILTER_VALIDATE_EMAIL)) {
-                    $mail->addCC($ccEmail);
-                }
-            }
-            foreach ($bcc as $bccEmail) {
-                if (filter_var($bccEmail, FILTER_VALIDATE_EMAIL)) {
-                    $mail->addBCC($bccEmail);
-                }
-            }
-
-            // Content
-            $mail->isHTML(true);
-            $mail->Subject = $subject;
-            $mail->Body    = $htmlBody;
-            $mail->AltBody = $textBody ?: self::htmlToPlainText($htmlBody);
-
-            // Transmit
-            $mail->send();
+            $this->executeSmtpSend($toEmail, $toName, $subject, $htmlBody, $textBody, $cc, $bcc);
 
             // Record successful dispatch
             $logId = $this->emailLog->record(
@@ -224,6 +151,165 @@ class EmailService
                 'error'     => $sanitized
             ];
         }
+    }
+
+    /**
+     * Dispatch an email asynchronously via safe background shutdown execution
+     * Eliminates SMTP latency from blocking create/edit save responses and redirects.
+     *
+     * @return int|null Returns log ID if queued, null if rejected or duplicate
+     */
+    public function queue(
+        string $toEmail,
+        ?string $toName,
+        string $subject,
+        string $htmlBody,
+        ?string $textBody = null,
+        string $emailType = 'general',
+        ?string $referenceType = null,
+        ?int $referenceId = null,
+        array $cc = [],
+        array $bcc = [],
+        int $cooldownMinutes = 0
+    ): ?int {
+        $toEmail = trim($toEmail);
+        $toName = $toName ? trim($toName) : null;
+
+        if (empty($toEmail) || !filter_var($toEmail, FILTER_VALIDATE_EMAIL) || str_ends_with(strtolower($toEmail), '@internal.local') || str_ends_with(strtolower($toEmail), '@voyagego.internal')) {
+            $msg = "Invalid recipient email address: '{$toEmail}'";
+            Logger::warning("EmailService [Queued]: {$msg}");
+            return $this->emailLog->record($toEmail, $toName, $emailType, $subject, $referenceType, $referenceId, 'failed', $msg);
+        }
+
+        // Idempotency check upfront
+        $idempotencyHash = EmailLog::makeHash($emailType, $referenceType, $referenceId, $toEmail);
+        if ($this->emailLog->hasDuplicate($idempotencyHash, $cooldownMinutes)) {
+            Logger::info("EmailService [Queued]: Duplicate prevented for {$emailType} [{$referenceType}:{$referenceId}] to {$toEmail}");
+            return null;
+        }
+
+        if ($cooldownMinutes === 0 && !empty($referenceType) && !empty($referenceId)) {
+            $pdo = \App\Core\Database::getConnection();
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM `email_logs` WHERE `email_type` = ? AND `reference_type` = ? AND `reference_id` = ? AND `status` IN ('sent', 'pending')");
+            $stmt->execute([$emailType, $referenceType, $referenceId]);
+            if (((int)$stmt->fetchColumn()) > 0) {
+                Logger::info("EmailService [Queued]: Duplicate prevented by entity reference for {$emailType} [{$referenceType}:{$referenceId}]");
+                return null;
+            }
+        }
+
+        // Pre-record in pending status so it is immediately visible in logs
+        $logId = $this->emailLog->record(
+            $toEmail,
+            $toName,
+            $emailType,
+            $subject,
+            $referenceType,
+            $referenceId,
+            'pending',
+            null,
+            $idempotencyHash
+        );
+
+        // Register shutdown function for safe non-blocking background transmission
+        register_shutdown_function(function () use ($logId, $toEmail, $toName, $subject, $htmlBody, $textBody, $emailType, $referenceType, $referenceId, $cc, $bcc) {
+            try {
+                $this->executeSmtpSend($toEmail, $toName, $subject, $htmlBody, $textBody, $cc, $bcc);
+                $this->emailLog->updateStatus($logId, 'sent', null);
+                Logger::info("EmailService [Queued]: Dispatched {$emailType} [{$referenceType}:{$referenceId}] to {$toEmail} (Log #{$logId})");
+            } catch (Throwable $e) {
+                $rawError = $e->getMessage();
+                $sanitized = preg_replace('/password[=\s:]+[^\s&]+/i', 'password=[REDACTED]', $rawError);
+                $sanitized = substr($sanitized, 0, 500);
+                $this->emailLog->updateStatus($logId, 'failed', $sanitized);
+                Logger::error("EmailService [Queued]: SMTP dispatch error for {$emailType} to {$toEmail}: {$sanitized}");
+            }
+        });
+
+        return $logId;
+    }
+
+    /**
+     * Internal raw SMTP transmission via PHPMailer
+     */
+    private function executeSmtpSend(
+        string $toEmail,
+        ?string $toName,
+        string $subject,
+        string $htmlBody,
+        ?string $textBody = null,
+        array $cc = [],
+        array $bcc = []
+    ): void {
+        if (str_ends_with(strtolower($toEmail), '@example.com') || str_ends_with(strtolower($toEmail), '@test.local') || str_ends_with(strtolower($toEmail), '@testdomain.org')) {
+            return;
+        }
+
+        $mail = new PHPMailer(true);
+
+        $mail->isSMTP();
+        $mail->Host       = Config::get('mail.host', 'smtp.gmail.com');
+        $mail->Port       = (int)Config::get('mail.port', 465);
+        $mail->SMTPAuth   = (bool)Config::get('mail.auth', true);
+        $mail->Username   = Config::get('mail.username', '');
+        $mail->Password   = Config::get('mail.password', '');
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+        $mail->Timeout    = (int)Config::get('mail.timeout', 15);
+        $mail->CharSet    = 'UTF-8';
+
+        $port = (int)Config::get('mail.port', 465);
+        $encryption = strtolower((string)Config::get('mail.encryption', 'ssl'));
+        if ($port === 465 || $encryption === 'ssl' || $encryption === 'smtps') {
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+        } elseif ($port === 587 || $encryption === 'tls' || $encryption === 'starttls') {
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        } else {
+            $mail->SMTPSecure = '';
+            $mail->SMTPAutoTLS = false;
+        }
+
+        $verifyPeer = (bool)Config::get('mail.verify_peer', true);
+        $mail->SMTPOptions = [
+            'ssl' => [
+                'verify_peer'       => $verifyPeer,
+                'verify_peer_name'  => $verifyPeer,
+                'allow_self_signed' => !$verifyPeer
+            ]
+        ];
+
+        $smtpUsername = Config::get('mail.username', '');
+        $configuredFrom = Config::get('mail.from.address', '');
+        $fromAddress = (!empty($configuredFrom) && filter_var($configuredFrom, FILTER_VALIDATE_EMAIL))
+            ? $configuredFrom
+            : ($smtpUsername ?: 'noreply@example.com');
+        $fromName = Config::get('mail.from.name', CompanySettingsService::getCompanyName());
+        $mail->setFrom($fromAddress, $fromName);
+
+        $replyToAddress = Config::get('mail.reply_to.address', CompanySettingsService::getCompanyEmail());
+        if (!empty($replyToAddress) && filter_var($replyToAddress, FILTER_VALIDATE_EMAIL)) {
+            $replyToName = Config::get('mail.reply_to.name', $fromName);
+            $mail->addReplyTo($replyToAddress, $replyToName);
+        }
+
+        $mail->addAddress($toEmail, $toName ?? '');
+
+        foreach ($cc as $ccEmail) {
+            if (filter_var($ccEmail, FILTER_VALIDATE_EMAIL)) {
+                $mail->addCC($ccEmail);
+            }
+        }
+        foreach ($bcc as $bccEmail) {
+            if (filter_var($bccEmail, FILTER_VALIDATE_EMAIL)) {
+                $mail->addBCC($bccEmail);
+            }
+        }
+
+        $mail->isHTML(true);
+        $mail->Subject = $subject;
+        $mail->Body    = $htmlBody;
+        $mail->AltBody = $textBody ?: self::htmlToPlainText($htmlBody);
+
+        $mail->send();
     }
 
     /**
@@ -303,6 +389,41 @@ class EmailService
             [],
             [],
             0 // Lifetime uniqueness for booking_created
+        );
+    }
+
+    /**
+     * Event: Booking Created (Queued / Asynchronous background delivery)
+     */
+    public function queueBookingCreated(array $booking): ?int
+    {
+        $company = CompanySettingsService::getCompanyName();
+        $customer = $this->resolveCustomerDetails($booking);
+        if (empty($customer['email']) || str_ends_with(strtolower($customer['email']), '@internal.local') || str_ends_with(strtolower($customer['email']), '@voyagego.internal')) {
+            Logger::warning("EmailService [Queued]: Skipped booking_created email for #{$booking['id']} - Customer has no valid email address.");
+            return null;
+        }
+
+        $subject = "Booking Received: {$booking['booking_code']} — {$company}";
+        $html = $this->renderTemplate('booking/created', [
+            'booking'     => $booking,
+            'customer'    => $customer,
+            'subject'     => $subject,
+            'previewText' => "Your reservation {$booking['booking_code']} has been received and is pending confirmation."
+        ]);
+
+        return $this->queue(
+            $customer['email'],
+            $customer['name'],
+            $subject,
+            $html,
+            null,
+            'booking_created',
+            'booking',
+            (int)$booking['id'],
+            [],
+            [],
+            0
         );
     }
 
@@ -779,6 +900,40 @@ class EmailService
     }
 
     /**
+     * Event: Customer Registration -> Queue Welcome Email (Non-blocking background delivery)
+     */
+    public function queueCustomerWelcome(array $customer): ?int
+    {
+        if (empty($customer['email'])) {
+            return null;
+        }
+
+        $code = $customer['customer_code'] ?? ('CUST-' . ($customer['id'] ?? 1));
+        $recipientName = $customer['name'] ?? 'Valued Guest';
+        $company = CompanySettingsService::getCompanyName();
+        $subject = "Welcome to {$company} [{$code}]";
+        $html = $this->renderTemplate('customer/welcome', [
+            'customer'    => $customer,
+            'subject'     => $subject,
+            'previewText' => "Your customer membership account is active."
+        ]);
+
+        return $this->queue(
+            $customer['email'],
+            $recipientName,
+            $subject,
+            $html,
+            null,
+            'customer_welcome',
+            'customer',
+            (int)($customer['id'] ?? 0),
+            [],
+            [],
+            0
+        );
+    }
+
+    /**
      * Event: Employee Registration -> Send Welcome Email
      */
     public function sendEmployeeWelcome(array $employee): array
@@ -802,6 +957,44 @@ class EmailService
         ]);
 
         return $this->send(
+            $employee['email'],
+            $fullName,
+            $subject,
+            $html,
+            null,
+            'employee_welcome',
+            'employee',
+            (int)($employee['id'] ?? 0),
+            [],
+            [],
+            0
+        );
+    }
+
+    /**
+     * Event: Employee Registration -> Queue Welcome Email (Non-blocking background delivery)
+     */
+    public function queueEmployeeWelcome(array $employee): ?int
+    {
+        if (empty($employee['email'])) {
+            return null;
+        }
+
+        $code = $employee['employee_code'] ?? ('EMP-' . ($employee['id'] ?? 1));
+        $fullName = trim(($employee['first_name'] ?? '') . ' ' . ($employee['last_name'] ?? ''));
+        if (empty($fullName)) {
+            $fullName = $employee['first_name'] ?? 'Team Member';
+        }
+
+        $company = CompanySettingsService::getCompanyName();
+        $subject = "Welcome to {$company} Operations Team [{$code}]";
+        $html = $this->renderTemplate('employee/welcome', [
+            'employee'    => $employee,
+            'subject'     => $subject,
+            'previewText' => "Your staff operations profile has been created."
+        ]);
+
+        return $this->queue(
             $employee['email'],
             $fullName,
             $subject,

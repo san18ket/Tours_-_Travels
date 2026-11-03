@@ -152,6 +152,8 @@ class UserController extends Controller
                 ? $input['language']
                 : \App\Core\Language::getLocale();
 
+            $passwordHash = password_hash($data['password'], PASSWORD_BCRYPT, ['cost' => 12]);
+
             $newUserId = $this->userModel->create([
                 'name'       => $data['name'],
                 'username'   => $username,
@@ -190,13 +192,35 @@ class UserController extends Controller
                 Session::getUserId()
             );
 
-            return $this->redirect(url('/office/users'), 'success', "User account '{$username}' successfully created.");
+            $msg = "User account '{$username}' successfully created.";
+            Session::setFlash('success', $msg);
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success'  => true,
+                    'message'  => $msg,
+                    'redirect' => url('/office/users'),
+                ]);
+            }
+            return $this->redirect(url('/office/users'), 'success', $msg);
         } catch (ValidationException $e) {
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                    'errors'  => $e->getErrors(),
+                ], 422);
+            }
             Session::setFlash('danger', $e->getMessage());
             Session::setFlash('form_errors', $e->getErrors());
             Session::setFlash('form_old', $request->all());
             return $this->redirect(url('/office/users/create'));
         } catch (Throwable $e) {
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                ], 500);
+            }
             Session::setFlash('danger', $e->getMessage());
             Session::setFlash('form_old', $request->all());
             return $this->redirect(url('/office/users/create'));
@@ -327,12 +351,34 @@ class UserController extends Controller
                 Session::set('user', $currentUser);
             }
 
-            return $this->redirect(url('/office/users'), 'success', "User '{$newUsername}' updated successfully.");
+            $msg = "User '{$newUsername}' updated successfully.";
+            Session::setFlash('success', $msg);
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success'  => true,
+                    'message'  => $msg,
+                    'redirect' => url('/office/users'),
+                ]);
+            }
+            return $this->redirect(url('/office/users'), 'success', $msg);
         } catch (ValidationException $e) {
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                    'errors'  => $e->getErrors(),
+                ], 422);
+            }
             Session::setFlash('danger', $e->getMessage());
             Session::setFlash('form_errors', $e->getErrors());
             return $this->redirect(url("/office/users/{$id}/edit"));
         } catch (Throwable $e) {
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                ], 500);
+            }
             Session::setFlash('danger', $e->getMessage());
             return $this->redirect(url("/office/users/{$id}/edit"));
         }

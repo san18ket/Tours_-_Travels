@@ -808,7 +808,7 @@ $recentTransfers = $account['recent_transfers'] ?? [];
         </div>
         <form action="<?= url('/office/finance/accounts/' . $account['id']) ?>" method="POST" id="editAccountForm">
             <?= csrf_field() ?>
-            <input type="hidden" name="redirect_to" value="<?= url('/office/finance/accounts/' . $account['id']) ?>">
+            <input type="hidden" name="redirect_to" value="<?= url('/office/finance/accounts') ?>">
             <div class="modal-body-custom">
                 <div class="form-group" style="margin-bottom: 1rem;">
                     <label class="form-label" for="edit_acc_name">Account / Vault Name <span class="req">*</span></label>
@@ -871,7 +871,7 @@ $recentTransfers = $account['recent_transfers'] ?? [];
         </div>
         <form action="<?= url('/office/finance/transfer') ?>" method="POST" id="fundTransferForm">
             <?= csrf_field() ?>
-            <input type="hidden" name="redirect_to" value="<?= url('/office/finance/accounts/' . $account['id']) ?>">
+            <input type="hidden" name="redirect_to" value="<?= url('/office/finance/accounts') ?>">
             <div class="modal-body-custom">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
                     <div class="form-group">

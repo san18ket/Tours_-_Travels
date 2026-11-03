@@ -845,13 +845,11 @@
                 btn.classList.add('is-loading');
                 btn.setAttribute('aria-busy', 'true');
 
-                if (!btn.querySelector('.vg-btn-spinner')) {
-                    const spinner = document.createElement('span');
-                    spinner.className = 'vg-btn-spinner';
-                    spinner.setAttribute('aria-hidden', 'true');
-                    spinner.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="3" stroke-dasharray="32" stroke-linecap="round"></circle></svg>';
-                    btn.insertBefore(spinner, btn.firstChild);
-                }
+                const btnText = (btn.textContent || '').trim();
+                const isSave = /save|create|update|register|store|assign|submit/i.test(btnText) || btn.type === 'submit' || btn.classList.contains('modern-btn-submit');
+                const labelText = isSave ? __trans('js.saving', 'Saving...') : __trans('js.processing', 'Processing...');
+
+                btn.innerHTML = `<span class="vg-btn-spinner" aria-hidden="true" style="display:inline-block;margin-right:6px;vertical-align:middle;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px;animation:vg-spin 0.8s linear infinite;vertical-align:middle;"><circle cx="12" cy="12" r="10" stroke-width="3" stroke-dasharray="32" stroke-linecap="round"></circle></svg></span> <span>${labelText}</span>`;
             } else {
                 if (btn.dataset.vgOriginalHtml) {
                     btn.innerHTML = btn.dataset.vgOriginalHtml;
@@ -889,7 +887,17 @@
             document.addEventListener('submit', (e) => {
                 const form = e.target;
                 if (!form || form.tagName !== 'FORM') return;
-                if (form.getAttribute('data-no-ajax') === 'true' || form.dataset.noAjax === 'true') return;
+                if (form.getAttribute('data-no-ajax') === 'true' || form.dataset.noAjax === 'true') {
+                    if (window.VoyageValidation && !window.VoyageValidation.validateForm(form)) {
+                        e.preventDefault();
+                        return;
+                    }
+                    const nativeBtn = e.submitter || form.querySelector('button[type="submit"], input[type="submit"]');
+                    if (nativeBtn) {
+                        this.setButtonLoading(nativeBtn, true);
+                    }
+                    return;
+                }
                 if (form.classList.contains('vg-lang-form')) return; // handled by language component
 
                 const action = form.getAttribute('action') || window.location.href;

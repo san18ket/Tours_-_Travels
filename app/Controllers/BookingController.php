@@ -221,9 +221,22 @@ class BookingController extends Controller
             }
 
             Session::setFlash('success', $flashMsg);
-            return $this->redirect(url("/office/bookings/{$booking['id']}"));
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success'  => true,
+                    'message'  => $flashMsg,
+                    'redirect' => url('/office/bookings'),
+                ]);
+            }
+            return $this->redirect(url('/office/bookings'));
         } catch (Throwable $e) {
             Session::setFlash('danger', $e->getMessage());
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                ], 422);
+            }
             return $this->redirect(url('/office/bookings/create'));
         }
     }
@@ -265,12 +278,26 @@ class BookingController extends Controller
 
         try {
             $this->bookingService->updateStatus($id, $status, $reason);
-            Session::setFlash('success', "Booking status updated to {$status}.");
+            $msg = "Booking status updated to {$status}.";
+            Session::setFlash('success', $msg);
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success'  => true,
+                    'message'  => $msg,
+                    'redirect' => url('/office/bookings'),
+                ]);
+            }
+            return $this->redirect(url('/office/bookings'));
         } catch (Throwable $e) {
             Session::setFlash('danger', $e->getMessage());
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                ], 422);
+            }
+            return $this->redirect(url('/office/bookings'));
         }
-
-        return $this->redirect(url("/office/bookings/{$id}"));
     }
 
     /**

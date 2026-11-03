@@ -218,26 +218,22 @@ class CustomerController extends Controller
                 ]
             );
 
-            $emailResult = null;
             try {
                 $emailService = new \App\Services\EmailService();
                 $fullCust = $this->customerModel->find($customerId);
                 if ($fullCust && !empty($fullCust['email'])) {
-                    $emailResult = $emailService->sendCustomerWelcome($fullCust);
+                    $emailService->queueCustomerWelcome($fullCust);
                 }
             } catch (\Throwable $e) {
-                Logger::warning("Could not dispatch customer welcome email: " . $e->getMessage());
-                $emailResult = ['success' => false, 'error' => $e->getMessage()];
+                Logger::warning("Could not queue customer welcome email: " . $e->getMessage());
             }
 
-            if ($emailResult !== null && !$emailResult['success'] && empty($emailResult['duplicate'])) {
-                Session::setFlash('warning', "Customer profile [{$customerCode}] for {$input['name']} registered successfully, but welcome email could not be sent (" . ($emailResult['error'] ?? 'SMTP Error') . "). You can retry anytime from Notification Settings.");
-            } else {
-                Session::setFlash('success', "Customer profile [{$customerCode}] for {$input['name']} registered successfully!");
-            }
+            $successMsg = "Customer profile [{$customerCode}] for {$input['name']} registered successfully!";
+            Session::setFlash('success', $successMsg);
             if ($request->isAjax()) {
                 return $this->json([
                     'success'  => true,
+                    'message'  => $successMsg,
                     'redirect' => url('/office/customers')
                 ]);
             }
@@ -429,15 +425,36 @@ class CustomerController extends Controller
                 ['status' => $input['status'] ?? 'active', 'updated_by' => Session::getUserId()]
             );
 
-            Session::setFlash('success', "Customer profile [{$customer['customer_code']}] updated successfully.");
-            return $this->redirect(url('/office/customers/' . $id));
+            $msg = "Customer profile [{$customer['customer_code']}] updated successfully.";
+            Session::setFlash('success', $msg);
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success'  => true,
+                    'message'  => $msg,
+                    'redirect' => url('/office/customers'),
+                ]);
+            }
+            return $this->redirect(url('/office/customers'));
 
         } catch (ValidationException $e) {
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                    'errors'  => $e->getErrors(),
+                ], 422);
+            }
             Session::setFlash('form_errors', $e->getErrors());
             Session::setFlash('form_old', $request->all());
             return $this->redirect(url('/office/customers/' . $id . '/edit'));
         } catch (Throwable $e) {
             Logger::error('Customer update error: ' . $e->getMessage());
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Failed to update customer profile: ' . $e->getMessage(),
+                ], 500);
+            }
             Session::setFlash('error', 'Failed to update customer profile.');
             return $this->redirect(url('/office/customers/' . $id . '/edit'));
         }
@@ -577,7 +594,7 @@ class CustomerController extends Controller
                 return $this->json(['success' => false, 'message' => $errMsg], 500);
             }
             Session::setFlash('error', $errMsg);
-            return $this->redirect(url('/office/customers/' . $id));
+            return $this->redirect(url('/office/customers'));
         }
     }
 
