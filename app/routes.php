@@ -27,6 +27,7 @@ use App\Controllers\RoleController;
 use App\Controllers\MobileApiController;
 use App\Controllers\LanguageController;
 use App\Controllers\CompanyController;
+use App\Controllers\EmailOtpController;
 
 $router = new Router();
 
@@ -95,6 +96,14 @@ $router->post('/office/customers/{id}', [CustomerController::class, 'update'], [
 $router->post('/office/customers/{id}/toggle-status', [CustomerController::class, 'toggleStatus'], ['auth', 'role:admin,dispatcher', 'csrf']);
 $router->post('/office/customers/{id}/status', [CustomerController::class, 'toggleStatus'], ['auth', 'role:admin,dispatcher', 'csrf']);
 $router->post('/office/customers/{id}/delete', [CustomerController::class, 'delete'], ['auth', 'role:admin', 'csrf']);
+
+// -----------------------------------------------------------------------------
+// Email OTP Verification Endpoints (Reusable across Customer & Employee Creation)
+// -----------------------------------------------------------------------------
+$router->post('/office/email-otp/send', [EmailOtpController::class, 'sendOtp'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->post('/office/email-otp/resend', [EmailOtpController::class, 'resendOtp'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->post('/office/email-otp/verify', [EmailOtpController::class, 'verifyOtp'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->post('/office/email-otp/invalidate', [EmailOtpController::class, 'invalidate'], ['auth', 'role:admin,dispatcher', 'csrf']);
 
 // -----------------------------------------------------------------------------
 // MODULE 3: Bookings — Create Booking and Booking List

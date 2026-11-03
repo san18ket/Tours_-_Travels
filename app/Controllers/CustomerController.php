@@ -113,6 +113,14 @@ class CustomerController extends Controller
             $alternatePhone = !empty($input['alternate_phone']) ? preg_replace('/[^\d+]/', '', trim((string)$input['alternate_phone'])) : null;
             $email = !empty($input['email']) ? strtolower(trim((string)$input['email'])) : null;
 
+            // Enforce mandatory verified email via server-side check
+            $otpService = new \App\Services\EmailOtpService();
+            if (empty($email) || !$otpService->isEmailVerified($email, \App\Services\EmailOtpService::FLOW_CUSTOMER, $input['email_verification_token'] ?? null)) {
+                throw new ValidationException('Email verification is required. Please verify your email using the 4-digit code before proceeding.', [
+                    'email' => ['Please complete email OTP verification before submitting.']
+                ]);
+            }
+
             // 3. Duplicate detection flag (do not auto-merge; prompt staff if potential duplicate detected)
             $confirmDuplicate = !empty($input['confirm_duplicate']) && $input['confirm_duplicate'] === '1';
             if (!$confirmDuplicate) {
@@ -194,6 +202,9 @@ class CustomerController extends Controller
                 'updated_at'        => date('Y-m-d H:i:s'),
             ]);
 
+            // Invalidate/consume the OTP verification so it cannot be reused (One-time use)
+            $otpService->consumeVerification($email, \App\Services\EmailOtpService::FLOW_CUSTOMER);
+
             // 6. Security & Audit Logging (No sensitive personal data logged)
             $this->auditLog->record(
                 'customer_registered',
@@ -233,8 +244,16 @@ class CustomerController extends Controller
             return $this->redirect(url('/office/customers'));
 
         } catch (ValidationException $e) {
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                    'errors'  => $e->getErrors(),
+                ], 422);
+            }
             Session::setFlash('form_errors', $e->getErrors());
             Session::setFlash('form_old', $request->all());
+            Session::setFlash('danger', $e->getMessage());
             return $this->redirect(url('/office/customers/create'));
         } catch (Throwable $e) {
             Logger::error('Customer registration error: ' . $e->getMessage(), [

@@ -182,15 +182,28 @@
                         <?php endif; ?>
                     </div>
 
-                    <!-- Corporate Email Address -->
-                    <div class="modern-form-group email-group">
+                    <!-- Corporate Email Address with Mandatory OTP Verification -->
+                    <div class="modern-form-group email-group vg-email-otp-group">
                         <label class="modern-form-label" for="email">
-                            Corporate Email
+                            Corporate Email <span class="req">*</span>
                         </label>
-                        <div class="modern-input-wrapper">
-                            <span class="modern-input-icon"><i class="fa-solid fa-envelope"></i></span>
-                            <input type="email" id="email" name="email" class="modern-input-pill" placeholder="e.g. v.rathore@manaswitours.com" value="<?= e($old['email'] ?? '') ?>" autocomplete="email">
+                        <div class="vg-email-otp-row">
+                            <div class="modern-input-wrapper">
+                                <span class="modern-input-icon"><i class="fa-solid fa-envelope"></i></span>
+                                <input type="email" id="email" name="email" class="modern-input-pill" required placeholder="e.g. v.rathore@manaswitours.com" value="<?= e($old['email'] ?? '') ?>" autocomplete="email">
+                            </div>
+                            <button type="button" id="btnSendOtp" class="vg-btn-send-otp" onclick="vgEmailOtp.send()">
+                                <i class="fa-solid fa-paper-plane"></i>
+                                <span>Send OTP</span>
+                            </button>
                         </div>
+                        <div class="vg-email-status-row">
+                            <span class="vg-email-status-pill vg-status-not-verified" id="emailStatusBadge">
+                                <i class="fa-solid fa-circle-exclamation"></i>
+                                <span>Not verified</span>
+                            </span>
+                        </div>
+                        <div id="emailOtpInlineError" class="vg-email-inline-msg"></div>
                         <?php if (!empty($errors['email'])): ?>
                             <div class="modern-field-error"><i class="fa-solid fa-circle-exclamation"></i> <?= e($errors['email'][0]) ?></div>
                         <?php endif; ?>
@@ -973,6 +986,12 @@
 
     </form>
 
+    <!-- Email OTP Verification Reference Modal -->
+    <?php 
+    $flow = 'employee';
+    require __DIR__ . '/../partials/email_otp_modal.php'; 
+    ?>
+
     <!-- Professional Document Lightbox Preview Modal -->
     <div id="docPreviewModal" class="doc-lightbox-backdrop" style="display: none;" onclick="closeDocPreviewModal(event)">
         <div class="doc-lightbox-container" onclick="event.stopPropagation()">
@@ -1070,6 +1089,18 @@ function wizardGoToStep(targetStep) {
     targetStep = parseInt(targetStep, 10);
     if (targetStep < 1 || targetStep > totalSteps) return;
 
+    // Email verification guard: Cannot leave Step 1 without verified corporate email
+    if (targetStep > 1 && window.vgEmailOtp && !window.vgEmailOtp.isVerified()) {
+        window.vgEmailOtp.showError('Corporate email verification is required. Please click Send OTP and verify your email before proceeding.');
+        updateStepperUI(1);
+        const emailField = document.getElementById('email');
+        if (emailField) {
+            emailField.focus();
+            emailField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return;
+    }
+
     // Hide all panels
     for (let i = 1; i <= totalSteps; i++) {
         const panel = document.getElementById('wizardPanel' + i);
@@ -1094,6 +1125,17 @@ function wizardGoToStep(targetStep) {
 function wizardValidateCurrentStep(stepNum) {
     const panel = document.getElementById('wizardPanel' + stepNum);
     if (!panel) return true;
+
+    // Step 1: Mandatory Email OTP Verification Guard
+    if (stepNum === 1 && window.vgEmailOtp && !window.vgEmailOtp.isVerified()) {
+        window.vgEmailOtp.showError('Please verify your corporate email address using the Send OTP button before continuing.');
+        const emailField = document.getElementById('email');
+        if (emailField) {
+            emailField.focus();
+            emailField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return false;
+    }
 
     if (window.VoyageValidation && typeof window.VoyageValidation.validateContainer === 'function') {
         const isValid = window.VoyageValidation.validateContainer(panel);
@@ -1839,11 +1881,23 @@ document.addEventListener('DOMContentLoaded', function() {
         onDocumentTypeChange(initialDocType.value);
     }
 
-    // Form submission UI spinner feedback
+    // Form submission UI spinner feedback & email verification guard
     const empForm = document.getElementById('createEmployeeForm');
     const submitBtn = document.getElementById('btnSubmitEmployee');
     if (empForm && submitBtn) {
-        empForm.addEventListener('submit', function() {
+        empForm.addEventListener('submit', function(e) {
+            if (window.vgEmailOtp && !window.vgEmailOtp.isVerified()) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.vgEmailOtp.showError('Corporate email verification is mandatory. Please verify your email with OTP before saving.');
+                wizardGoToStep(1);
+                const emailField = document.getElementById('email');
+                if (emailField) {
+                    emailField.focus();
+                    emailField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return false;
+            }
             submitBtn.style.pointerEvents = 'none';
             submitBtn.style.opacity = '0.85';
             submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Registering Staff Profile...</span>';
@@ -2161,7 +2215,7 @@ document.addEventListener('DOMContentLoaded', function() {
 /* Grids & Inputs */
 .customer-name-row {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: 1fr 1fr 1.1fr 1.6fr;
     gap: 1.25rem;
     margin-bottom: 1.25rem;
 }

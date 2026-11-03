@@ -149,15 +149,28 @@
                         <?php endif; ?>
                     </div>
 
-                    <!-- Email Address -->
-                    <div class="modern-form-group email-group">
+                    <!-- Email Address with Mandatory OTP Verification -->
+                    <div class="modern-form-group email-group vg-email-otp-group">
                         <label class="modern-form-label" for="email">
                             <?= e(__('customer_form.email', [], 'Email Address')) ?> <span class="req">*</span>
                         </label>
-                        <div class="modern-input-wrapper">
-                            <span class="modern-input-icon"><i class="fa-solid fa-envelope"></i></span>
-                            <input type="email" id="email" name="email" class="modern-input-pill" required placeholder="<?= e(__('customer_form.email_placeholder', [], 'e.g. john@example.com')) ?>" value="<?= e($old['email'] ?? '') ?>" autocomplete="email">
+                        <div class="vg-email-otp-row">
+                            <div class="modern-input-wrapper">
+                                <span class="modern-input-icon"><i class="fa-solid fa-envelope"></i></span>
+                                <input type="email" id="email" name="email" class="modern-input-pill" required placeholder="<?= e(__('customer_form.email_placeholder', [], 'e.g. john@example.com')) ?>" value="<?= e($old['email'] ?? '') ?>" autocomplete="email">
+                            </div>
+                            <button type="button" id="btnSendOtp" class="vg-btn-send-otp" onclick="vgEmailOtp.send()">
+                                <i class="fa-solid fa-paper-plane"></i>
+                                <span>Send OTP</span>
+                            </button>
                         </div>
+                        <div class="vg-email-status-row">
+                            <span class="vg-email-status-pill vg-status-not-verified" id="emailStatusBadge">
+                                <i class="fa-solid fa-circle-exclamation"></i>
+                                <span>Not verified</span>
+                            </span>
+                        </div>
+                        <div id="emailOtpInlineError" class="vg-email-inline-msg"></div>
                         <?php if (!empty($errors['email'])): ?>
                             <div class="modern-field-error"><i class="fa-solid fa-circle-exclamation"></i> <?= e($errors['email'][0]) ?></div>
                         <?php endif; ?>
@@ -628,6 +641,12 @@
 
     </form>
 
+    <!-- Email OTP Verification Reference Modal -->
+    <?php 
+    $flow = 'customer';
+    require __DIR__ . '/../partials/email_otp_modal.php'; 
+    ?>
+
     <!-- Professional Document Lightbox Preview Modal -->
     <div id="docPreviewModal" class="doc-lightbox-backdrop" style="display: none;" onclick="closeDocPreviewModal(event)">
         <div class="doc-lightbox-container" onclick="event.stopPropagation()">
@@ -710,6 +729,18 @@ function wizardGoToStep(targetStep) {
     targetStep = parseInt(targetStep, 10);
     if (targetStep < 1 || targetStep > totalSteps) return;
 
+    // Email verification guard: Cannot leave Step 1 without verified email
+    if (targetStep > 1 && window.vgEmailOtp && !window.vgEmailOtp.isVerified()) {
+        window.vgEmailOtp.showError('Email verification is required. Please click Send OTP and verify your email before proceeding.');
+        updateStepperUI(1);
+        const emailField = document.getElementById('email');
+        if (emailField) {
+            emailField.focus();
+            emailField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return;
+    }
+
     // Hide all panels
     for (let i = 1; i <= totalSteps; i++) {
         const panel = document.getElementById('wizardPanel' + i);
@@ -734,6 +765,17 @@ function wizardGoToStep(targetStep) {
 function wizardValidateCurrentStep(stepNum) {
     const panel = document.getElementById('wizardPanel' + stepNum);
     if (!panel) return true;
+
+    // Step 1: Mandatory Email OTP Verification Guard
+    if (stepNum === 1 && window.vgEmailOtp && !window.vgEmailOtp.isVerified()) {
+        window.vgEmailOtp.showError('Please verify your email address using the Send OTP button before continuing.');
+        const emailField = document.getElementById('email');
+        if (emailField) {
+            emailField.focus();
+            emailField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return false;
+    }
 
     if (window.VoyageValidation && typeof window.VoyageValidation.validateContainer === 'function') {
         const isValid = window.VoyageValidation.validateContainer(panel);
@@ -1295,7 +1337,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const custForm = document.getElementById('createCustomerForm');
     const submitBtn = document.getElementById('btnSubmitCustomer');
     if (custForm && submitBtn) {
-        custForm.addEventListener('submit', function() {
+        custForm.addEventListener('submit', function(e) {
+            if (window.vgEmailOtp && !window.vgEmailOtp.isVerified()) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.vgEmailOtp.showError('Email verification is mandatory. Please verify your email with OTP before saving.');
+                wizardGoToStep(1);
+                const emailField = document.getElementById('email');
+                if (emailField) {
+                    emailField.focus();
+                    emailField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return false;
+            }
             submitBtn.style.pointerEvents = 'none';
             submitBtn.style.opacity = '0.85';
             submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Saving Customer Profile...</span>';
@@ -1530,23 +1584,27 @@ document.addEventListener('DOMContentLoaded', function() {
 /* ========================================================================= */
 .customer-name-row {
     display: grid;
-    grid-template-columns: 145px 1.4fr 1.3fr 1.3fr;
+    grid-template-columns: 130px 1.2fr 1.6fr 1.1fr;
     gap: 1.25rem;
     margin-bottom: 1.5rem;
 }
-@media (max-width: 1100px) {
+@media (max-width: 1200px) {
     .customer-name-row {
-        grid-template-columns: 140px 1fr;
+        grid-template-columns: 130px 1fr;
     }
     .customer-name-row .email-group,
     .customer-name-row .phone-group {
-        grid-column: span 1;
+        grid-column: span 2;
     }
 }
 @media (max-width: 640px) {
     .customer-name-row {
         grid-template-columns: 1fr;
         gap: 1rem;
+    }
+    .customer-name-row .email-group,
+    .customer-name-row .phone-group {
+        grid-column: span 1;
     }
 }
 

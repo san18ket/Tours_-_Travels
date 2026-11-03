@@ -122,6 +122,15 @@ class EmployeeController extends Controller
 
             $data = $this->validate($input, $rules);
 
+            // Enforce mandatory verified corporate email via server-side check
+            $email = strtolower(trim((string)$data['email']));
+            $otpService = new \App\Services\EmailOtpService();
+            if (empty($email) || !$otpService->isEmailVerified($email, \App\Services\EmailOtpService::FLOW_EMPLOYEE, $input['email_verification_token'] ?? null)) {
+                throw new ValidationException('Corporate email verification is required. Please verify your email using the 4-digit code before proceeding.', [
+                    'email' => ['Please complete corporate email OTP verification before submitting.']
+                ]);
+            }
+
             // Automatically resolve Department and Designation based on Role
             if ($roleSlug === 'driver' || $roleSlug === 'chauffeur') {
                 $department = 'fleet_chauffeur';
@@ -297,6 +306,9 @@ class EmployeeController extends Controller
                 'updated_at'             => date('Y-m-d H:i:s'),
             ]);
 
+            // Invalidate/consume the OTP verification so it cannot be reused (One-time use)
+            $otpService->consumeVerification($email, \App\Services\EmailOtpService::FLOW_EMPLOYEE);
+
             // If chauffeur/driver role or license number provided, ensure driver_profile exists
             if ($isDriverRole && $userId) {
                 $licenseNum = !empty($input['license_number']) ? strtoupper(trim($input['license_number'])) : ('DL-' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8)));
@@ -358,6 +370,13 @@ class EmployeeController extends Controller
             return $this->redirect(url('/office/employees'), 'success', "Employee [{$employeeCode}] {$data['first_name']} {$data['last_name']} successfully registered.");
 
         } catch (ValidationException $e) {
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                    'errors'  => $e->getErrors(),
+                ], 422);
+            }
             Session::setFlash('form_errors', $e->getErrors());
             Session::setFlash('form_old', $request->all());
             Session::setFlash('danger', $e->getMessage());
