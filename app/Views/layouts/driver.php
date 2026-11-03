@@ -312,10 +312,10 @@
         <!-- Luxury Dedicated Driver Navigation Sidebar -->
         <aside class="sidebar" id="sidebar" aria-label="<?= e(__('sidebar.menu')) ?>">
             <div class="sidebar-header">
-                <a href="<?= url('/driver/dashboard') ?>" class="brand-logo" title="MANASWI Tours & Travels - Chauffeur Console">
+                <a href="<?= url('/driver/dashboard') ?>" class="brand-logo" data-no-ajax="true" title="MANASWI Tours & Travels - Chauffeur Console">
                     <img src="<?= asset('images/manaswi-logo.svg') ?>" alt="Manaswi Logo" class="brand-logo-img">
                     <div class="brand-name">
-                        <span class="brand-title">MANASWI</span>
+                        <span class="brand-title"><?= e(company_name()) ?></span>
                         <span class="brand-subtitle-main"><?= e(__('app.tours_travels', 'Tours & Travels')) ?></span>
                         <span class="brand-tagline"><?= e(__('app.safe_journey_tagline', 'Safe Journey • Happy Memories')) ?></span>
                     </div>
@@ -325,19 +325,34 @@
 
             <nav class="sidebar-nav">
                 <?php
-                    $uri = $_SERVER['REQUEST_URI'] ?? '';
-                    $isDashboardActive = str_contains($uri, '/driver/dashboard') || $uri === '/driver' || $uri === '/driver/';
-                    $isTripsActive     = str_contains($uri, '/driver/trips');
-                    $isNotifActive     = str_contains($uri, '/driver/notifications');
-                    $isHistoryActive   = str_contains($uri, '/driver/history');
-                    $isVehicleActive   = str_contains($uri, '/driver/vehicle');
-                    $isLocationActive  = str_contains($uri, '/driver/location');
-                    $isProfileActive   = str_contains($uri, '/driver/profile');
+                    $reqUri = $_SERVER['REQUEST_URI'] ?? '/';
+                    $path = parse_url($reqUri, PHP_URL_PATH) ?? '/';
+                    $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+                    $baseDir = rtrim(str_replace('\\', '/', dirname($scriptName)), '/');
+                    if ($baseDir !== '' && str_starts_with($path, $baseDir)) {
+                        $path = substr($path, strlen($baseDir));
+                    }
+                    $currPath = '/' . trim($path, '/');
+                    if ($currPath === '') {
+                        $currPath = '/';
+                    }
+
+                    $isPrefix = function(string $prefix) use ($currPath): bool {
+                        return $currPath === $prefix || str_starts_with($currPath, rtrim($prefix, '/') . '/');
+                    };
+
+                    $isDashboardActive = ($currPath === '/driver' || $currPath === '/driver/dashboard');
+                    $isTripsActive     = $isPrefix('/driver/trips');
+                    $isNotifActive     = $isPrefix('/driver/notifications');
+                    $isHistoryActive   = $isPrefix('/driver/history');
+                    $isVehicleActive   = $isPrefix('/driver/vehicle');
+                    $isLocationActive  = $isPrefix('/driver/location');
+                    $isProfileActive   = $isPrefix('/driver/profile');
                 ?>
 
                 <!-- 1. Dashboard -->
                 <div class="sidebar-category" id="cat-driver-dashboard">
-                    <a href="<?= url('/driver/dashboard') ?>" class="category-header direct-link <?= $isDashboardActive ? 'has-active' : '' ?>" id="cat-driver-dashboard-header" data-title="Dashboard" style="text-decoration: none; width: 100%;">
+                    <a href="<?= url('/driver/dashboard') ?>" class="category-header direct-link <?= $isDashboardActive ? 'has-active' : '' ?>" data-no-ajax="true" id="cat-driver-dashboard-header" data-title="Dashboard" style="text-decoration: none; width: 100%;">
                         <span class="category-label">
                             <span class="category-icon-wrap">
                                 <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
@@ -354,7 +369,7 @@
 
                 <!-- 2. My Assigned Trips -->
                 <div class="sidebar-category" id="cat-driver-trips">
-                    <a href="<?= url('/driver/trips') ?>" class="category-header direct-link <?= $isTripsActive ? 'has-active' : '' ?>" id="cat-driver-trips-header" data-title="Assigned Trips" style="text-decoration: none; width: 100%;">
+                    <a href="<?= url('/driver/trips') ?>" class="category-header direct-link <?= $isTripsActive ? 'has-active' : '' ?>" data-no-ajax="true" id="cat-driver-trips-header" data-title="Assigned Trips" style="text-decoration: none; width: 100%;">
                         <span class="category-label">
                             <span class="category-icon-wrap">
                                 <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
@@ -371,7 +386,7 @@
 
                 <!-- 3. Notifications & Alerts -->
                 <div class="sidebar-category" id="cat-driver-notifications">
-                    <a href="<?= url('/driver/notifications') ?>" class="category-header direct-link <?= $isNotifActive ? 'has-active' : '' ?>" id="cat-driver-notifications-header" data-title="Notifications" style="text-decoration: none; width: 100%;">
+                    <a href="<?= url('/driver/notifications') ?>" class="category-header direct-link <?= $isNotifActive ? 'has-active' : '' ?>" data-no-ajax="true" id="cat-driver-notifications-header" data-title="Notifications" style="text-decoration: none; width: 100%;">
                         <span class="category-label">
                             <span class="category-icon-wrap">
                                 <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
@@ -391,7 +406,7 @@
 
                 <!-- 3. Trip History -->
                 <div class="sidebar-category" id="cat-driver-history">
-                    <a href="<?= url('/driver/history') ?>" class="category-header direct-link <?= $isHistoryActive ? 'has-active' : '' ?>" id="cat-driver-history-header" data-title="Trip History" style="text-decoration: none; width: 100%;">
+                    <a href="<?= url('/driver/history') ?>" class="category-header direct-link <?= $isHistoryActive ? 'has-active' : '' ?>" data-no-ajax="true" id="cat-driver-history-header" data-title="Trip History" style="text-decoration: none; width: 100%;">
                         <span class="category-label">
                             <span class="category-icon-wrap">
                                 <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -408,7 +423,7 @@
 
                 <!-- 4. My Vehicle -->
                 <div class="sidebar-category" id="cat-driver-vehicle">
-                    <a href="<?= url('/driver/vehicle') ?>" class="category-header direct-link <?= $isVehicleActive ? 'has-active' : '' ?>" id="cat-driver-vehicle-header" data-title="My Vehicle" style="text-decoration: none; width: 100%;">
+                    <a href="<?= url('/driver/vehicle') ?>" class="category-header direct-link <?= $isVehicleActive ? 'has-active' : '' ?>" data-no-ajax="true" id="cat-driver-vehicle-header" data-title="My Vehicle" style="text-decoration: none; width: 100%;">
                         <span class="category-label">
                             <span class="category-icon-wrap">
                                 <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
@@ -425,7 +440,7 @@
 
                 <!-- 5. Live Location / Location Sharing -->
                 <div class="sidebar-category" id="cat-driver-location">
-                    <a href="<?= url('/driver/location') ?>" class="category-header direct-link <?= $isLocationActive ? 'has-active' : '' ?>" id="cat-driver-location-header" data-title="Live Location" style="text-decoration: none; width: 100%;">
+                    <a href="<?= url('/driver/location') ?>" class="category-header direct-link <?= $isLocationActive ? 'has-active' : '' ?>" data-no-ajax="true" id="cat-driver-location-header" data-title="Live Location" style="text-decoration: none; width: 100%;">
                         <span class="category-label">
                             <span class="category-icon-wrap">
                                 <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
@@ -443,7 +458,7 @@
 
                 <!-- 6. My Profile -->
                 <div class="sidebar-category" id="cat-driver-profile">
-                    <a href="<?= url('/driver/profile') ?>" class="category-header direct-link <?= $isProfileActive ? 'has-active' : '' ?>" id="cat-driver-profile-header" data-title="My Profile" style="text-decoration: none; width: 100%;">
+                    <a href="<?= url('/driver/profile') ?>" class="category-header direct-link <?= $isProfileActive ? 'has-active' : '' ?>" data-no-ajax="true" id="cat-driver-profile-header" data-title="My Profile" style="text-decoration: none; width: 100%;">
                         <span class="category-label">
                             <span class="category-icon-wrap">
                                 <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
@@ -460,7 +475,7 @@
             </nav>
 
             <div class="sidebar-footer">
-                <a href="<?= url('/driver/profile') ?>" class="user-badge" style="text-decoration:none;">
+                <a href="<?= url('/driver/profile') ?>" class="user-badge" data-no-ajax="true" style="text-decoration:none;">
                     <div class="user-avatar" style="background: linear-gradient(135deg, var(--vg-blue-500), var(--vg-navy-800)); color:#FFF;">
                         <?= strtoupper(substr($user['name'] ?? 'D', 0, 1)) ?>
                     </div>
@@ -704,7 +719,7 @@
                                 </div>
                                 <i class="fa-solid fa-download topbar-menu-arrow"></i>
                             </button>
-                            <a href="<?= url('/driver/notification-settings') ?>" class="topbar-menu-item" role="menuitem">
+                            <a href="<?= url('/driver/notification-settings') ?>" class="topbar-menu-item" data-no-ajax="true" role="menuitem">
                                 <div class="topbar-menu-icon" style="background: rgba(59, 130, 246, 0.1); color: #3B82F6;">
                                     <i class="fa-solid fa-bell"></i>
                                 </div>
@@ -790,11 +805,11 @@
         </button>
 
         <div class="bottom-nav-inner">
-            <a href="<?= url('/driver/dashboard') ?>" class="bottom-nav-item <?= $isDashboardActive ? 'active' : '' ?>">
+            <a href="<?= url('/driver/dashboard') ?>" class="bottom-nav-item <?= $isDashboardActive ? 'active' : '' ?>" data-no-ajax="true">
                 <svg fill="currentColor" viewBox="0 0 24 24" width="20" height="20"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
                 <span><?= e(__('sidebar.dashboard', 'Home')) ?></span>
             </a>
-            <a href="<?= url('/driver/trips') ?>" class="bottom-nav-item <?= $isTripsActive ? 'active' : '' ?>">
+            <a href="<?= url('/driver/trips') ?>" class="bottom-nav-item <?= $isTripsActive ? 'active' : '' ?>" data-no-ajax="true">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                 <span><?= e(__('sidebar.trips', 'Trips')) ?></span>
             </a>
@@ -802,11 +817,11 @@
             <!-- Center slot spacer (Ensures left 2 items and right 2 items are 100% symmetric) -->
             <div class="bottom-nav-center-slot" aria-hidden="true"></div>
 
-            <a href="<?= url('/driver/location') ?>" class="bottom-nav-item <?= $isLocationActive ? 'active' : '' ?>">
+            <a href="<?= url('/driver/location') ?>" class="bottom-nav-item <?= $isLocationActive ? 'active' : '' ?>" data-no-ajax="true">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                 <span><?= e(__('sidebar.live_location', 'Tracking')) ?></span>
             </a>
-            <a href="<?= url('/driver/notifications') ?>" class="bottom-nav-item nav-notif-item <?= $isNotifActive ? 'active' : '' ?>">
+            <a href="<?= url('/driver/notifications') ?>" class="bottom-nav-item nav-notif-item <?= $isNotifActive ? 'active' : '' ?>" data-no-ajax="true">
                 <div style="position: relative; display: inline-flex;">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
                     <span class="nav-badge-pill" id="driverBottomNotifBadge" style="display: <?= $curNotifCount > 0 ? 'inline-flex' : 'none' ?>;"><?= $curNotifCount ?></span>

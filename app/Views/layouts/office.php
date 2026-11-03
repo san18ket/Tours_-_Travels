@@ -37,7 +37,7 @@
         <!-- Frosted Glass Sidebar Navigation (MANASWI Tours & Travels) -->
         <aside class="sidebar" id="sidebar" aria-label="<?= e(__('sidebar.menu')) ?>">
             <div class="sidebar-header">
-                <a href="<?= url('/office/dashboard') ?>" class="brand-logo" title="MANASWI Tours & Travels">
+                <a href="<?= url('/office/dashboard') ?>" class="brand-logo" title="<?= e(company_name()) ?>" data-no-ajax="true">
                     <img src="<?= asset('images/manaswi-logo.svg') ?>" alt="Manaswi Logo" class="brand-logo-img">
                     <div class="brand-name">
                         <span class="brand-title"><?= e(company_name()) ?></span>
@@ -50,25 +50,76 @@
 
             <nav class="sidebar-nav">
                 <?php
-                    $uri = $_SERVER['REQUEST_URI'] ?? '';
+                    $rawUri = $_SERVER['REQUEST_URI'] ?? '/';
+                    $path = parse_url($rawUri, PHP_URL_PATH) ?? '/';
+
+                    // Normalize path by stripping base directory if app runs in a subfolder
+                    $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+                    $baseDir = rtrim(str_replace('\\', '/', dirname($scriptName)), '/');
+                    if ($baseDir !== '' && $baseDir !== '/' && $baseDir !== '.' && str_starts_with($path, $baseDir)) {
+                        $path = substr($path, strlen($baseDir));
+                    }
+                    $currPath = '/' . trim($path, '/');
+                    if ($currPath === '') {
+                        $currPath = '/';
+                    }
+
                     $role = auth_role();
 
-                    $isDashboardActive = str_contains($uri, '/office/dashboard');
-                    $isBookingsActive  = str_contains($uri, '/office/bookings');
-                    $isCustomersActive = str_contains($uri, '/office/customers');
-                    $isVehiclesActive  = str_contains($uri, '/office/vehicles');
-                    $isDriversActive   = str_contains($uri, '/office/employees');
-                    $isFinanceActive   = str_contains($uri, '/office/finance');
-                    $isInvoicesActive  = str_contains($uri, '/office/invoices');
-                    $isTripsActive     = str_contains($uri, '/office/trips') || str_contains($uri, '/office/dispatch');
-                    $isTrackingActive  = str_contains($uri, '/office/tracking');
-                    $isAccessActive    = str_contains($uri, '/office/users');
-                    $isBackupsActive   = str_contains($uri, '/office/backups');
+                    // Helper for prefix checks with boundary
+                    $isPrefix = function(string $prefix) use ($currPath): bool {
+                        return $currPath === $prefix || str_starts_with($currPath, rtrim($prefix, '/') . '/');
+                    };
+
+                    // Category Active Determinations (controls parent category expansion)
+                    $isDashboardActive = ($currPath === '/office/dashboard' || $currPath === '/office' || $currPath === '/');
+                    $isBookingsActive  = $isPrefix('/office/bookings');
+                    $isCustomersActive = $isPrefix('/office/customers');
+                    $isVehiclesActive  = $isPrefix('/office/vehicles');
+                    $isDriversActive   = $isPrefix('/office/employees');
+                    $isFinanceActive   = ($isPrefix('/office/finance') || $isPrefix('/office/invoices'));
+                    $isTripsActive     = ($isPrefix('/office/trips') || $isPrefix('/office/dispatch'));
+                    $isTrackingActive  = $isPrefix('/office/tracking');
+                    $isCompanyActive   = $isPrefix('/office/company');
+                    $isSettingsActive  = ($isPrefix('/office/users') || $isPrefix('/office/roles') || $isPrefix('/office/role-permission') || $isPrefix('/office/backups') || $isPrefix('/office/notification-settings') || $isPrefix('/office/email'));
+
+                    // Submenu Item Active Determinations (avoids overlapping false positives)
+                    $isBookingCreateActive = ($currPath === '/office/bookings/create');
+                    $isBookingListActive   = ($isBookingsActive && !$isBookingCreateActive);
+
+                    $isCustomerCreateActive = ($currPath === '/office/customers/create');
+                    $isCustomerListActive   = ($isCustomersActive && !$isCustomerCreateActive);
+
+                    $isVehicleCreateActive = ($currPath === '/office/vehicles/create');
+                    $isVehicleListActive   = ($isVehiclesActive && !$isVehicleCreateActive);
+
+                    $isEmployeeCreateActive = ($currPath === '/office/employees/create');
+                    $isEmployeeListActive   = ($isDriversActive && !$isEmployeeCreateActive);
+
+                    $isFinanceOverviewActive  = ($currPath === '/office/finance' || $currPath === '/office/finance/dashboard');
+                    $isFinanceAccountsActive  = $isPrefix('/office/finance/accounts');
+                    $isFinanceTxnsActive      = $isPrefix('/office/finance/transactions');
+                    $isFinanceExpensesActive  = $isPrefix('/office/finance/expenses');
+                    $isFinancePayrollActive   = ($isPrefix('/office/finance/payroll') || $isPrefix('/office/finance/payslips'));
+                    $isFinanceAdvancesActive  = $isPrefix('/office/finance/advances');
+                    $isFinanceRefundsActive   = $isPrefix('/office/finance/refunds');
+                    $isFinanceInvoicesActive  = $isPrefix('/office/invoices');
+
+                    $isTripAssignActive  = ($isPrefix('/office/trips/assign') || $isPrefix('/office/dispatch'));
+                    $isTripHistoryActive = $isPrefix('/office/trips/history');
+
+                    $isCompanyCreateActive = ($currPath === '/office/company/create');
+                    $isCompanyListActive   = ($isCompanyActive && !$isCompanyCreateActive);
+
+                    $isUsersActive        = $isPrefix('/office/users');
+                    $isRolesActive        = ($isPrefix('/office/roles') || $isPrefix('/office/role-permission'));
+                    $isBackupsActive      = $isPrefix('/office/backups');
+                    $isNotificationActive = ($isPrefix('/office/notification-settings') || $isPrefix('/office/email'));
                 ?>
 
                 <!-- 1. Dashboard (Direct Link) -->
                 <div class="sidebar-category" id="cat-dashboard">
-                    <a href="<?= url('/office/dashboard') ?>" class="category-header direct-link <?= $isDashboardActive ? 'has-active' : '' ?>" id="cat-dashboard-header" data-title="<?= e(__('sidebar.dashboard', 'Dashboard')) ?>">
+                    <a href="<?= url('/office/dashboard') ?>" class="category-header direct-link <?= $isDashboardActive ? 'has-active' : '' ?>" id="cat-dashboard-header" data-title="<?= e(__('sidebar.dashboard', 'Dashboard')) ?>" data-no-ajax="true">
                         <span class="category-label">
                             <span class="category-icon-wrap">
                                 <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
@@ -98,13 +149,13 @@
                     </button>
                     <div class="sidebar-category-items <?= $isBookingsActive ? 'expanded' : '' ?>" id="cat-bookings-items">
                         <div class="category-items-inner">
-                            <a href="<?= url('/office/bookings') ?>" class="nav-link <?= ($uri === '/office/bookings' || (str_contains($uri, '/office/bookings') && !str_contains($uri, '/create'))) ? 'active' : '' ?>">
+                            <a href="<?= url('/office/bookings') ?>" class="nav-link <?= $isBookingListActive ? 'active' : '' ?>" data-no-ajax="true">
                                 <span class="nav-link-left">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                                     <span class="nav-text"><?= e(__('sidebar.booking_list', 'Booking List')) ?></span>
                                 </span>
                             </a>
-                            <a href="<?= url('/office/bookings/create') ?>" class="nav-link <?= str_contains($uri, '/office/bookings/create') ? 'active' : '' ?>">
+                            <a href="<?= url('/office/bookings/create') ?>" class="nav-link <?= $isBookingCreateActive ? 'active' : '' ?>" data-no-ajax="true">
                                 <span class="nav-link-left">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                                     <span class="nav-text"><?= e(__('sidebar.create_booking', 'New Booking')) ?></span>
@@ -129,13 +180,13 @@
                     </button>
                     <div class="sidebar-category-items <?= $isCustomersActive ? 'expanded' : '' ?>" id="cat-customers-items">
                         <div class="category-items-inner">
-                            <a href="<?= url('/office/customers') ?>" class="nav-link <?= ($uri === '/office/customers' || (str_contains($uri, '/office/customers') && !str_contains($uri, '/create'))) ? 'active' : '' ?>">
+                            <a href="<?= url('/office/customers') ?>" class="nav-link <?= $isCustomerListActive ? 'active' : '' ?>" data-no-ajax="true">
                                 <span class="nav-link-left">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
                                     <span class="nav-text"><?= e(__('sidebar.customer_list', 'Customer Directory')) ?></span>
                                 </span>
                             </a>
-                            <a href="<?= url('/office/customers/create') ?>" class="nav-link <?= str_contains($uri, '/office/customers/create') ? 'active' : '' ?>">
+                            <a href="<?= url('/office/customers/create') ?>" class="nav-link <?= $isCustomerCreateActive ? 'active' : '' ?>" data-no-ajax="true">
                                 <span class="nav-link-left">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
                                     <span class="nav-text"><?= e(__('sidebar.add_customer', 'Add Customer')) ?></span>
@@ -160,13 +211,13 @@
                     </button>
                     <div class="sidebar-category-items <?= $isVehiclesActive ? 'expanded' : '' ?>" id="cat-vehicles-items">
                         <div class="category-items-inner">
-                            <a href="<?= url('/office/vehicles') ?>" class="nav-link <?= ($uri === '/office/vehicles' || (str_contains($uri, '/office/vehicles') && !str_contains($uri, '/create'))) ? 'active' : '' ?>">
+                            <a href="<?= url('/office/vehicles') ?>" class="nav-link <?= $isVehicleListActive ? 'active' : '' ?>" data-no-ajax="true">
                                 <span class="nav-link-left">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                                     <span class="nav-text"><?= e(__('sidebar.vehicle_list', 'Fleet Overview')) ?></span>
                                 </span>
                             </a>
-                            <a href="<?= url('/office/vehicles/create') ?>" class="nav-link <?= str_contains($uri, '/office/vehicles/create') ? 'active' : '' ?>">
+                            <a href="<?= url('/office/vehicles/create') ?>" class="nav-link <?= $isVehicleCreateActive ? 'active' : '' ?>" data-no-ajax="true">
                                 <span class="nav-link-left">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                                     <span class="nav-text"><?= e(__('sidebar.add_vehicle', 'Add Vehicle')) ?></span>
@@ -191,13 +242,13 @@
                     </button>
                     <div class="sidebar-category-items <?= $isDriversActive ? 'expanded' : '' ?>" id="cat-drivers-items">
                         <div class="category-items-inner">
-                            <a href="<?= url('/office/employees') ?>" class="nav-link <?= ($uri === '/office/employees' || (str_contains($uri, '/office/employees') && !str_contains($uri, '/create'))) ? 'active' : '' ?>">
+                            <a href="<?= url('/office/employees') ?>" class="nav-link <?= $isEmployeeListActive ? 'active' : '' ?>" data-no-ajax="true">
                                 <span class="nav-link-left">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
                                     <span class="nav-text"><?= e(__('sidebar.employee_list', 'Driver & Staff List')) ?></span>
                                 </span>
                             </a>
-                            <a href="<?= url('/office/employees/create') ?>" class="nav-link <?= str_contains($uri, '/office/employees/create') ? 'active' : '' ?>">
+                            <a href="<?= url('/office/employees/create') ?>" class="nav-link <?= $isEmployeeCreateActive ? 'active' : '' ?>" data-no-ajax="true">
                                 <span class="nav-link-left">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
                                     <span class="nav-text"><?= e(__('sidebar.add_employee', 'Add Driver / Staff')) ?></span>
@@ -207,10 +258,9 @@
                     </div>
                 </div>
 
-                <!-- 6. Billing & Invoices -->
                 <!-- 6. Finance & Billing -->
                 <div class="sidebar-category" id="cat-finance">
-                    <button type="button" class="category-header <?= ($isFinanceActive || $isInvoicesActive) ? 'has-active open' : '' ?>" id="cat-finance-header" data-title="<?= e(__('sidebar.finance', 'Finance')) ?>" onclick="toggleCategory('cat-finance')" aria-expanded="<?= ($isFinanceActive || $isInvoicesActive) ? 'true' : 'false' ?>">
+                    <button type="button" class="category-header <?= $isFinanceActive ? 'has-active open' : '' ?>" id="cat-finance-header" data-title="<?= e(__('sidebar.finance', 'Finance')) ?>" onclick="toggleCategory('cat-finance')" aria-expanded="<?= $isFinanceActive ? 'true' : 'false' ?>">
                         <span class="category-label">
                             <span class="category-icon-wrap">
                                 <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -221,51 +271,51 @@
                             <svg class="category-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                         </span>
                     </button>
-                    <div class="sidebar-category-items <?= ($isFinanceActive || $isInvoicesActive) ? 'expanded' : '' ?>" id="cat-finance-items">
+                    <div class="sidebar-category-items <?= $isFinanceActive ? 'expanded' : '' ?>" id="cat-finance-items">
                         <div class="category-items-inner">
-                            <a href="<?= url('/office/finance') ?>" class="nav-link <?= ($uri === '/office/finance' || $uri === '/office/finance/dashboard') ? 'active' : '' ?>">
+                            <a href="<?= url('/office/finance') ?>" class="nav-link <?= $isFinanceOverviewActive ? 'active' : '' ?>" data-no-ajax="true">
                                 <span class="nav-link-left">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                                     <span class="nav-text"><?= e(__('sidebar.finance_overview', 'Overview')) ?></span>
                                 </span>
                             </a>
-                            <a href="<?= url('/office/finance/accounts') ?>" class="nav-link <?= str_contains($uri, '/office/finance/accounts') ? 'active' : '' ?>">
+                            <a href="<?= url('/office/finance/accounts') ?>" class="nav-link <?= $isFinanceAccountsActive ? 'active' : '' ?>" data-no-ajax="true">
                                 <span class="nav-link-left">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
                                     <span class="nav-text"><?= e(__('sidebar.accounts', 'Accounts & Banks')) ?></span>
                                 </span>
                             </a>
-                            <a href="<?= url('/office/finance/transactions') ?>" class="nav-link <?= str_contains($uri, '/office/finance/transactions') ? 'active' : '' ?>">
+                            <a href="<?= url('/office/finance/transactions') ?>" class="nav-link <?= $isFinanceTxnsActive ? 'active' : '' ?>" data-no-ajax="true">
                                 <span class="nav-link-left">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
                                     <span class="nav-text"><?= e(__('sidebar.transactions', 'Money Transactions')) ?></span>
                                 </span>
                             </a>
-                            <a href="<?= url('/office/finance/expenses') ?>" class="nav-link <?= str_contains($uri, '/office/finance/expenses') ? 'active' : '' ?>">
+                            <a href="<?= url('/office/finance/expenses') ?>" class="nav-link <?= $isFinanceExpensesActive ? 'active' : '' ?>" data-no-ajax="true">
                                 <span class="nav-link-left">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                                     <span class="nav-text"><?= e(__('sidebar.expenses', 'Expenses')) ?></span>
                                 </span>
                             </a>
-                            <a href="<?= url('/office/finance/payroll') ?>" class="nav-link <?= (str_contains($uri, '/office/finance/payroll') || str_contains($uri, '/office/finance/payslips')) ? 'active' : '' ?>">
+                            <a href="<?= url('/office/finance/payroll') ?>" class="nav-link <?= $isFinancePayrollActive ? 'active' : '' ?>" data-no-ajax="true">
                                 <span class="nav-link-left">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                                     <span class="nav-text"><?= e(__('sidebar.payroll', 'Payroll')) ?></span>
                                 </span>
                             </a>
-                            <a href="<?= url('/office/finance/advances') ?>" class="nav-link <?= str_contains($uri, '/office/finance/advances') ? 'active' : '' ?>">
+                            <a href="<?= url('/office/finance/advances') ?>" class="nav-link <?= $isFinanceAdvancesActive ? 'active' : '' ?>" data-no-ajax="true">
                                 <span class="nav-link-left">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     <span class="nav-text"><?= e(__('sidebar.advances', 'Staff Advances')) ?></span>
                                 </span>
                             </a>
-                            <a href="<?= url('/office/finance/refunds') ?>" class="nav-link <?= str_contains($uri, '/office/finance/refunds') ? 'active' : '' ?>">
+                            <a href="<?= url('/office/finance/refunds') ?>" class="nav-link <?= $isFinanceRefundsActive ? 'active' : '' ?>" data-no-ajax="true">
                                 <span class="nav-link-left">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-1a4 4 0 00-4-4H4m0 0l3-3m-3 3l3 3m5 4v1a3 3 0 003 3h6a3 3 0 003-3v-6a3 3 0 00-3-3h-1"></path></svg>
                                     <span class="nav-text"><?= e(__('sidebar.refunds', 'Refunds')) ?></span>
                                 </span>
                             </a>
-                            <a href="<?= url('/office/invoices') ?>" class="nav-link <?= $isInvoicesActive ? 'active' : '' ?>">
+                            <a href="<?= url('/office/invoices') ?>" class="nav-link <?= $isFinanceInvoicesActive ? 'active' : '' ?>" data-no-ajax="true">
                                 <span class="nav-link-left">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                     <span class="nav-text"><?= e(__('sidebar.invoices', 'GST Invoices')) ?></span>
@@ -290,13 +340,13 @@
                     </button>
                     <div class="sidebar-category-items <?= $isTripsActive ? 'expanded' : '' ?>" id="cat-trips-items">
                         <div class="category-items-inner">
-                            <a href="<?= url('/office/trips/assign') ?>" class="nav-link <?= (str_contains($uri, '/office/trips/assign') || str_contains($uri, '/office/dispatch')) ? 'active' : '' ?>">
+                            <a href="<?= url('/office/trips/assign') ?>" class="nav-link <?= $isTripAssignActive ? 'active' : '' ?>" data-no-ajax="true">
                                 <span class="nav-link-left">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
                                     <span class="nav-text"><?= e(__('sidebar.assign_trip', 'Assign Trip')) ?></span>
                                 </span>
                             </a>
-                            <a href="<?= url('/office/trips/history') ?>" class="nav-link <?= str_contains($uri, '/office/trips/history') ? 'active' : '' ?>">
+                            <a href="<?= url('/office/trips/history') ?>" class="nav-link <?= $isTripHistoryActive ? 'active' : '' ?>" data-no-ajax="true">
                                 <span class="nav-link-left">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     <span class="nav-text"><?= e(__('sidebar.trip_history', 'Trip History')) ?></span>
@@ -308,7 +358,7 @@
 
                 <!-- 8. Live Tracking -->
                 <div class="sidebar-category" id="cat-tracking">
-                    <a href="<?= url('/office/tracking') ?>" class="category-header direct-link <?= $isTrackingActive ? 'has-active' : '' ?>" id="cat-tracking-header" data-title="<?= e(__('sidebar.live_tracking', 'Tracking')) ?>">
+                    <a href="<?= url('/office/tracking') ?>" class="category-header direct-link <?= $isTrackingActive ? 'has-active' : '' ?>" id="cat-tracking-header" data-title="<?= e(__('sidebar.live_tracking', 'Tracking')) ?>" data-no-ajax="true">
                         <span class="category-label">
                             <span class="category-icon-wrap">
                                 <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
@@ -323,7 +373,7 @@
 
                 <!-- 9. Reports & Audits -->
                 <div class="sidebar-category" id="cat-reports">
-                    <a href="<?= url('/office/dashboard') ?>#reports" class="category-header direct-link" id="cat-reports-header" data-title="<?= e(__('sidebar.reports', 'Reports')) ?>">
+                    <a href="<?= url('/office/dashboard') ?>#reports" class="category-header direct-link" id="cat-reports-header" data-title="<?= e(__('sidebar.reports', 'Reports')) ?>" data-no-ajax="true">
                         <span class="category-label">
                             <span class="category-icon-wrap">
                                 <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
@@ -336,10 +386,10 @@
                     </a>
                 </div>
 
-                <!-- Company Management Dropdown -->
+                <!-- 10. Company Management -->
                 <?php if ($role === 'admin'): ?>
                 <div class="sidebar-category" id="cat-company">
-                    <button type="button" class="category-header <?= str_contains($uri, '/office/company') ? 'has-active open' : '' ?>" id="cat-company-header" data-title="Company Management" onclick="toggleCategory('cat-company')" aria-expanded="<?= str_contains($uri, '/office/company') ? 'true' : 'false' ?>">
+                    <button type="button" class="category-header <?= $isCompanyActive ? 'has-active open' : '' ?>" id="cat-company-header" data-title="Company Management" onclick="toggleCategory('cat-company')" aria-expanded="<?= $isCompanyActive ? 'true' : 'false' ?>">
                         <span class="category-label">
                             <span class="category-icon-wrap">
                                 <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
@@ -350,15 +400,15 @@
                             <svg class="category-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                         </span>
                     </button>
-                    <div class="sidebar-category-items <?= str_contains($uri, '/office/company') ? 'expanded' : '' ?>" id="cat-company-items">
+                    <div class="sidebar-category-items <?= $isCompanyActive ? 'expanded' : '' ?>" id="cat-company-items">
                         <div class="category-items-inner">
-                            <a href="<?= url('/office/company') ?>" class="nav-link <?= ($uri === '/office/company' || $uri === '/office/company/') ? 'active' : '' ?>">
+                            <a href="<?= url('/office/company') ?>" class="nav-link <?= $isCompanyListActive ? 'active' : '' ?>" data-no-ajax="true">
                                 <span class="nav-link-left">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
                                     <span class="nav-text">List Companies</span>
                                 </span>
                             </a>
-                            <a href="<?= url('/office/company/create') ?>" class="nav-link <?= str_contains($uri, '/office/company/create') ? 'active' : '' ?>">
+                            <a href="<?= url('/office/company/create') ?>" class="nav-link <?= $isCompanyCreateActive ? 'active' : '' ?>" data-no-ajax="true">
                                 <span class="nav-link-left">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                                     <span class="nav-text">Add Company</span>
@@ -369,10 +419,10 @@
                 </div>
                 <?php endif; ?>
 
-                <!-- 10. Settings & Access -->
+                <!-- 11. Settings & Access -->
                 <?php if ($role === 'admin'): ?>
                 <div class="sidebar-category" id="cat-settings">
-                    <button type="button" class="category-header <?= ($isAccessActive || $isBackupsActive) ? 'has-active open' : '' ?>" id="cat-settings-header" data-title="<?= e(__('sidebar.settings', 'Settings')) ?>" onclick="toggleCategory('cat-settings')" aria-expanded="<?= ($isAccessActive || $isBackupsActive) ? 'true' : 'false' ?>">
+                    <button type="button" class="category-header <?= $isSettingsActive ? 'has-active open' : '' ?>" id="cat-settings-header" data-title="<?= e(__('sidebar.settings', 'Settings')) ?>" onclick="toggleCategory('cat-settings')" aria-expanded="<?= $isSettingsActive ? 'true' : 'false' ?>">
                         <span class="category-label">
                             <span class="category-icon-wrap">
                                 <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
@@ -383,15 +433,27 @@
                             <svg class="category-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                         </span>
                     </button>
-                    <div class="sidebar-category-items <?= ($isAccessActive || $isBackupsActive) ? 'expanded' : '' ?>" id="cat-settings-items">
+                    <div class="sidebar-category-items <?= $isSettingsActive ? 'expanded' : '' ?>" id="cat-settings-items">
                         <div class="category-items-inner">
-                            <a href="<?= url('/office/users') ?>" class="nav-link <?= $isAccessActive ? 'active' : '' ?>">
+                            <a href="<?= url('/office/users') ?>" class="nav-link <?= $isUsersActive ? 'active' : '' ?>" data-no-ajax="true">
                                 <span class="nav-link-left">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                                     <span class="nav-text"><?= e(__('sidebar.users', 'Staff Accounts')) ?></span>
                                 </span>
                             </a>
-                            <a href="<?= url('/office/backups') ?>" class="nav-link <?= $isBackupsActive ? 'active' : '' ?>">
+                            <a href="<?= url('/office/roles') ?>" class="nav-link <?= $isRolesActive ? 'active' : '' ?>" data-no-ajax="true">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                                    <span class="nav-text"><?= e(__('sidebar.roles_permissions', 'Roles & Permissions')) ?></span>
+                                </span>
+                            </a>
+                            <a href="<?= url('/office/notification-settings') ?>" class="nav-link <?= $isNotificationActive ? 'active' : '' ?>" data-no-ajax="true">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                                    <span class="nav-text">Notification Settings</span>
+                                </span>
+                            </a>
+                            <a href="<?= url('/office/backups') ?>" class="nav-link <?= $isBackupsActive ? 'active' : '' ?>" data-no-ajax="true">
                                 <span class="nav-link-left">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
                                     <span class="nav-text"><?= e(__('nav.backup', 'Database Backups')) ?></span>
@@ -401,7 +463,7 @@
                     </div>
                 </div>
                 <?php endif; ?>
-            </nav>
+</nav>
 
             <div class="sidebar-footer">
                 <div class="user-badge">
@@ -488,7 +550,7 @@
                                 </div>
                             </div>
                             <div class="topbar-menu-divider"></div>
-                            <a href="<?= url('/office/users') ?>" class="topbar-menu-item" role="menuitem">
+                            <a href="<?= url('/office/users') ?>" class="topbar-menu-item" role="menuitem" data-no-ajax="true">
                                 <div class="topbar-menu-icon" style="background: rgba(23, 107, 91, 0.1); color: #176B5B;">
                                     <i class="fa-solid fa-user-circle"></i>
                                 </div>
@@ -508,7 +570,7 @@
                                 </div>
                                 <i class="fa-solid fa-download topbar-menu-arrow"></i>
                             </button>
-                            <a href="<?= url('/office/notification-settings') ?>" class="topbar-menu-item" role="menuitem">
+                            <a href="<?= url('/office/notification-settings') ?>" class="topbar-menu-item" role="menuitem" data-no-ajax="true">
                                 <div class="topbar-menu-icon" style="background: rgba(59, 130, 246, 0.1); color: #3B82F6;">
                                     <i class="fa-solid fa-bell"></i>
                                 </div>
@@ -595,11 +657,11 @@
         </button>
 
         <div class="bottom-nav-inner">
-            <a href="<?= url('/office/dashboard') ?>" class="bottom-nav-item <?= str_contains($uri, '/office/dashboard') ? 'active' : '' ?>">
+            <a href="<?= url('/office/dashboard') ?>" class="bottom-nav-item <?= $isDashboardActive ? 'active' : '' ?>" data-no-ajax="true">
                 <svg fill="currentColor" viewBox="0 0 24 24" width="20" height="20"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
                 <span><?= e(__('sidebar.dashboard', 'Home')) ?></span>
             </a>
-            <a href="<?= url('/office/bookings') ?>" class="bottom-nav-item <?= str_contains($uri, '/office/bookings') ? 'active' : '' ?>">
+            <a href="<?= url('/office/bookings') ?>" class="bottom-nav-item <?= $isBookingsActive ? 'active' : '' ?>" data-no-ajax="true">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                 <span><?= e(__('sidebar.bookings', 'Bookings')) ?></span>
             </a>
@@ -607,11 +669,11 @@
             <!-- Center slot spacer (Ensures left 2 items and right 2 items are 100% symmetric) -->
             <div class="bottom-nav-center-slot" aria-hidden="true"></div>
 
-            <a href="<?= url('/office/dispatch') ?>" class="bottom-nav-item <?= (str_contains($uri, '/office/dispatch') || str_contains($uri, '/office/trips')) ? 'active' : '' ?>">
+            <a href="<?= url('/office/trips/assign') ?>" class="bottom-nav-item <?= $isTripsActive ? 'active' : '' ?>" data-no-ajax="true">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                 <span><?= e(__('sidebar.trips', 'Trips')) ?></span>
             </a>
-            <a href="<?= url('/office/bookings') ?>" class="bottom-nav-item nav-notif-item">
+            <a href="<?= url('/office/notification-settings') ?>" class="bottom-nav-item nav-notif-item <?= $isNotificationActive ? 'active' : '' ?>" data-no-ajax="true">
                 <div style="position: relative; display: inline-flex;">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
                     <span class="nav-badge-pill">3</span>

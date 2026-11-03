@@ -960,11 +960,20 @@
         },
 
         shouldInterceptLink: function (link, e) {
-            if (e.button !== 0) return false; // left-click only
+            if (!link || e.button !== 0) return false; // left-click only
             if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return false; // allow opening in new tab
             if (link.target === '_blank') return false;
             if (link.hasAttribute('download')) return false;
-            if (link.getAttribute('data-no-ajax') === 'true' || link.dataset.noAjax === 'true') return false;
+
+            // Strict Native Navigation Rule: Never intercept any link marked with data-no-ajax="true"
+            if (link.getAttribute('data-no-ajax') === 'true' || link.dataset.noAjax === 'true' || link.closest('[data-no-ajax="true"]')) {
+                return false;
+            }
+
+            // Strict Native Navigation Rule: Never intercept sidebar, drawer, brand, bottom nav, or topbar menu links
+            if (link.closest('#sidebar, .sidebar, aside, .bottom-nav, .notched-bottom-nav, .brand-logo, .sidebar-header, .sidebar-nav, .sidebar-footer, .topbar-user-menu, .mv-dash-menu, .driver-sidebar, .driver-bottom-nav, .topbar-left, .topbar-profile-chip, .user-badge')) {
+                return false;
+            }
 
             const href = link.getAttribute('href');
             if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:') || href.includes('/logout')) {

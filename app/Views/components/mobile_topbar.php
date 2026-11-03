@@ -20,7 +20,7 @@ $curReturnUrl = $_SERVER['REQUEST_URI'] ?? $homeUrl;
 ?>
 <!-- Mobile Top Navbar (Matches Dashboard Home Page on Responsive Devices) -->
 <header class="mv-dash-topbar" id="mvDashTopbar">
-    <a href="<?= $homeUrl ?>" class="mv-dash-logo" title="MANASWI <?= e(__('app.tours_travels', 'Tours & Travels')) ?> - <?= e(__('sidebar.dashboard', 'Home')) ?>">
+    <a href="<?= $homeUrl ?>" class="mv-dash-logo" title="<?= e(company_name()) ?> - <?= e(__('sidebar.dashboard', 'Home')) ?>" data-no-ajax="true">
         <img src="<?= asset('images/brand-teal-bus.svg') ?>" class="mv-logo-bus-img" alt="Bus">
         <div class="mv-logo-text">
             <span class="mv-brand-title"><?= e(company_name()) ?></span>
@@ -76,7 +76,7 @@ $curReturnUrl = $_SERVER['REQUEST_URI'] ?? $homeUrl;
                     </div>
                 </div>
                 <div class="mv-menu-divider"></div>
-                <a href="<?= $profileUrl ?>" class="mv-menu-item">
+                <a href="<?= $profileUrl ?>" class="mv-menu-item" data-no-ajax="true">
                     <div class="mv-menu-item-icon" style="background: rgba(23, 107, 91, 0.1); color: #176B5B;">
                         <i class="fa-solid fa-user-circle"></i>
                     </div>
@@ -90,7 +90,7 @@ $curReturnUrl = $_SERVER['REQUEST_URI'] ?? $homeUrl;
                     <span class="mv-menu-item-label install-btn-label">Install Tours</span>
                     <i class="fa-solid fa-download mv-menu-item-arrow"></i>
                 </button>
-                <a href="<?= $notifSettingsUrl ?>" class="mv-menu-item">
+                <a href="<?= $notifSettingsUrl ?>" class="mv-menu-item" data-no-ajax="true">
                     <div class="mv-menu-item-icon" style="background: rgba(59, 130, 246, 0.1); color: #3B82F6;">
                         <i class="fa-solid fa-bell"></i>
                     </div>
