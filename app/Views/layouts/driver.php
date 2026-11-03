@@ -312,12 +312,23 @@
         <!-- Luxury Dedicated Driver Navigation Sidebar -->
         <aside class="sidebar" id="sidebar" aria-label="<?= e(__('sidebar.menu')) ?>">
             <div class="sidebar-header">
-                <a href="<?= url('/driver/dashboard') ?>" class="brand-logo" data-no-ajax="true" title="MANASWI Tours & Travels - Chauffeur Console">
-                    <img src="<?= asset('images/manaswi-logo.svg') ?>" alt="Manaswi Logo" class="brand-logo-img">
+                <a href="<?= url('/driver/dashboard') ?>" class="brand-logo" data-no-ajax="true" title="<?= e(company_display_name()) ?>">
+                    <?php if (has_company_logo()): ?>
+                        <img src="<?= e(company_logo_url()) ?>" alt="<?= e(company_display_name()) ?>" class="brand-logo-img" style="object-fit: contain;">
+                    <?php else: ?>
+                        <div class="brand-logo-icon-badge">
+                            <i class="fa-solid fa-building"></i>
+                        </div>
+                    <?php endif; ?>
                     <div class="brand-name">
-                        <span class="brand-title"><?= e(company_name()) ?></span>
-                        <span class="brand-subtitle-main"><?= e(__('app.tours_travels', 'Tours & Travels')) ?></span>
-                        <span class="brand-tagline"><?= e(__('app.safe_journey_tagline', 'Safe Journey • Happy Memories')) ?></span>
+                        <span class="brand-title"><?= e(company_display_name()) ?></span>
+                        <?php if (has_company_name()): ?>
+                            <?php if (!empty(company_tagline())): ?>
+                                <span class="brand-tagline"><?= e(company_tagline()) ?></span>
+                            <?php else: ?>
+                                <span class="brand-subtitle-main"><?= e(__('app.tours_travels', 'Tours & Travels')) ?></span>
+                            <?php endif; ?>
+                        <?php endif; ?>
                     </div>
                 </a>
                 <button type="button" class="sidebar-close-btn" onclick="closeSidebar()" aria-label="<?= e(__('sidebar.close_navigation', 'Close Navigation')) ?>">&times;</button>
@@ -830,6 +841,9 @@
             </a>
         </div>
     </nav>
+
+    <!-- Professional Custom PWA Installation Modal -->
+    <?php require dirname(__DIR__) . '/components/pwa_install_modal.php'; ?>
 
     <script src="<?= asset('js/app.js') ?>?v=3.0"></script>
     <script src="<?= asset('js/tours-pwa.js') ?>?v=5.0"></script>

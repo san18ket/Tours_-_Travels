@@ -57,6 +57,27 @@ class CompanySettingsService
     }
 
     /**
+     * Check if a valid, non-fallback company name is configured and available
+     */
+    public static function hasCompanyName(): bool
+    {
+        $p = self::getProfile();
+        if (!empty($p['is_fallback'])) {
+            return false;
+        }
+        $name = trim((string)($p['company_name'] ?? ''));
+        return $name !== '' && $name !== 'Company name not configured' && strtolower($name) !== '(company name)';
+    }
+
+    /**
+     * Get display company name with neutral placeholder '(company name)' when unconfigured
+     */
+    public static function getDisplayName(): string
+    {
+        return self::hasCompanyName() ? self::getCompanyName() : '(company name)';
+    }
+
+    /**
      * Get fallback default profile from environment or neutral defaults
      */
     private static function getDefaults(): array
@@ -76,17 +97,27 @@ class CompanySettingsService
         $address = env('COMPANY_ADDRESS', Config::get('app.company_address', ''));
 
         return [
-            'id'           => null,
-            'company_name' => $appName,
-            'tagline'      => $tagline,
-            'logo'         => null,
-            'email'        => $email,
-            'phone'        => $phone,
-            'website'      => $website,
-            'address'      => $address,
-            'status'       => 'active',
-            'is_primary'   => 1,
-            'is_fallback'  => true,
+            'id'              => null,
+            'company_name'    => $appName,
+            'owner_name'      => env('COMPANY_OWNER', ''),
+            'tagline'         => $tagline,
+            'logo'            => null,
+            'paid_stamp'      => null,
+            'signature'       => null,
+            'signature_stamp' => null,
+            'email'           => $email,
+            'phone'           => $phone,
+            'alternate_phone' => env('COMPANY_ALT_PHONE', ''),
+            'website'         => $website,
+            'gst_number'      => env('COMPANY_GSTIN', ''),
+            'pan_number'      => env('COMPANY_PAN', ''),
+            'address'         => $address,
+            'city'            => env('COMPANY_CITY', ''),
+            'state'           => env('COMPANY_STATE', ''),
+            'pin_code'        => env('COMPANY_PIN', ''),
+            'status'          => 'active',
+            'is_primary'      => 1,
+            'is_fallback'     => true,
         ];
     }
 
@@ -104,6 +135,15 @@ class CompanySettingsService
     }
 
     /**
+     * Get active owner/contact person name
+     */
+    public static function getOwnerName(): string
+    {
+        $p = self::getProfile();
+        return !empty($p['owner_name']) ? (string)$p['owner_name'] : '';
+    }
+
+    /**
      * Get active company tagline
      */
     public static function getTagline(): string
@@ -113,20 +153,10 @@ class CompanySettingsService
     }
 
     /**
-     * Get relative logo storage path
+     * Helper to resolve web URL for any company storage image
      */
-    public static function getLogoPath(): ?string
+    public static function formatImageUrl(?string $path, bool $absolute = false): ?string
     {
-        $p = self::getProfile();
-        return !empty($p['logo']) ? (string)$p['logo'] : null;
-    }
-
-    /**
-     * Get absolute web URL for company logo
-     */
-    public static function getLogoUrl(bool $absolute = false): ?string
-    {
-        $path = self::getLogoPath();
         if (empty($path)) {
             return null;
         }
@@ -146,6 +176,120 @@ class CompanySettingsService
         }
 
         return url('/storage/' . $clean);
+    }
+
+    /**
+     * Check if a specific image file exists physically on disk
+     */
+    public static function fileExistsInStorage(?string $path): bool
+    {
+        if (empty($path)) {
+            return false;
+        }
+        $clean = ltrim(str_replace('\\', '/', $path), '/');
+        $clean = preg_replace('#^(public/storage/|storage/|public/)#', '', $clean);
+        $fullPath = dirname(__DIR__, 2) . '/public/storage/' . $clean;
+        return file_exists($fullPath) && is_file($fullPath);
+    }
+
+    /**
+     * Get relative logo storage path
+     */
+    public static function getLogoPath(): ?string
+    {
+        $p = self::getProfile();
+        return !empty($p['logo']) ? (string)$p['logo'] : null;
+    }
+
+    /**
+     * Get absolute or relative web URL for company logo
+     */
+    public static function getLogoUrl(bool $absolute = false): ?string
+    {
+        return self::formatImageUrl(self::getLogoPath(), $absolute);
+    }
+
+    /**
+     * Check if company has an uploaded custom logo on disk
+     */
+    public static function hasLogo(): bool
+    {
+        return self::fileExistsInStorage(self::getLogoPath());
+    }
+
+    /**
+     * Get Paid Stamp storage path
+     */
+    public static function getPaidStampPath(): ?string
+    {
+        $p = self::getProfile();
+        return !empty($p['paid_stamp']) ? (string)$p['paid_stamp'] : null;
+    }
+
+    /**
+     * Get Paid Stamp Web URL
+     */
+    public static function getPaidStampUrl(bool $absolute = false): ?string
+    {
+        return self::formatImageUrl(self::getPaidStampPath(), $absolute);
+    }
+
+    /**
+     * Check if Paid Stamp is configured and file exists
+     */
+    public static function hasPaidStamp(): bool
+    {
+        return self::fileExistsInStorage(self::getPaidStampPath());
+    }
+
+    /**
+     * Get Authorized Signature storage path
+     */
+    public static function getSignaturePath(): ?string
+    {
+        $p = self::getProfile();
+        return !empty($p['signature']) ? (string)$p['signature'] : null;
+    }
+
+    /**
+     * Get Authorized Signature Web URL
+     */
+    public static function getSignatureUrl(bool $absolute = false): ?string
+    {
+        return self::formatImageUrl(self::getSignaturePath(), $absolute);
+    }
+
+    /**
+     * Check if Authorized Signature is configured and file exists
+     */
+    public static function hasSignature(): bool
+    {
+        return self::fileExistsInStorage(self::getSignaturePath());
+    }
+
+    /**
+     * Get Signature + Stamp storage path
+     */
+    public static function getSignatureStampPath(): ?string
+    {
+        $p = self::getProfile();
+        return !empty($p['signature_stamp']) ? (string)$p['signature_stamp'] : null;
+    }
+
+    /**
+     * Get Signature + Stamp Web URL
+     */
+    public static function getSignatureStampUrl(bool $absolute = false): ?string
+    {
+        return self::formatImageUrl(self::getSignatureStampPath(), $absolute);
+    }
+
+    /**
+     * Check if Signature + Stamp is configured and file exists
+     */
+    public static function hasSignatureStamp(): bool
+    {
+        return self::fileExistsInStorage(self::getSignatureStampPath());
     }
 
     /**
@@ -174,6 +318,15 @@ class CompanySettingsService
     }
 
     /**
+     * Get active alternate mobile number
+     */
+    public static function getAlternatePhone(): string
+    {
+        $p = self::getProfile();
+        return !empty($p['alternate_phone']) ? (string)$p['alternate_phone'] : '';
+    }
+
+    /**
      * Get active company website
      */
     public static function getWebsite(): string
@@ -187,12 +340,84 @@ class CompanySettingsService
     }
 
     /**
-     * Get active company address
+     * Get active company GST number
+     */
+    public static function getGstNumber(): string
+    {
+        $p = self::getProfile();
+        return !empty($p['gst_number']) ? (string)$p['gst_number'] : '';
+    }
+
+    /**
+     * Get active company PAN number
+     */
+    public static function getPanNumber(): string
+    {
+        $p = self::getProfile();
+        return !empty($p['pan_number']) ? (string)$p['pan_number'] : '';
+    }
+
+    /**
+     * Get active company office address line
      */
     public static function getAddress(): string
     {
         $p = self::getProfile();
         return !empty($p['address']) ? (string)$p['address'] : '';
+    }
+
+    /**
+     * Get active company city
+     */
+    public static function getCity(): string
+    {
+        $p = self::getProfile();
+        return !empty($p['city']) ? (string)$p['city'] : '';
+    }
+
+    /**
+     * Get active company state
+     */
+    public static function getState(): string
+    {
+        $p = self::getProfile();
+        return !empty($p['state']) ? (string)$p['state'] : '';
+    }
+
+    /**
+     * Get active company pin code
+     */
+    public static function getPinCode(): string
+    {
+        $p = self::getProfile();
+        return !empty($p['pin_code']) ? (string)$p['pin_code'] : '';
+    }
+
+    /**
+     * Formatted full address string with city, state, and pin code
+     */
+    public static function getFullAddress(): string
+    {
+        $parts = [];
+        $addr = self::getAddress();
+        if (!empty($addr)) {
+            $parts[] = $addr;
+        }
+        $city = self::getCity();
+        if (!empty($city)) {
+            $parts[] = $city;
+        }
+        $state = self::getState();
+        $pin = self::getPinCode();
+        if (!empty($state) && !empty($pin)) {
+            $parts[] = "{$state} - {$pin}";
+        } elseif (!empty($state)) {
+            $parts[] = $state;
+        } elseif (!empty($pin)) {
+            $parts[] = "PIN: {$pin}";
+        }
+
+        return implode(', ', $parts);
     }
 
     /**
@@ -202,18 +427,5 @@ class CompanySettingsService
     {
         $p = self::getProfile();
         return !empty($p['status']) ? (string)$p['status'] : 'active';
-    }
-
-    /**
-     * Check if company has an uploaded custom logo on disk
-     */
-    public static function hasLogo(): bool
-    {
-        $path = self::getLogoPath();
-        if (empty($path)) {
-            return false;
-        }
-        $fullPath = dirname(__DIR__, 2) . '/public/storage/' . ltrim(str_replace('\\', '/', $path), '/');
-        return file_exists($fullPath);
     }
 }

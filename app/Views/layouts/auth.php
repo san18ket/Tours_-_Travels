@@ -7,7 +7,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <?= csrf_meta() ?>
-    <title><?= e($title ?? 'Sign In') ?> - <?= e(company_name()) ?></title>
+    <title><?= e($title ?? 'Sign In') ?> - <?= e(company_display_name()) ?></title>
     
     <?php
         $cssVer = @filemtime(dirname(__DIR__, 3) . '/public/assets/css/app.css') ?: time();
@@ -20,8 +20,9 @@
 
     <!-- Favicon & PWA Manifest -->
     <link rel="manifest" href="<?= url('/manifest.json') ?>">
-    <link rel="icon" type="image/png" href="<?= asset('images/manaswi-icon.png') ?>?v=<?= $iconVer ?>">
-    <link rel="icon" type="image/svg+xml" href="<?= asset('images/manaswi-logo.svg') ?>?v=<?= $iconVer ?>">
+    <?php if (has_company_logo()): ?>
+        <link rel="icon" type="image/png" href="<?= e(company_logo_url()) ?>">
+    <?php endif; ?>
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -479,10 +480,22 @@
         <header class="auth-topbar">
             <!-- Desktop Brand Header (Top-Left) -->
             <div class="desktop-brand-block">
-                <img src="<?= asset('images/manaswi-emblem.png') ?>?v=<?= $emblemVer ?>" alt="Manaswi Emblem" class="desktop-brand-emblem">
+                <?php if (has_company_logo()): ?>
+                    <img src="<?= e(company_logo_url()) ?>" alt="<?= e(company_display_name()) ?>" class="desktop-brand-emblem" style="object-fit: contain;">
+                <?php else: ?>
+                    <div class="desktop-brand-icon-badge" style="width: 58px; height: 58px; font-size: 1.6rem; border-radius: 16px; background: linear-gradient(135deg, #0b326d 0%, #1d72f2 100%); color: #ffffff; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(11, 50, 109, 0.25); flex-shrink: 0;">
+                        <i class="fa-solid fa-building"></i>
+                    </div>
+                <?php endif; ?>
                 <div class="desktop-brand-text">
-                    <span class="desktop-brand-name">MANASWI</span>
-                    <span class="desktop-brand-sub">Tours &amp; Travels</span>
+                    <span class="desktop-brand-name"><?= e(company_display_name()) ?></span>
+                    <?php if (has_company_name()): ?>
+                        <?php if (!empty(company_tagline())): ?>
+                            <span class="desktop-brand-sub"><?= e(company_tagline()) ?></span>
+                        <?php else: ?>
+                            <span class="desktop-brand-sub"><?= e(__('app.tours_travels', 'Tours & Travels')) ?></span>
+                        <?php endif; ?>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -514,10 +527,21 @@
 
         <!-- Mobile View Centered Brand Header (Shown on phone / tablet) -->
         <div class="mobile-brand-header">
-            <img src="<?= asset('images/manaswi-emblem.png') ?>?v=<?= $emblemVer ?>" alt="Manaswi Tours & Travels" class="mobile-brand-emblem">
-            <h1 class="mobile-brand-name">MANASWI</h1>
-            <div class="mobile-brand-sub">Tours &amp; Travels</div>
-            <div class="mobile-brand-tagline">Explore &bull; Travel &bull; Discover</div>
+            <?php if (has_company_logo()): ?>
+                <img src="<?= e(company_logo_url()) ?>" alt="<?= e(company_display_name()) ?>" class="mobile-brand-emblem" style="object-fit: contain;">
+            <?php else: ?>
+                <div class="mobile-brand-icon-badge" style="width: 56px; height: 56px; font-size: 1.5rem; margin: 0 auto 0.5rem auto; border-radius: 14px; background: linear-gradient(135deg, #0b326d 0%, #1d72f2 100%); color: #ffffff; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(11, 50, 109, 0.2); flex-shrink: 0;">
+                    <i class="fa-solid fa-building"></i>
+                </div>
+            <?php endif; ?>
+            <h1 class="mobile-brand-name"><?= e(company_display_name()) ?></h1>
+            <?php if (has_company_name()): ?>
+                <?php if (!empty(company_tagline())): ?>
+                    <div class="mobile-brand-sub"><?= e(company_tagline()) ?></div>
+                <?php else: ?>
+                    <div class="mobile-brand-sub"><?= e(__('app.tours_travels', 'Tours & Travels')) ?></div>
+                <?php endif; ?>
+            <?php endif; ?>
         </div>
 
         <!-- Center Master Grid: Left Hero vs Right Glass Form -->
@@ -536,7 +560,7 @@
                     <span>Our Priority</span>
                 </h2>
                 <p class="hero-description">
-                    Book your next adventure with <?= e(company_name()) ?> and explore the world with comfort and safety.
+                    Book your next adventure with <?= e(company_display_name()) ?> and explore the world with comfort and safety.
                 </p>
             </section>
 

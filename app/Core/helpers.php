@@ -528,6 +528,20 @@ if (!function_exists('company_name')) {
     }
 }
 
+if (!function_exists('has_company_name')) {
+    function has_company_name(): bool
+    {
+        return \App\Services\CompanySettingsService::hasCompanyName();
+    }
+}
+
+if (!function_exists('company_display_name')) {
+    function company_display_name(): string
+    {
+        return \App\Services\CompanySettingsService::getDisplayName();
+    }
+}
+
 if (!function_exists('company_tagline')) {
     function company_tagline(): string
     {
@@ -587,6 +601,104 @@ if (!function_exists('has_configured_company')) {
     function has_configured_company(): bool
     {
         return \App\Services\CompanySettingsService::hasConfiguredProfile();
+    }
+}
+
+if (!function_exists('company_owner')) {
+    function company_owner(): string
+    {
+        return \App\Services\CompanySettingsService::getOwnerName();
+    }
+}
+
+if (!function_exists('company_alternate_phone')) {
+    function company_alternate_phone(): string
+    {
+        return \App\Services\CompanySettingsService::getAlternatePhone();
+    }
+}
+
+if (!function_exists('company_gst_number')) {
+    function company_gst_number(): string
+    {
+        return \App\Services\CompanySettingsService::getGstNumber();
+    }
+}
+
+if (!function_exists('company_pan_number')) {
+    function company_pan_number(): string
+    {
+        return \App\Services\CompanySettingsService::getPanNumber();
+    }
+}
+
+if (!function_exists('company_city')) {
+    function company_city(): string
+    {
+        return \App\Services\CompanySettingsService::getCity();
+    }
+}
+
+if (!function_exists('company_state')) {
+    function company_state(): string
+    {
+        return \App\Services\CompanySettingsService::getState();
+    }
+}
+
+if (!function_exists('company_pin_code')) {
+    function company_pin_code(): string
+    {
+        return \App\Services\CompanySettingsService::getPinCode();
+    }
+}
+
+if (!function_exists('company_full_address')) {
+    function company_full_address(): string
+    {
+        return \App\Services\CompanySettingsService::getFullAddress();
+    }
+}
+
+if (!function_exists('company_paid_stamp_url')) {
+    function company_paid_stamp_url(bool $absolute = false): ?string
+    {
+        return \App\Services\CompanySettingsService::getPaidStampUrl($absolute);
+    }
+}
+
+if (!function_exists('has_company_paid_stamp')) {
+    function has_company_paid_stamp(): bool
+    {
+        return \App\Services\CompanySettingsService::hasPaidStamp();
+    }
+}
+
+if (!function_exists('company_signature_url')) {
+    function company_signature_url(bool $absolute = false): ?string
+    {
+        return \App\Services\CompanySettingsService::getSignatureUrl($absolute);
+    }
+}
+
+if (!function_exists('has_company_signature')) {
+    function has_company_signature(): bool
+    {
+        return \App\Services\CompanySettingsService::hasSignature();
+    }
+}
+
+if (!function_exists('company_signature_stamp_url')) {
+    function company_signature_stamp_url(bool $absolute = false): ?string
+    {
+        return \App\Services\CompanySettingsService::getSignatureStampUrl($absolute);
+    }
+}
+
+if (!function_exists('has_company_signature_stamp')) {
+    function has_company_signature_stamp(): bool
+    {
+        return \App\Services\CompanySettingsService::hasSignatureStamp();
     }
 }
 

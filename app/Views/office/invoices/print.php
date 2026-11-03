@@ -1,50 +1,68 @@
 <?php
 // Function to convert amount to Indian Rupee Words
-function convertAmountToWordsINR(float $number): string {
-    $decimal = round($number - ($no = floor($number)), 2) * 100;
-    $hundred = null;
-    $digits_length = strlen($no);
-    $i = 0;
-    $str = array();
-    $words = array(
-        0 => '', 1 => 'One', 2 => 'Two', 3 => 'Three', 4 => 'Four', 5 => 'Five',
-        6 => 'Six', 7 => 'Seven', 8 => 'Eight', 9 => 'Nine', 10 => 'Ten',
-        11 => 'Eleven', 12 => 'Twelve', 13 => 'Thirteen', 14 => 'Fourteen',
-        15 => 'Fifteen', 16 => 'Sixteen', 17 => 'Seventeen', 18 => 'Eighteen',
-        19 => 'Nineteen', 20 => 'Twenty', 30 => 'Thirty', 40 => 'Forty',
-        50 => 'Fifty', 60 => 'Sixty', 70 => 'Seventy', 80 => 'Eighty',
-        90 => 'Ninety'
-    );
-    $digits = array('', 'Hundred', 'Thousand', 'Lakh', 'Crore');
-    while ($i < $digits_length) {
-        $divider = ($i == 2) ? 10 : 100;
-        $number = floor($no % $divider);
-        $no = floor($no / $divider);
-        $i += $divider == 10 ? 1 : 2;
-        if ($number) {
-            $plural = (($counter = count($str)) && $number > 9) ? 's' : null;
-            $hundred = ($counter == 1 && $str[0]) ? ' and ' : null;
-            $str[] = ($number < 21) ? $words[$number] . ' ' . $digits[$counter] . $plural . ' ' . $hundred
-                : $words[floor($number / 10) * 10] . ' ' . $words[$number % 10] . ' ' . $digits[$counter] . $plural . ' ' . $hundred;
-        } else $str[] = null;
+if (!function_exists('convertAmountToWordsINR')) {
+    function convertAmountToWordsINR(float $number): string {
+        $decimal = round($number - ($no = floor($number)), 2) * 100;
+        $hundred = null;
+        $digits_length = strlen($no);
+        $i = 0;
+        $str = array();
+        $words = array(
+            0 => '', 1 => 'One', 2 => 'Two', 3 => 'Three', 4 => 'Four', 5 => 'Five',
+            6 => 'Six', 7 => 'Seven', 8 => 'Eight', 9 => 'Nine', 10 => 'Ten',
+            11 => 'Eleven', 12 => 'Twelve', 13 => 'Thirteen', 14 => 'Fourteen',
+            15 => 'Fifteen', 16 => 'Sixteen', 17 => 'Seventeen', 18 => 'Eighteen',
+            19 => 'Nineteen', 20 => 'Twenty', 30 => 'Thirty', 40 => 'Forty',
+            50 => 'Fifty', 60 => 'Sixty', 70 => 'Seventy', 80 => 'Eighty',
+            90 => 'Ninety'
+        );
+        $digits = array('', 'Hundred', 'Thousand', 'Lakh', 'Crore');
+        while ($i < $digits_length) {
+            $divider = ($i == 2) ? 10 : 100;
+            $number = floor($no % $divider);
+            $no = floor($no / $divider);
+            $i += $divider == 10 ? 1 : 2;
+            if ($number) {
+                $plural = (($counter = count($str)) && $number > 9) ? 's' : null;
+                $hundred = ($counter == 1 && $str[0]) ? ' and ' : null;
+                $str[] = ($number < 21) ? $words[$number] . ' ' . $digits[$counter] . $plural . ' ' . $hundred
+                    : $words[floor($number / 10) * 10] . ' ' . $words[$number % 10] . ' ' . $digits[$counter] . $plural . ' ' . $hundred;
+            } else $str[] = null;
+        }
+        $d = 0;
+        $res = implode('', array_reverse($str));
+        $points = ($decimal) ? " and " . ($words[$decimal / 10] . " " . $words[$decimal % 10]) . ' Paise' : '';
+        return empty(trim($res)) ? 'Zero Rupees Only' : trim($res) . " Rupees" . $points . " Only";
     }
-    $d = 0;
-    $res = implode('', array_reverse($str));
-    $points = ($decimal) ? " and " . ($words[$decimal / 10] . " " . $words[$decimal % 10]) . ' Paise' : '';
-    return empty(trim($res)) ? 'Zero Rupees Only' : trim($res) . " Rupees" . $points . " Only";
 }
 
 $totalAmt = (float)$invoice['total_amount'];
 $paidAmt = (float)$invoice['paid_amount'];
 $balanceAmt = max(0.0, $totalAmt - $paidAmt);
 $amtInWords = convertAmountToWordsINR($totalAmt);
+
+$paymentStatus = strtolower(trim((string)($invoice['payment_status'] ?? 'unpaid')));
+$isFullyPaid = ($paymentStatus === 'paid' && $balanceAmt <= 0.01 && $totalAmt > 0);
+
+$companyName = \App\Services\CompanySettingsService::getCompanyName();
+$companyTagline = \App\Services\CompanySettingsService::getTagline();
+$companyLogoUrl = \App\Services\CompanySettingsService::getLogoUrl();
+$paidStampUrl = \App\Services\CompanySettingsService::getPaidStampUrl();
+$authSigUrl = \App\Services\CompanySettingsService::getSignatureUrl();
+$sigStampUrl = \App\Services\CompanySettingsService::getSignatureStampUrl();
+$companyAddress = \App\Services\CompanySettingsService::getFullAddress() ?: \App\Services\CompanySettingsService::getAddress();
+$companyPhone = \App\Services\CompanySettingsService::getPhone();
+$companyAltPhone = \App\Services\CompanySettingsService::getAlternatePhone();
+$companyEmail = \App\Services\CompanySettingsService::getCompanyEmail();
+$companyGst = \App\Services\CompanySettingsService::getGstNumber();
+$companyPan = \App\Services\CompanySettingsService::getPanNumber();
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bill Receipt - <?= e($invoice['invoice_number']) ?> - MANASWI Tours &amp; Travels</title>
+    <title>Bill Receipt - <?= e($invoice['invoice_number']) ?> - <?= e($companyName) ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -367,6 +385,7 @@ $amtInWords = convertAmountToWordsINR($totalAmt);
         @media print {
             body { background: #FFFFFF; padding: 0; }
             .action-bar { display: none !important; }
+            .sig-unconfigured-notice { display: none !important; }
             .receipt-card {
                 border: none;
                 box-shadow: none;
@@ -378,13 +397,35 @@ $amtInWords = convertAmountToWordsINR($totalAmt);
 </head>
 <body>
 
-    <!-- Top Action Bar -->
+    <!-- Top Action Bar with Signature Selection Controls -->
     <div class="action-bar">
         <div>
             <a href="<?= url('/office/invoices/' . $invoice['id']) ?>" class="btn-action btn-light">
                 &larr; Back to Invoice
             </a>
         </div>
+
+        <!-- Selectable Signature Mode for Invoice Printing -->
+        <div style="display: flex; align-items: center; gap: 8px; background: #FFFFFF; padding: 6px 14px; border-radius: 12px; border: 1px solid rgba(23, 107, 91, 0.25); box-shadow: 0 2px 8px rgba(22, 68, 59, 0.06);">
+            <span style="font-size: 13px; font-weight: 700; color: #16443B; display: flex; align-items: center; gap: 6px;">
+                ✍️ Signature Print:
+            </span>
+            <div style="display: flex; gap: 12px; font-size: 13px; align-items: center;">
+                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; color: #20352F; font-weight: 500;">
+                    <input type="radio" name="sigOption" value="none" checked onchange="handleSigOptionChange('none')">
+                    <span>No Signature</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; color: #20352F; font-weight: 500;">
+                    <input type="radio" name="sigOption" value="auth" onchange="handleSigOptionChange('auth')">
+                    <span>Authorized Signature</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; color: #20352F; font-weight: 500;">
+                    <input type="radio" name="sigOption" value="stamp" onchange="handleSigOptionChange('stamp')">
+                    <span>Signature + Stamp</span>
+                </label>
+            </div>
+        </div>
+
         <div style="display: flex; gap: 10px;">
             <button onclick="shareBill()" class="btn-action btn-light">
                 🔗 Share Bill
@@ -397,18 +438,32 @@ $amtInWords = convertAmountToWordsINR($totalAmt);
 
     <!-- Official Printable Manaswi Tours & Travels Receipt -->
     <div class="receipt-card">
+
+        <!-- Fully Paid Stamp (Rendered ONLY when Invoice is Fully Paid AND stamp is uploaded) -->
+        <?php if ($isFullyPaid && !empty($paidStampUrl)): ?>
+            <div class="paid-stamp-watermark" style="position: absolute; right: 40px; top: 110px; z-index: 10; pointer-events: none; transform: rotate(-14deg); opacity: 0.90;" title="Invoice Fully Paid">
+                <img src="<?= e($paidStampUrl) ?>" alt="PAID" style="max-width: 170px; max-height: 105px; object-fit: contain; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.12));">
+            </div>
+        <?php endif; ?>
+
         <!-- Header -->
         <div class="receipt-header">
             <div class="receipt-brand-left">
-                <img src="<?= asset('images/manaswi-logo.svg') ?>" alt="Logo" class="receipt-logo">
+                <?php if (!empty($companyLogoUrl)): ?>
+                    <img src="<?= e($companyLogoUrl) ?>" alt="Logo" class="receipt-logo" style="object-fit: contain; background: #FFFFFF; border: 1px solid #E2E8F0; padding: 4px;">
+                <?php endif; ?>
                 <div>
-                    <div class="company-title">MANASWI</div>
-                    <div class="company-subtitle">Tours &amp; Travels</div>
-                    <div class="company-tagline">Safe Journey &bull; Happy Memories</div>
+                    <div class="company-title"><?= e($companyName) ?></div>
+                    <?php if (!empty($companyTagline)): ?>
+                        <div class="company-tagline"><?= e($companyTagline) ?></div>
+                    <?php endif; ?>
                     <div class="company-contact">
-                        Main Office Road, Maharashtra, India<br>
-                        Phone: +91 98220 12345 | Email: contact@manaswitravels.com<br>
-                        GSTIN: 27AABCM8899Q1ZX
+                        <?= e($companyAddress ?: 'Registered Office Address') ?><br>
+                        Phone: <?= e($companyPhone ?: '—') ?>
+                        <?php if (!empty($companyAltPhone)): ?> | Alt: <?= e($companyAltPhone) ?><?php endif; ?>
+                        <?php if (!empty($companyEmail)): ?> | Email: <?= e($companyEmail) ?><?php endif; ?><br>
+                        <?php if (!empty($companyGst)): ?>GSTIN: <strong><?= e($companyGst) ?></strong><?php endif; ?>
+                        <?php if (!empty($companyPan)): ?> | PAN: <strong><?= e($companyPan) ?></strong><?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -421,7 +476,7 @@ $amtInWords = convertAmountToWordsINR($totalAmt);
                     Date: <strong><?= format_date($invoice['issued_at']) ?></strong>
                 </div>
                 <div class="bill-meta-row">
-                    Status: <strong style="color:#20C997; text-transform:uppercase;"><?= e($invoice['payment_status']) ?></strong>
+                    Status: <strong style="color:<?= $isFullyPaid ? '#10B981' : ($paymentStatus === 'partial' ? '#2563EB' : '#DC2626') ?>; text-transform:uppercase;"><?= e($invoice['payment_status']) ?></strong>
                 </div>
             </div>
         </div>
@@ -564,23 +619,64 @@ $amtInWords = convertAmountToWordsINR($totalAmt);
         <!-- Official Signatures -->
         <div class="receipt-signatures">
             <div class="sig-block">
+                <div style="height: 55px;"></div>
                 <div class="sig-line">Customer Signature</div>
                 <div class="sig-sub">Accepted &bull; Received vehicle in good order</div>
             </div>
             <div class="sig-block">
-                <div class="sig-line">For MANASWI Tours &amp; Travels</div>
+                <div id="companySigContainer" style="min-height: 55px; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 6px;">
+                    <!-- Authorized Signature Container -->
+                    <div id="authSigBox" style="display: none;">
+                        <?php if (!empty($authSigUrl)): ?>
+                            <img src="<?= e($authSigUrl) ?>" alt="Authorized Signature" style="max-height: 52px; max-width: 190px; object-fit: contain;">
+                        <?php else: ?>
+                            <span class="sig-unconfigured-notice" style="font-size: 11px; color: #94A3B8; font-style: italic; background: #F8FAFC; border: 1px dashed #CBD5E1; padding: 4px 8px; border-radius: 6px; display: inline-block;">
+                                (Authorized signature not uploaded in Company Profile)
+                            </span>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Signature + Company Stamp Container -->
+                    <div id="stampSigBox" style="display: none;">
+                        <?php if (!empty($sigStampUrl)): ?>
+                            <img src="<?= e($sigStampUrl) ?>" alt="Signature &amp; Stamp" style="max-height: 60px; max-width: 190px; object-fit: contain;">
+                        <?php else: ?>
+                            <span class="sig-unconfigured-notice" style="font-size: 11px; color: #94A3B8; font-style: italic; background: #F8FAFC; border: 1px dashed #CBD5E1; padding: 4px 8px; border-radius: 6px; display: inline-block;">
+                                (Signature + Stamp not uploaded in Company Profile)
+                            </span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <div class="sig-line">For <?= e($companyName) ?></div>
                 <div class="sig-sub">Authorized Signatory / Cashier</div>
             </div>
         </div>
     </div>
 
     <script>
+        function handleSigOptionChange(opt) {
+            var authBox = document.getElementById('authSigBox');
+            var stampBox = document.getElementById('stampSigBox');
+            if (!authBox || !stampBox) return;
+
+            if (opt === 'auth') {
+                authBox.style.display = 'block';
+                stampBox.style.display = 'none';
+            } else if (opt === 'stamp') {
+                authBox.style.display = 'none';
+                stampBox.style.display = 'block';
+            } else {
+                authBox.style.display = 'none';
+                stampBox.style.display = 'none';
+            }
+        }
+
         function shareBill() {
             var url = window.location.href;
             if (navigator.share) {
                 navigator.share({
-                    title: 'Manaswi Tours & Travels Receipt <?= e($invoice['invoice_number']) ?>',
-                    text: 'Official Bill Receipt from Manaswi Tours & Travels',
+                    title: '<?= e($companyName) ?> Receipt <?= e($invoice['invoice_number']) ?>',
+                    text: 'Official Bill Receipt from <?= e($companyName) ?>',
                     url: url
                 }).catch(function(err){});
             } else {

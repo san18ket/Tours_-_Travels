@@ -20,12 +20,23 @@ $curReturnUrl = $_SERVER['REQUEST_URI'] ?? $homeUrl;
 ?>
 <!-- Mobile Top Navbar (Matches Dashboard Home Page on Responsive Devices) -->
 <header class="mv-dash-topbar" id="mvDashTopbar">
-    <a href="<?= $homeUrl ?>" class="mv-dash-logo" title="<?= e(company_name()) ?> - <?= e(__('sidebar.dashboard', 'Home')) ?>" data-no-ajax="true">
-        <img src="<?= asset('images/brand-teal-bus.svg') ?>" class="mv-logo-bus-img" alt="Bus">
+    <a href="<?= $homeUrl ?>" class="mv-dash-logo" title="<?= e(company_display_name()) ?> - <?= e(__('sidebar.dashboard', 'Home')) ?>" data-no-ajax="true">
+        <?php if (has_company_logo()): ?>
+            <img src="<?= e(company_logo_url()) ?>" class="mv-logo-bus-img" alt="Logo" style="object-fit: contain; border-radius: 8px;">
+        <?php else: ?>
+            <div class="mv-logo-icon-badge" style="width: 36px; height: 36px; background: rgba(255, 255, 255, 0.15); color: #FFFFFF; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+                <i class="fa-solid fa-building"></i>
+            </div>
+        <?php endif; ?>
         <div class="mv-logo-text">
-            <span class="mv-brand-title"><?= e(company_name()) ?></span>
-            <span class="mv-brand-sub"><?= e(__('app.tours_travels', 'Tours & Travels')) ?></span>
-            <span class="mv-brand-tagline"><?= e(company_tagline()) ?></span>
+            <span class="mv-brand-title"><?= e(company_display_name()) ?></span>
+            <?php if (has_company_name()): ?>
+                <?php if (!empty(company_tagline())): ?>
+                    <span class="mv-brand-tagline"><?= e(company_tagline()) ?></span>
+                <?php else: ?>
+                    <span class="mv-brand-sub"><?= e(__('app.tours_travels', 'Tours & Travels')) ?></span>
+                <?php endif; ?>
+            <?php endif; ?>
         </div>
     </a>
     <div class="mv-dash-top-actions">

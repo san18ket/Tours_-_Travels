@@ -371,7 +371,13 @@
 
 <!-- Inside Glassmorphism Card Header -->
 <div class="glass-card-header">
-    <img src="<?= asset('images/manaswi-icon.png') ?>" alt="Manaswi Emblem" class="glass-card-emblem">
+    <?php if (has_company_logo()): ?>
+        <img src="<?= e(company_logo_url()) ?>" alt="<?= e(company_display_name()) ?>" class="glass-card-emblem" style="object-fit: contain;">
+    <?php else: ?>
+        <div class="glass-card-icon-badge" style="width: 44px; height: 44px; font-size: 1.25rem; border-radius: 12px; background: linear-gradient(135deg, #0b326d 0%, #1d72f2 100%); color: #ffffff; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 0.65rem; box-shadow: 0 4px 12px rgba(11, 50, 109, 0.2);">
+            <i class="fa-solid fa-building"></i>
+        </div>
+    <?php endif; ?>
     <h2 class="glass-card-title"><?= e(__('auth.welcome_back', 'Welcome Back')) ?></h2>
     <p class="glass-card-sub"><?= e(__('auth.signin_prompt', 'Sign in to continue your journey')) ?></p>
 </div>

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?= csrf_meta() ?>
     <meta name="base-url" content="<?= url('/') ?>">
-    <title><?= e($title ?? 'Admin Dashboard') ?> - <?= e(company_name()) ?></title>
+    <title><?= e($title ?? 'Admin Dashboard') ?> - <?= e(company_display_name()) ?></title>
     <?php
         $cssVer = @filemtime(dirname(__DIR__, 3) . '/public/assets/css/app.css') ?: time();
         $pwaCssVer = @filemtime(dirname(__DIR__, 3) . '/public/assets/css/tours-pwa.css') ?: time();
@@ -37,12 +37,23 @@
         <!-- Frosted Glass Sidebar Navigation (MANASWI Tours & Travels) -->
         <aside class="sidebar" id="sidebar" aria-label="<?= e(__('sidebar.menu')) ?>">
             <div class="sidebar-header">
-                <a href="<?= url('/office/dashboard') ?>" class="brand-logo" title="<?= e(company_name()) ?>" data-no-ajax="true">
-                    <img src="<?= asset('images/manaswi-logo.svg') ?>" alt="Manaswi Logo" class="brand-logo-img">
+                <a href="<?= url('/office/dashboard') ?>" class="brand-logo" title="<?= e(company_display_name()) ?>" data-no-ajax="true">
+                    <?php if (has_company_logo()): ?>
+                        <img src="<?= e(company_logo_url()) ?>" alt="<?= e(company_display_name()) ?>" class="brand-logo-img" style="object-fit: contain;">
+                    <?php else: ?>
+                        <div class="brand-logo-icon-badge">
+                            <i class="fa-solid fa-building"></i>
+                        </div>
+                    <?php endif; ?>
                     <div class="brand-name">
-                        <span class="brand-title"><?= e(company_name()) ?></span>
-                        <span class="brand-subtitle-main"><?= e(__('app.tours_travels', 'Tours & Travels')) ?></span>
-                        <span class="brand-tagline"><?= e(company_tagline()) ?></span>
+                        <span class="brand-title"><?= e(company_display_name()) ?></span>
+                        <?php if (has_company_name()): ?>
+                            <?php if (!empty(company_tagline())): ?>
+                                <span class="brand-tagline"><?= e(company_tagline()) ?></span>
+                            <?php else: ?>
+                                <span class="brand-subtitle-main"><?= e(__('app.tours_travels', 'Tours & Travels')) ?></span>
+                            <?php endif; ?>
+                        <?php endif; ?>
                     </div>
                 </a>
                 <button type="button" class="sidebar-close-btn" onclick="closeSidebar()" aria-label="<?= e(__('sidebar.close_navigation', 'Close Navigation')) ?>">&times;</button>
@@ -583,6 +594,7 @@
                 </form>
             </div>
         </aside>
+        <!-- Reference: /office/company/create -->
 
         <!-- Main Content Wrapper -->
         <div class="main-wrapper">
@@ -732,7 +744,7 @@
             <!-- Branded Clean Light Footer -->
             <footer class="app-footer">
                 <div>
-                    &copy; <?= date('Y') ?> <strong><?= e(company_name()) ?></strong>. <?= e(__('footer.all_rights', 'All rights reserved.')) ?> <?= e(__('footer.all_rights_reserved', 'All rights reserved.')) ?>
+                    &copy; <?= date('Y') ?> <strong><?= e(company_display_name()) ?></strong>. <?= e(__('footer.all_rights', 'All rights reserved.')) ?> <?= e(__('footer.all_rights_reserved', 'All rights reserved.')) ?>
                 </div>
                 <div>
                     <a href="#privacy"><?= e(__('footer.privacy', 'Privacy Policy')) ?></a>
@@ -784,6 +796,9 @@
             </a>
         </div>
     </nav>
+
+    <!-- Professional Custom PWA Installation Modal -->
+    <?php require dirname(__DIR__) . '/components/pwa_install_modal.php'; ?>
 
     <script src="<?= asset('js/app.js') ?>?v=3.0"></script>
     <script src="<?= asset('js/tours-pwa.js') ?>?v=5.0"></script>

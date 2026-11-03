@@ -1,5 +1,6 @@
 /**
  * Tours Progressive Web App (PWA) Client
+ * Professional Custom Installation Modal & State Management
  * Preserves native installability, offline caching, and standalone UX across Android, iOS, Windows, macOS
  * Browser Web Push functionality has been completely removed in favor of professional SMTP email notifications.
  */
@@ -10,8 +11,10 @@
     // Application state
     let deferredInstallPrompt = null;
     let isAppStandalone = false;
+    let isAppInstalled = false;
     let previouslyFocusedElement = null;
     let modalKeydownHandler = null;
+    let currentModalState = 'ready';
 
     // Helper: Retrieve Base URL
     function getBaseUrl() {
@@ -42,7 +45,7 @@
         return '';
     }
 
-    // Helper: Detect iOS Device
+    // Helper: Detect iOS Device (iPhone, iPad, iPod)
     function isIosDevice() {
         return /iPhone|iPad|iPod/i.test(navigator.userAgent) && !window.MSStream;
     }
@@ -52,7 +55,7 @@
         return /Android/i.test(navigator.userAgent);
     }
 
-    // Helper: Detect if App is Running Standalone (Installed)
+    // Helper: Detect if App is Running Standalone (Already Installed)
     function checkStandaloneMode() {
         return Boolean(
             (window.matchMedia && (
@@ -88,29 +91,44 @@
     }
 
     // ==========================================================================
-    // 1. PWA INSTALLATION MANAGEMENT
+    // 1. PWA INSTALLATION EVENT MANAGEMENT
     // ==========================================================================
 
     function initPwaInstall() {
         isAppStandalone = checkStandaloneMode();
+        if (isAppStandalone) {
+            isAppInstalled = true;
+        }
 
-        // Listen for Chromium installation prompt
+        // Check navigator.getInstalledRelatedApps if supported
+        if (navigator.getInstalledRelatedApps && typeof navigator.getInstalledRelatedApps === 'function') {
+            navigator.getInstalledRelatedApps().then((apps) => {
+                if (apps && apps.length > 0) {
+                    isAppInstalled = true;
+                    updateInstallUi(false, true);
+                }
+            }).catch(() => {});
+        }
+
+        // Listen for Chromium beforeinstallprompt
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredInstallPrompt = e;
-            updateInstallUi(true);
+            updateInstallUi(true, false);
         });
 
         // Listen for successful installation
         window.addEventListener('appinstalled', () => {
             deferredInstallPrompt = null;
             isAppStandalone = true;
+            isAppInstalled = true;
             updateInstallUi(false, true);
-            showToursToast('Tours installed successfully! You can launch it directly from your home screen or apps menu.', 'success');
+            renderCustomModalState('success');
+            showToursToast('Tours installed successfully! You can launch it directly from your device.', 'success');
         });
 
         // Initial UI evaluation
-        if (isAppStandalone) {
+        if (isAppStandalone || isAppInstalled) {
             updateInstallUi(false, true);
         } else if (isIosDevice()) {
             updateInstallUi(true, false, true);
@@ -139,329 +157,461 @@
         });
     }
 
-    // Central modal manager
-    window.closeAllToursModals = function () {
-        const modalIds = [
-            'toursIosInstallModal',
-            'toursAndroidInstallModal',
-            'toursDesktopInstallModal',
-            'toursGenericInstallModal'
-        ];
-        modalIds.forEach((id) => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.style.display = 'none';
-                el.setAttribute('aria-hidden', 'true');
+    // ==========================================================================
+    // 2. CUSTOM PWA INSTALLATION MODAL & STATE MANAGEMENT
+    // ==========================================================================
+
+    // Ensure modal container exists in DOM
+    function ensureCustomInstallModal() {
+        let modal = document.getElementById('toursPwaInstallModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'toursPwaInstallModal';
+            modal.className = 'pwa-install-backdrop';
+            modal.setAttribute('role', 'dialog');
+            modal.setAttribute('aria-modal', 'true');
+            modal.setAttribute('aria-labelledby', 'pwaModalTitle');
+            modal.style.display = 'none';
+
+            // Default app name & icon
+            modal.setAttribute('data-app-name', 'Tours & Travels');
+            modal.setAttribute('data-logo-url', appUrl('assets/icons/icon-192.png'));
+            modal.setAttribute('data-has-custom-logo', '0');
+
+            modal.innerHTML = `
+                <div class="pwa-install-card" id="pwaModalCard">
+                    <button type="button" class="pwa-card-close" onclick="closeToursInstallModal()" aria-label="Close modal">&times;</button>
+                    <div id="pwaModalDynamicContent"></div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // Close on backdrop click (outside card)
+        if (!modal.dataset.hasBackdropListener) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal && currentModalState !== 'progress') {
+                    closeToursInstallModal();
+                }
+            });
+            modal.dataset.hasBackdropListener = 'true';
+        }
+
+        return modal;
+    }
+
+    // Close any active user profile dropdown in navbar
+    function closeNavbarProfileDropdown() {
+        const topbarProfile = document.getElementById('topbarUserProfile');
+        if (topbarProfile) {
+            topbarProfile.classList.remove('is-open');
+        }
+        const mvProfileMenu = document.getElementById('mvProfileMenu');
+        if (mvProfileMenu) {
+            mvProfileMenu.classList.remove('is-open');
+        }
+    }
+
+    // Render specific state into the modal
+    function renderCustomModalState(state, options = {}) {
+        const modal = ensureCustomInstallModal();
+        const contentContainer = document.getElementById('pwaModalDynamicContent');
+        if (!contentContainer) return;
+
+        currentModalState = state;
+
+        const appName = modal.getAttribute('data-app-name') || 'Tours & Travels';
+        const logoUrl = modal.getAttribute('data-logo-url') || appUrl('assets/icons/icon-192.png');
+        const hasCustomLogo = modal.getAttribute('data-has-custom-logo') === '1';
+
+        // Logo markup helper
+        const renderLogoHtml = (extraClasses = '') => {
+            if (hasCustomLogo && logoUrl) {
+                return `<img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(appName)}" class="pwa-hero-emblem ${extraClasses}">`;
             }
+            return `
+                <div class="pwa-hero-emblem-icon ${extraClasses}">
+                    <i class="fa-solid fa-building"></i>
+                </div>
+            `;
+        };
+
+        if (state === 'ready') {
+            // STAGE ONE: Ready to Install
+            const noticeHtml = options.cancelledMessage ? `
+                <div class="pwa-notice-box" role="alert">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>${escapeHtml(options.cancelledMessage)}</span>
+                </div>
+            ` : '';
+
+            contentContainer.innerHTML = `
+                <div class="pwa-hero-header">
+                    <div class="pwa-hero-emblem-wrap">
+                        ${renderLogoHtml()}
+                    </div>
+                    <span class="pwa-app-badge"><i class="fa-solid fa-certificate"></i> Official Web App</span>
+                    <h3 class="pwa-modal-title" id="pwaModalTitle">Install Tours</h3>
+                    <p class="pwa-modal-desc">Install Tours &amp; Travels on your device for a convenient, dedicated app experience.</p>
+                </div>
+
+                ${noticeHtml}
+
+                <div class="pwa-benefits-list">
+                    <div class="pwa-benefit-item">
+                        <div class="pwa-benefit-icon">
+                            <i class="fa-solid fa-house-laptop"></i>
+                        </div>
+                        <div class="pwa-benefit-text">
+                            <div class="pwa-benefit-title">Home Screen &amp; Desktop</div>
+                            <div class="pwa-benefit-desc">Open the application quickly from your desktop or home screen.</div>
+                        </div>
+                    </div>
+
+                    <div class="pwa-benefit-item">
+                        <div class="pwa-benefit-icon">
+                            <i class="fa-solid fa-window-maximize"></i>
+                        </div>
+                        <div class="pwa-benefit-text">
+                            <div class="pwa-benefit-title">Dedicated App Window</div>
+                            <div class="pwa-benefit-desc">Launch it in a dedicated app window where supported.</div>
+                        </div>
+                    </div>
+
+                    <div class="pwa-benefit-item">
+                        <div class="pwa-benefit-icon">
+                            <i class="fa-solid fa-bolt"></i>
+                        </div>
+                        <div class="pwa-benefit-text">
+                            <div class="pwa-benefit-title">Offline Capabilities</div>
+                            <div class="pwa-benefit-desc">Access supported offline features and ultra-fast cached loading.</div>
+                        </div>
+                    </div>
+
+                    <div class="pwa-benefit-item">
+                        <div class="pwa-benefit-icon">
+                            <i class="fa-solid fa-shield-heart"></i>
+                        </div>
+                        <div class="pwa-benefit-text">
+                            <div class="pwa-benefit-title">Convenient Experience</div>
+                            <div class="pwa-benefit-desc">Enjoy a smooth, distraction-free application experience.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pwa-btn-group">
+                    <button type="button" class="pwa-btn-secondary" onclick="closeToursInstallModal()">
+                        Cancel
+                    </button>
+                    <button type="button" class="pwa-btn-install-primary" id="btnInstallPwaNow" onclick="startToursInstallation()">
+                        <i class="fa-solid fa-download"></i>
+                        <span>${options.cancelledMessage ? 'Try Again' : 'Install Now'}</span>
+                    </button>
+                </div>
+            `;
+        } else if (state === 'progress') {
+            // STAGE TWO: Installation Progress Screen
+            contentContainer.innerHTML = `
+                <div class="pwa-progress-view">
+                    <div class="pwa-progress-pulse-wrap">
+                        <div class="pwa-pulse-ring"></div>
+                        ${renderLogoHtml()}
+                    </div>
+
+                    <h3 class="pwa-modal-title" id="pwaModalTitle">Installing Tours</h3>
+                    <p class="pwa-modal-desc">Preparing your application...</p>
+
+                    <!-- Animated Indeterminate Progress Bar (No fake percentages) -->
+                    <div class="pwa-progress-track" role="progressbar" aria-label="Installing application">
+                        <div class="pwa-progress-bar-indeterminate"></div>
+                    </div>
+
+                    <div class="pwa-progress-status-row">
+                        <div class="pwa-status-left">
+                            <span class="pwa-mini-spinner"></span>
+                            <span>Installing...</span>
+                        </div>
+                        <div>Awaiting browser confirmation...</div>
+                    </div>
+                </div>
+            `;
+        } else if (state === 'success') {
+            // STAGE THREE: Successful Installation
+            contentContainer.innerHTML = `
+                <div class="pwa-success-view">
+                    <div class="pwa-success-emblem-wrap" aria-hidden="true">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
+
+                    <div class="pwa-hero-emblem-wrap" style="width: 58px; height: 58px; margin: 0 auto 0.75rem;">
+                        ${renderLogoHtml()}
+                    </div>
+
+                    <h3 class="pwa-modal-title" id="pwaModalTitle">Tours Successfully Installed!</h3>
+                    <p class="pwa-modal-desc" style="max-width: 380px; margin: 0 auto 1.5rem;">
+                        Your application is ready. You can now open Tours directly from your device.
+                    </p>
+
+                    <button type="button" class="pwa-btn-install-primary" style="width: 100%;" onclick="closeToursInstallModal()">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Done</span>
+                    </button>
+                </div>
+            `;
+        } else if (state === 'installed') {
+            // ALREADY INSTALLED STATE
+            contentContainer.innerHTML = `
+                <div class="pwa-hero-header">
+                    <div class="pwa-hero-emblem-wrap">
+                        ${renderLogoHtml()}
+                        <span style="position: absolute; bottom: -4px; right: -4px; background: #10B981; color: #FFF; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.82rem; border: 2px solid #FFF;">
+                            <i class="fa-solid fa-check"></i>
+                        </span>
+                    </div>
+                    <span class="pwa-app-badge" style="background: #D1FAE5; color: #065F46; border-color: #6EE7B7;">
+                        <i class="fa-solid fa-circle-check"></i> App Ready
+                    </span>
+                    <h3 class="pwa-modal-title" id="pwaModalTitle">Tours is already installed</h3>
+                    <p class="pwa-modal-desc">Tours &amp; Travels is already installed on this device. You can open and launch it anytime from your desktop applications or home screen.</p>
+                </div>
+
+                <div class="pwa-btn-group" style="justify-content: center;">
+                    <button type="button" class="pwa-btn-install-primary" style="width: 100%;" onclick="closeToursInstallModal()">
+                        <i class="fa-solid fa-check"></i>
+                        <span>Got It</span>
+                    </button>
+                </div>
+            `;
+        } else if (state === 'instructions') {
+            // UNSUPPORTED / MANUAL INSTRUCTIONS
+            let platformTitle = 'Install Tours on Your Device';
+            let platformDesc = 'Follow these simple instructions to add Tours to your device:';
+            let stepsHtml = '';
+
+            if (isIosDevice()) {
+                platformTitle = 'Install Tours on iPhone & iPad';
+                platformDesc = 'Follow these quick steps in Apple Safari:';
+                stepsHtml = `
+                    <div class="pwa-step-row">
+                        <span class="pwa-step-badge">1</span>
+                        <div class="pwa-step-content">
+                            Tap the <strong>Share button</strong> (<i class="fa-solid fa-arrow-up-from-bracket" style="color: #176B5B;"></i>) in Safari's bottom toolbar.
+                        </div>
+                    </div>
+                    <div class="pwa-step-row">
+                        <span class="pwa-step-badge">2</span>
+                        <div class="pwa-step-content">
+                            Scroll down and select <strong>"Add to Home Screen"</strong> (<i class="fa-solid fa-square-plus" style="color: #176B5B;"></i>).
+                        </div>
+                    </div>
+                    <div class="pwa-step-row">
+                        <span class="pwa-step-badge">3</span>
+                        <div class="pwa-step-content">
+                            Tap <strong>Add</strong> in the top-right corner to complete.
+                        </div>
+                    </div>
+                `;
+            } else if (isAndroidDevice()) {
+                platformTitle = 'Install Tours on Android';
+                platformDesc = 'Follow these quick steps in Google Chrome:';
+                stepsHtml = `
+                    <div class="pwa-step-row">
+                        <span class="pwa-step-badge">1</span>
+                        <div class="pwa-step-content">
+                            Tap Chrome's <strong>three dots menu</strong> (<i class="fa-solid fa-ellipsis-vertical" style="color: #176B5B;"></i>) in the top-right corner.
+                        </div>
+                    </div>
+                    <div class="pwa-step-row">
+                        <span class="pwa-step-badge">2</span>
+                        <div class="pwa-step-content">
+                            Select <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong>.
+                        </div>
+                    </div>
+                    <div class="pwa-step-row">
+                        <span class="pwa-step-badge">3</span>
+                        <div class="pwa-step-content">
+                            Tap <strong>Install</strong> or <strong>Add</strong> to confirm.
+                        </div>
+                    </div>
+                `;
+            } else {
+                platformTitle = 'Install Tours on Desktop';
+                platformDesc = 'Add Tours to your desktop applications:';
+                stepsHtml = `
+                    <div class="pwa-step-row">
+                        <span class="pwa-step-badge">1</span>
+                        <div class="pwa-step-content">
+                            Look for the <strong>Install icon</strong> (<i class="fa-solid fa-download" style="color: #176B5B;"></i>) on the right side of your browser address bar.
+                        </div>
+                    </div>
+                    <div class="pwa-step-row">
+                        <span class="pwa-step-badge">2</span>
+                        <div class="pwa-step-content">
+                            Or click the browser menu (<i class="fa-solid fa-ellipsis-vertical" style="color: #176B5B;"></i>) &rarr; <strong>"Install Tours..."</strong>.
+                        </div>
+                    </div>
+                    <div class="pwa-step-row">
+                        <span class="pwa-step-badge">3</span>
+                        <div class="pwa-step-content">
+                            Click <strong>Install</strong> to add Tours to your applications.
+                        </div>
+                    </div>
+                `;
+            }
+
+            contentContainer.innerHTML = `
+                <div class="pwa-hero-header">
+                    <div class="pwa-hero-emblem-wrap">
+                        ${renderLogoHtml()}
+                    </div>
+                    <h3 class="pwa-modal-title" id="pwaModalTitle">${escapeHtml(platformTitle)}</h3>
+                    <p class="pwa-modal-desc">${escapeHtml(platformDesc)}</p>
+                </div>
+
+                <div class="pwa-manual-steps">
+                    ${stepsHtml}
+                </div>
+
+                <div class="pwa-btn-group">
+                    <button type="button" class="pwa-btn-install-primary" style="width: 100%;" onclick="closeToursInstallModal()">
+                        <i class="fa-solid fa-check"></i>
+                        <span>Understood</span>
+                    </button>
+                </div>
+            `;
+        }
+
+        // Focus primary action button smoothly
+        setTimeout(() => {
+            const btnPrimary = contentContainer.querySelector('.pwa-btn-install-primary');
+            if (btnPrimary && typeof btnPrimary.focus === 'function') {
+                btnPrimary.focus();
+            }
+        }, 50);
+    }
+
+    // Open Custom Installation Modal
+    window.openToursInstallModal = function () {
+        closeNavbarProfileDropdown();
+        const modal = ensureCustomInstallModal();
+
+        // Check if already installed
+        if (checkStandaloneMode() || isAppInstalled) {
+            renderCustomModalState('installed');
+        } else {
+            renderCustomModalState('ready');
+        }
+
+        modal.style.display = 'flex';
+        // Trigger smooth CSS opacity transition
+        requestAnimationFrame(() => {
+            modal.classList.add('is-open');
         });
-        teardownModalFocusTrap();
+        modal.setAttribute('aria-hidden', 'false');
+
+        setupModalFocusTrap(modal);
     };
 
-    window.closeToursModal = function (modalId) {
-        if (modalId) {
-            const modal = document.getElementById(modalId);
-            if (modal) {
+    // Close Custom Installation Modal
+    window.closeToursInstallModal = function () {
+        const modal = document.getElementById('toursPwaInstallModal');
+        if (modal) {
+            modal.classList.remove('is-open');
+            setTimeout(() => {
                 modal.style.display = 'none';
                 modal.setAttribute('aria-hidden', 'true');
-            }
-        } else {
-            window.closeAllToursModals();
+            }, 200);
         }
         teardownModalFocusTrap();
+
         if (previouslyFocusedElement && typeof previouslyFocusedElement.focus === 'function') {
             previouslyFocusedElement.focus();
             previouslyFocusedElement = null;
         }
     };
 
-    // Native / Supported PWA installation execution
-    // Directly installs or guides the user without any notification permission prompts.
-    window.proceedWithPwaInstall = function () {
-        window.closeAllToursModals();
-
-        // 1. Check genuine standalone mode
-        if (checkStandaloneMode()) {
-            isAppStandalone = true;
-            showToursToast('Tours is already installed on this device.', 'info');
+    // Start PWA Installation
+    window.startToursInstallation = function () {
+        // 1. If already installed
+        if (checkStandaloneMode() || isAppInstalled) {
+            renderCustomModalState('installed');
             return;
         }
 
-        // 2. If beforeinstallprompt is available, invoke native browser prompt
+        // 2. If native beforeinstallprompt is available
         if (deferredInstallPrompt) {
+            // Show Stage Two: Progress Screen immediately
+            renderCustomModalState('progress');
+
             const promptEvent = deferredInstallPrompt;
             deferredInstallPrompt = null;
+
+            // Trigger native prompt
             promptEvent.prompt();
+
             promptEvent.userChoice.then((choiceResult) => {
-                if (choiceResult.outcome === 'accepted') {
-                    showToursToast('Installing Tours...', 'info');
+                if (choiceResult && choiceResult.outcome === 'accepted') {
+                    // Browser installation accepted
+                    isAppInstalled = true;
+                    setTimeout(() => {
+                        renderCustomModalState('success');
+                        updateInstallUi(false, true);
+                    }, 400);
+                } else {
+                    // User cancelled / dismissed native prompt
+                    renderCustomModalState('ready', {
+                        cancelledMessage: 'Installation was cancelled. You can try again whenever you are ready.'
+                    });
                 }
             }).catch((err) => {
                 console.warn('PWA install prompt error:', err);
+                renderCustomModalState('instructions');
             });
             return;
         }
 
-        // 3. Otherwise show platform-specific installation guide modal
-        if (isIosDevice()) {
-            showIosInstallModal();
-        } else if (isAndroidDevice()) {
-            showAndroidInstallModal();
-        } else {
-            showDesktopInstallModal();
-        }
+        // 3. Fallback: Show platform instructions
+        renderCustomModalState('instructions');
     };
 
-    // Triggered when user clicks "Install Tours" in profile dropdown or mobile menu
+    // Primary Entry Point: Triggered from Navbar Profile Dropdown
     window.triggerToursInstall = function (e) {
-        if (e) e.preventDefault();
-
-        if (checkStandaloneMode()) {
-            isAppStandalone = true;
-            showToursToast('Tours is already installed on this device.', 'info');
-            return;
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
         }
-
-        window.proceedWithPwaInstall();
+        window.openToursInstallModal();
     };
 
-    // Platform-specific manual installation modal: Android Chrome
-    function showAndroidInstallModal() {
-        window.closeAllToursModals();
-        let modal = document.getElementById('toursAndroidInstallModal');
-        const isSecure = isSecureContextOrigin();
-        if (!modal) {
-            modal = document.createElement('div');
-            modal.id = 'toursAndroidInstallModal';
-            modal.className = 'tours-modal-backdrop';
-            modal.setAttribute('role', 'dialog');
-            modal.setAttribute('aria-modal', 'true');
-            modal.setAttribute('aria-labelledby', 'toursAndroidModalHeading');
-            document.body.appendChild(modal);
+    // Backward-compatible aliases
+    window.proceedWithPwaInstall = function () {
+        window.startToursInstallation();
+    };
 
-            modal.addEventListener('click', (ev) => {
-                if (ev.target === modal) {
-                    closeToursModal('toursAndroidInstallModal');
-                }
-            });
-        }
+    window.closeAllToursModals = function () {
+        window.closeToursInstallModal();
+    };
 
-        modal.innerHTML = `
-            <div class="tours-light-modal">
-                <div class="tours-light-header">
-                    <button type="button" class="tours-light-close" onclick="closeToursModal('toursAndroidInstallModal')" aria-label="Close modal">&times;</button>
-                    <div class="tours-light-icon-wrap" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); box-shadow: 0 10px 22px -4px rgba(16, 185, 129, 0.38);" aria-hidden="true">
-                        <i class="fa-brands fa-android"></i>
-                    </div>
-                    <h3 id="toursAndroidModalHeading">Install Tours on Android</h3>
-                    <p>Add Tours to your Home Screen for fast, fullscreen access</p>
-                </div>
-                <div class="tours-light-body">
-                    <div class="tours-light-blocked-box" style="background: rgba(248, 250, 252, 0.95); border-color: rgba(226, 232, 240, 0.9); color: #334155;">
-                        <strong style="color: #0F172A;"><i class="fa-solid fa-mobile-screen" style="color: #176B5B;"></i> How to Install from Chrome:</strong>
-                        <ol class="tours-light-blocked-steps">
-                            <li class="tours-light-blocked-step">
-                                <span class="tours-step-badge-purple" style="background: #176B5B;">1</span>
-                                <span>Tap Chrome's <strong>three dots menu</strong> (<i class="fa-solid fa-ellipsis-vertical"></i>) in the top-right corner.</span>
-                            </li>
-                            <li class="tours-light-blocked-step">
-                                <span class="tours-step-badge-purple" style="background: #176B5B;">2</span>
-                                <span>Select <strong>"Install App"</strong> or <strong>"Add to Home screen"</strong>.</span>
-                            </li>
-                            <li class="tours-light-blocked-step">
-                                <span class="tours-step-badge-purple" style="background: #176B5B;">3</span>
-                                <span>Tap <strong>Install</strong> or <strong>Add</strong> to confirm.</span>
-                            </li>
-                        </ol>
-                    </div>
-                    ${!isSecure ? `
-                        <div class="tours-https-inline-notice">
-                            <i class="fa-solid fa-shield-halved"></i>
-                            <div class="tours-https-notice-text">
-                                <strong>HTTPS Connection Notice:</strong>
-                                <span>Chrome provides automated one-tap prompts when connected via HTTPS. You can still install Tours via the menu above.</span>
-                            </div>
-                        </div>
-                    ` : ''}
-                </div>
-                <div class="tours-light-footer">
-                    <button type="button" class="btn-purple-primary" onclick="closeToursModal('toursAndroidInstallModal')" style="background: #176B5B; border-color: #176B5B;">
-                        <i class="fa-solid fa-check"></i>
-                        <span>Understood</span>
-                    </button>
-                </div>
-            </div>
-        `;
+    window.closeToursModal = function () {
+        window.closeToursInstallModal();
+    };
 
-        modal.style.display = 'flex';
-        modal.setAttribute('aria-hidden', 'false');
-        setupModalFocusTrap(modal);
-    }
+    // ==========================================================================
+    // 3. ACCESSIBILITY & FOCUS TRAP
+    // ==========================================================================
 
-    // Platform-specific manual installation modal: Desktop Chrome / Edge
-    function showDesktopInstallModal() {
-        window.closeAllToursModals();
-        let modal = document.getElementById('toursDesktopInstallModal');
-        const isSecure = isSecureContextOrigin();
-        if (!modal) {
-            modal = document.createElement('div');
-            modal.id = 'toursDesktopInstallModal';
-            modal.className = 'tours-modal-backdrop';
-            modal.setAttribute('role', 'dialog');
-            modal.setAttribute('aria-modal', 'true');
-            modal.setAttribute('aria-labelledby', 'toursDesktopModalHeading');
-            document.body.appendChild(modal);
-
-            modal.addEventListener('click', (ev) => {
-                if (ev.target === modal) {
-                    closeToursModal('toursDesktopInstallModal');
-                }
-            });
-        }
-
-        modal.innerHTML = `
-            <div class="tours-light-modal">
-                <div class="tours-light-header">
-                    <button type="button" class="tours-light-close" onclick="closeToursModal('toursDesktopInstallModal')" aria-label="Close modal">&times;</button>
-                    <div class="tours-light-icon-wrap" style="background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%); box-shadow: 0 10px 22px -4px rgba(59, 130, 246, 0.38);" aria-hidden="true">
-                        <i class="fa-solid fa-laptop"></i>
-                    </div>
-                    <h3 id="toursDesktopModalHeading">Install Tours on Desktop</h3>
-                    <p>Install Tours for a dedicated, fullscreen desktop app experience</p>
-                </div>
-                <div class="tours-light-body">
-                    <div class="tours-light-blocked-box" style="background: rgba(248, 250, 252, 0.95); border-color: rgba(226, 232, 240, 0.9); color: #334155;">
-                        <strong style="color: #0F172A;"><i class="fa-solid fa-laptop" style="color: #176B5B;"></i> How to Install on Desktop:</strong>
-                        <ol class="tours-light-blocked-steps">
-                            <li class="tours-light-blocked-step">
-                                <span class="tours-step-badge-purple" style="background: #176B5B;">1</span>
-                                <span>Click the <strong>Install icon</strong> (<i class="fa-solid fa-download"></i>) on the right side of your address bar.</span>
-                            </li>
-                            <li class="tours-light-blocked-step">
-                                <span class="tours-step-badge-purple" style="background: #176B5B;">2</span>
-                                <span>Or click Chrome's <strong>three dots menu</strong> (<i class="fa-solid fa-ellipsis-vertical"></i>) &rarr; <strong>"Install Tours..."</strong>.</span>
-                            </li>
-                            <li class="tours-light-blocked-step">
-                                <span class="tours-step-badge-purple" style="background: #176B5B;">3</span>
-                                <span>Click <strong>Install</strong> to add Tours to your applications.</span>
-                            </li>
-                        </ol>
-                    </div>
-                    ${!isSecure ? `
-                        <div class="tours-https-inline-notice">
-                            <i class="fa-solid fa-shield-halved"></i>
-                            <div class="tours-https-notice-text">
-                                <strong>HTTPS Connection Notice:</strong>
-                                <span>Chrome enables address bar install buttons when connected via HTTPS or localhost.</span>
-                            </div>
-                        </div>
-                    ` : ''}
-                </div>
-                <div class="tours-light-footer">
-                    <button type="button" class="btn-purple-primary" onclick="closeToursModal('toursDesktopInstallModal')" style="background: #176B5B; border-color: #176B5B;">
-                        <i class="fa-solid fa-check"></i>
-                        <span>Understood</span>
-                    </button>
-                </div>
-            </div>
-        `;
-
-        modal.style.display = 'flex';
-        modal.setAttribute('aria-hidden', 'false');
-        setupModalFocusTrap(modal);
-    }
-
-    // Platform-specific manual installation modal: iOS Safari
-    function showIosInstallModal() {
-        window.closeAllToursModals();
-        let modal = document.getElementById('toursIosInstallModal');
-        if (!modal) {
-            modal = document.createElement('div');
-            modal.id = 'toursIosInstallModal';
-            modal.className = 'tours-modal-backdrop';
-            modal.setAttribute('role', 'dialog');
-            modal.setAttribute('aria-modal', 'true');
-            modal.setAttribute('aria-labelledby', 'toursIosModalHeading');
-            document.body.appendChild(modal);
-
-            modal.addEventListener('click', (ev) => {
-                if (ev.target === modal) {
-                    closeToursModal('toursIosInstallModal');
-                }
-            });
-        }
-
-        modal.innerHTML = `
-            <div class="tours-light-modal">
-                <div class="tours-light-header">
-                    <button type="button" class="tours-light-close" onclick="closeToursModal('toursIosInstallModal')" aria-label="Close modal">&times;</button>
-                    <div class="tours-light-icon-wrap" style="background: linear-gradient(135deg, #0EA5E9 0%, #0284C7 100%); box-shadow: 0 10px 22px -4px rgba(14, 165, 233, 0.38);" aria-hidden="true">
-                        <i class="fa-brands fa-apple"></i>
-                    </div>
-                    <h3 id="toursIosModalHeading">Install Tours on iPhone / iPad</h3>
-                    <p>Follow these quick steps to install Tours directly onto your iOS Home Screen</p>
-                </div>
-                <div class="tours-light-body">
-                    <div class="tours-light-blocked-box" style="background: rgba(248, 250, 252, 0.95); border-color: rgba(226, 232, 240, 0.9); color: #334155;">
-                        <strong style="color: #0F172A;"><i class="fa-solid fa-mobile-screen" style="color: #176B5B;"></i> How to Install from Safari:</strong>
-                        <ol class="tours-light-blocked-steps">
-                            <li class="tours-light-blocked-step">
-                                <span class="tours-step-badge-purple" style="background: #176B5B;">1</span>
-                                <span>Tap the <strong>Share button</strong> (<i class="fa-solid fa-arrow-up-from-bracket"></i>) in Safari toolbar at bottom of screen.</span>
-                            </li>
-                            <li class="tours-light-blocked-step">
-                                <span class="tours-step-badge-purple" style="background: #176B5B;">2</span>
-                                <span>Scroll down and select <strong>"Add to Home Screen"</strong> (<i class="fa-solid fa-square-plus"></i>).</span>
-                            </li>
-                            <li class="tours-light-blocked-step">
-                                <span class="tours-step-badge-purple" style="background: #176B5B;">3</span>
-                                <span>Tap <strong>Add</strong> in the top-right corner to complete.</span>
-                            </li>
-                        </ol>
-                    </div>
-                </div>
-                <div class="tours-light-footer">
-                    <button type="button" class="btn-purple-primary" onclick="closeToursModal('toursIosInstallModal')" style="background: #176B5B; border-color: #176B5B;">
-                        <i class="fa-solid fa-check"></i>
-                        <span>Understood</span>
-                    </button>
-                </div>
-            </div>
-        `;
-
-        modal.style.display = 'flex';
-        modal.setAttribute('aria-hidden', 'false');
-        setupModalFocusTrap(modal);
-    }
-
-    // Generic fallback: routes to the platform-tailored modal
-    function showGenericInstallModal() {
-        if (isAndroidDevice()) {
-            showAndroidInstallModal();
-        } else if (isIosDevice()) {
-            showIosInstallModal();
-        } else {
-            showDesktopInstallModal();
-        }
-    }
-
-    // Modal accessibility & focus trapping
     function setupModalFocusTrap(modal) {
         previouslyFocusedElement = document.activeElement;
         teardownModalFocusTrap();
 
         const focusableSelector = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-        setTimeout(() => {
-            const primary = modal.querySelector('.btn-purple-primary') || modal.querySelector(focusableSelector);
-            if (primary && typeof primary.focus === 'function') {
-                primary.focus();
-            }
-        }, 50);
-
         modalKeydownHandler = function (e) {
             if (e.key === 'Escape') {
                 e.preventDefault();
-                window.closeAllToursModals();
+                if (currentModalState !== 'progress') {
+                    window.closeToursInstallModal();
+                }
                 return;
             }
 
@@ -481,6 +631,7 @@
                 }
             }
         };
+
         document.addEventListener('keydown', modalKeydownHandler);
     }
 
@@ -492,7 +643,7 @@
     }
 
     // ==========================================================================
-    // 2. TOAST NOTIFICATIONS HELPER
+    // 4. TOAST NOTIFICATIONS HELPER
     // ==========================================================================
     window.showToursToast = function (message, type = 'info') {
         let container = document.getElementById('toursToastContainer');
@@ -541,7 +692,7 @@
     }
 
     // ==========================================================================
-    // 3. AUTO INITIALIZATION
+    // 5. AUTO INITIALIZATION
     // ==========================================================================
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {

@@ -26,6 +26,7 @@ use App\Controllers\CustomerController;
 use App\Controllers\RoleController;
 use App\Controllers\MobileApiController;
 use App\Controllers\LanguageController;
+use App\Controllers\CompanyController;
 
 $router = new Router();
 
@@ -268,6 +269,19 @@ $router->get('/office/finance/reports/expense-categories', [FinanceController::c
 $router->get('/office/backups', [BackupController::class, 'index'], ['auth', 'role:admin']);
 $router->post('/office/backups/create', [BackupController::class, 'create'], ['auth', 'role:admin', 'csrf']);
 $router->post('/office/backups/restore', [BackupController::class, 'restore'], ['auth', 'role:admin', 'csrf']);
+
+// -----------------------------------------------------------------------------
+// Single Company Profile Management (Admin Only)
+// -----------------------------------------------------------------------------
+$router->get('/office/company', [CompanyController::class, 'index'], ['auth', 'role:admin']);
+$router->post('/office/company', [CompanyController::class, 'save'], ['auth', 'role:admin', 'csrf']);
+$router->post('/office/company/save', [CompanyController::class, 'save'], ['auth', 'role:admin', 'csrf']);
+$router->get('/office/company/create', [CompanyController::class, 'create'], ['auth', 'role:admin']);
+$router->post('/office/company/create', [CompanyController::class, 'store'], ['auth', 'role:admin', 'csrf']);
+$router->get('/office/company/{id}/edit', [CompanyController::class, 'edit'], ['auth', 'role:admin']);
+$router->post('/office/company/{id}', [CompanyController::class, 'update'], ['auth', 'role:admin', 'csrf']);
+$router->post('/office/company/remove-image', [CompanyController::class, 'removeImage'], ['auth', 'role:admin', 'csrf']);
+$router->post('/office/company/remove-logo', [CompanyController::class, 'removeLogo'], ['auth', 'role:admin', 'csrf']);
 
 // -----------------------------------------------------------------------------
 // MODULE 19: Dedicated Driver Portal — Role-Based UI, Sidebar, Navbar & Pages
