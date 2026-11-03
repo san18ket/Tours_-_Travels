@@ -518,6 +518,80 @@
         }
     };
 
+    // =========================================================================
+    // Professional Multi-Level Subcategory Accordion Engine (Finance)
+    // =========================================================================
+    let isSubAccordionTransitioning = false;
+
+    window.toggleSubCategory = function (subCatId, event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        if (isSubAccordionTransitioning) return;
+
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar && sidebar.classList.contains('collapsed')) {
+            sidebar.classList.remove('collapsed');
+            localStorage.setItem('vg_sidebar_collapsed', 'false');
+            const toggleBtn = document.getElementById('sidebarToggleBtn');
+            if (toggleBtn) toggleBtn.classList.remove('is-collapsed');
+        }
+
+        const targetHeader = document.getElementById(subCatId + '-header');
+        const targetItems = document.getElementById(subCatId + '-items');
+        if (!targetHeader || !targetItems) return;
+
+        const isCurrentlyExpanded = targetHeader.getAttribute('aria-expanded') === 'true' || targetItems.classList.contains('expanded');
+
+        // Locate any currently open sibling subcategory inside the parent container
+        const parentContainer = targetHeader.closest('.category-items-inner') || document;
+        const allSubcatHeaders = parentContainer.querySelectorAll('.subcategory-header');
+        let openSiblingId = null;
+
+        allSubcatHeaders.forEach(header => {
+            const hId = header.id.replace('-header', '');
+            if (hId !== subCatId && (header.getAttribute('aria-expanded') === 'true' || header.classList.contains('open'))) {
+                openSiblingId = hId;
+            }
+        });
+
+        function closeSubcat(id) {
+            const h = document.getElementById(id + '-header');
+            const it = document.getElementById(id + '-items');
+            if (h) {
+                h.setAttribute('aria-expanded', 'false');
+                h.classList.remove('open');
+            }
+            if (it) it.classList.remove('expanded');
+        }
+
+        function openSubcat(id) {
+            const h = document.getElementById(id + '-header');
+            const it = document.getElementById(id + '-items');
+            if (h) {
+                h.setAttribute('aria-expanded', 'true');
+                h.classList.add('open');
+            }
+            if (it) it.classList.add('expanded');
+        }
+
+        if (isCurrentlyExpanded) {
+            closeSubcat(subCatId);
+        } else {
+            if (openSiblingId) {
+                isSubAccordionTransitioning = true;
+                closeSubcat(openSiblingId);
+                setTimeout(() => {
+                    openSubcat(subCatId);
+                    isSubAccordionTransitioning = false;
+                }, 180);
+            } else {
+                openSubcat(subCatId);
+            }
+        }
+    };
+
     // Professional Sidebar Collapse Engine:
     // On Desktop (>900px): collapses sidebar into an icon-only mini-rail.
     // On Mobile (<=900px): toggles off-canvas drawer navigation.

@@ -568,6 +568,207 @@ a:hover {
     opacity: 0.85;
 }
 
+.sidebar-category-label {
+    padding: 0.5rem 0.75rem 0.2rem 1.85rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--vg-text-muted, #64748B);
+    opacity: 0.8;
+    user-select: none;
+    pointer-events: none;
+    cursor: default;
+    line-height: 1.3;
+}
+
+.sidebar-dropdown-divider {
+    height: 1px;
+    margin: 5px 10px 4px 1.85rem;
+    background: var(--vg-border, rgba(0, 0, 0, 0.07));
+    opacity: 0.6;
+    border: none;
+}
+
+/* Multi-Level Subcategory Accordion (Finance Nested Navigation) */
+.sidebar-subcategory {
+    margin: 2px 0;
+    width: 100%;
+    position: relative;
+}
+
+.subcategory-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.52rem 0.75rem 0.52rem 1.75rem;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    font-size: 0.835rem;
+    font-weight: 500;
+    color: var(--vg-text, #334155);
+    transition: all 0.18s ease;
+    user-select: none;
+    outline: none;
+}
+
+.subcategory-label {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
+}
+
+.subcategory-icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    color: var(--vg-text-muted, #64748b);
+    transition: color 0.18s ease;
+}
+
+.subcategory-icon {
+    width: 15px;
+    height: 15px;
+    stroke-width: 2;
+}
+
+.subcategory-title {
+    font-weight: 600;
+    color: inherit;
+    font-size: 0.835rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.subcategory-header-right {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.subcategory-chevron {
+    width: 13px;
+    height: 13px;
+    transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), color 0.18s ease;
+    stroke-width: 2.2;
+    color: var(--vg-text-muted, #64748b);
+}
+
+.subcategory-header:hover {
+    background-color: rgba(23, 107, 91, 0.08);
+    color: var(--vg-primary-blue, #164e63);
+}
+
+.subcategory-header:hover .subcategory-icon-wrap,
+.subcategory-header:hover .subcategory-chevron {
+    color: var(--vg-primary-blue, #164e63);
+}
+
+.subcategory-header.has-active {
+    color: var(--vg-primary-blue, #164e63);
+    font-weight: 700;
+}
+
+.subcategory-header.has-active .subcategory-icon-wrap {
+    color: var(--vg-primary-blue, #164e63);
+}
+
+.subcategory-header.open .subcategory-chevron,
+.subcategory-header[aria-expanded="true"] .subcategory-chevron {
+    transform: rotate(90deg);
+    color: var(--vg-primary-blue, #164e63);
+}
+
+/* Subcategory Items Grid Accordion */
+.sidebar-subcategory-items {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.22s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+    opacity: 0;
+    overflow: hidden;
+}
+
+.sidebar-subcategory-items.expanded {
+    grid-template-rows: 1fr;
+    opacity: 1;
+}
+
+.subcategory-items-inner {
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.15rem 0 0.35rem 0;
+    position: relative;
+}
+
+.subcategory-items-inner::before {
+    content: '';
+    position: absolute;
+    left: 2.35rem;
+    top: 0.25rem;
+    bottom: 0.4rem;
+    width: 1.5px;
+    background: linear-gradient(180deg, rgba(23, 107, 91, 0.25) 0%, rgba(23, 107, 91, 0.05) 100%);
+    border-radius: 2px;
+}
+
+.subcategory-items-inner .nav-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.48rem 0.75rem 0.48rem 2.85rem !important;
+    color: var(--vg-text, #334155);
+    border-radius: 8px;
+    font-size: 0.82rem !important;
+    font-weight: 500;
+    transition: all 0.18s ease;
+    text-decoration: none;
+    position: relative;
+}
+
+.subcategory-items-inner .nav-link:hover {
+    background-color: rgba(23, 107, 91, 0.08);
+    color: var(--vg-primary-blue, #164e63);
+    transform: translateX(3px);
+}
+
+.subcategory-items-inner .nav-link.active {
+    background: rgba(23, 107, 91, 0.12);
+    color: var(--vg-primary-blue, #164e63);
+    font-weight: 700;
+    border-left: 3px solid var(--vg-primary-blue, #164e63);
+    padding-left: calc(2.85rem - 3px) !important;
+}
+
+.subcategory-items-inner .nav-link-left {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.subcategory-items-inner .nav-link svg {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+    opacity: 0.85;
+}
+
+.sidebar.collapsed .sidebar-subcategory-items {
+    display: none !important;
+}
+
 /* Sidebar Travel Promo Card */
 .sidebar-promo-card {
     margin: 1rem 0.4rem 0.5rem;
