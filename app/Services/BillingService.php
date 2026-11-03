@@ -83,7 +83,7 @@ class BillingService
     /**
      * Record payment allocation with strict idempotency and transaction locking
      */
-    public function recordPayment(int $invoiceId, float $amount, string $paymentMethod, ?string $transactionId, string $idempotencyKey, ?string $notes = null): array
+    public function recordPayment(int $invoiceId, float $amount, string $paymentMethod, ?string $transactionId, string $idempotencyKey, ?string $notes = null, ?int $accountId = null): array
     {
         if ($amount <= 0.0) {
             throw new RuntimeException("Payment amount must be greater than zero.");
@@ -114,12 +114,28 @@ class BillingService
 
         $paymentRef = 'PAY-' . date('Ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
 
+        // Resolve account if not explicitly passed
+        if (!$accountId) {
+            $accModel = new \App\Models\FinanceAccount();
+            $targetType = ($paymentMethod === 'cash') ? 'cash' : 'bank';
+            $matchingAcc = $accModel->where("status = 'active' AND account_type = ?", [$targetType], 'id ASC', 1);
+            if (!empty($matchingAcc)) {
+                $accountId = (int)$matchingAcc[0]['id'];
+            } else {
+                $anyAcc = $accModel->where("status = 'active'", [], 'id ASC', 1);
+                if (!empty($anyAcc)) {
+                    $accountId = (int)$anyAcc[0]['id'];
+                }
+            }
+        }
+
         $pdo = Database::getConnection();
         $pdo->beginTransaction();
         try {
             $paymentId = $this->paymentModel->create([
                 'payment_reference' => $paymentRef,
                 'invoice_id'        => $invoiceId,
+                'account_id'        => $accountId,
                 'amount'            => $amount,
                 'payment_method'    => $paymentMethod,
                 'transaction_id'    => $transactionId,
@@ -133,6 +149,24 @@ class BillingService
                 'paid_amount'    => $newPaid,
                 'payment_status' => $newStatus,
             ]);
+
+            // If account resolved, record in finance ledger and update account balance atomically
+            if ($accountId) {
+                $txnModel = new \App\Models\FinanceTransaction();
+                $txnModel->recordTransaction([
+                    'account_id'       => $accountId,
+                    'transaction_type' => 'credit',
+                    'amount'           => $amount,
+                    'category'         => 'Customer Payment',
+                    'reference_type'   => 'payment',
+                    'reference_id'     => $paymentId,
+                    'payment_method'   => $paymentMethod,
+                    'transaction_ref'  => $paymentRef,
+                    'notes'            => "Payment for Invoice #{$invoice['invoice_number']}. " . ($notes ?? ''),
+                    'created_by'       => \App\Core\Session::getUserId(),
+                    'transacted_at'    => date('Y-m-d H:i:s'),
+                ]);
+            }
 
             $this->auditLog->record('payment_received', 'payments', $paymentId, null, [
                 'invoice_id' => $invoiceId,

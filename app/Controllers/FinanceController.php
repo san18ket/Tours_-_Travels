@@ -8,6 +8,8 @@ use App\Core\Session;
 use App\Models\FinanceAccount;
 use App\Models\FinanceTransaction;
 use App\Models\BusinessExpense;
+use App\Models\ExpenseCategory;
+use App\Models\Payment;
 use App\Models\Payroll;
 use App\Models\PayrollItem;
 use App\Models\SalaryStructure;
@@ -22,6 +24,8 @@ class FinanceController extends Controller
     private FinanceAccount $accountModel;
     private FinanceTransaction $transactionModel;
     private BusinessExpense $expenseModel;
+    private ExpenseCategory $categoryModel;
+    private Payment $paymentModel;
     private Payroll $payrollModel;
     private PayrollItem $payrollItemModel;
     private EmployeeAdvance $advanceModel;
@@ -34,6 +38,8 @@ class FinanceController extends Controller
         $this->accountModel = new FinanceAccount();
         $this->transactionModel = new FinanceTransaction();
         $this->expenseModel = new BusinessExpense();
+        $this->categoryModel = new ExpenseCategory();
+        $this->paymentModel = new Payment();
         $this->payrollModel = new Payroll();
         $this->payrollItemModel = new PayrollItem();
         $this->advanceModel = new EmployeeAdvance();
@@ -47,19 +53,36 @@ class FinanceController extends Controller
      */
     public function dashboard(Request $request): Response
     {
+        $pdo = \App\Core\Database::getConnection();
         $currentYear = (int)date('Y');
         $currentMonth = (int)date('n');
 
-        // Liquidity across accounts
-        $accounts = $this->accountModel->getActiveAccounts();
-        $totalLiquid = 0.0;
-        foreach ($accounts as $a) {
-            $totalLiquid += (float)$a['current_balance'];
+        // 1. Total Money Received (actual payments recorded)
+        $totalReceived = (float)($pdo->query("SELECT COALESCE(SUM(amount), 0) FROM payments WHERE status = 'success'")->fetchColumn() ?: 0);
+        if ($totalReceived <= 0) {
+            $totalReceived = (float)($pdo->query("SELECT COALESCE(SUM(amount), 0) FROM finance_ledger WHERE transaction_type = 'credit' AND category NOT IN ('Internal Transfer') AND (reference_type IS NULL OR reference_type != 'finance_transfer')")->fetchColumn() ?: 0);
         }
 
-        // Monthly Inflow vs Outflow
+        // 2. Total Business Expenses (expenses + paid salaries)
+        $bizExp = (float)($pdo->query("SELECT COALESCE(SUM(amount), 0) FROM business_expenses WHERE status != 'rejected'")->fetchColumn() ?: 0);
+        $salariesPaid = (float)($pdo->query("SELECT COALESCE(SUM(net_salary), 0) FROM payroll_items WHERE payment_status = 'paid'")->fetchColumn() ?: 0);
+        $totalExpenses = $bizExp + $salariesPaid;
+
+        // 3. Available Cash/Bank Balance (sum of active accounts)
+        $accounts = $this->accountModel->getActiveAccounts();
+        $availableBalance = 0.0;
+        foreach ($accounts as $a) {
+            $availableBalance += (float)$a['current_balance'];
+        }
+
+        // 4. Customer Pending Payments (invoices unpaid/partially_paid balance)
+        $customerPendingPayments = (float)($pdo->query("SELECT COALESCE(SUM(total_amount - paid_amount), 0) FROM invoices WHERE payment_status != 'paid' AND (total_amount > paid_amount)")->fetchColumn() ?: 0);
+
+        // 5. Staff Salary Pending (unpaid payroll items)
+        $staffSalaryPending = (float)($pdo->query("SELECT COALESCE(SUM(net_salary), 0) FROM payroll_items WHERE payment_status = 'unpaid'")->fetchColumn() ?: 0);
+
+        // Monthly Inflow vs Outflow (excluding internal transfers)
         $monthlyLedger = $this->transactionModel->getMonthlyIncomeExpense($currentYear);
-        $chartMonths = [];
         $incomeData = array_fill(1, 12, 0.0);
         $expenseData = array_fill(1, 12, 0.0);
 
@@ -74,40 +97,35 @@ class FinanceController extends Controller
             7 => 'Jul', 8 => 'Aug', 9 => 'Sep', 10 => 'Oct', 11 => 'Nov', 12 => 'Dec'
         ];
 
-        $currentMonthIncome = $incomeData[$currentMonth] ?? 0.0;
-        $currentMonthExpense = $expenseData[$currentMonth] ?? 0.0;
-        $netCashFlow = $currentMonthIncome - $currentMonthExpense;
+        // Recent Activity Lists
+        $recentPayments = $this->paymentModel->getPaymentsWithDetails([], 5, 0);
+        $recentExpenses = $this->expenseModel->getExpensesWithDetails([], 5, 0);
+        $upcomingSalaries = $this->payrollItemModel->getPayslipsWithDetails(['payment_status' => 'pending'], 5, 0);
+        $recentRefunds = $this->refundModel->getRefundsWithDetails([], 5, 0);
 
-        // Invoices Receivables summary
-        $invoices = $this->invoiceModel->all();
-        $totalInvoiced = 0.0;
-        $totalCollected = 0.0;
-        foreach ($invoices as $inv) {
-            $totalInvoiced += (float)($inv['total_amount'] ?? 0);
-            $totalCollected += (float)($inv['paid_amount'] ?? 0);
-        }
-        $receivables = max(0.0, $totalInvoiced - $totalCollected);
-
-        // Expense by Category breakdown
-        $expenseBreakdown = $this->expenseModel->getTotalExpensesByCategory($currentYear, $currentMonth);
-
-        // Latest transactions
-        $recentTransactions = $this->transactionModel->getLedgerWithDetails([], 10, 0);
+        // Helper data for Quick Action Modals
+        $pendingInvoices = $this->invoiceModel->getPendingInvoicesWithDetails([], 50, 0);
+        $categories = $this->categoryModel->getActiveCategories();
 
         return $this->render('office/finance/dashboard', [
-            'title'               => 'Finance & Treasury Command',
-            'accounts'            => $accounts,
-            'totalLiquid'         => $totalLiquid,
-            'currentMonthIncome'  => $currentMonthIncome,
-            'currentMonthExpense' => $currentMonthExpense,
-            'netCashFlow'         => $netCashFlow,
-            'receivables'         => $receivables,
-            'incomeData'          => array_values($incomeData),
-            'expenseData'         => array_values($expenseData),
-            'monthLabels'         => array_values($monthNames),
-            'expenseBreakdown'    => $expenseBreakdown,
-            'recentTransactions'  => $recentTransactions,
-            'currentYear'         => $currentYear,
+            'title'                   => 'Finance Overview & Treasury',
+            'totalReceived'           => $totalReceived,
+            'totalExpenses'           => $totalExpenses,
+            'availableBalance'        => $availableBalance,
+            'customerPendingPayments' => $customerPendingPayments,
+            'staffSalaryPending'      => $staffSalaryPending,
+            'accounts'                => $accounts,
+            'incomeData'              => array_values($incomeData),
+            'expenseData'             => array_values($expenseData),
+            'monthLabels'             => array_values($monthNames),
+            'recentPayments'          => $recentPayments,
+            'recentExpenses'          => $recentExpenses,
+            'upcomingSalaries'        => $upcomingSalaries,
+            'recentRefunds'           => $recentRefunds,
+            'pendingInvoices'         => $pendingInvoices,
+            'categories'              => $categories,
+            'currentYear'             => $currentYear,
+            'currentMonth'            => $currentMonth,
         ], 'layouts/office');
     }
 
@@ -154,7 +172,8 @@ class FinanceController extends Controller
         }
 
         $accounts = $this->accountModel->getActiveAccounts();
-        $categories = config('finance.expense_categories', []);
+        $dbCatMap = $this->categoryModel->getCategoryMap();
+        $categories = !empty($dbCatMap) ? $dbCatMap : config('finance.expense_categories', []);
 
         return $this->render('office/finance/transactions', [
             'title'          => 'General Ledger & Transactions',
@@ -426,49 +445,16 @@ class FinanceController extends Controller
                 return $this->redirect($redirectTo);
             }
 
-            if ((float)$fromAcc['current_balance'] < $amount) {
-                $err = "Insufficient balance in {$fromAcc['account_name']}. Available: " . format_currency((float)$fromAcc['current_balance']);
-                if ($request->isAjax()) {
-                    return $this->json(['success' => false, 'message' => $err], 422);
-                }
-                Session::setFlash('error', $err);
-                return $this->redirect($redirectTo);
-            }
-
-            $userId = Session::getUserId();
-            $now = date('Y-m-d H:i:s');
-
-            // 1. Debit from source account
-            $this->transactionModel->recordTransaction([
-                'account_id'       => $fromAccountId,
-                'transaction_type' => 'debit',
-                'amount'           => $amount,
-                'category'         => 'Internal Transfer',
-                'reference_type'   => 'finance_transfer',
-                'reference_id'     => $toAccountId,
-                'payment_method'   => 'bank_transfer',
-                'transaction_ref'  => $ref,
-                'notes'            => "Transfer to {$toAcc['account_name']}. " . $notes,
-                'created_by'       => $userId,
-                'transacted_at'    => $now,
+            $transferRes = $this->transactionModel->transferFunds([
+                'from_account_id' => $fromAccountId,
+                'to_account_id'   => $toAccountId,
+                'amount'          => $amount,
+                'transfer_ref'    => $ref,
+                'notes'           => $notes,
+                'created_by'      => Session::getUserId(),
             ]);
 
-            // 2. Credit to destination account
-            $this->transactionModel->recordTransaction([
-                'account_id'       => $toAccountId,
-                'transaction_type' => 'credit',
-                'amount'           => $amount,
-                'category'         => 'Internal Transfer',
-                'reference_type'   => 'finance_transfer',
-                'reference_id'     => $fromAccountId,
-                'payment_method'   => 'bank_transfer',
-                'transaction_ref'  => $ref,
-                'notes'            => "Transfer received from {$fromAcc['account_name']}. " . $notes,
-                'created_by'       => $userId,
-                'transacted_at'    => $now,
-            ]);
-
-            $msg = "Successfully transferred " . format_currency($amount) . " from {$fromAcc['account_name']} to {$toAcc['account_name']}.";
+            $msg = "Successfully transferred " . format_currency($amount) . " from {$transferRes['from_account']} to {$transferRes['to_account']}.";
             Session::setFlash('success', $msg);
 
             if ($request->isAjax()) {
@@ -793,7 +779,8 @@ class FinanceController extends Controller
         }
 
         $accounts = $this->accountModel->getActiveAccounts();
-        $categories = config('finance.expense_categories', []);
+        $dbCatMap = $this->categoryModel->getCategoryMap();
+        $categories = !empty($dbCatMap) ? $dbCatMap : config('finance.expense_categories', []);
 
         return $this->render('office/finance/expenses', [
             'title'            => 'Operating & Fleet Expenses',
@@ -1710,7 +1697,7 @@ class FinanceController extends Controller
     }
 
     /**
-     * 7. Refunds & Returns
+     * 7. Customer Refunds & Adjustments List
      */
     public function refunds(Request $request): Response
     {
@@ -1746,21 +1733,141 @@ class FinanceController extends Controller
 
         $accounts = $this->accountModel->getActiveAccounts();
 
+        // Invoices with paid amounts eligible for refund
+        $pdo = \App\Core\Database::getConnection();
+        $stmt = $pdo->query("SELECT i.id, i.invoice_number, i.total_amount, i.paid_amount, i.booking_id, b.booking_code, c.name as customer_name FROM invoices i LEFT JOIN bookings b ON i.booking_id = b.id LEFT JOIN customers c ON b.customer_profile_id = c.id WHERE i.paid_amount > 0 ORDER BY i.id DESC LIMIT 100");
+        $eligibleInvoices = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
         return $this->render('office/finance/refunds', [
-            'title'          => 'Customer Refunds & Adjustments',
-            'refunds'        => $refunds,
-            'accounts'       => $accounts,
-            'totalRecords'   => $totalRecords,
-            'totalAll'       => count($allRef),
-            'totalProcessed' => $totalProcessed,
-            'totalPending'   => $totalPending,
-            'pendingCount'   => $pendingCount,
-            'currentPage'    => $page,
-            'totalPages'     => $totalPages,
-            'perPage'        => $perPage,
-            'search'         => $search,
-            'selectedStatus' => $status,
+            'title'            => 'Customer Refunds & Adjustments',
+            'refunds'          => $refunds,
+            'accounts'         => $accounts,
+            'eligibleInvoices' => $eligibleInvoices,
+            'totalRecords'     => $totalRecords,
+            'totalAll'         => count($allRef),
+            'totalProcessed'   => $totalProcessed,
+            'totalPending'     => $totalPending,
+            'pendingCount'     => $pendingCount,
+            'currentPage'      => $page,
+            'totalPages'       => $totalPages,
+            'perPage'          => $perPage,
+            'search'           => $search,
+            'selectedStatus'   => $status,
         ], 'layouts/office');
+    }
+
+    /**
+     * Store new Customer Refund
+     */
+    public function storeRefund(Request $request): Response
+    {
+        $redirectTo = $request->post('redirect_to') ?: url('/office/finance/refunds');
+        try {
+            $invoiceId = (int)$request->post('invoice_id', 0) ?: null;
+            $amount = (float)$request->post('amount', 0);
+            $refundMethod = trim((string)$request->post('refund_method', 'bank_transfer'));
+            $reason = trim((string)$request->post('reason', 'Customer cancellation / trip adjustment'));
+            $accountId = (int)$request->post('account_id', 0) ?: null;
+            $refundDate = trim((string)$request->post('refund_date', date('Y-m-d')));
+            $autoProcess = (int)$request->post('auto_process', 1);
+
+            if ($amount <= 0) {
+                $err = 'Refund amount must be greater than zero.';
+                if ($request->isAjax()) return $this->json(['success' => false, 'message' => $err], 422);
+                Session::setFlash('error', $err);
+                return $this->redirect($redirectTo);
+            }
+
+            $bookingId = null;
+            $invoice = null;
+            if ($invoiceId) {
+                $invoice = $this->invoiceModel->find($invoiceId);
+                if (!$invoice) {
+                    $err = 'Specified invoice not found.';
+                    if ($request->isAjax()) return $this->json(['success' => false, 'message' => $err], 404);
+                    Session::setFlash('error', $err);
+                    return $this->redirect($redirectTo);
+                }
+                $bookingId = $invoice['booking_id'] ?? null;
+
+                // Check maximum allowable refund to prevent duplicate/excess refunds
+                $pdo = \App\Core\Database::getConnection();
+                $stmt = $pdo->prepare("SELECT COALESCE(SUM(amount), 0) FROM refunds WHERE invoice_id = ? AND status = 'processed'");
+                $stmt->execute([$invoiceId]);
+                $alreadyRefunded = (float)$stmt->fetchColumn();
+                $maxRefund = max(0.0, (float)$invoice['paid_amount'] - $alreadyRefunded);
+
+                if ($amount > $maxRefund) {
+                    $err = 'Refund amount cannot exceed remaining refundable paid amount (' . format_inr($maxRefund) . ').';
+                    if ($request->isAjax()) return $this->json(['success' => false, 'message' => $err], 422);
+                    Session::setFlash('error', $err);
+                    return $this->redirect($redirectTo);
+                }
+            }
+
+            $now = date('Y-m-d H:i:s');
+            $userId = Session::getUserId();
+            $refundNumber = 'REF-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
+            $status = ($autoProcess && $accountId) ? 'processed' : 'pending';
+
+            $refundId = $this->refundModel->create([
+                'booking_id'    => $bookingId,
+                'invoice_id'    => $invoiceId,
+                'refund_number' => $refundNumber,
+                'amount'        => $amount,
+                'reason'        => $reason,
+                'refund_method' => $refundMethod,
+                'refund_date'   => $refundDate ?: date('Y-m-d'),
+                'status'        => $status,
+                'processed_by'  => ($status === 'processed') ? $userId : null,
+                'processed_at'  => ($status === 'processed') ? $now : null,
+                'created_at'    => $now,
+                'updated_at'    => $now,
+            ]);
+
+            if ($status === 'processed') {
+                // Adjust invoice paid amount and payment status
+                if ($invoice) {
+                    $newPaid = max(0.0, (float)$invoice['paid_amount'] - $amount);
+                    $totalAmt = (float)$invoice['total_amount'];
+                    $newStatus = ($newPaid >= $totalAmt && $totalAmt > 0) ? 'paid' : ($newPaid > 0 ? 'partial' : 'unpaid');
+                    $this->invoiceModel->update((int)$invoice['id'], [
+                        'paid_amount'    => $newPaid,
+                        'payment_status' => $newStatus,
+                        'updated_at'     => $now,
+                    ]);
+                }
+
+                // Debit account
+                if ($accountId) {
+                    $this->transactionModel->recordTransaction([
+                        'account_id'       => $accountId,
+                        'transaction_type' => 'debit',
+                        'amount'           => $amount,
+                        'category'         => 'Booking Refund',
+                        'reference_type'   => 'refund',
+                        'reference_id'     => $refundId,
+                        'payment_method'   => $refundMethod,
+                        'transaction_ref'  => $refundNumber,
+                        'notes'            => "Processed Refund: {$refundNumber}. Reason: {$reason}",
+                        'created_by'       => $userId,
+                        'transacted_at'    => $refundDate ? ($refundDate . ' 12:00:00') : $now,
+                    ]);
+                }
+            }
+
+            $msg = "Refund {$refundNumber} created successfully (" . ucfirst($status) . ").";
+            Session::setFlash('success', $msg);
+            if ($request->isAjax()) {
+                return $this->json(['success' => true, 'message' => $msg, 'redirect' => $redirectTo]);
+            }
+            return $this->redirect($redirectTo);
+        } catch (Throwable $e) {
+            $err = 'Failed to create refund: ' . $e->getMessage();
+            if ($request->isAjax()) return $this->json(['success' => false, 'message' => $err], 500);
+            Session::setFlash('error', $err);
+            return $this->redirect($redirectTo);
+        }
     }
 
     /**
@@ -1786,21 +1893,37 @@ class FinanceController extends Controller
             $userId = Session::getUserId();
             $now = date('Y-m-d H:i:s');
 
-            if ($status === 'processed' && $refund['status'] !== 'processed' && $accountId) {
-                // Debit refund amount from account
-                $this->transactionModel->recordTransaction([
-                    'account_id'       => $accountId,
-                    'transaction_type' => 'debit',
-                    'amount'           => (float)$refund['amount'],
-                    'category'         => 'Booking Refund',
-                    'reference_type'   => 'refund',
-                    'reference_id'     => $id,
-                    'payment_method'   => $refund['refund_method'],
-                    'transaction_ref'  => $refund['refund_number'],
-                    'notes'            => "Processed Refund: {$refund['refund_number']}. Reason: {$refund['reason']}",
-                    'created_by'       => $userId,
-                    'transacted_at'    => $now,
-                ]);
+            if ($status === 'processed' && $refund['status'] !== 'processed') {
+                // If invoice_id exists, adjust invoice paid_amount and payment_status
+                if (!empty($refund['invoice_id'])) {
+                    $invoice = $this->invoiceModel->find((int)$refund['invoice_id']);
+                    if ($invoice) {
+                        $newPaid = max(0.0, (float)$invoice['paid_amount'] - (float)$refund['amount']);
+                        $totalAmt = (float)$invoice['total_amount'];
+                        $newStatus = ($newPaid >= $totalAmt && $totalAmt > 0) ? 'paid' : ($newPaid > 0 ? 'partial' : 'unpaid');
+                        $this->invoiceModel->update((int)$invoice['id'], [
+                            'paid_amount'    => $newPaid,
+                            'payment_status' => $newStatus,
+                            'updated_at'     => $now,
+                        ]);
+                    }
+                }
+
+                if ($accountId) {
+                    $this->transactionModel->recordTransaction([
+                        'account_id'       => $accountId,
+                        'transaction_type' => 'debit',
+                        'amount'           => (float)$refund['amount'],
+                        'category'         => 'Booking Refund',
+                        'reference_type'   => 'refund',
+                        'reference_id'     => $id,
+                        'payment_method'   => $refund['refund_method'],
+                        'transaction_ref'  => $refund['refund_number'],
+                        'notes'            => "Processed Refund: {$refund['refund_number']}. Reason: {$refund['reason']}",
+                        'created_by'       => $userId,
+                        'transacted_at'    => $now,
+                    ]);
+                }
             }
 
             $this->refundModel->update($id, [
@@ -1829,5 +1952,906 @@ class FinanceController extends Controller
             Session::setFlash('error', $err);
             return $this->redirect(url('/office/finance/refunds'));
         }
+    }
+
+    /**
+     * 8. Customer Payment History
+     */
+    public function payments(Request $request): Response
+    {
+        $search = trim((string)$request->get('search', (string)$request->get('q', '')));
+        $method = trim((string)$request->get('method', (string)$request->get('payment_method', '')));
+        $dateFrom = trim((string)$request->get('date_from', ''));
+        $dateTo = trim((string)$request->get('date_to', ''));
+        $page = max(1, (int)$request->get('page', 1));
+        $perPage = in_array((int)$request->get('per_page'), [10, 25, 50, 100], true) ? (int)$request->get('per_page') : 15;
+
+        $filters = array_filter([
+            'search'         => $search,
+            'payment_method' => $method,
+            'date_from'      => $dateFrom,
+            'date_to'        => $dateTo,
+        ]);
+
+        $totalRecords = $this->paymentModel->countPayments($filters);
+        $totalPages = max(1, (int)ceil($totalRecords / $perPage));
+        $offset = ($page - 1) * $perPage;
+        $payments = $this->paymentModel->getPaymentsWithDetails($filters, $perPage, $offset);
+
+        // Summary KPI stats
+        $pdo = \App\Core\Database::getConnection();
+        $totalCollected = (float)($pdo->query("SELECT COALESCE(SUM(amount), 0) FROM payments WHERE status = 'success'")->fetchColumn() ?: 0);
+        $cashCollected = (float)($pdo->query("SELECT COALESCE(SUM(amount), 0) FROM payments WHERE status = 'success' AND LOWER(payment_method) = 'cash'")->fetchColumn() ?: 0);
+        $upiCollected = (float)($pdo->query("SELECT COALESCE(SUM(amount), 0) FROM payments WHERE status = 'success' AND LOWER(payment_method) = 'upi'")->fetchColumn() ?: 0);
+        $bankCollected = (float)($pdo->query("SELECT COALESCE(SUM(amount), 0) FROM payments WHERE status = 'success' AND LOWER(payment_method) IN ('net_banking', 'card')")->fetchColumn() ?: 0);
+
+        $accounts = $this->accountModel->getActiveAccounts();
+        $pendingInvoices = $this->invoiceModel->getPendingInvoicesWithDetails([], 50, 0);
+
+        return $this->render('office/finance/payments', [
+            'title'           => 'Customer Payment History',
+            'payments'        => $payments,
+            'accounts'        => $accounts,
+            'pendingInvoices' => $pendingInvoices,
+            'totalRecords'    => $totalRecords,
+            'totalCollected'  => $totalCollected,
+            'cashCollected'   => $cashCollected,
+            'upiCollected'    => $upiCollected,
+            'bankCollected'   => $bankCollected,
+            'currentPage'     => $page,
+            'totalPages'      => $totalPages,
+            'perPage'         => $perPage,
+            'search'          => $search,
+            'selectedMethod'  => $method,
+            'dateFrom'        => $dateFrom,
+            'dateTo'          => $dateTo,
+        ], 'layouts/office');
+    }
+
+    /**
+     * 9. Customer Pending Payments & Receivables
+     */
+    public function pendingPayments(Request $request): Response
+    {
+        $search = trim((string)$request->get('search', (string)$request->get('q', '')));
+        $status = trim((string)$request->get('status', ''));
+        $dateFrom = trim((string)$request->get('date_from', ''));
+        $dateTo = trim((string)$request->get('date_to', ''));
+        $page = max(1, (int)$request->get('page', 1));
+        $perPage = in_array((int)$request->get('per_page'), [10, 25, 50, 100], true) ? (int)$request->get('per_page') : 15;
+
+        $filters = array_filter([
+            'search'         => $search,
+            'payment_status' => $status,
+            'date_from'      => $dateFrom,
+            'date_to'        => $dateTo,
+        ]);
+
+        $totalRecords = $this->invoiceModel->countPendingInvoices($filters);
+        $totalPages = max(1, (int)ceil($totalRecords / $perPage));
+        $offset = ($page - 1) * $perPage;
+        $pendingInvoices = $this->invoiceModel->getPendingInvoicesWithDetails($filters, $perPage, $offset);
+
+        // Summary KPIs
+        $pdo = \App\Core\Database::getConnection();
+        $totalDues = (float)($pdo->query("SELECT COALESCE(SUM(total_amount - paid_amount), 0) FROM invoices WHERE payment_status != 'paid' AND total_amount > paid_amount")->fetchColumn() ?: 0);
+        $overdueDues = (float)($pdo->query("SELECT COALESCE(SUM(total_amount - paid_amount), 0) FROM invoices WHERE payment_status != 'paid' AND total_amount > paid_amount AND due_date IS NOT NULL AND due_date < CURDATE()")->fetchColumn() ?: 0);
+        $unpaidCount = (int)($pdo->query("SELECT COUNT(*) FROM invoices WHERE payment_status = 'unpaid'")->fetchColumn() ?: 0);
+        $partialCount = (int)($pdo->query("SELECT COUNT(*) FROM invoices WHERE payment_status = 'partially_paid'")->fetchColumn() ?: 0);
+
+        $accounts = $this->accountModel->getActiveAccounts();
+
+        return $this->render('office/finance/pending_payments', [
+            'title'           => 'Customer Pending Payments & Receivables',
+            'invoices'        => $pendingInvoices,
+            'accounts'        => $accounts,
+            'totalRecords'    => $totalRecords,
+            'totalDues'       => $totalDues,
+            'overdueDues'     => $overdueDues,
+            'unpaidCount'     => $unpaidCount,
+            'partialCount'    => $partialCount,
+            'currentPage'     => $page,
+            'totalPages'      => $totalPages,
+            'perPage'         => $perPage,
+            'search'          => $search,
+            'selectedStatus'  => $status,
+            'dateFrom'        => $dateFrom,
+            'dateTo'          => $dateTo,
+        ], 'layouts/office');
+    }
+
+    /**
+     * 10. Business Expense Categories
+     */
+    public function expenseCategories(Request $request): Response
+    {
+        $categories = $this->categoryModel->all();
+        $spendStats = $this->expenseModel->getCategorySpendStats();
+
+        $statMap = [];
+        foreach ($spendStats as $s) {
+            $statMap[strtolower($s['category'])] = $s;
+        }
+
+        $totalCategorized = 0.0;
+        $topCategory = '-';
+        $maxSpend = 0.0;
+        foreach ($categories as &$cat) {
+            $slugKey = strtolower($cat['name']);
+            $spent = (float)($statMap[$slugKey]['total_spent'] ?? 0);
+            $cnt = (int)($statMap[$slugKey]['expense_count'] ?? 0);
+            $cat['total_spent'] = $spent;
+            $cat['expense_count'] = $cnt;
+            $totalCategorized += $spent;
+            if ($spent > $maxSpend) {
+                $maxSpend = $spent;
+                $topCategory = $cat['name'];
+            }
+        }
+        unset($cat);
+
+        return $this->render('office/finance/expense_categories', [
+            'title'            => 'Business Expense Categories',
+            'categories'       => $categories,
+            'totalCategories'  => count($categories),
+            'totalCategorized' => $totalCategorized,
+            'topCategory'      => $topCategory,
+        ], 'layouts/office');
+    }
+
+    /**
+     * Store new Expense Category
+     */
+    public function storeExpenseCategory(Request $request): Response
+    {
+        try {
+            $name = trim((string)$request->post('name', ''));
+            $desc = trim((string)$request->post('description', ''));
+            $isActive = (int)$request->post('is_active', 1);
+
+            if (empty($name)) {
+                Session::setFlash('error', 'Category name is required.');
+                return $this->redirect(url('/office/finance/expense-categories'));
+            }
+
+            $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $name)));
+            $existing = $this->categoryModel->findBySlug($slug);
+            if ($existing) {
+                Session::setFlash('error', 'A category with this name already exists.');
+                return $this->redirect(url('/office/finance/expense-categories'));
+            }
+
+            $this->categoryModel->create([
+                'name'        => $name,
+                'slug'        => $slug,
+                'description' => $desc,
+                'is_active'   => $isActive,
+                'created_at'  => date('Y-m-d H:i:s'),
+                'updated_at'  => date('Y-m-d H:i:s'),
+            ]);
+
+            Session::setFlash('success', "Category '{$name}' created successfully.");
+            return $this->redirect(url('/office/finance/expense-categories'));
+        } catch (Throwable $e) {
+            Session::setFlash('error', 'Failed to create category: ' . $e->getMessage());
+            return $this->redirect(url('/office/finance/expense-categories'));
+        }
+    }
+
+    /**
+     * Update Expense Category
+     */
+    public function updateExpenseCategory(Request $request, array $params): Response
+    {
+        try {
+            $id = (int)($params['id'] ?? 0);
+            $name = trim((string)$request->post('name', ''));
+            $desc = trim((string)$request->post('description', ''));
+            $isActive = (int)$request->post('is_active', 1);
+
+            if (empty($name)) {
+                Session::setFlash('error', 'Category name is required.');
+                return $this->redirect(url('/office/finance/expense-categories'));
+            }
+
+            $this->categoryModel->update($id, [
+                'name'        => $name,
+                'description' => $desc,
+                'is_active'   => $isActive,
+                'updated_at'  => date('Y-m-d H:i:s'),
+            ]);
+
+            Session::setFlash('success', "Category '{$name}' updated successfully.");
+            return $this->redirect(url('/office/finance/expense-categories'));
+        } catch (Throwable $e) {
+            Session::setFlash('error', 'Failed to update category: ' . $e->getMessage());
+            return $this->redirect(url('/office/finance/expense-categories'));
+        }
+    }
+
+    /**
+     * 11. Staff Salary & Payslips Directory
+     */
+    public function payslips(Request $request): Response
+    {
+        $search = trim((string)$request->get('search', (string)$request->get('q', '')));
+        $month = (int)$request->get('month', 0);
+        $year = (int)$request->get('year', 0);
+        $status = trim((string)$request->get('status', ''));
+        $page = max(1, (int)$request->get('page', 1));
+        $perPage = in_array((int)$request->get('per_page'), [10, 25, 50, 100], true) ? (int)$request->get('per_page') : 15;
+
+        $filters = array_filter([
+            'search'         => $search,
+            'month'          => $month ?: null,
+            'year'           => $year ?: null,
+            'payment_status' => $status,
+        ]);
+
+        $totalRecords = $this->payrollItemModel->countPayslips($filters);
+        $totalPages = max(1, (int)ceil($totalRecords / $perPage));
+        $offset = ($page - 1) * $perPage;
+        $payslips = $this->payrollItemModel->getPayslipsWithDetails($filters, $perPage, $offset);
+
+        // Summary KPI stats
+        $pdo = \App\Core\Database::getConnection();
+        $totalDisbursable = (float)($pdo->query("SELECT COALESCE(SUM(net_salary), 0) FROM payroll_items")->fetchColumn() ?: 0);
+        $totalPaid = (float)($pdo->query("SELECT COALESCE(SUM(net_salary), 0) FROM payroll_items WHERE payment_status = 'paid'")->fetchColumn() ?: 0);
+        $totalPending = (float)($pdo->query("SELECT COALESCE(SUM(net_salary), 0) FROM payroll_items WHERE payment_status != 'paid'")->fetchColumn() ?: 0);
+        $totalEmployees = (int)($pdo->query("SELECT COUNT(DISTINCT employee_id) FROM payroll_items")->fetchColumn() ?: 0);
+
+        $accounts = $this->accountModel->getActiveAccounts();
+
+        return $this->render('office/finance/payslips', [
+            'title'            => 'Staff Salary & Payslips Directory',
+            'payslips'         => $payslips,
+            'accounts'         => $accounts,
+            'totalRecords'     => $totalRecords,
+            'totalDisbursable' => $totalDisbursable,
+            'totalPaid'        => $totalPaid,
+            'totalPending'     => $totalPending,
+            'totalEmployees'   => $totalEmployees,
+            'currentPage'      => $page,
+            'totalPages'       => $totalPages,
+            'perPage'          => $perPage,
+            'search'           => $search,
+            'selectedMonth'    => $month,
+            'selectedYear'     => $year,
+            'selectedStatus'   => $status,
+        ], 'layouts/office');
+    }
+
+    /**
+     * Mark single payslip as paid
+     */
+    public function markPayslipPaid(Request $request, array $params): Response
+    {
+        $redirectTo = $request->post('redirect_to') ?: url('/office/finance/payslips');
+        try {
+            $id = (int)($params['id'] ?? 0);
+            $item = $this->payrollItemModel->find($id);
+            if (!$item) {
+                $err = 'Payslip record not found.';
+                if ($request->isAjax()) return $this->json(['success' => false, 'message' => $err], 404);
+                Session::setFlash('error', $err);
+                return $this->redirect($redirectTo);
+            }
+
+            if ($item['payment_status'] === 'paid') {
+                $err = 'This payslip has already been marked as paid.';
+                if ($request->isAjax()) return $this->json(['success' => false, 'message' => $err], 422);
+                Session::setFlash('error', $err);
+                return $this->redirect($redirectTo);
+            }
+
+            $accountId = (int)$request->post('account_id', 0) ?: null;
+            $paymentMethod = trim((string)$request->post('payment_method', 'bank_transfer'));
+            $paymentDate = trim((string)$request->post('payment_date', date('Y-m-d')));
+            $now = date('Y-m-d H:i:s');
+            $userId = Session::getUserId();
+
+            // Mark payslip as paid
+            $this->payrollItemModel->update($id, [
+                'payment_status' => 'paid',
+                'payment_method' => $paymentMethod,
+                'paid_at'        => $paymentDate ? ($paymentDate . ' 12:00:00') : $now,
+            ]);
+
+            // If account selected, debit ledger
+            if ($accountId) {
+                $emp = $this->employeeModel->find((int)$item['employee_id']);
+                $empName = $emp ? trim(($emp['first_name'] ?? '') . ' ' . ($emp['last_name'] ?? '')) : 'Employee #' . $item['employee_id'];
+                $this->transactionModel->recordTransaction([
+                    'account_id'       => $accountId,
+                    'transaction_type' => 'debit',
+                    'amount'           => (float)$item['net_salary'],
+                    'category'         => 'Salary Disbursal',
+                    'reference_type'   => 'payroll_item',
+                    'reference_id'     => $id,
+                    'payment_method'   => $paymentMethod,
+                    'transaction_ref'  => 'SAL-' . str_pad((string)$id, 5, '0', STR_PAD_LEFT),
+                    'notes'            => "Salary payment to {$empName}. Net: " . format_inr($item['net_salary']),
+                    'created_by'       => $userId,
+                    'transacted_at'    => $paymentDate ? ($paymentDate . ' 12:00:00') : $now,
+                ]);
+            }
+
+            $msg = 'Payslip successfully marked as paid.';
+            Session::setFlash('success', $msg);
+            if ($request->isAjax()) {
+                return $this->json(['success' => true, 'message' => $msg, 'redirect' => $redirectTo]);
+            }
+            return $this->redirect($redirectTo);
+        } catch (Throwable $e) {
+            $err = 'Action failed: ' . $e->getMessage();
+            if ($request->isAjax()) return $this->json(['success' => false, 'message' => $err], 500);
+            Session::setFlash('error', $err);
+            return $this->redirect($redirectTo);
+        }
+    }
+
+    /**
+     * 12. Salary Payment History
+     */
+    public function salaryHistory(Request $request): Response
+    {
+        $search = trim((string)$request->get('search', (string)$request->get('q', '')));
+        $method = trim((string)$request->get('method', ''));
+        $dateFrom = trim((string)$request->get('date_from', ''));
+        $dateTo = trim((string)$request->get('date_to', ''));
+        $page = max(1, (int)$request->get('page', 1));
+        $perPage = in_array((int)$request->get('per_page'), [10, 25, 50, 100], true) ? (int)$request->get('per_page') : 15;
+
+        $filters = array_filter([
+            'search'         => $search,
+            'payment_method' => $method,
+            'date_from'      => $dateFrom,
+            'date_to'        => $dateTo,
+        ]);
+
+        $totalRecords = $this->payrollItemModel->countSalaryHistory($filters);
+        $totalPages = max(1, (int)ceil($totalRecords / $perPage));
+        $offset = ($page - 1) * $perPage;
+        $history = $this->payrollItemModel->getSalaryHistory($filters, $perPage, $offset);
+
+        // Summary KPIs
+        $pdo = \App\Core\Database::getConnection();
+        $totalDisbursed = (float)($pdo->query("SELECT COALESCE(SUM(net_salary), 0) FROM payroll_items WHERE payment_status = 'paid'")->fetchColumn() ?: 0);
+        $thisMonthDisbursed = (float)($pdo->query("SELECT COALESCE(SUM(net_salary), 0) FROM payroll_items WHERE payment_status = 'paid' AND MONTH(paid_at) = MONTH(CURRENT_DATE()) AND YEAR(paid_at) = YEAR(CURRENT_DATE())")->fetchColumn() ?: 0);
+        $avgSalary = $totalRecords > 0 ? ($totalDisbursed / $totalRecords) : 0;
+
+        return $this->render('office/finance/salary_history', [
+            'title'              => 'Salary Payment History',
+            'history'            => $history,
+            'totalRecords'       => $totalRecords,
+            'totalDisbursed'     => $totalDisbursed,
+            'thisMonthDisbursed' => $thisMonthDisbursed,
+            'avgSalary'          => $avgSalary,
+            'currentPage'        => $page,
+            'totalPages'         => $totalPages,
+            'perPage'            => $perPage,
+            'search'             => $search,
+            'selectedMethod'     => $method,
+            'dateFrom'           => $dateFrom,
+            'dateTo'             => $dateTo,
+        ], 'layouts/office');
+    }
+
+    /**
+     * Cash & Bank helper redirects
+     */
+    public function accountDetailsDirect(Request $request): Response
+    {
+        $id = (int)$request->get('id', 0);
+        if ($id > 0) {
+            return $this->redirect(url('/office/finance/accounts/' . $id));
+        }
+        $acc = $this->accountModel->getActiveAccounts();
+        if (!empty($acc)) {
+            return $this->redirect(url('/office/finance/accounts/' . $acc[0]['id']));
+        }
+        return $this->redirect(url('/office/finance/accounts'));
+    }
+
+    public function transactionDetailsDirect(Request $request): Response
+    {
+        $id = (int)$request->get('id', 0);
+        if ($id > 0) {
+            return $this->redirect(url('/office/finance/transactions/' . $id));
+        }
+        $latest = $this->transactionModel->getLedgerWithDetails([], 1, 0);
+        if (!empty($latest)) {
+            return $this->redirect(url('/office/finance/transactions/' . $latest[0]['id']));
+        }
+        return $this->redirect(url('/office/finance/transactions'));
+    }
+
+    /**
+     * 13. Financial Reports Overview Hub
+     */
+    public function reports(Request $request): Response
+    {
+        $pdo = \App\Core\Database::getConnection();
+        $currentMonth = (int)date('m');
+        $currentYear = (int)date('Y');
+
+        // Month metrics
+        $monthIncome = (float)($pdo->query("SELECT COALESCE(SUM(amount), 0) FROM payments WHERE status = 'success' AND MONTH(paid_at) = {$currentMonth} AND YEAR(paid_at) = {$currentYear}")->fetchColumn() ?: 0);
+        $monthExpenses = (float)($pdo->query("SELECT COALESCE(SUM(amount), 0) FROM business_expenses WHERE status != 'rejected' AND MONTH(expense_date) = {$currentMonth} AND YEAR(expense_date) = {$currentYear}")->fetchColumn() ?: 0);
+        $monthSalaries = (float)($pdo->query("SELECT COALESCE(SUM(net_salary), 0) FROM payroll_items WHERE payment_status = 'paid' AND MONTH(paid_at) = {$currentMonth} AND YEAR(paid_at) = {$currentYear}")->fetchColumn() ?: 0);
+        $monthTotalOutflow = $monthExpenses + $monthSalaries;
+        $monthNetSurplus = $monthIncome - $monthTotalOutflow;
+
+        $totalCustomerDues = (float)($pdo->query("SELECT COALESCE(SUM(total_amount - paid_amount), 0) FROM invoices WHERE payment_status != 'paid' AND total_amount > paid_amount")->fetchColumn() ?: 0);
+
+        return $this->render('office/finance/reports/index', [
+            'title'             => 'Financial Intelligence & Reports',
+            'monthIncome'       => $monthIncome,
+            'monthTotalOutflow' => $monthTotalOutflow,
+            'monthNetSurplus'   => $monthNetSurplus,
+            'totalCustomerDues' => $totalCustomerDues,
+            'currentMonth'      => date('F Y'),
+        ], 'layouts/office');
+    }
+
+    /**
+     * Income Report
+     */
+    public function incomeReport(Request $request): Response
+    {
+        $startDate = trim((string)$request->get('start_date', date('Y-m-01')));
+        $endDate = trim((string)$request->get('end_date', date('Y-m-d')));
+        $method = trim((string)$request->get('method', ''));
+
+        $pdo = \App\Core\Database::getConnection();
+        $params = [$startDate . ' 00:00:00', $endDate . ' 23:59:59'];
+        $sql = "SELECT p.*, DATE(p.paid_at) as payment_date, i.invoice_number, b.booking_code, 
+                       COALESCE(c.name, u.name, 'Direct Guest') as customer_name, 
+                       COALESCE(c.phone, u.phone, '') as customer_phone, 
+                       a.account_name 
+                FROM payments p 
+                LEFT JOIN invoices i ON p.invoice_id = i.id 
+                LEFT JOIN bookings b ON i.booking_id = b.id 
+                LEFT JOIN customers c ON i.customer_profile_id = c.id 
+                LEFT JOIN users u ON i.customer_id = u.id 
+                LEFT JOIN finance_accounts a ON p.account_id = a.id 
+                WHERE p.paid_at BETWEEN ? AND ? AND p.status = 'success'";
+        if (!empty($method)) {
+            $sql .= " AND LOWER(p.payment_method) = ?";
+            $params[] = strtolower($method);
+        }
+        $sql .= " ORDER BY p.paid_at DESC, p.id DESC";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $totalIncome = 0.0;
+        $cashTotal = 0.0;
+        $upiTotal = 0.0;
+        $bankTotal = 0.0;
+        foreach ($rows as $r) {
+            $amt = (float)$r['amount'];
+            $totalIncome += $amt;
+            $m = strtolower($r['payment_method'] ?? '');
+            if ($m === 'cash') $cashTotal += $amt;
+            elseif ($m === 'upi') $upiTotal += $amt;
+            else $bankTotal += $amt;
+        }
+
+        if ($request->get('export') === 'csv') {
+            $headers = ['Payment Date', 'Payment Ref', 'Customer Name', 'Phone', 'Booking Code', 'Invoice #', 'Payment Method', 'Account', 'Amount (INR)'];
+            $csvData = [];
+            foreach ($rows as $r) {
+                $csvData[] = [
+                    $r['payment_date'],
+                    $r['payment_reference'] ?: ('PAY-' . $r['id']),
+                    $r['customer_name'] ?? 'Direct Walk-in',
+                    $r['customer_phone'] ?? '',
+                    $r['booking_code'] ?? '',
+                    $r['invoice_number'] ?? '',
+                    strtoupper($r['payment_method'] ?? 'CASH'),
+                    $r['account_name'] ?? 'Default Treasury',
+                    $r['amount'],
+                ];
+            }
+            return $this->streamCsv('income_report_' . $startDate . '_to_' . $endDate . '.csv', $headers, $csvData);
+        }
+
+        return $this->render('office/finance/reports/income', [
+            'title'       => 'Income & Revenue Report',
+            'rows'        => $rows,
+            'startDate'   => $startDate,
+            'endDate'     => $endDate,
+            'method'      => $method,
+            'totalIncome' => $totalIncome,
+            'cashTotal'   => $cashTotal,
+            'upiTotal'    => $upiTotal,
+            'bankTotal'   => $bankTotal,
+        ], 'layouts/office');
+    }
+
+    /**
+     * Expense Report
+     */
+    public function expenseReport(Request $request): Response
+    {
+        $startDate = trim((string)$request->get('start_date', date('Y-m-01')));
+        $endDate = trim((string)$request->get('end_date', date('Y-m-d')));
+        $category = trim((string)$request->get('category', ''));
+
+        $pdo = \App\Core\Database::getConnection();
+        $params = [$startDate, $endDate];
+        $sql = "SELECT e.*, a.account_name 
+                FROM business_expenses e 
+                LEFT JOIN finance_accounts a ON e.account_id = a.id 
+                WHERE e.expense_date BETWEEN ? AND ? AND e.status != 'rejected'";
+        if (!empty($category)) {
+            $sql .= " AND LOWER(e.category) = ?";
+            $params[] = strtolower($category);
+        }
+        $sql .= " ORDER BY e.expense_date DESC, e.id DESC";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $totalExpenses = 0.0;
+        $categoryBreakdown = [];
+        foreach ($rows as $r) {
+            $amt = (float)$r['amount'];
+            $totalExpenses += $amt;
+            $cat = $r['category'] ?: 'Other Expenses';
+            $categoryBreakdown[$cat] = ($categoryBreakdown[$cat] ?? 0) + $amt;
+        }
+
+        if ($request->get('export') === 'csv') {
+            $headers = ['Expense Date', 'Expense Code', 'Title', 'Category', 'Vendor Name', 'Payment Method', 'Account', 'Amount (INR)', 'Status'];
+            $csvData = [];
+            foreach ($rows as $r) {
+                $csvData[] = [
+                    $r['expense_date'],
+                    $r['expense_code'] ?: ('EXP-' . $r['id']),
+                    $r['title'],
+                    $r['category'],
+                    $r['vendor_name'] ?? '',
+                    strtoupper($r['payment_method'] ?? 'CASH'),
+                    $r['account_name'] ?? 'Treasury',
+                    $r['amount'],
+                    ucfirst($r['status'] ?? 'Approved'),
+                ];
+            }
+            return $this->streamCsv('expense_report_' . $startDate . '_to_' . $endDate . '.csv', $headers, $csvData);
+        }
+
+        $allCategories = $this->categoryModel->getActiveCategories();
+
+        return $this->render('office/finance/reports/expenses', [
+            'title'             => 'Business Expense Report',
+            'rows'              => $rows,
+            'startDate'         => $startDate,
+            'endDate'           => $endDate,
+            'category'          => $category,
+            'allCategories'     => $allCategories,
+            'totalExpenses'     => $totalExpenses,
+            'categoryBreakdown' => $categoryBreakdown,
+        ], 'layouts/office');
+    }
+
+    /**
+     * Profit & Loss Report
+     */
+    public function profitLossReport(Request $request): Response
+    {
+        $startDate = trim((string)$request->get('start_date', date('Y-01-01')));
+        $endDate = trim((string)$request->get('end_date', date('Y-m-d')));
+
+        $pdo = \App\Core\Database::getConnection();
+
+        // 1. Accrual Invoiced Revenue
+        $stmt = $pdo->prepare("SELECT COALESCE(SUM(total_amount), 0) FROM invoices WHERE created_at BETWEEN ? AND ?");
+        $stmt->execute([$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+        $invoicedRevenue = (float)$stmt->fetchColumn();
+
+        // 2. Realized Cash Collected
+        $stmt = $pdo->prepare("SELECT COALESCE(SUM(amount), 0) FROM payments WHERE paid_at BETWEEN ? AND ? AND status = 'success'");
+        $stmt->execute([$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+        $realizedRevenue = (float)$stmt->fetchColumn();
+
+        // 3. Operational Business Expenses (excluding internal transfers)
+        $stmt = $pdo->prepare("SELECT COALESCE(SUM(amount), 0) FROM business_expenses WHERE expense_date BETWEEN ? AND ? AND status != 'rejected'");
+        $stmt->execute([$startDate, $endDate]);
+        $operatingExpenses = (float)$stmt->fetchColumn();
+
+        // 4. Staff Salary Disbursed
+        $stmt = $pdo->prepare("SELECT COALESCE(SUM(net_salary), 0) FROM payroll_items WHERE paid_at BETWEEN ? AND ? AND payment_status = 'paid'");
+        $stmt->execute([$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+        $salaryExpenses = (float)$stmt->fetchColumn();
+
+        // 5. Refunds Processed
+        $stmt = $pdo->prepare("SELECT COALESCE(SUM(amount), 0) FROM refunds WHERE (refund_date BETWEEN ? AND ? OR processed_at BETWEEN ? AND ?) AND status = 'processed'");
+        $stmt->execute([$startDate, $endDate, $startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+        $refundsPaid = (float)$stmt->fetchColumn();
+
+        // Totals
+        $totalCosts = $operatingExpenses + $salaryExpenses + $refundsPaid;
+        $netAccrualProfit = $invoicedRevenue - $totalCosts;
+        $netCashSurplus = $realizedRevenue - $totalCosts;
+
+        $accrualMargin = $invoicedRevenue > 0 ? (($netAccrualProfit / $invoicedRevenue) * 100) : 0.0;
+        $cashMargin = $realizedRevenue > 0 ? (($netCashSurplus / $realizedRevenue) * 100) : 0.0;
+
+        if ($request->get('export') === 'csv') {
+            $headers = ['Metric / Line Item', 'Amount (INR)', 'Notes / Explanations'];
+            $csvData = [
+                ['Total Invoiced Revenue (Accrual)', $invoicedRevenue, 'Total amount billed to customers on trips within this date range'],
+                ['Total Realized Collections (Cash)', $realizedRevenue, 'Actual money received in cash/bank from customers'],
+                ['Operational Business Expenses', $operatingExpenses, 'Office rent, fuel, vehicle maintenance, marketing, supplies'],
+                ['Staff Salary Disbursed', $salaryExpenses, 'Net salaries paid to employees during this period'],
+                ['Customer Refunds Issued', $refundsPaid, 'Money returned to customers for trip cancellations/adjustments'],
+                ['Total Business Costs', $totalCosts, 'Sum of operating expenses, salaries, and refunds'],
+                ['Net Accounting Profit (Accrual)', $netAccrualProfit, 'Invoiced Revenue minus Total Costs'],
+                ['Net Cash Surplus (Cash in Hand)', $netCashSurplus, 'Realized Collections minus Total Costs'],
+                ['Accrual Profit Margin (%)', round($accrualMargin, 2) . '%', 'Accounting profitability'],
+                ['Cash Surplus Margin (%)', round($cashMargin, 2) . '%', 'Pure cash generation percentage'],
+            ];
+            return $this->streamCsv('profit_loss_' . $startDate . '_to_' . $endDate . '.csv', $headers, $csvData);
+        }
+
+        return $this->render('office/finance/reports/profit_loss', [
+            'title'              => 'Profit & Loss Statement (P&L)',
+            'startDate'          => $startDate,
+            'endDate'            => $endDate,
+            'invoicedRevenue'    => $invoicedRevenue,
+            'realizedRevenue'    => $realizedRevenue,
+            'operatingExpenses'  => $operatingExpenses,
+            'salaryExpenses'     => $salaryExpenses,
+            'refundsPaid'        => $refundsPaid,
+            'totalCosts'         => $totalCosts,
+            'netAccrualProfit'   => $netAccrualProfit,
+            'netCashSurplus'     => $netCashSurplus,
+            'accrualMargin'      => $accrualMargin,
+            'cashMargin'         => $cashMargin,
+        ], 'layouts/office');
+    }
+
+    /**
+     * Customer Pending Dues & Aging Report
+     */
+    public function customerDuesReport(Request $request): Response
+    {
+        $pdo = \App\Core\Database::getConnection();
+
+        $sql = "SELECT i.*, DATE(COALESCE(i.issued_at, i.created_at)) as invoice_date, b.booking_code, 
+                       COALESCE(c.name, u.name, 'Direct Guest') as customer_name, 
+                       COALESCE(c.phone, u.phone, '') as customer_phone, 
+                       COALESCE(c.email, u.email, '') as customer_email,
+                       DATEDIFF(CURDATE(), COALESCE(i.due_date, DATE(i.created_at))) as days_overdue,
+                       (i.total_amount - i.paid_amount) as remaining_balance 
+                FROM invoices i 
+                LEFT JOIN bookings b ON i.booking_id = b.id 
+                LEFT JOIN customers c ON i.customer_profile_id = c.id 
+                LEFT JOIN users u ON i.customer_id = u.id 
+                WHERE (i.total_amount - i.paid_amount) > 0.01
+                ORDER BY days_overdue DESC, remaining_balance DESC";
+
+        $rows = $pdo->query($sql)->fetchAll(\PDO::FETCH_ASSOC);
+
+        $totalDues = 0.0;
+        $bucketCurrent = 0.0;   // 0-15 days
+        $bucket16to30 = 0.0;    // 16-30 days
+        $bucket31to60 = 0.0;    // 31-60 days
+        $bucketOver60 = 0.0;    // 60+ days
+
+        foreach ($rows as $r) {
+            $bal = (float)$r['remaining_balance'];
+            $days = (int)$r['days_overdue'];
+            $totalDues += $bal;
+
+            if ($days <= 15) {
+                $bucketCurrent += $bal;
+            } elseif ($days <= 30) {
+                $bucket16to30 += $bal;
+            } elseif ($days <= 60) {
+                $bucket31to60 += $bal;
+            } else {
+                $bucketOver60 += $bal;
+            }
+        }
+
+        if ($request->get('export') === 'csv') {
+            $headers = ['Invoice #', 'Customer Name', 'Phone', 'Booking Code', 'Invoice Date', 'Due Date', 'Total Amount', 'Paid Amount', 'Pending Due (INR)', 'Days Overdue', 'Aging Bucket'];
+            $csvData = [];
+            foreach ($rows as $r) {
+                $days = (int)$r['days_overdue'];
+                $bucket = ($days <= 15) ? '0-15 Days' : (($days <= 30) ? '16-30 Days' : (($days <= 60) ? '31-60 Days' : '60+ Days Overdue'));
+                $csvData[] = [
+                    $r['invoice_number'],
+                    $r['customer_name'] ?? 'Direct Customer',
+                    $r['customer_phone'] ?? '',
+                    $r['booking_code'] ?? '',
+                    $r['invoice_date'],
+                    $r['due_date'] ?? 'On Arrival',
+                    $r['total_amount'],
+                    $r['paid_amount'],
+                    $r['remaining_balance'],
+                    $days,
+                    $bucket,
+                ];
+            }
+            return $this->streamCsv('customer_dues_aging_report.csv', $headers, $csvData);
+        }
+
+        return $this->render('office/finance/reports/customer_dues', [
+            'title'          => 'Customer Pending Dues & Aging Report',
+            'rows'           => $rows,
+            'totalDues'      => $totalDues,
+            'bucketCurrent'  => $bucketCurrent,
+            'bucket16to30'   => $bucket16to30,
+            'bucket31to60'   => $bucket31to60,
+            'bucketOver60'   => $bucketOver60,
+        ], 'layouts/office');
+    }
+
+    /**
+     * Staff Salary Report
+     */
+    public function salaryReport(Request $request): Response
+    {
+        $year = (int)$request->get('year', (int)date('Y'));
+        $month = (int)$request->get('month', 0);
+
+        $pdo = \App\Core\Database::getConnection();
+        $params = [$year];
+        $sql = "SELECT pi.*, pi.allowances_total as allowances, pi.deductions_total as deductions,
+                       DATE(pi.paid_at) as payment_date,
+                       p.month as payroll_month, p.year as payroll_year, p.payroll_code, 
+                       CONCAT(e.first_name, ' ', e.last_name) as employee_name, e.employee_code, e.department as department_name, 
+                       a.account_name 
+                FROM payroll_items pi 
+                JOIN payrolls p ON pi.payroll_id = p.id 
+                JOIN employees e ON pi.employee_id = e.id 
+                LEFT JOIN finance_accounts a ON pi.payment_ref = a.id 
+                WHERE p.year = ?";
+        if ($month > 0) {
+            $sql .= " AND p.month = ?";
+            $params[] = $month;
+        }
+        $sql .= " ORDER BY p.year DESC, p.month DESC, e.first_name ASC";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $totalBasic = 0.0;
+        $totalAllowances = 0.0;
+        $totalDeductions = 0.0;
+        $totalNetSalary = 0.0;
+        $totalPaid = 0.0;
+        $totalPending = 0.0;
+
+        foreach ($rows as $r) {
+            $totalBasic += (float)$r['basic_salary'];
+            $totalAllowances += (float)$r['allowances'];
+            $totalDeductions += (float)$r['deductions'];
+            $net = (float)$r['net_salary'];
+            $totalNetSalary += $net;
+            if ($r['payment_status'] === 'paid') {
+                $totalPaid += $net;
+            } else {
+                $totalPending += $net;
+            }
+        }
+
+        if ($request->get('export') === 'csv') {
+            $headers = ['Month/Year', 'Employee Code', 'Employee Name', 'Department', 'Basic Salary', 'Allowances', 'Deductions', 'Net Salary (INR)', 'Payment Status', 'Payment Date', 'Account'];
+            $csvData = [];
+            foreach ($rows as $r) {
+                $mName = date('M', mktime(0, 0, 0, (int)$r['payroll_month'], 10));
+                $csvData[] = [
+                    $mName . ' ' . $r['payroll_year'],
+                    $r['employee_code'],
+                    $r['employee_name'],
+                    $r['department_name'] ?? 'Operations',
+                    $r['basic_salary'],
+                    $r['allowances'],
+                    $r['deductions'],
+                    $r['net_salary'],
+                    ucfirst($r['payment_status']),
+                    $r['payment_date'] ?? 'Unpaid',
+                    $r['account_name'] ?? '',
+                ];
+            }
+            return $this->streamCsv('salary_report_' . $year . '.csv', $headers, $csvData);
+        }
+
+        return $this->render('office/finance/reports/salary', [
+            'title'           => 'Staff Salary & Payroll Report',
+            'rows'            => $rows,
+            'year'            => $year,
+            'month'           => $month,
+            'totalBasic'      => $totalBasic,
+            'totalAllowances' => $totalAllowances,
+            'totalDeductions' => $totalDeductions,
+            'totalNetSalary'  => $totalNetSalary,
+            'totalPaid'       => $totalPaid,
+            'totalPending'    => $totalPending,
+        ], 'layouts/office');
+    }
+
+    /**
+     * Expense Category Spend Report
+     */
+    public function expenseCategoryReport(Request $request): Response
+    {
+        $startDate = trim((string)$request->get('start_date', date('Y-01-01')));
+        $endDate = trim((string)$request->get('end_date', date('Y-m-d')));
+
+        $pdo = \App\Core\Database::getConnection();
+
+        $stmt = $pdo->prepare("SELECT category, COUNT(*) as voucher_count, COALESCE(SUM(amount), 0) as total_amount 
+                               FROM business_expenses 
+                               WHERE expense_date BETWEEN ? AND ? AND status != 'rejected' 
+                               GROUP BY category 
+                               ORDER BY total_amount DESC");
+        $stmt->execute([$startDate, $endDate]);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $grandTotal = 0.0;
+        foreach ($rows as $r) {
+            $grandTotal += (float)$r['total_amount'];
+        }
+
+        foreach ($rows as &$r) {
+            $amt = (float)$r['total_amount'];
+            $r['percentage'] = $grandTotal > 0 ? round(($amt / $grandTotal) * 100, 1) : 0;
+        }
+        unset($r);
+
+        if ($request->get('export') === 'csv') {
+            $headers = ['Category', 'Voucher Count', 'Total Spent (INR)', 'Percentage of Total (%)'];
+            $csvData = [];
+            foreach ($rows as $r) {
+                $csvData[] = [
+                    $r['category'],
+                    $r['voucher_count'],
+                    $r['total_amount'],
+                    $r['percentage'] . '%',
+                ];
+            }
+            return $this->streamCsv('expense_category_report.csv', $headers, $csvData);
+        }
+
+        return $this->render('office/finance/reports/expense_categories', [
+            'title'      => 'Expense Category Spend Breakdown',
+            'rows'       => $rows,
+            'startDate'  => $startDate,
+            'endDate'    => $endDate,
+            'grandTotal' => $grandTotal,
+        ], 'layouts/office');
+    }
+
+    /**
+     * Stream CSV download
+     */
+    private function streamCsv(string $filename, array $headers, array $rows): Response
+    {
+        $output = fopen('php://temp', 'r+');
+        // UTF-8 BOM for Microsoft Excel
+        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+        fputcsv($output, $headers);
+        foreach ($rows as $row) {
+            fputcsv($output, $row);
+        }
+        rewind($output);
+        $csv = stream_get_contents($output);
+        fclose($output);
+
+        return new Response($csv, 200, [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Pragma'              => 'no-cache',
+            'Expires'             => '0',
+        ]);
     }
 }

@@ -88,6 +88,21 @@ class BusinessExpense extends Model
             $params[] = $filters['status'];
         }
 
+        if (!empty($filters['account_id'])) {
+            $where[] = "account_id = ?";
+            $params[] = (int)$filters['account_id'];
+        }
+
+        if (!empty($filters['date_from'])) {
+            $where[] = "expense_date >= ?";
+            $params[] = $filters['date_from'];
+        }
+
+        if (!empty($filters['date_to'])) {
+            $where[] = "expense_date <= ?";
+            $params[] = $filters['date_to'];
+        }
+
         if (!empty($filters['search'])) {
             $term = '%' . trim($filters['search']) . '%';
             $where[] = "(expense_code LIKE ? OR title LIKE ? OR vendor_name LIKE ?)";
@@ -123,5 +138,31 @@ class BusinessExpense extends Model
         $stmt->execute($params);
         return $stmt->fetchAll();
     }
-}
 
+    public function getCategorySpendStats(?string $dateFrom = null, ?string $dateTo = null): array
+    {
+        $where = ["status = 'paid'"];
+        $params = [];
+
+        if (!empty($dateFrom)) {
+            $where[] = "expense_date >= ?";
+            $params[] = $dateFrom;
+        }
+        if (!empty($dateTo)) {
+            $where[] = "expense_date <= ?";
+            $params[] = $dateTo;
+        }
+
+        $whereSql = implode(' AND ', $where);
+        $sql = "SELECT category, SUM(amount) as total_spend, COUNT(*) as transaction_count,
+                       MAX(expense_date) as last_expense_date
+                FROM `business_expenses`
+                WHERE {$whereSql}
+                GROUP BY category
+                ORDER BY total_spend DESC";
+
+        $stmt = $this->getPdo()->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll();
+    }
+}

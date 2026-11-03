@@ -74,11 +74,43 @@ if (!function_exists('auth_role')) {
     }
 }
 
-if (!function_exists('format_currency')) {
-    function format_currency(float|int $amount): string
+if (!function_exists('format_inr')) {
+    /**
+     * Format an amount using the Indian numbering system (Lakhs and Crores grouping)
+     * e.g. 1000 -> ₹1,000, 25500 -> ₹25,500, 125000 -> ₹1,25,000, 1050000 -> ₹10,50,000
+     */
+    function format_inr(float|int|string|null $amount, bool $showDecimals = false): string
     {
-        $symbol = Config::get('app.currency_symbol', '₹');
-        return $symbol . ' ' . number_format($amount, 2);
+        if ($amount === null || $amount === '') {
+            return '₹0';
+        }
+        $num = (float)$amount;
+        $isNeg = $num < 0;
+        $num = abs($num);
+        $formattedDec = '';
+        if ($showDecimals) {
+            $formattedDec = '.' . sprintf('%02d', round(($num - floor($num)) * 100));
+        }
+        $intStr = (string)(int)floor($num);
+        if (strlen($intStr) > 3) {
+            $last3 = substr($intStr, -3);
+            $rest = substr($intStr, 0, -3);
+            $rest = preg_replace('/\B(?=(\d{2})+(?!\d))/', ',', $rest);
+            $intFormatted = $rest . ',' . $last3;
+        } else {
+            $intFormatted = $intStr;
+        }
+        return ($isNeg ? '-' : '') . '₹' . $intFormatted . $formattedDec;
+    }
+}
+
+if (!function_exists('format_currency')) {
+    /**
+     * Reusable currency formatting helper displaying consistent Indian Rupee format
+     */
+    function format_currency(float|int|string|null $amount, bool $showDecimals = false): string
+    {
+        return format_inr($amount, $showDecimals);
     }
 }
 

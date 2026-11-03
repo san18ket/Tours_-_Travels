@@ -135,15 +135,17 @@ class InvoiceController extends Controller
 
     public function recordPayment(Request $request, array $params): Response
     {
-        $invoiceId = (int)($params['id'] ?? 0);
+        $invoiceId = (int)($params['id'] ?? $request->input('invoice_id', 0));
+        $redirectTo = $request->input('redirect_to') ?: url("/office/invoices/{$invoiceId}");
         try {
             $data = $this->validate($request->all(), [
                 'amount'         => 'required|numeric',
-                'payment_method' => 'required|in:upi,net_banking,card,cash',
+                'payment_method' => 'required|in:upi,net_banking,card,cash,bank_transfer',
             ]);
 
             $idempotencyKey = $request->input('idempotency_key') ?: bin2hex(random_bytes(16));
             $transactionId = $request->input('transaction_id') ?: ('TXN-' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8)));
+            $accountId = (int)$request->input('account_id', 0) ?: null;
 
             $payment = $this->billingService->recordPayment(
                 $invoiceId,
@@ -151,15 +153,30 @@ class InvoiceController extends Controller
                 $data['payment_method'],
                 $transactionId,
                 $idempotencyKey,
-                $request->input('notes')
+                $request->input('notes'),
+                $accountId
             );
 
-            Session::setFlash('success', "Payment {$payment['payment_reference']} of " . format_currency((float)$data['amount']) . " recorded successfully.");
+            $msg = "Payment {$payment['payment_reference']} of " . format_currency((float)$data['amount']) . " recorded successfully.";
+            Session::setFlash('success', $msg);
+
+            if ($request->isAjax()) {
+                return $this->json([
+                    'success'  => true,
+                    'message'  => $msg,
+                    'redirect' => $redirectTo,
+                    'payment'  => $payment,
+                ]);
+            }
         } catch (Throwable $e) {
-            Session::setFlash('danger', $e->getMessage());
+            $err = $e->getMessage();
+            if ($request->isAjax()) {
+                return $this->json(['success' => false, 'message' => $err], 422);
+            }
+            Session::setFlash('danger', $err);
         }
 
-        return $this->redirect(url("/office/invoices/{$invoiceId}"));
+        return $this->redirect($redirectTo);
     }
 
     public function printInvoice(Request $request, array $params): Response

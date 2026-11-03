@@ -8,7 +8,7 @@ class Refund extends Model
     protected string $table = 'refunds';
     protected array $fillable = [
         'refund_number', 'booking_id', 'invoice_id', 'payment_id',
-        'customer_id', 'amount', 'reason', 'status', 'refund_method',
+        'customer_id', 'amount', 'refund_date', 'reason', 'status', 'refund_method',
         'gateway_refund_id', 'processed_by', 'processed_at', 'notes'
     ];
 
@@ -30,9 +30,20 @@ class Refund extends Model
             $params[] = $filters['status'];
         }
 
+        if (!empty($filters['date_from'])) {
+            $where[] = "COALESCE(r.refund_date, DATE(r.created_at)) >= ?";
+            $params[] = $filters['date_from'];
+        }
+
+        if (!empty($filters['date_to'])) {
+            $where[] = "COALESCE(r.refund_date, DATE(r.created_at)) <= ?";
+            $params[] = $filters['date_to'];
+        }
+
         if (!empty($filters['search'])) {
             $term = '%' . trim($filters['search']) . '%';
-            $where[] = "(r.refund_number LIKE ? OR b.booking_code LIKE ? OR u.name LIKE ? OR c.name LIKE ?)";
+            $where[] = "(r.refund_number LIKE ? OR b.booking_code LIKE ? OR i.invoice_number LIKE ? OR u.name LIKE ? OR c.name LIKE ?)";
+            $params[] = $term;
             $params[] = $term;
             $params[] = $term;
             $params[] = $term;
@@ -41,13 +52,15 @@ class Refund extends Model
 
         $whereSql = implode(' AND ', $where);
 
-        $sql = "SELECT r.*, b.booking_code,
+        $sql = "SELECT r.*, COALESCE(r.refund_date, DATE(r.created_at)) as refund_date,
+                       b.booking_code, i.invoice_number, i.total_amount as invoice_total, i.paid_amount as invoice_paid,
                        COALESCE(c.name, u.name) as customer_name,
                        COALESCE(c.phone, u.phone) as customer_phone,
                        COALESCE(c.email, u.email) as customer_email,
                        p.payment_reference,
                        pu.name as processed_by_name
                 FROM `refunds` r
+                LEFT JOIN `invoices` i ON r.invoice_id = i.id
                 LEFT JOIN `bookings` b ON r.booking_id = b.id
                 LEFT JOIN `users` u ON r.customer_id = u.id
                 LEFT JOIN `customers` c ON b.customer_id = c.id
@@ -72,9 +85,20 @@ class Refund extends Model
             $params[] = $filters['status'];
         }
 
+        if (!empty($filters['date_from'])) {
+            $where[] = "COALESCE(r.refund_date, DATE(r.created_at)) >= ?";
+            $params[] = $filters['date_from'];
+        }
+
+        if (!empty($filters['date_to'])) {
+            $where[] = "COALESCE(r.refund_date, DATE(r.created_at)) <= ?";
+            $params[] = $filters['date_to'];
+        }
+
         if (!empty($filters['search'])) {
             $term = '%' . trim($filters['search']) . '%';
-            $where[] = "(r.refund_number LIKE ? OR b.booking_code LIKE ? OR u.name LIKE ?)";
+            $where[] = "(r.refund_number LIKE ? OR b.booking_code LIKE ? OR i.invoice_number LIKE ? OR u.name LIKE ?)";
+            $params[] = $term;
             $params[] = $term;
             $params[] = $term;
             $params[] = $term;
@@ -84,6 +108,7 @@ class Refund extends Model
 
         $sql = "SELECT COUNT(*)
                 FROM `refunds` r
+                LEFT JOIN `invoices` i ON r.invoice_id = i.id
                 LEFT JOIN `bookings` b ON r.booking_id = b.id
                 LEFT JOIN `users` u ON r.customer_id = u.id
                 WHERE {$whereSql}";
@@ -93,4 +118,3 @@ class Refund extends Model
         return (int)$stmt->fetchColumn();
     }
 }
-

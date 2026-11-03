@@ -204,26 +204,31 @@ $router->post('/office/invoices/{id}/payment', [InvoiceController::class, 'recor
 // -----------------------------------------------------------------------------
 $router->get('/office/finance', [FinanceController::class, 'dashboard'], ['auth', 'role:admin,dispatcher']);
 $router->get('/office/finance/dashboard', [FinanceController::class, 'dashboard'], ['auth', 'role:admin,dispatcher']);
-$router->get('/office/finance/transactions', [FinanceController::class, 'transactions'], ['auth', 'role:admin,dispatcher']);
-$router->post('/office/finance/transactions', [FinanceController::class, 'recordTransaction'], ['auth', 'role:admin,dispatcher', 'csrf']);
-$router->get('/office/finance/transactions/{id}', [FinanceController::class, 'showTransaction'], ['auth', 'role:admin,dispatcher']);
-$router->post('/office/finance/transactions/{id}', [FinanceController::class, 'updateTransaction'], ['auth', 'role:admin,dispatcher', 'csrf']);
-$router->post('/office/finance/transactions/{id}/delete', [FinanceController::class, 'deleteTransaction'], ['auth', 'role:admin,dispatcher', 'csrf']);
-$router->post('/office/finance/transactions/{id}/toggle-status', [FinanceController::class, 'toggleTransactionStatus'], ['auth', 'role:admin,dispatcher', 'csrf']);
-$router->post('/office/finance/transfer', [FinanceController::class, 'transfer'], ['auth', 'role:admin,dispatcher', 'csrf']);
-$router->get('/office/finance/accounts', [FinanceController::class, 'accounts'], ['auth', 'role:admin,dispatcher']);
-$router->post('/office/finance/accounts', [FinanceController::class, 'storeAccount'], ['auth', 'role:admin,dispatcher', 'csrf']);
-$router->get('/office/finance/accounts/{id}', [FinanceController::class, 'accountShow'], ['auth', 'role:admin,dispatcher']);
-$router->post('/office/finance/accounts/{id}', [FinanceController::class, 'updateAccount'], ['auth', 'role:admin,dispatcher', 'csrf']);
-$router->post('/office/finance/accounts/{id}/toggle-status', [FinanceController::class, 'toggleAccountStatus'], ['auth', 'role:admin,dispatcher', 'csrf']);
+
+// Customer Payments
+$router->get('/office/finance/payments', [FinanceController::class, 'payments'], ['auth', 'role:admin,dispatcher']);
+$router->get('/office/finance/pending-payments', [FinanceController::class, 'pendingPayments'], ['auth', 'role:admin,dispatcher']);
+$router->get('/office/finance/refunds', [FinanceController::class, 'refunds'], ['auth', 'role:admin,dispatcher']);
+$router->post('/office/finance/refunds', [FinanceController::class, 'storeRefund'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->post('/office/finance/refunds/{id}/status', [FinanceController::class, 'updateRefundStatus'], ['auth', 'role:admin,dispatcher', 'csrf']);
+
+// Business Expenses
 $router->get('/office/finance/expenses', [FinanceController::class, 'expenses'], ['auth', 'role:admin,dispatcher']);
 $router->post('/office/finance/expenses', [FinanceController::class, 'storeExpense'], ['auth', 'role:admin,dispatcher', 'csrf']);
 $router->post('/office/finance/expenses/{id}/status', [FinanceController::class, 'updateExpenseStatus'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->get('/office/finance/expense-categories', [FinanceController::class, 'expenseCategories'], ['auth', 'role:admin,dispatcher']);
+$router->post('/office/finance/expense-categories', [FinanceController::class, 'storeExpenseCategory'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->post('/office/finance/expense-categories/{id}', [FinanceController::class, 'updateExpenseCategory'], ['auth', 'role:admin,dispatcher', 'csrf']);
+
+// Staff Salary & Compensation
 $router->get('/office/finance/payroll', [FinanceController::class, 'payroll'], ['auth', 'role:admin,dispatcher']);
 $router->post('/office/finance/payroll/generate', [FinanceController::class, 'generatePayroll'], ['auth', 'role:admin,dispatcher', 'csrf']);
 $router->get('/office/finance/payroll/{id}', [FinanceController::class, 'payrollShow'], ['auth', 'role:admin,dispatcher']);
 $router->post('/office/finance/payroll/{id}/pay', [FinanceController::class, 'markPayrollPaid'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->get('/office/finance/payslips', [FinanceController::class, 'payslips'], ['auth', 'role:admin,dispatcher']);
 $router->get('/office/finance/payslips/{id}', [FinanceController::class, 'payslip'], ['auth', 'role:admin,dispatcher']);
+$router->post('/office/finance/payslips/{id}/pay', [FinanceController::class, 'markPayslipPaid'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->get('/office/finance/salary-history', [FinanceController::class, 'salaryHistory'], ['auth', 'role:admin,dispatcher']);
 $router->get('/office/finance/advances', [FinanceController::class, 'advances'], ['auth', 'role:admin,dispatcher']);
 $router->post('/office/finance/advances', [FinanceController::class, 'storeAdvance'], ['auth', 'role:admin,dispatcher', 'csrf']);
 $router->post('/office/finance/advances/{id}/status', [FinanceController::class, 'updateAdvanceStatus'], ['auth', 'role:admin,dispatcher', 'csrf']);
@@ -231,8 +236,31 @@ $router->get('/office/finance/advances/{id}', [FinanceController::class, 'showAd
 $router->post('/office/finance/advances/{id}', [FinanceController::class, 'updateAdvance'], ['auth', 'role:admin,dispatcher', 'csrf']);
 $router->post('/office/finance/advances/{id}/delete', [FinanceController::class, 'deleteAdvance'], ['auth', 'role:admin,dispatcher', 'csrf']);
 $router->post('/office/finance/advances/{id}/toggle-status', [FinanceController::class, 'toggleAdvanceStatus'], ['auth', 'role:admin,dispatcher', 'csrf']);
-$router->get('/office/finance/refunds', [FinanceController::class, 'refunds'], ['auth', 'role:admin,dispatcher']);
-$router->post('/office/finance/refunds/{id}/status', [FinanceController::class, 'updateRefundStatus'], ['auth', 'role:admin,dispatcher', 'csrf']);
+
+// Cash & Bank
+$router->get('/office/finance/accounts', [FinanceController::class, 'accounts'], ['auth', 'role:admin,dispatcher']);
+$router->post('/office/finance/accounts', [FinanceController::class, 'storeAccount'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->get('/office/finance/accounts/{id}', [FinanceController::class, 'accountShow'], ['auth', 'role:admin,dispatcher']);
+$router->post('/office/finance/accounts/{id}', [FinanceController::class, 'updateAccount'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->post('/office/finance/accounts/{id}/toggle-status', [FinanceController::class, 'toggleAccountStatus'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->get('/office/finance/account-details', [FinanceController::class, 'accountDetailsDirect'], ['auth', 'role:admin,dispatcher']);
+$router->get('/office/finance/transactions', [FinanceController::class, 'transactions'], ['auth', 'role:admin,dispatcher']);
+$router->post('/office/finance/transactions', [FinanceController::class, 'recordTransaction'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->get('/office/finance/transactions/{id}', [FinanceController::class, 'showTransaction'], ['auth', 'role:admin,dispatcher']);
+$router->post('/office/finance/transactions/{id}', [FinanceController::class, 'updateTransaction'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->post('/office/finance/transactions/{id}/delete', [FinanceController::class, 'deleteTransaction'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->post('/office/finance/transactions/{id}/toggle-status', [FinanceController::class, 'toggleTransactionStatus'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->get('/office/finance/transaction-details', [FinanceController::class, 'transactionDetailsDirect'], ['auth', 'role:admin,dispatcher']);
+$router->post('/office/finance/transfer', [FinanceController::class, 'transfer'], ['auth', 'role:admin,dispatcher', 'csrf']);
+
+// Financial Reports
+$router->get('/office/finance/reports', [FinanceController::class, 'reports'], ['auth', 'role:admin,dispatcher']);
+$router->get('/office/finance/reports/income', [FinanceController::class, 'incomeReport'], ['auth', 'role:admin,dispatcher']);
+$router->get('/office/finance/reports/expenses', [FinanceController::class, 'expenseReport'], ['auth', 'role:admin,dispatcher']);
+$router->get('/office/finance/reports/profit-loss', [FinanceController::class, 'profitLossReport'], ['auth', 'role:admin,dispatcher']);
+$router->get('/office/finance/reports/customer-dues', [FinanceController::class, 'customerDuesReport'], ['auth', 'role:admin,dispatcher']);
+$router->get('/office/finance/reports/salary', [FinanceController::class, 'salaryReport'], ['auth', 'role:admin,dispatcher']);
+$router->get('/office/finance/reports/expense-categories', [FinanceController::class, 'expenseCategoryReport'], ['auth', 'role:admin,dispatcher']);
 
 // -----------------------------------------------------------------------------
 // Backups & Disaster Recovery (Admin Only)

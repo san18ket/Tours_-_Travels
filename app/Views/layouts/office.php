@@ -96,14 +96,28 @@
                     $isEmployeeCreateActive = ($currPath === '/office/employees/create');
                     $isEmployeeListActive   = ($isDriversActive && !$isEmployeeCreateActive);
 
-                    $isFinanceOverviewActive  = ($currPath === '/office/finance' || $currPath === '/office/finance/dashboard');
-                    $isFinanceAccountsActive  = $isPrefix('/office/finance/accounts');
-                    $isFinanceTxnsActive      = $isPrefix('/office/finance/transactions');
-                    $isFinanceExpensesActive  = $isPrefix('/office/finance/expenses');
-                    $isFinancePayrollActive   = ($isPrefix('/office/finance/payroll') || $isPrefix('/office/finance/payslips'));
-                    $isFinanceAdvancesActive  = $isPrefix('/office/finance/advances');
-                    $isFinanceRefundsActive   = $isPrefix('/office/finance/refunds');
-                    $isFinanceInvoicesActive  = $isPrefix('/office/invoices');
+                    $isFinanceOverviewActive        = ($currPath === '/office/finance' || $currPath === '/office/finance/dashboard');
+                    $isFinanceInvoicesActive        = $isPrefix('/office/invoices');
+                    $isFinanceRefundsActive         = $isPrefix('/office/finance/refunds');
+                    $isFinancePaymentsActive        = $isPrefix('/office/finance/payments');
+                    $isFinancePendingPaymentsActive = $isPrefix('/office/finance/pending-payments');
+                    $isFinanceExpensesActive        = ($currPath === '/office/finance/expenses');
+                    $isFinanceExpCategoriesActive   = $isPrefix('/office/finance/expense-categories');
+                    $isFinancePayrollActive         = ($currPath === '/office/finance/payroll');
+                    $isFinanceAdvancesActive        = $isPrefix('/office/finance/advances');
+                    $isFinancePayslipsActive        = ($isPrefix('/office/finance/payslips') && !str_contains($currPath, 'pay'));
+                    $isFinanceSalaryHistoryActive   = $isPrefix('/office/finance/salary-history');
+                    $isFinanceAccountsActive        = ($currPath === '/office/finance/accounts');
+                    $isFinanceTxnsActive            = ($currPath === '/office/finance/transactions');
+                    $isFinanceAccountDetailsActive  = ($currPath === '/office/finance/account-details' || (str_starts_with($currPath, '/office/finance/accounts/') && $currPath !== '/office/finance/accounts'));
+                    $isFinanceTxnDetailsActive      = ($currPath === '/office/finance/transaction-details' || (str_starts_with($currPath, '/office/finance/transactions/') && $currPath !== '/office/finance/transactions'));
+                    $isFinanceReportIncomeActive    = ($currPath === '/office/finance/reports/income');
+                    $isFinanceReportExpensesActive  = ($currPath === '/office/finance/reports/expenses');
+                    $isFinanceReportPLActive        = ($currPath === '/office/finance/reports/profit-loss');
+                    $isFinanceReportDuesActive      = ($currPath === '/office/finance/reports/customer-dues');
+                    $isFinanceReportSalaryActive    = ($currPath === '/office/finance/reports/salary');
+                    $isFinanceReportsHubActive      = ($currPath === '/office/finance/reports');
+                    $canViewFinance                 = (in_array(strtolower($role ?? ''), ['admin', 'owner', 'superadmin'], true) || has_permission('finance.view'));
 
                     $isTripAssignActive  = ($isPrefix('/office/trips/assign') || $isPrefix('/office/dispatch'));
                     $isTripHistoryActive = $isPrefix('/office/trips/history');
@@ -258,7 +272,8 @@
                     </div>
                 </div>
 
-                <!-- 6. Finance & Billing -->
+                <!-- 6. Finance Management -->
+                <?php if ($canViewFinance): ?>
                 <div class="sidebar-category" id="cat-finance">
                     <button type="button" class="category-header <?= $isFinanceActive ? 'has-active open' : '' ?>" id="cat-finance-header" data-title="<?= e(__('sidebar.finance', 'Finance')) ?>" onclick="toggleCategory('cat-finance')" aria-expanded="<?= $isFinanceActive ? 'true' : 'false' ?>">
                         <span class="category-label">
@@ -273,57 +288,153 @@
                     </button>
                     <div class="sidebar-category-items <?= $isFinanceActive ? 'expanded' : '' ?>" id="cat-finance-items">
                         <div class="category-items-inner">
+                            <!-- 1. Finance Overview -->
+                            <div class="sidebar-sub-heading">1. Finance Overview</div>
                             <a href="<?= url('/office/finance') ?>" class="nav-link <?= $isFinanceOverviewActive ? 'active' : '' ?>" data-no-ajax="true">
                                 <span class="nav-link-left">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                                    <span class="nav-text"><?= e(__('sidebar.finance_overview', 'Overview')) ?></span>
+                                    <span class="nav-text">Finance Dashboard</span>
                                 </span>
                             </a>
-                            <a href="<?= url('/office/finance/accounts') ?>" class="nav-link <?= $isFinanceAccountsActive ? 'active' : '' ?>" data-no-ajax="true">
+
+                            <!-- 2. Customer Payments -->
+                            <div class="sidebar-sub-heading">2. Customer Payments</div>
+                            <a href="<?= url('/office/invoices') ?>" class="nav-link <?= $isFinanceInvoicesActive ? 'active' : '' ?>" data-no-ajax="true">
                                 <span class="nav-link-left">
-                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
-                                    <span class="nav-text"><?= e(__('sidebar.accounts', 'Accounts & Banks')) ?></span>
-                                </span>
-                            </a>
-                            <a href="<?= url('/office/finance/transactions') ?>" class="nav-link <?= $isFinanceTxnsActive ? 'active' : '' ?>" data-no-ajax="true">
-                                <span class="nav-link-left">
-                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
-                                    <span class="nav-text"><?= e(__('sidebar.transactions', 'Money Transactions')) ?></span>
-                                </span>
-                            </a>
-                            <a href="<?= url('/office/finance/expenses') ?>" class="nav-link <?= $isFinanceExpensesActive ? 'active' : '' ?>" data-no-ajax="true">
-                                <span class="nav-link-left">
-                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                                    <span class="nav-text"><?= e(__('sidebar.expenses', 'Expenses')) ?></span>
-                                </span>
-                            </a>
-                            <a href="<?= url('/office/finance/payroll') ?>" class="nav-link <?= $isFinancePayrollActive ? 'active' : '' ?>" data-no-ajax="true">
-                                <span class="nav-link-left">
-                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                                    <span class="nav-text"><?= e(__('sidebar.payroll', 'Payroll')) ?></span>
-                                </span>
-                            </a>
-                            <a href="<?= url('/office/finance/advances') ?>" class="nav-link <?= $isFinanceAdvancesActive ? 'active' : '' ?>" data-no-ajax="true">
-                                <span class="nav-link-left">
-                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    <span class="nav-text"><?= e(__('sidebar.advances', 'Staff Advances')) ?></span>
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                    <span class="nav-text">Invoices</span>
                                 </span>
                             </a>
                             <a href="<?= url('/office/finance/refunds') ?>" class="nav-link <?= $isFinanceRefundsActive ? 'active' : '' ?>" data-no-ajax="true">
                                 <span class="nav-link-left">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-1a4 4 0 00-4-4H4m0 0l3-3m-3 3l3 3m5 4v1a3 3 0 003 3h6a3 3 0 003-3v-6a3 3 0 00-3-3h-1"></path></svg>
-                                    <span class="nav-text"><?= e(__('sidebar.refunds', 'Refunds')) ?></span>
+                                    <span class="nav-text">Refunds</span>
                                 </span>
                             </a>
-                            <a href="<?= url('/office/invoices') ?>" class="nav-link <?= $isFinanceInvoicesActive ? 'active' : '' ?>" data-no-ajax="true">
+                            <a href="<?= url('/office/finance/payments') ?>" class="nav-link <?= $isFinancePaymentsActive ? 'active' : '' ?>" data-no-ajax="true">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <span class="nav-text">Payment History</span>
+                                </span>
+                            </a>
+                            <a href="<?= url('/office/finance/pending-payments') ?>" class="nav-link <?= $isFinancePendingPaymentsActive ? 'active' : '' ?>" data-no-ajax="true">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <span class="nav-text">Pending Payments</span>
+                                </span>
+                            </a>
+
+                            <!-- 3. Business Expenses -->
+                            <div class="sidebar-sub-heading">3. Business Expenses</div>
+                            <a href="<?= url('/office/finance/expenses') ?>" class="nav-link <?= $isFinanceExpensesActive ? 'active' : '' ?>" data-no-ajax="true">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                    <span class="nav-text">Expenses</span>
+                                </span>
+                            </a>
+                            <a href="<?= url('/office/finance/expense-categories') ?>" class="nav-link <?= $isFinanceExpCategoriesActive ? 'active' : '' ?>" data-no-ajax="true">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                                    <span class="nav-text">Expense Categories</span>
+                                </span>
+                            </a>
+
+                            <!-- 4. Staff Salary -->
+                            <div class="sidebar-sub-heading">4. Staff Salary</div>
+                            <a href="<?= url('/office/finance/payroll') ?>" class="nav-link <?= $isFinancePayrollActive ? 'active' : '' ?>" data-no-ajax="true">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                    <span class="nav-text">Payroll</span>
+                                </span>
+                            </a>
+                            <a href="<?= url('/office/finance/advances') ?>" class="nav-link <?= $isFinanceAdvancesActive ? 'active' : '' ?>" data-no-ajax="true">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <span class="nav-text">Salary Advances</span>
+                                </span>
+                            </a>
+                            <a href="<?= url('/office/finance/payslips') ?>" class="nav-link <?= $isFinancePayslipsActive ? 'active' : '' ?>" data-no-ajax="true">
                                 <span class="nav-link-left">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                    <span class="nav-text"><?= e(__('sidebar.invoices', 'GST Invoices')) ?></span>
+                                    <span class="nav-text">Payslips</span>
+                                </span>
+                            </a>
+                            <a href="<?= url('/office/finance/salary-history') ?>" class="nav-link <?= $isFinanceSalaryHistoryActive ? 'active' : '' ?>" data-no-ajax="true">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <span class="nav-text">Salary Payment History</span>
+                                </span>
+                            </a>
+
+                            <!-- 5. Cash & Bank -->
+                            <div class="sidebar-sub-heading">5. Cash & Bank</div>
+                            <a href="<?= url('/office/finance/accounts') ?>" class="nav-link <?= $isFinanceAccountsActive ? 'active' : '' ?>" data-no-ajax="true">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                                    <span class="nav-text">Accounts</span>
+                                </span>
+                            </a>
+                            <a href="<?= url('/office/finance/transactions') ?>" class="nav-link <?= $isFinanceTxnsActive ? 'active' : '' ?>" data-no-ajax="true">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                                    <span class="nav-text">Transactions</span>
+                                </span>
+                            </a>
+                            <a href="<?= url('/office/finance/account-details') ?>" class="nav-link <?= $isFinanceAccountDetailsActive ? 'active' : '' ?>" data-no-ajax="true">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                    <span class="nav-text">Account Details</span>
+                                </span>
+                            </a>
+                            <a href="<?= url('/office/finance/transaction-details') ?>" class="nav-link <?= $isFinanceTxnDetailsActive ? 'active' : '' ?>" data-no-ajax="true">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <span class="nav-text">Transaction Details</span>
+                                </span>
+                            </a>
+
+                            <!-- 6. Financial Reports -->
+                            <div class="sidebar-sub-heading">6. Financial Reports</div>
+                            <a href="<?= url('/office/finance/reports') ?>" class="nav-link <?= $isFinanceReportsHubActive ? 'active' : '' ?>" data-no-ajax="true">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                                    <span class="nav-text">Reports Overview</span>
+                                </span>
+                            </a>
+                            <a href="<?= url('/office/finance/reports/income') ?>" class="nav-link <?= $isFinanceReportIncomeActive ? 'active' : '' ?>" data-no-ajax="true">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"></path></svg>
+                                    <span class="nav-text">Income Report</span>
+                                </span>
+                            </a>
+                            <a href="<?= url('/office/finance/reports/expenses') ?>" class="nav-link <?= $isFinanceReportExpensesActive ? 'active' : '' ?>" data-no-ajax="true">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"></path></svg>
+                                    <span class="nav-text">Expense Report</span>
+                                </span>
+                            </a>
+                            <a href="<?= url('/office/finance/reports/profit-loss') ?>" class="nav-link <?= $isFinanceReportPLActive ? 'active' : '' ?>" data-no-ajax="true">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                                    <span class="nav-text">Profit & Loss Report</span>
+                                </span>
+                            </a>
+                            <a href="<?= url('/office/finance/reports/customer-dues') ?>" class="nav-link <?= $isFinanceReportDuesActive ? 'active' : '' ?>" data-no-ajax="true">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <span class="nav-text">Customer Dues Report</span>
+                                </span>
+                            </a>
+                            <a href="<?= url('/office/finance/reports/salary') ?>" class="nav-link <?= $isFinanceReportSalaryActive ? 'active' : '' ?>" data-no-ajax="true">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                    <span class="nav-text">Salary Report</span>
                                 </span>
                             </a>
                         </div>
                     </div>
                 </div>
+                <?php endif; ?>
 
                 <!-- 7. Trip Operations -->
                 <div class="sidebar-category" id="cat-trips">
@@ -373,7 +484,7 @@
 
                 <!-- 9. Reports & Audits -->
                 <div class="sidebar-category" id="cat-reports">
-                    <a href="<?= url('/office/dashboard') ?>#reports" class="category-header direct-link" id="cat-reports-header" data-title="<?= e(__('sidebar.reports', 'Reports')) ?>" data-no-ajax="true">
+                    <a href="<?= url('/office/finance/reports') ?>" class="category-header direct-link <?= $isFinanceReportsHubActive ? 'has-active' : '' ?>" id="cat-reports-header" data-title="<?= e(__('sidebar.reports', 'Reports')) ?>" data-no-ajax="true">
                         <span class="category-label">
                             <span class="category-icon-wrap">
                                 <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>

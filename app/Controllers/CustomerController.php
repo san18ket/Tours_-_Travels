@@ -672,7 +672,7 @@ class CustomerController extends Controller
         }
 
         return $savedRelPath;
-    }
+    }
     /**
      * Re-dispatch customer welcome email without recreating customer
      */

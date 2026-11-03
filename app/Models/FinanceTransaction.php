@@ -87,6 +87,99 @@ class FinanceTransaction extends Model
         }
     }
 
+    /**
+     * Transfer funds between two company accounts atomically
+     */
+    public function transferFunds(array $data): array
+    {
+        $pdo = $this->getPdo();
+        $fromId = (int)($data['from_account_id'] ?? 0);
+        $toId   = (int)($data['to_account_id'] ?? 0);
+        $amount = abs((float)($data['amount'] ?? 0));
+        $ref    = trim((string)($data['transfer_ref'] ?? ('TRF-' . date('Ymd-His'))));
+        $notes  = trim((string)($data['notes'] ?? 'Internal account transfer'));
+        $userId = $data['created_by'] ?? null;
+        $now    = date('Y-m-d H:i:s');
+
+        if ($fromId <= 0 || $toId <= 0 || $fromId === $toId) {
+            throw new RuntimeException("Two distinct valid accounts must be specified for transfer.");
+        }
+        if ($amount <= 0) {
+            throw new RuntimeException("Transfer amount must be greater than zero.");
+        }
+
+        $inTx = $pdo->inTransaction();
+        if (!$inTx) {
+            $pdo->beginTransaction();
+        }
+
+        try {
+            // Check balance
+            $stmt = $pdo->prepare("SELECT current_balance, account_name FROM finance_accounts WHERE id = ? FOR UPDATE");
+            $stmt->execute([$fromId]);
+            $fromAcc = $stmt->fetch(\PDO::FETCH_ASSOC);
+            if (!$fromAcc) {
+                throw new RuntimeException("Source account not found.");
+            }
+            if ((float)$fromAcc['current_balance'] < $amount) {
+                throw new RuntimeException("Insufficient balance in {$fromAcc['account_name']}.");
+            }
+
+            $stmt->execute([$toId]);
+            $toAcc = $stmt->fetch(\PDO::FETCH_ASSOC);
+            if (!$toAcc) {
+                throw new RuntimeException("Destination account not found.");
+            }
+
+            // 1. Debit from source
+            $debitId = $this->recordTransaction([
+                'account_id'       => $fromId,
+                'transaction_type' => 'debit',
+                'amount'           => $amount,
+                'category'         => 'Internal Transfer',
+                'reference_type'   => 'finance_transfer',
+                'reference_id'     => $toId,
+                'payment_method'   => 'bank_transfer',
+                'transaction_ref'  => $ref,
+                'notes'            => "Transfer to {$toAcc['account_name']}. " . $notes,
+                'created_by'       => $userId,
+                'transacted_at'    => $now,
+            ]);
+
+            // 2. Credit to destination
+            $creditId = $this->recordTransaction([
+                'account_id'       => $toId,
+                'transaction_type' => 'credit',
+                'amount'           => $amount,
+                'category'         => 'Internal Transfer',
+                'reference_type'   => 'finance_transfer',
+                'reference_id'     => $fromId,
+                'payment_method'   => 'bank_transfer',
+                'transaction_ref'  => $ref,
+                'notes'            => "Transfer received from {$fromAcc['account_name']}. " . $notes,
+                'created_by'       => $userId,
+                'transacted_at'    => $now,
+            ]);
+
+            if (!$inTx) {
+                $pdo->commit();
+            }
+
+            return [
+                'debit_tx_id'  => $debitId,
+                'credit_tx_id' => $creditId,
+                'transfer_ref' => $ref,
+                'from_account' => $fromAcc['account_name'],
+                'to_account'   => $toAcc['account_name'],
+            ];
+        } catch (\Throwable $e) {
+            if (!$inTx && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
     public function getLedgerWithDetails(array $filters = [], int $limit = 50, int $offset = 0): array
     {
         $where = ["1=1"];
@@ -209,10 +302,10 @@ class FinanceTransaction extends Model
     {
         $sql = "SELECT 
                     MONTH(transacted_at) as month,
-                    SUM(CASE WHEN transaction_type = 'credit' THEN amount ELSE 0 END) as total_income,
-                    SUM(CASE WHEN transaction_type = 'debit' THEN amount ELSE 0 END) as total_expense
+                    SUM(CASE WHEN transaction_type = 'credit' AND category != 'Internal Transfer' AND (reference_type IS NULL OR reference_type != 'finance_transfer') THEN amount ELSE 0 END) as total_income,
+                    SUM(CASE WHEN transaction_type = 'debit' AND category != 'Internal Transfer' AND (reference_type IS NULL OR reference_type != 'finance_transfer') THEN amount ELSE 0 END) as total_expense
                 FROM `finance_ledger`
-                WHERE YEAR(transacted_at) = ?
+                WHERE YEAR(transacted_at) = ? AND status IN ('completed', 'active')
                 GROUP BY MONTH(transacted_at)
                 ORDER BY month ASC";
 

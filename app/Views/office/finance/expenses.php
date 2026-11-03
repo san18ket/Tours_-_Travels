@@ -3,7 +3,10 @@
  * MANASWI TOURS & TRAVELS — OPERATING & FLEET EXPENSES
  * Matching Customers / Invoices Architecture & Aesthetics
  */
-$actionsHtml = '<button type="button" class="btn btn-primary" onclick="openExpenseModal()"><i class="fa-solid fa-plus"></i> <span>Add Expense</span></button>';
+$actionsHtml = '<div style="display: flex; gap: 0.65rem; flex-wrap: wrap;">'
+    . '<a href="' . url('/office/finance/expense-categories') . '" class="btn btn-outline"><i class="fa-solid fa-tags"></i> <span>Expense Categories</span></a>'
+    . '<button type="button" class="btn btn-primary" onclick="openExpenseModal()"><i class="fa-solid fa-plus"></i> <span>Add Expense</span></button>'
+    . '</div>';
 ?>
 
 <div class="bookings-page-view finance-page-view" id="financeExpensesPage">

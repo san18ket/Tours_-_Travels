@@ -963,7 +963,7 @@ class EmployeeController extends Controller
         }
 
         return $savedRelPath;
-    }
+    }
     /**
      * Re-dispatch employee onboarding email without recreating employee
      */
