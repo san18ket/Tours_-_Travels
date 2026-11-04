@@ -94,6 +94,14 @@ $router->get('/forgot-password/reset', [AccountRecoveryController::class, 'showR
 $router->post('/forgot-password/reset', [AccountRecoveryController::class, 'resetPassword'], ['csrf']);
 
 // -----------------------------------------------------------------------------
+// Public Email OTP Verification Endpoints (Rate limited, CSRF protected)
+// -----------------------------------------------------------------------------
+$router->post('/email-otp/send', [EmailOtpController::class, 'sendOtp'], ['csrf', 'throttle:api']);
+$router->post('/email-otp/resend', [EmailOtpController::class, 'resendOtp'], ['csrf', 'throttle:api']);
+$router->post('/email-otp/verify', [EmailOtpController::class, 'verifyOtp'], ['csrf']);
+$router->post('/email-otp/invalidate', [EmailOtpController::class, 'invalidate'], ['csrf']);
+
+// -----------------------------------------------------------------------------
 // Setup Wizard (Database Initialization & Migrations)
 // -----------------------------------------------------------------------------
 $router->get('/setup', [SetupController::class, 'index']);

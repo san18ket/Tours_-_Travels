@@ -159,17 +159,11 @@ class FinanceController extends Controller
         $offset = ($page - 1) * $perPage;
         $transactions = $this->transactionModel->getLedgerWithDetails($filters, $perPage, $offset);
 
-        // Summary KPI figures
-        $allTx = $this->transactionModel->all();
-        $totalCredits = 0.0;
-        $totalDebits = 0.0;
-        foreach ($allTx as $tx) {
-            if ($tx['transaction_type'] === 'credit') {
-                $totalCredits += (float)$tx['amount'];
-            } else {
-                $totalDebits += (float)$tx['amount'];
-            }
-        }
+        // Summary KPI figures via fast indexed aggregation
+        $ledgerTotals = $this->transactionModel->getLedgerSummaryTotals();
+        $totalAll = $ledgerTotals['total_count'];
+        $totalCredits = $ledgerTotals['total_credits'];
+        $totalDebits = $ledgerTotals['total_debits'];
 
         $accounts = $this->accountModel->getActiveAccounts();
         $dbCatMap = $this->categoryModel->getCategoryMap();
@@ -181,7 +175,7 @@ class FinanceController extends Controller
             'accounts'       => $accounts,
             'categories'     => $categories,
             'totalRecords'   => $totalRecords,
-            'totalAll'       => count($allTx),
+            'totalAll'       => $totalAll,
             'totalCredits'   => $totalCredits,
             'totalDebits'    => $totalDebits,
             'netBalance'     => ($totalCredits - $totalDebits),

@@ -60,10 +60,16 @@ class EmailTransportService
             $mail->Host       = $config['host'];
             $mail->Port       = $config['port'];
             $mail->SMTPAuth   = $config['auth'];
+            if (!empty($config['auth'])) {
+                // PLAIN authentication sends credentials in a single round-trip, saving ~300-600ms
+                $mail->AuthType = 'PLAIN';
+            }
             $mail->Username   = $config['username'];
             $mail->Password   = $config['password'];
-            $mail->Timeout    = $config['timeout'];
+            $mail->Timeout    = min(10, (int)$config['timeout']);
             $mail->CharSet    = 'UTF-8';
+            // Explicit localhost hostname avoids Windows NetBIOS/DNS machine name resolution delay (~400-500ms)
+            $mail->Hostname   = 'localhost';
 
             // Encryption setup
             $port = $config['port'];

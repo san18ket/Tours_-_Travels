@@ -200,7 +200,7 @@ assertTest($activeRecord !== false && $activeRecord['status'] === 'pending', "Or
 
 // Order of operations failure test: when email dispatch fails, record is marked 'failed'
 $mockEmailFail = new class extends \App\Services\EmailService {
-    public function send(string $toEmail, ?string $toName, string $subject, string $htmlBody, ?string $textBody = null, string $emailType = 'general', ?string $referenceType = null, ?int $referenceId = null, array $cc = [], array $bcc = [], int $cooldownMinutes = 0): array {
+    public function send(string $toEmail, ?string $toName, string $subject, string $htmlBody, ?string $textBody = null, string $emailType = 'general', ?string $referenceType = null, ?int $referenceId = null, array $cc = [], array $bcc = [], int $cooldownMinutes = 0, bool $forceSync = false): array {
         return ['success' => false, 'error' => 'Simulated SMTP transmission drop'];
     }
 };

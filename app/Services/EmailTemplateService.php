@@ -101,6 +101,7 @@ class EmailTemplateService
     {
         return [
             'auth/otp'                    => 'Registration OTP',
+            'auth/recovery-username-otp'  => 'Username Recovery OTP',
             'auth/recovery-password-otp'  => 'Password Recovery OTP',
             'auth/username-recovered'     => 'Username Recovery Notification',
             'customer/welcome'            => 'Customer Welcome Onboarding',
@@ -250,6 +251,20 @@ class EmailTemplateService
                     'otp'            => '4892',
                     'flow'           => 'customer',
                     'greetingLead'   => "Hello Vikramaditya, please use the 4-digit verification code below to verify your email address.",
+                ];
+
+            case 'auth/recovery-username-otp':
+                return [
+                    'subject'        => "Your account username recovery code — {$companyName}",
+                    'previewText'    => "Your 4-digit username recovery code is 7821. Valid for 5 minutes.",
+                    'category'       => 'ACCOUNT SECURITY',
+                    'heading'        => 'Recover your username',
+                    'subheading'     => 'Use this 4-digit code to view your registered account username.',
+                    'recipientName'  => 'Vikramaditya Sharma',
+                    'recipientEmail' => 'vikramaditya.sharma@example.com',
+                    'otp'            => '7821',
+                    'purpose'        => 'recovery_username',
+                    'greetingLead'   => "Hello Vikramaditya, we received a request to recover your {$companyName} account username.",
                 ];
 
             case 'auth/recovery-password-otp':

@@ -152,12 +152,14 @@ class BookingService
             try {
                 $emailResult = $this->emailService->sendBookingCreated($created);
                 $created['email_sent'] = !empty($emailResult['success']);
+                $created['email_status'] = $emailResult['status'] ?? null;
                 if (empty($emailResult['success']) && !empty($emailResult['error'])) {
                     $created['email_error'] = $emailResult['error'];
                 }
             } catch (\Throwable $e) {
                 Logger::warning("Could not dispatch booking_created email: " . $e->getMessage());
                 $created['email_sent'] = false;
+                $created['email_status'] = 'failed';
                 $created['email_error'] = $e->getMessage();
             }
             return $created;

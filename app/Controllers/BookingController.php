@@ -214,9 +214,15 @@ class BookingController extends Controller
 
             $emailStatusNotice = '';
             if (!empty($booking['email_sent'])) {
-                $emailStatusNotice = ' Confirmation email sent to customer.';
+                if (($booking['email_status'] ?? '') === 'sent') {
+                    $emailStatusNotice = ' Confirmation email sent to customer.';
+                } elseif (($booking['email_status'] ?? '') === 'pending') {
+                    $emailStatusNotice = ' Confirmation email scheduled for delivery.';
+                } else {
+                    $emailStatusNotice = '';
+                }
             } elseif (isset($booking['email_sent']) && !$booking['email_sent'] && !empty($booking['email_error'])) {
-                $emailStatusNotice = ' (Confirmation email could not be sent; please check email settings).';
+                $emailStatusNotice = ' (Confirmation email could not be queued; please check email settings).';
             }
 
             if ($advanceAmount <= 0.0) {

@@ -24,14 +24,17 @@ class EmailOtpController extends Controller
     {
         try {
             $email = trim((string)$request->input('email', ''));
-            $flow = trim((string)$request->input('flow', 'customer'));
+            $flow = trim((string)($request->input('flow') ?? $request->input('purpose') ?? 'customer'));
             $recipientName = trim((string)$request->input('name', ''));
             $clientIp = $request->getClientIp();
 
             if (empty($email)) {
+                $emptyMsg = str_starts_with($flow, 'recovery') || str_starts_with($flow, 'forgot')
+                    ? 'Please enter your registered email address.'
+                    : 'Please enter an email address to send the verification code.';
                 return Response::json([
                     'success'  => false,
-                    'message'  => 'Please enter an email address to send the verification code.',
+                    'message'  => $emptyMsg,
                     'cooldown' => 0
                 ], 422);
             }
@@ -51,6 +54,7 @@ class EmailOtpController extends Controller
                 'success'  => $result['success'],
                 'message'  => $result['message'],
                 'cooldown' => $result['cooldown'] ?? 0,
+                'error'    => $result['error'] ?? null,
             ], $statusCode);
         } catch (Throwable $e) {
             Logger::error("EmailOtpController::sendOtp exception: " . $e->getMessage());
@@ -69,7 +73,7 @@ class EmailOtpController extends Controller
     {
         try {
             $email = trim((string)$request->input('email', ''));
-            $flow = trim((string)$request->input('flow', 'customer'));
+            $flow = trim((string)($request->input('flow') ?? $request->input('purpose') ?? 'customer'));
             $recipientName = trim((string)$request->input('name', ''));
             $clientIp = $request->getClientIp();
 
@@ -88,6 +92,7 @@ class EmailOtpController extends Controller
                 'success'  => $result['success'],
                 'message'  => $result['message'],
                 'cooldown' => $result['cooldown'] ?? 0,
+                'error'    => $result['error'] ?? null,
             ], $statusCode);
         } catch (Throwable $e) {
             Logger::error("EmailOtpController::resendOtp exception: " . $e->getMessage());
@@ -106,8 +111,9 @@ class EmailOtpController extends Controller
     {
         try {
             $email = trim((string)$request->input('email', ''));
-            $flow = trim((string)$request->input('flow', 'customer'));
+            $flow = trim((string)($request->input('flow') ?? $request->input('purpose') ?? 'customer'));
             $otp = trim((string)$request->input('otp', ''));
+            $clientIp = $request->getClientIp();
 
             if (empty($email)) {
                 return Response::json([
@@ -123,13 +129,14 @@ class EmailOtpController extends Controller
                 ], 422);
             }
 
-            $result = $this->otpService->verifyOtp($email, $flow, $otp);
+            $result = $this->otpService->verifyOtp($email, $flow, $otp, $clientIp);
 
             $statusCode = $result['success'] ? 200 : 422;
             return Response::json([
                 'success' => $result['success'],
                 'message' => $result['message'],
-                'token'   => $result['token'] ?? null
+                'token'   => $result['token'] ?? null,
+                'error'   => $result['error'] ?? null,
             ], $statusCode);
         } catch (Throwable $e) {
             Logger::error("EmailOtpController::verifyOtp exception: " . $e->getMessage());
@@ -147,7 +154,7 @@ class EmailOtpController extends Controller
     {
         try {
             $email = trim((string)$request->input('email', ''));
-            $flow = trim((string)$request->input('flow', 'customer'));
+            $flow = trim((string)($request->input('flow') ?? $request->input('purpose') ?? 'customer'));
 
             if (!empty($email)) {
                 $this->otpService->invalidateVerification($email, $flow);

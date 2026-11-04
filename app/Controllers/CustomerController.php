@@ -218,6 +218,7 @@ class CustomerController extends Controller
                 ]
             );
 
+            $emailResult = null;
             $emailSent = false;
             $emailError = null;
             $hasValidEmail = false;
@@ -239,9 +240,15 @@ class CustomerController extends Controller
             }
 
             if ($emailSent) {
-                $successMsg = "Customer profile [{$customerCode}] for {$input['name']} registered successfully. Welcome email sent.";
+                if (($emailResult['status'] ?? '') === 'sent') {
+                    $successMsg = "Customer profile [{$customerCode}] for {$input['name']} registered successfully. Welcome email sent.";
+                } elseif (($emailResult['status'] ?? '') === 'pending') {
+                    $successMsg = "Customer profile [{$customerCode}] for {$input['name']} registered successfully. Welcome email scheduled for delivery.";
+                } else {
+                    $successMsg = "Customer profile [{$customerCode}] for {$input['name']} registered successfully.";
+                }
             } elseif ($hasValidEmail && $emailError) {
-                $successMsg = "Customer profile [{$customerCode}] for {$input['name']} registered successfully, but the welcome email could not be sent. You can retry it from Email Management.";
+                $successMsg = "Customer profile [{$customerCode}] for {$input['name']} registered successfully, but the welcome email could not be queued. You can retry it from Email Management.";
             } else {
                 $successMsg = "Customer profile [{$customerCode}] for {$input['name']} registered successfully!";
             }

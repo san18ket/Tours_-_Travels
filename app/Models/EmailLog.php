@@ -195,57 +195,69 @@ class EmailLog extends Model
     public function claimPendingBatch(string $workerId, int $batchSize = 10, int $lockTimeoutSeconds = 300): array
     {
         $pdo = $this->getPdo();
+        $attempts = 0;
+        $maxAttempts = 3;
 
-        try {
-            $pdo->beginTransaction();
+        while ($attempts < $maxAttempts) {
+            $attempts++;
+            try {
+                $pdo->beginTransaction();
 
-            // 1. Recover stale locks if any worker crashed
-            $staleThreshold = date('Y-m-d H:i:s', time() - $lockTimeoutSeconds);
-            $recoverStmt = $pdo->prepare("UPDATE `{$this->table}` 
-                                          SET `status` = 'pending', `locked_at` = NULL, `locked_by` = NULL 
-                                          WHERE `status` = 'processing' AND `locked_at` < ?");
-            $recoverStmt->execute([$staleThreshold]);
+                // 1. Recover stale locks if any worker crashed
+                $staleThreshold = date('Y-m-d H:i:s', time() - $lockTimeoutSeconds);
+                $recoverStmt = $pdo->prepare("UPDATE `{$this->table}` 
+                                              SET `status` = 'pending', `locked_at` = NULL, `locked_by` = NULL 
+                                              WHERE `status` = 'processing' AND `locked_at` < ?");
+                $recoverStmt->execute([$staleThreshold]);
 
-            // 2. Select eligible pending IDs
-            $selectSql = "SELECT `id` FROM `{$this->table}` 
-                          WHERE `status` = 'pending' 
-                            AND (`next_attempt_at` IS NULL OR `next_attempt_at` <= NOW())
-                            AND (`locked_at` IS NULL OR `locked_at` < ?)
-                          ORDER BY `id` ASC 
-                          LIMIT ? FOR UPDATE";
-            $selectStmt = $pdo->prepare($selectSql);
-            $selectStmt->bindValue(1, $staleThreshold);
-            $selectStmt->bindValue(2, $batchSize, PDO::PARAM_INT);
-            $selectStmt->execute();
+                // 2. Select eligible pending IDs
+                $selectSql = "SELECT `id` FROM `{$this->table}` 
+                              WHERE `status` = 'pending' 
+                                AND (`next_attempt_at` IS NULL OR `next_attempt_at` <= NOW())
+                                AND (`locked_at` IS NULL OR `locked_at` < ?)
+                              ORDER BY `id` ASC 
+                              LIMIT ? FOR UPDATE";
+                $selectStmt = $pdo->prepare($selectSql);
+                $selectStmt->bindValue(1, $staleThreshold);
+                $selectStmt->bindValue(2, $batchSize, PDO::PARAM_INT);
+                $selectStmt->execute();
 
-            $ids = $selectStmt->fetchAll(PDO::FETCH_COLUMN);
+                $ids = $selectStmt->fetchAll(PDO::FETCH_COLUMN);
 
-            if (empty($ids)) {
+                if (empty($ids)) {
+                    $pdo->commit();
+                    return [];
+                }
+
+                // 3. Atomically claim selected IDs
+                $inClause = implode(',', array_map('intval', $ids));
+                $now = date('Y-m-d H:i:s');
+                $claimSql = "UPDATE `{$this->table}` 
+                             SET `status` = 'processing', `locked_at` = ?, `locked_by` = ?, `updated_at` = ? 
+                             WHERE `id` IN ({$inClause})";
+                $claimStmt = $pdo->prepare($claimSql);
+                $claimStmt->execute([$now, $workerId, $now]);
+
                 $pdo->commit();
-                return [];
+
+                // 4. Fetch the claimed records outside the transaction
+                $fetchSql = "SELECT * FROM `{$this->table}` WHERE `id` IN ({$inClause}) ORDER BY `id` ASC";
+                return $pdo->query($fetchSql)->fetchAll(PDO::FETCH_ASSOC);
+
+            } catch (\Throwable $e) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                // If deadlock (1213 / 40001) and attempts remaining, retry after brief jitter
+                if ($attempts < $maxAttempts && str_contains($e->getMessage(), 'Deadlock')) {
+                    usleep(random_int(10000, 50000)); // 10-50ms jitter
+                    continue;
+                }
+                throw $e;
             }
-
-            // 3. Atomically claim selected IDs
-            $inClause = implode(',', array_map('intval', $ids));
-            $now = date('Y-m-d H:i:s');
-            $claimSql = "UPDATE `{$this->table}` 
-                         SET `status` = 'processing', `locked_at` = ?, `locked_by` = ?, `updated_at` = ? 
-                         WHERE `id` IN ({$inClause})";
-            $claimStmt = $pdo->prepare($claimSql);
-            $claimStmt->execute([$now, $workerId, $now]);
-
-            $pdo->commit();
-
-            // 4. Fetch the claimed records outside the transaction
-            $fetchSql = "SELECT * FROM `{$this->table}` WHERE `id` IN ({$inClause}) ORDER BY `id` ASC";
-            return $pdo->query($fetchSql)->fetchAll(PDO::FETCH_ASSOC);
-
-        } catch (\Throwable $e) {
-            if ($pdo->inTransaction()) {
-                $pdo->rollBack();
-            }
-            throw $e;
         }
+
+        return [];
     }
 
     /**

@@ -26,6 +26,120 @@ class EmailService
     private EmailLogRepository $repository;
     private EmailRetryService $retryService;
 
+    /**
+     * Synchronous dispatch mode flag.
+     * When false (default), non-critical business notifications are stored as 'pending'
+     * and the CLI background worker is triggered asynchronously, enabling lightning-fast
+     * form response times (<100ms) without waiting for slow SMTP SSL network round-trips.
+     * When true (or for OTPs/Recovery), emails are transmitted synchronously.
+     */
+    public static bool $syncMode = false;
+
+    /**
+     * High-priority email types that always require immediate synchronous delivery
+     */
+    public const SYNCHRONOUS_TYPES = [
+        'email_verification_otp',
+        'account_recovery_otp',
+        'username_recovery',
+        'diagnostic_test',
+        'smtp_test',
+    ];
+
+    /**
+     * Resolves the real PHP CLI executable binary.
+     * Prevents fatal invocation of the Apache webserver binary (httpd.exe) when running under mod_php.
+     */
+    public static function getPhpCliBinary(): string
+    {
+        if (!empty($_ENV['PHP_CLI_PATH']) && file_exists($_ENV['PHP_CLI_PATH'])) {
+            return $_ENV['PHP_CLI_PATH'];
+        }
+        if (!empty(getenv('PHP_CLI_PATH')) && file_exists(getenv('PHP_CLI_PATH'))) {
+            return getenv('PHP_CLI_PATH');
+        }
+
+        $currentBinary = PHP_BINARY;
+        if (!empty($currentBinary) && file_exists($currentBinary)) {
+            $basename = strtolower(basename($currentBinary));
+            if (!str_contains($basename, 'httpd') && !str_contains($basename, 'apache')) {
+                return $currentBinary;
+            }
+            // If current binary is apache/httpd, look for sibling php directory in XAMPP
+            $apacheDir = dirname($currentBinary);
+            $xamppRoot = dirname($apacheDir);
+            $candidate = $xamppRoot . DIRECTORY_SEPARATOR . 'php' . DIRECTORY_SEPARATOR . 'php.exe';
+            if (file_exists($candidate)) {
+                return $candidate;
+            }
+        }
+
+        $commonWindowsPaths = [
+            'E:\\xampp\\php\\php.exe',
+            'C:\\xampp\\php\\php.exe',
+            'D:\\xampp\\php\\php.exe',
+            'C:\\Program Files\\PHP\\php.exe',
+        ];
+
+        foreach ($commonWindowsPaths as $path) {
+            if (file_exists($path)) {
+                return $path;
+            }
+        }
+
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            $which = @trim((string) shell_exec('where php 2>NUL'));
+            if (!empty($which)) {
+                $lines = explode("\n", str_replace("\r", "", $which));
+                if (!empty($lines[0]) && file_exists($lines[0])) {
+                    return $lines[0];
+                }
+            }
+        } else {
+            $which = @trim((string) shell_exec('which php 2>/dev/null'));
+            if (!empty($which) && file_exists($which)) {
+                return $which;
+            }
+        }
+
+        return 'php';
+    }
+
+    /**
+     * Trigger background CLI worker non-blockingly without delaying the HTTP response
+     */
+    public static function dispatchBackgroundWorker(): void
+    {
+        try {
+            $phpBinary = self::getPhpCliBinary();
+            $workerScript = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'email_worker.php';
+            if (!file_exists($workerScript)) {
+                return;
+            }
+
+            if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+                $descriptors = [
+                    0 => ['file', 'NUL', 'r'],
+                    1 => ['file', 'NUL', 'w'],
+                    2 => ['file', 'NUL', 'w'],
+                ];
+                $pipes = [];
+                proc_open(
+                    "\"{$phpBinary}\" \"{$workerScript}\" --once",
+                    $descriptors,
+                    $pipes,
+                    dirname($workerScript),
+                    null,
+                    ['bypass_shell' => true]
+                );
+            } else {
+                exec("\"{$phpBinary}\" \"{$workerScript}\" --once > /dev/null 2>&1 &");
+            }
+        } catch (Throwable $e) {
+            Logger::warning("EmailService::dispatchBackgroundWorker spawn failed: " . $e->getMessage());
+        }
+    }
+
     public function __construct(
         ?EmailTransportService $transport = null,
         ?EmailTemplateService $templateService = null,
@@ -54,7 +168,8 @@ class EmailService
      * @param array $cc Carbon copy recipient emails
      * @param array $bcc Blind carbon copy recipient emails
      * @param int $cooldownMinutes 0 means permanent single-dispatch for entity, >0 is cooldown window
-     * @return array ['success' => bool, 'message' => string, 'duplicate' => bool, 'log_id' => ?int, 'message_id' => ?string, 'error' => ?string]
+     * @param bool $forceSync Force synchronous delivery regardless of email type
+     * @return array ['success' => bool, 'status' => string, 'message' => string, 'duplicate' => bool, 'log_id' => ?int, 'message_id' => ?string, 'error' => ?string]
      */
     public function send(
         string $toEmail,
@@ -67,7 +182,8 @@ class EmailService
         ?int $referenceId = null,
         array $cc = [],
         array $bcc = [],
-        int $cooldownMinutes = 0
+        int $cooldownMinutes = 0,
+        bool $forceSync = false
     ): array {
         $toEmail = trim($toEmail);
         $toName = $toName ? trim($toName) : null;
@@ -98,6 +214,7 @@ class EmailService
 
             return [
                 'success'    => false,
+                'status'     => 'failed',
                 'message'    => $msg,
                 'duplicate'  => false,
                 'log_id'     => $logId,
@@ -138,7 +255,47 @@ class EmailService
             }
         }
 
-        // 3. SMTP Transmission
+        // 3. Determine Execution Mode (Synchronous vs Non-Blocking Background Dispatch)
+        $isSync = $forceSync
+            || self::$syncMode === true
+            || in_array($emailType, self::SYNCHRONOUS_TYPES, true);
+
+        if (!$isSync) {
+            // Asynchronous Safe Dispatch: Record pending outbox entry & trigger background worker
+            $logId = $this->logService->recordAttempt(
+                $toEmail,
+                $toName,
+                $emailType,
+                $subject,
+                $referenceType,
+                $referenceId,
+                'pending',
+                null,
+                $idempotencyHash,
+                null,
+                $htmlBody,
+                $textBody ?: EmailTemplateService::htmlToPlainText($htmlBody),
+                $cc,
+                $bcc
+            );
+
+            // Trigger non-blocking worker spawn to immediately process outbox
+            self::dispatchBackgroundWorker();
+
+            Logger::info("EmailService: Scheduled {$emailType} [{$referenceType}:{$referenceId}] to {$toEmail} via background outbox (Log #{$logId})");
+
+            return [
+                'success'    => true,
+                'status'     => 'pending',
+                'message'    => 'Email scheduled for immediate delivery.',
+                'duplicate'  => false,
+                'log_id'     => $logId,
+                'message_id' => null,
+                'error'      => null
+            ];
+        }
+
+        // 4. Synchronous Direct SMTP Transmission (for OTPs, recovery & synchronous test runs)
         try {
             $messageId = $this->transport->send($toEmail, $toName, $subject, $htmlBody, $textBody, $cc, $bcc);
 
@@ -164,6 +321,7 @@ class EmailService
 
             return [
                 'success'    => true,
+                'status'     => 'sent',
                 'message'    => 'Email transmitted successfully.',
                 'duplicate'  => false,
                 'log_id'     => $logId,
@@ -194,6 +352,7 @@ class EmailService
 
             return [
                 'success'    => false,
+                'status'     => 'failed',
                 'message'    => 'Email transmission failed.',
                 'duplicate'  => false,
                 'log_id'     => $logId,

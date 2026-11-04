@@ -10,11 +10,25 @@ use App\Core\Config;
  */
 class EmailSettingsService
 {
+    private static ?array $cachedConfig = null;
+
+    /**
+     * Clear cached transport config (e.g. after updating settings)
+     */
+    public static function clearConfigCache(): void
+    {
+        self::$cachedConfig = null;
+    }
+
     /**
      * Get authoritative SMTP configuration for sending (raw credentials)
      */
     public static function getTransportConfig(): array
     {
+        if (self::$cachedConfig !== null) {
+            return self::$cachedConfig;
+        }
+
         $smtpUsername = (string)Config::get('mail.username', env('MAIL_USERNAME', ''));
         $configuredFrom = (string)Config::get('mail.from.address', env('MAIL_FROM_ADDRESS', ''));
         $fromAddress = (!empty($configuredFrom) && filter_var($configuredFrom, FILTER_VALIDATE_EMAIL))
@@ -31,7 +45,7 @@ class EmailSettingsService
         $replyToAddress = (string)Config::get('mail.reply_to.address', env('MAIL_REPLY_TO_ADDRESS', CompanySettingsService::getCompanyEmail()));
         $replyToName = (string)Config::get('mail.reply_to.name', env('MAIL_REPLY_TO_NAME', $fromName));
 
-        return [
+        return self::$cachedConfig = [
             'host'              => $host,
             'port'              => (int)Config::get('mail.port', env('MAIL_PORT', 465)),
             'encryption'        => strtolower((string)Config::get('mail.encryption', env('MAIL_ENCRYPTION', 'ssl'))),

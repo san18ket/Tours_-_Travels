@@ -478,4 +478,23 @@ class FinanceTransaction extends Model
             'message'    => "Transaction status updated to {$label}."
         ];
     }
+
+    /**
+     * Compute aggregated ledger summary totals using a single fast indexed SQL query
+     */
+    public function getLedgerSummaryTotals(): array
+    {
+        $sql = "SELECT 
+                    COUNT(*) AS total_count,
+                    COALESCE(SUM(CASE WHEN transaction_type = 'credit' THEN amount ELSE 0 END), 0) AS total_credits,
+                    COALESCE(SUM(CASE WHEN transaction_type = 'debit' THEN amount ELSE 0 END), 0) AS total_debits
+                FROM `{$this->table}`";
+        $row = $this->getPdo()->query($sql)->fetch(\PDO::FETCH_ASSOC);
+
+        return [
+            'total_count'   => (int)($row['total_count'] ?? 0),
+            'total_credits' => (float)($row['total_credits'] ?? 0.0),
+            'total_debits'  => (float)($row['total_debits'] ?? 0.0),
+        ];
+    }
 }

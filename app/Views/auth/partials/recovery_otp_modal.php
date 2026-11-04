@@ -543,7 +543,7 @@ window.vgRecoveryOtp = (function() {
         const resendBtn = getResendBtn();
         const resendText = document.getElementById('vgRecoveryOtpResendBtnText');
         if (resendBtn) resendBtn.disabled = true;
-        if (resendText) resendText.textContent = 'Sending...';
+        if (resendText) resendText.textContent = 'Sending OTP...';
 
         setModalError('');
         setModalSuccess('');

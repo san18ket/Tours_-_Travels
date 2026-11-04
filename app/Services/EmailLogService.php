@@ -98,7 +98,7 @@ class EmailLogService
             'retry_count'      => 0,
             'attempt_count'    => ($cleanStatus === 'sent' || $cleanStatus === 'failed') ? 1 : 0,
             'max_attempts'     => 5,
-            'next_attempt_at'  => null,
+            'next_attempt_at'  => ($cleanStatus === 'pending') ? $now : null,
             'locked_at'        => null,
             'locked_by'        => null,
             'sent_at'          => ($cleanStatus === 'sent') ? $now : null,
@@ -110,7 +110,7 @@ class EmailLogService
     }
 
     /**
-     * Update an existing log record upon retry
+     * Update an existing log record upon retry or outbox worker execution
      */
     public function recordRetryOutcome(int $logId, string $status, ?string $errorMessage = null, ?string $messageId = null): bool
     {
@@ -118,16 +118,16 @@ class EmailLogService
         $sanitized = self::sanitizeErrorMessage($errorMessage);
         $now = date('Y-m-d H:i:s');
 
-        $isSuccess = ($status === 'sent');
-
         $sql = "UPDATE `email_logs` 
                 SET `status` = ?,
                     `attempt_count` = `attempt_count` + 1,
-                    `retry_count` = `retry_count` + 1,
+                    `retry_count` = CASE WHEN `attempt_count` > 0 THEN `retry_count` + 1 ELSE `retry_count` END,
                     `last_attempt_at` = ?,
                     `sent_at` = CASE WHEN ? = 'sent' THEN ? ELSE `sent_at` END,
                     `message_id` = CASE WHEN ? IS NOT NULL THEN ? ELSE `message_id` END,
                     `error_message` = ?,
+                    `locked_at` = NULL,
+                    `locked_by` = NULL,
                     `updated_at` = ?
                 WHERE `id` = ?";
 

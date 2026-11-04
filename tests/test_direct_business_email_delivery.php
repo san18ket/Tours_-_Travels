@@ -37,6 +37,7 @@ use App\Services\EmailOtpService;
 
 $pdo = Database::getConnection();
 $emailService = new EmailService();
+EmailService::$syncMode = true; // Force synchronous SMTP path for direct delivery verification suite
 $emailLog = new EmailLog();
 $bookingService = new BookingService();
 $dispatchService = new DispatchService();

@@ -765,7 +765,7 @@ window.vgEmailOtp = (function() {
         const sendBtn = getSendBtn();
         if (sendBtn) {
             sendBtn.disabled = true;
-            sendBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Sending...</span>';
+            sendBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Sending OTP...</span>';
         }
 
         // Gather recipient name if available on page
@@ -830,7 +830,7 @@ window.vgEmailOtp = (function() {
         const resendBtn = getResendBtn();
         const resendText = document.getElementById('vgOtpResendBtnText');
         if (resendBtn) resendBtn.disabled = true;
-        if (resendText) resendText.textContent = 'Sending...';
+        if (resendText) resendText.textContent = 'Sending OTP...';
 
         setModalError('');
         setModalSuccess('');

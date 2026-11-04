@@ -351,6 +351,7 @@ class EmployeeController extends Controller
                 Session::getUserId()
             );
 
+            $emailResult = null;
             $emailSent = false;
             $emailError = null;
             $hasValidEmail = false;
@@ -372,9 +373,15 @@ class EmployeeController extends Controller
             }
 
             if ($emailSent) {
-                $successMsg = "Employee [{$employeeCode}] {$data['first_name']} {$data['last_name']} successfully registered. Welcome email sent.";
+                if (($emailResult['status'] ?? '') === 'sent') {
+                    $successMsg = "Employee [{$employeeCode}] {$data['first_name']} {$data['last_name']} successfully registered. Welcome email sent.";
+                } elseif (($emailResult['status'] ?? '') === 'pending') {
+                    $successMsg = "Employee [{$employeeCode}] {$data['first_name']} {$data['last_name']} successfully registered. Welcome email scheduled for delivery.";
+                } else {
+                    $successMsg = "Employee [{$employeeCode}] {$data['first_name']} {$data['last_name']} successfully registered.";
+                }
             } elseif ($hasValidEmail && $emailError) {
-                $successMsg = "Employee [{$employeeCode}] {$data['first_name']} {$data['last_name']} successfully registered, but the welcome email could not be sent. You can retry it from Email Management.";
+                $successMsg = "Employee [{$employeeCode}] {$data['first_name']} {$data['last_name']} successfully registered, but the welcome email could not be queued. You can retry it from Email Management.";
             } else {
                 $successMsg = "Employee [{$employeeCode}] {$data['first_name']} {$data['last_name']} successfully registered.";
             }

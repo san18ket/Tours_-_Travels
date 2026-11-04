@@ -834,8 +834,8 @@
             }, 200);
         },
 
-        // 2. Button Loading State
-        setButtonLoading: function (btn, isLoading) {
+        // 2. Button Loading State (with context-aware action labels)
+        setButtonLoading: function (btn, isLoading, customText) {
             if (!btn) return;
             if (isLoading) {
                 if (!btn.dataset.vgOriginalHtml) {
@@ -846,8 +846,27 @@
                 btn.setAttribute('aria-busy', 'true');
 
                 const btnText = (btn.textContent || '').trim();
-                const isSave = /save|create|update|register|store|assign|submit/i.test(btnText) || btn.type === 'submit' || btn.classList.contains('modern-btn-submit');
-                const labelText = isSave ? __trans('js.saving', 'Saving...') : __trans('js.processing', 'Processing...');
+                let labelText = customText;
+                if (!labelText) {
+                    const form = btn.closest('form');
+                    const action = ((form ? form.getAttribute('action') : '') || window.location.pathname).toLowerCase();
+                    if (action.includes('/bookings')) {
+                        labelText = __trans('js.saving_booking', 'Saving booking...');
+                    } else if (action.includes('/customers')) {
+                        labelText = __trans('js.saving_customer', 'Saving customer...');
+                    } else if (action.includes('/employees')) {
+                        labelText = __trans('js.saving_employee', 'Saving employee...');
+                    } else if (action.includes('/expenses')) {
+                        labelText = __trans('js.saving_expense', 'Saving expense...');
+                    } else if (action.includes('/payments') || action.includes('/finance')) {
+                        labelText = __trans('js.processing_payment', 'Processing payment...');
+                    } else if (action.includes('/dispatches') || action.includes('/assign')) {
+                        labelText = __trans('js.assigning_trip', 'Assigning trip...');
+                    } else {
+                        const isSave = /save|create|update|register|store|assign|submit/i.test(btnText) || btn.type === 'submit' || btn.classList.contains('modern-btn-submit');
+                        labelText = isSave ? __trans('js.saving', 'Saving...') : __trans('js.processing', 'Processing...');
+                    }
+                }
 
                 btn.innerHTML = `<span class="vg-btn-spinner" aria-hidden="true" style="display:inline-block;margin-right:6px;vertical-align:middle;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px;animation:vg-spin 0.8s linear infinite;vertical-align:middle;"><circle cx="12" cy="12" r="10" stroke-width="3" stroke-dasharray="32" stroke-linecap="round"></circle></svg></span> <span>${labelText}</span>`;
             } else {
@@ -936,10 +955,21 @@
         },
 
         submitForm: function (form, submitter) {
+            // Guard against rapid duplicate submissions
+            if (form.dataset.submitting === 'true') {
+                return;
+            }
+
             const confirmMsg = form.getAttribute('data-confirm');
             if (confirmMsg && !window.confirm(confirmMsg)) return;
 
             const btn = submitter || form.querySelector('button[type="submit"], input[type="submit"], button:not([type="button"])');
+            const allSubmitBtns = form.querySelectorAll('button[type="submit"], input[type="submit"], button:not([type="button"])');
+
+            // Lock form state
+            form.dataset.submitting = 'true';
+            allSubmitBtns.forEach(b => { b.disabled = true; });
+
             this.setButtonLoading(btn, true);
             this.startProgress();
 
@@ -957,6 +987,8 @@
                 const queryString = searchParams.toString();
                 const targetUrl = queryString ? `${cleanBase}?${queryString}` : cleanBase;
 
+                delete form.dataset.submitting;
+                allSubmitBtns.forEach(b => { b.disabled = false; });
                 this.navigate(targetUrl, { pushState: true, submitterBtn: btn });
                 return;
             }
@@ -991,6 +1023,8 @@
                     this.toast('Request failed. Please check network connection.', 'error');
                 })
                 .finally(() => {
+                    delete form.dataset.submitting;
+                    allSubmitBtns.forEach(b => { b.disabled = false; });
                     this.setButtonLoading(btn, false);
                     this.finishProgress();
                 });

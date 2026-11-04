@@ -68,19 +68,27 @@ return new class {
         $stmtUsers = $pdo->query("SELECT * FROM `users` WHERE `role` = 'customer'");
         $existingCustomers = $stmtUsers->fetchAll(PDO::FETCH_ASSOC);
 
-        $checkCust = $pdo->prepare("SELECT `id` FROM `customers` WHERE `user_id` = ? OR `email` = ?");
+        $checkCust = $pdo->prepare("SELECT `id` FROM `customers` WHERE `user_id` = ? OR `customer_code` = ? OR (`email` IS NOT NULL AND `email` != '' AND `email` = ?)");
         $insertCust = $pdo->prepare("INSERT INTO `customers` (`customer_code`, `user_id`, `name`, `phone`, `email`, `status`, `created_at`, `updated_at`) 
                                      VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
         $updateBooking = $pdo->prepare("UPDATE `bookings` SET `customer_profile_id` = ? WHERE `customer_id` = ? AND `customer_profile_id` IS NULL");
         $updateInvoice = $pdo->prepare("UPDATE `invoices` SET `customer_profile_id` = ? WHERE `customer_id` = ? AND `customer_profile_id` IS NULL");
 
         foreach ($existingCustomers as $cu) {
-            $checkCust->execute([$cu['id'], $cu['email']]);
+            $code = 'VG-CUST-' . str_pad((string)$cu['id'], 4, '0', STR_PAD_LEFT);
+            $checkCust->execute([$cu['id'], $code, $cu['email']]);
             $existingRow = $checkCust->fetch(PDO::FETCH_ASSOC);
             $profileId = $existingRow['id'] ?? null;
 
             if (!$profileId) {
-                $code = 'VG-CUST-' . str_pad((string)$cu['id'], 4, '0', STR_PAD_LEFT);
+                // Ensure customer_code is unique
+                $checkCodeStmt = $pdo->prepare("SELECT COUNT(*) FROM `customers` WHERE `customer_code` = ?");
+                $checkCodeStmt->execute([$code]);
+                if ((int)$checkCodeStmt->fetchColumn() > 0) {
+                    $maxNum = (int)$pdo->query("SELECT MAX(CAST(SUBSTRING(customer_code, 9) AS UNSIGNED)) FROM `customers`")->fetchColumn();
+                    $code = 'VG-CUST-' . str_pad((string)($maxNum + 1), 4, '0', STR_PAD_LEFT);
+                }
+
                 $phone = !empty($cu['phone']) ? $cu['phone'] : '+91 90000 00000';
                 $insertCust->execute([
                     $code,
@@ -93,6 +101,9 @@ return new class {
                     $cu['updated_at']
                 ]);
                 $profileId = (int)$pdo->lastInsertId();
+            } else {
+                // Link user_id if not linked
+                $pdo->prepare("UPDATE `customers` SET `user_id` = ? WHERE `id` = ? AND `user_id` IS NULL")->execute([$cu['id'], $profileId]);
             }
 
             if ($profileId) {
