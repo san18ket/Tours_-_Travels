@@ -1933,7 +1933,21 @@ class FinanceController extends Controller
                 'updated_at'   => $now,
             ]);
 
-            $msg = "Refund {$refund['refund_number']} marked as " . ucfirst($status) . ".";
+            $emailNotice = '';
+            if ($status === 'processed') {
+                try {
+                    $refreshedRefund = $this->refundModel->find($id);
+                    $emailService = new \App\Services\EmailService();
+                    $emailRes = $emailService->sendRefundNotification($refreshedRefund);
+                    if (!empty($emailRes['success'])) {
+                        $emailNotice = ' Confirmation email sent.';
+                    }
+                } catch (\Throwable $ne) {
+                    \App\Core\Logger::warning("Could not dispatch refund confirmation email: " . $ne->getMessage());
+                }
+            }
+
+            $msg = "Refund {$refund['refund_number']} marked as " . ucfirst($status) . ".{$emailNotice}";
             Session::setFlash('success', $msg);
 
             if ($request->isAjax()) {

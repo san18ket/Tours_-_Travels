@@ -177,6 +177,18 @@ function onBookingChange(sel) {
     }
     if (box) box.style.display = 'block';
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const deployForm = document.querySelector('form[action*="dispatch/assign"]');
+    const deployBtn = document.getElementById('btnDeployTrip');
+    if (deployForm && deployBtn) {
+        deployForm.addEventListener('submit', function() {
+            deployBtn.style.pointerEvents = 'none';
+            deployBtn.style.opacity = '0.85';
+            deployBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Deploying Trip & Dispatching Alerts...</span>';
+        });
+    }
+});
 </script>
 
 <style>

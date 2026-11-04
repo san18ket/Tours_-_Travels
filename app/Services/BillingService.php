@@ -217,9 +217,11 @@ class BillingService
             }
             $payment = $this->paymentModel->find($paymentId);
             try {
-                $this->emailService->sendPaymentSuccessful($payment, $invoice);
+                $emailResult = $this->emailService->sendPaymentSuccessful($payment, $invoice);
+                $payment['email_sent'] = !empty($emailResult['success']);
             } catch (\Throwable $e) {
                 Logger::warning("Could not send payment successful email: " . $e->getMessage());
+                $payment['email_sent'] = false;
             }
             return $payment;
         } catch (\Throwable $e) {

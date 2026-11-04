@@ -281,9 +281,9 @@ $resVerifyUser = $service->verifyRecoveryOtp($testUserEmail, AccountRecoveryServ
 assertTest($resVerifyUser['success'] === true && !empty($resVerifyUser['token']), "Correct OTP verifies successfully and generates authorization token");
 $usernameAuthToken = $resVerifyUser['token'];
 
-// Item 3: Correct OTP reveals username
+// Item 3: Correct OTP verifies and triggers private email delivery (Phase 9: Zero on-screen username leak)
 $resRecoverUser = $service->recoverUsername($usernameAuthToken);
-assertTest($resRecoverUser['success'] === true && $resRecoverUser['username'] === $testUsername, "Item 3: Correct OTP reveals actual username: {$resRecoverUser['username']}");
+assertTest($resRecoverUser['success'] === true && !isset($resRecoverUser['username']), "Item 3: Correct OTP verifies and dispatches username privately via email (username omitted from return payload)");
 
 // Item 21 (for username): Recovery authorization cannot be reused (one-time use)
 $resReuseUser = $service->recoverUsername($usernameAuthToken);

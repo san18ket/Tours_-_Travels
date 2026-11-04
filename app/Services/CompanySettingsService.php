@@ -101,6 +101,9 @@ class CompanySettingsService
             'company_name'    => $appName,
             'owner_name'      => env('COMPANY_OWNER', ''),
             'tagline'         => $tagline,
+            'primary_color'   => env('THEME_PRIMARY_COLOR', '#176B5B'),
+            'secondary_color' => env('THEME_SECONDARY_COLOR', '#16443B'),
+            'accent_color'    => env('THEME_ACCENT_COLOR', '#D6B77A'),
             'logo'            => null,
             'paid_stamp'      => null,
             'signature'       => null,
@@ -150,6 +153,43 @@ class CompanySettingsService
     {
         $p = self::getProfile();
         return !empty($p['tagline']) ? (string)$p['tagline'] : '';
+    }
+
+    /**
+     * Get active brand theme colors for dynamic website and email branding
+     */
+    public static function getThemeColors(): array
+    {
+        $p = self::getProfile();
+        $primary = !empty($p['primary_color']) ? (string)$p['primary_color'] : env('THEME_PRIMARY_COLOR', '#176B5B');
+        $secondary = !empty($p['secondary_color']) ? (string)$p['secondary_color'] : env('THEME_SECONDARY_COLOR', '#16443B');
+        $accent = !empty($p['accent_color']) ? (string)$p['accent_color'] : env('THEME_ACCENT_COLOR', '#D6B77A');
+
+        return [
+            'primary'   => $primary,
+            'secondary' => $secondary,
+            'accent'    => $accent,
+            'bg_light'  => '#F7F8F4',
+            'surface'   => '#FFFFFF',
+            'text_dark' => '#20352F',
+            'text_muted'=> '#64748B',
+            'border'    => '#E2E8F0',
+        ];
+    }
+
+    public static function getPrimaryColor(): string
+    {
+        return self::getThemeColors()['primary'];
+    }
+
+    public static function getSecondaryColor(): string
+    {
+        return self::getThemeColors()['secondary'];
+    }
+
+    public static function getAccentColor(): string
+    {
+        return self::getThemeColors()['accent'];
     }
 
     /**

@@ -212,12 +212,19 @@ class BookingController extends Controller
             $remainingAmount = max(0.0, $totalAmount - $paidAmount);
             $invNum = $invoice['invoice_number'] ?? 'INV';
 
+            $emailStatusNotice = '';
+            if (!empty($booking['email_sent'])) {
+                $emailStatusNotice = ' Confirmation email sent to customer.';
+            } elseif (isset($booking['email_sent']) && !$booking['email_sent'] && !empty($booking['email_error'])) {
+                $emailStatusNotice = ' (Confirmation email could not be sent; please check email settings).';
+            }
+
             if ($advanceAmount <= 0.0) {
-                $flashMsg = "Booking {$booking['booking_code']} created successfully. Invoice {$invNum} generated. ₹" . number_format($totalAmount, 2) . " remaining (Unpaid).";
+                $flashMsg = "Booking {$booking['booking_code']} created successfully. Invoice {$invNum} generated. ₹" . number_format($totalAmount, 2) . " remaining (Unpaid)." . $emailStatusNotice;
             } elseif ($remainingAmount <= 0.0) {
-                $flashMsg = "Booking {$booking['booking_code']} created successfully. Invoice {$invNum} generated. ₹" . number_format($advanceAmount, 2) . " received in full. Invoice is fully paid.";
+                $flashMsg = "Booking {$booking['booking_code']} created successfully. Invoice {$invNum} generated. ₹" . number_format($advanceAmount, 2) . " received in full. Invoice is fully paid." . $emailStatusNotice;
             } else {
-                $flashMsg = "Booking {$booking['booking_code']} created successfully. Invoice {$invNum} generated. ₹" . number_format($advanceAmount, 2) . " received. ₹" . number_format($remainingAmount, 2) . " remaining.";
+                $flashMsg = "Booking {$booking['booking_code']} created successfully. Invoice {$invNum} generated. ₹" . number_format($advanceAmount, 2) . " received. ₹" . number_format($remainingAmount, 2) . " remaining." . $emailStatusNotice;
             }
 
             Session::setFlash('success', $flashMsg);

@@ -1,42 +1,60 @@
 <?php
 namespace App\Services;
 
+use App\Repositories\EmailLogRepository;
 use App\Models\EmailLog;
-use App\Models\User;
 use App\Models\Customer;
 use App\Models\Employee;
 use App\Models\Booking;
 use App\Models\Invoice;
-use App\Core\Config;
+use App\Models\Payment;
+use App\Models\Refund;
 use App\Core\Logger;
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception as PHPMailerException;
 use Throwable;
 
 /**
- * Reusable Professional Email Notification Service
- * Transmits SSL/TLS emails using PHPMailer via Gmail SMTP (Port 465)
- * Handles templating, validation, duplicate prevention, and secure audit logging.
+ * Centralized Application Email Service
+ * Coordinates all transactional and operational emails across Tours & Travels.
+ * Uses a single standardized direct SMTP pipeline with dynamic company branding,
+ * website theme-matching, idempotency protection, and comprehensive audit logging.
  */
 class EmailService
 {
-    private EmailLog $emailLog;
-    private User $userModel;
-    private Customer $customerModel;
-    private Employee $employeeModel;
+    private EmailTransportService $transport;
+    private EmailTemplateService $templateService;
+    private EmailLogService $logService;
+    private EmailLogRepository $repository;
+    private EmailRetryService $retryService;
 
-    public function __construct()
-    {
-        $this->emailLog = new EmailLog();
-        $this->userModel = new User();
-        $this->customerModel = new Customer();
-        $this->employeeModel = new Employee();
+    public function __construct(
+        ?EmailTransportService $transport = null,
+        ?EmailTemplateService $templateService = null,
+        ?EmailLogService $logService = null,
+        ?EmailLogRepository $repository = null,
+        ?EmailRetryService $retryService = null
+    ) {
+        $this->transport = $transport ?? new EmailTransportService();
+        $this->templateService = $templateService ?? new EmailTemplateService();
+        $this->logService = $logService ?? new EmailLogService();
+        $this->repository = $repository ?? new EmailLogRepository();
+        $this->retryService = $retryService ?? new EmailRetryService($this->repository, $this->transport, $this->logService, $this->templateService);
     }
 
     /**
-     * Send an email with HTML & plain-text alternative, validation, and idempotency protection
+     * Master centralized email dispatch pipeline
      *
-     * @return array ['success' => bool, 'message' => string, 'duplicate' => bool, 'log_id' => ?int, 'error' => ?string]
+     * @param string $toEmail Recipient email address
+     * @param string|null $toName Recipient display name
+     * @param string $subject Email subject line
+     * @param string $htmlBody Rendered HTML content
+     * @param string|null $textBody Optional plain text alternative
+     * @param string $emailType Unique event category
+     * @param string|null $referenceType Related database entity (e.g. 'booking', 'customer')
+     * @param int|null $referenceId Related entity record ID
+     * @param array $cc Carbon copy recipient emails
+     * @param array $bcc Blind carbon copy recipient emails
+     * @param int $cooldownMinutes 0 means permanent single-dispatch for entity, >0 is cooldown window
+     * @return array ['success' => bool, 'message' => string, 'duplicate' => bool, 'log_id' => ?int, 'message_id' => ?string, 'error' => ?string]
      */
     public function send(
         string $toEmail,
@@ -54,55 +72,78 @@ class EmailService
         $toEmail = trim($toEmail);
         $toName = $toName ? trim($toName) : null;
 
-        // 1. Validate recipient email address
-        if (empty($toEmail) || !filter_var($toEmail, FILTER_VALIDATE_EMAIL) || str_ends_with(strtolower($toEmail), '@internal.local') || str_ends_with(strtolower($toEmail), '@voyagego.internal')) {
+        // 1. Recipient Validation
+        if (empty($toEmail) || !filter_var($toEmail, FILTER_VALIDATE_EMAIL) ||
+            str_ends_with(strtolower($toEmail), '@internal.local') ||
+            str_ends_with(strtolower($toEmail), '@voyagego.internal')) {
             $msg = "Invalid recipient email address: '{$toEmail}'";
-            Logger::warning("EmailService: {$msg}");
-            $logId = $this->emailLog->record($toEmail, $toName, $emailType, $subject, $referenceType, $referenceId, 'failed', $msg);
+            Logger::warning("EmailService: {$msg} [Type: {$emailType}]");
+
+            $logId = $this->logService->recordAttempt(
+                $toEmail,
+                $toName,
+                $emailType,
+                $subject,
+                $referenceType,
+                $referenceId,
+                'failed',
+                $msg,
+                null,
+                null,
+                $htmlBody,
+                $textBody ?: EmailTemplateService::htmlToPlainText($htmlBody),
+                $cc,
+                $bcc
+            );
+
             return [
-                'success'   => false,
-                'message'   => $msg,
-                'duplicate' => false,
-                'log_id'    => $logId,
-                'error'     => $msg
+                'success'    => false,
+                'message'    => $msg,
+                'duplicate'  => false,
+                'log_id'     => $logId,
+                'message_id' => null,
+                'error'      => $msg
             ];
         }
 
         // 2. Duplicate Prevention / Idempotency Check
-        $idempotencyHash = EmailLog::makeHash($emailType, $referenceType, $referenceId, $toEmail);
-        if ($this->emailLog->hasDuplicate($idempotencyHash, $cooldownMinutes)) {
-            Logger::info("EmailService: Duplicate email prevented for {$emailType} [{$referenceType}:{$referenceId}] to {$toEmail}");
+        $idempotencyHash = EmailLogService::makeHash($emailType, $referenceType, $referenceId, $toEmail);
+
+        if ($this->repository->hasDuplicateHash($idempotencyHash, $cooldownMinutes)) {
+            Logger::info("EmailService: Duplicate email prevented by hash for {$emailType} [{$referenceType}:{$referenceId}] to {$toEmail}");
             return [
-                'success'   => true,
-                'message'   => 'Email already dispatched (duplicate prevented).',
-                'duplicate' => true,
-                'log_id'    => null,
-                'error'     => null
+                'success'    => true,
+                'status'     => 'skipped',
+                'message'    => 'Email already dispatched (duplicate prevented).',
+                'duplicate'  => true,
+                'log_id'     => null,
+                'message_id' => null,
+                'error'      => null
             ];
         }
 
-        if ($cooldownMinutes === 0 && !empty($referenceType) && !empty($referenceId) && !in_array($emailType, ['email_verification_otp', 'account_recovery_otp'], true)) {
-            $pdo = \App\Core\Database::getConnection();
-            $stmt = $pdo->prepare("SELECT COUNT(*) FROM `email_logs` WHERE `email_type` = ? AND `reference_type` = ? AND `reference_id` = ?");
-            $stmt->execute([$emailType, $referenceType, $referenceId]);
-            if (((int)$stmt->fetchColumn()) > 0) {
+        if ($cooldownMinutes === 0 && !empty($referenceType) && !empty($referenceId) &&
+            !in_array($emailType, ['email_verification_otp', 'account_recovery_otp'], true)) {
+            if ($this->repository->hasSentForEntity($emailType, $referenceType, $referenceId)) {
                 Logger::info("EmailService: Duplicate prevented by entity reference for {$emailType} [{$referenceType}:{$referenceId}]");
                 return [
-                    'success'   => true,
-                    'message'   => 'Email already dispatched (duplicate prevented).',
-                    'duplicate' => true,
-                    'log_id'    => null,
-                    'error'     => null
+                    'success'    => true,
+                    'status'     => 'skipped',
+                    'message'    => 'Email already dispatched (duplicate prevented).',
+                    'duplicate'  => true,
+                    'log_id'     => null,
+                    'message_id' => null,
+                    'error'      => null
                 ];
             }
         }
 
-        // 3. Configure and transmit via PHPMailer
+        // 3. SMTP Transmission
         try {
-            $messageId = $this->executeSmtpSend($toEmail, $toName, $subject, $htmlBody, $textBody, $cc, $bcc);
+            $messageId = $this->transport->send($toEmail, $toName, $subject, $htmlBody, $textBody, $cc, $bcc);
 
             // Record successful dispatch
-            $logId = $this->emailLog->record(
+            $logId = $this->logService->recordAttempt(
                 $toEmail,
                 $toName,
                 $emailType,
@@ -112,10 +153,14 @@ class EmailService
                 'sent',
                 null,
                 $idempotencyHash,
-                $messageId
+                $messageId,
+                $htmlBody,
+                $textBody ?: EmailTemplateService::htmlToPlainText($htmlBody),
+                $cc,
+                $bcc
             );
 
-            Logger::info("EmailService: Dispatched {$emailType} [{$referenceType}:{$referenceId}] to {$toEmail}" . ($messageId ? " (MsgID: {$messageId})" : ""));
+            Logger::info("EmailService: Successfully dispatched {$emailType} [{$referenceType}:{$referenceId}] to {$toEmail} (MsgID: {$messageId})");
 
             return [
                 'success'    => true,
@@ -125,15 +170,12 @@ class EmailService
                 'message_id' => $messageId,
                 'error'      => null
             ];
+
         } catch (Throwable $e) {
-            // Sanitize error message to ensure passwords are NEVER leaked
-            $rawError = $e->getMessage();
-            $sanitized = preg_replace('/password[=\s:]+[^\s&]+/i', 'password=[REDACTED]', $rawError);
-            $sanitized = substr($sanitized, 0, 500);
+            $cleanError = EmailLogService::sanitizeErrorMessage($e->getMessage());
+            Logger::error("EmailService: Transmission failure for {$emailType} to {$toEmail}: {$cleanError}");
 
-            Logger::error("EmailService: SMTP dispatch error for {$emailType} to {$toEmail}: {$sanitized}");
-
-            $logId = $this->emailLog->record(
+            $logId = $this->logService->recordAttempt(
                 $toEmail,
                 $toName,
                 $emailType,
@@ -141,233 +183,60 @@ class EmailService
                 $referenceType,
                 $referenceId,
                 'failed',
-                $sanitized,
-                $idempotencyHash
+                $cleanError,
+                $idempotencyHash,
+                null,
+                $htmlBody,
+                $textBody ?: EmailTemplateService::htmlToPlainText($htmlBody),
+                $cc,
+                $bcc
             );
 
             return [
-                'success'   => false,
-                'message'   => 'Email transmission failed.',
-                'duplicate' => false,
-                'log_id'    => $logId,
-                'error'     => $sanitized
+                'success'    => false,
+                'message'    => 'Email transmission failed.',
+                'duplicate'  => false,
+                'log_id'     => $logId,
+                'message_id' => null,
+                'error'      => $cleanError
             ];
         }
     }
 
     /**
-     * Dispatch an email asynchronously via safe background shutdown execution
-     * Eliminates SMTP latency from blocking create/edit save responses and redirects.
-     *
-     * @return int|null Returns log ID if queued, null if rejected or duplicate
-     */
-    public function queue(
-        string $toEmail,
-        ?string $toName,
-        string $subject,
-        string $htmlBody,
-        ?string $textBody = null,
-        string $emailType = 'general',
-        ?string $referenceType = null,
-        ?int $referenceId = null,
-        array $cc = [],
-        array $bcc = [],
-        int $cooldownMinutes = 0
-    ): ?int {
-        $toEmail = trim($toEmail);
-        $toName = $toName ? trim($toName) : null;
-
-        if (empty($toEmail) || !filter_var($toEmail, FILTER_VALIDATE_EMAIL) || str_ends_with(strtolower($toEmail), '@internal.local') || str_ends_with(strtolower($toEmail), '@voyagego.internal')) {
-            $msg = "Invalid recipient email address: '{$toEmail}'";
-            Logger::warning("EmailService [Queued]: {$msg}");
-            return $this->emailLog->record($toEmail, $toName, $emailType, $subject, $referenceType, $referenceId, 'failed', $msg);
-        }
-
-        // Idempotency check upfront
-        $idempotencyHash = EmailLog::makeHash($emailType, $referenceType, $referenceId, $toEmail);
-        if ($this->emailLog->hasDuplicate($idempotencyHash, $cooldownMinutes)) {
-            Logger::info("EmailService [Queued]: Duplicate prevented for {$emailType} [{$referenceType}:{$referenceId}] to {$toEmail}");
-            return null;
-        }
-
-        if ($cooldownMinutes === 0 && !empty($referenceType) && !empty($referenceId)) {
-            $pdo = \App\Core\Database::getConnection();
-            $stmt = $pdo->prepare("SELECT COUNT(*) FROM `email_logs` WHERE `email_type` = ? AND `reference_type` = ? AND `reference_id` = ? AND `status` IN ('sent', 'pending')");
-            $stmt->execute([$emailType, $referenceType, $referenceId]);
-            if (((int)$stmt->fetchColumn()) > 0) {
-                Logger::info("EmailService [Queued]: Duplicate prevented by entity reference for {$emailType} [{$referenceType}:{$referenceId}]");
-                return null;
-            }
-        }
-
-        // Pre-record in pending status so it is immediately visible in logs
-        $logId = $this->emailLog->record(
-            $toEmail,
-            $toName,
-            $emailType,
-            $subject,
-            $referenceType,
-            $referenceId,
-            'pending',
-            null,
-            $idempotencyHash
-        );
-
-        // Register shutdown function for safe non-blocking background transmission
-        register_shutdown_function(function () use ($logId, $toEmail, $toName, $subject, $htmlBody, $textBody, $emailType, $referenceType, $referenceId, $cc, $bcc) {
-            try {
-                $this->executeSmtpSend($toEmail, $toName, $subject, $htmlBody, $textBody, $cc, $bcc);
-                $this->emailLog->updateStatus($logId, 'sent', null);
-                Logger::info("EmailService [Queued]: Dispatched {$emailType} [{$referenceType}:{$referenceId}] to {$toEmail} (Log #{$logId})");
-            } catch (Throwable $e) {
-                $rawError = $e->getMessage();
-                $sanitized = preg_replace('/password[=\s:]+[^\s&]+/i', 'password=[REDACTED]', $rawError);
-                $sanitized = substr($sanitized, 0, 500);
-                $this->emailLog->updateStatus($logId, 'failed', $sanitized);
-                Logger::error("EmailService [Queued]: SMTP dispatch error for {$emailType} to {$toEmail}: {$sanitized}");
-            }
-        });
-
-        return $logId;
-    }
-
-    /**
-     * Internal raw SMTP transmission via PHPMailer
-     */
-    private function executeSmtpSend(
-        string $toEmail,
-        ?string $toName,
-        string $subject,
-        string $htmlBody,
-        ?string $textBody = null,
-        array $cc = [],
-        array $bcc = []
-    ): ?string {
-        if (str_ends_with(strtolower($toEmail), '@example.com') || str_ends_with(strtolower($toEmail), '@test.local') || str_ends_with(strtolower($toEmail), '@testdomain.org')) {
-            return '<test-' . bin2hex(random_bytes(8)) . '@local.test>';
-        }
-
-        $mail = new PHPMailer(true);
-
-        $mail->isSMTP();
-        $mail->Host       = Config::get('mail.host', 'smtp.gmail.com');
-        $mail->Port       = (int)Config::get('mail.port', 465);
-        $mail->SMTPAuth   = (bool)Config::get('mail.auth', true);
-        $mail->Username   = Config::get('mail.username', '');
-        $mail->Password   = Config::get('mail.password', '');
-        $mail->Timeout    = (int)Config::get('mail.timeout', 15);
-        $mail->CharSet    = 'UTF-8';
-
-        $port = (int)Config::get('mail.port', 465);
-        $encryption = strtolower((string)Config::get('mail.encryption', 'ssl'));
-        if ($port === 465 || $encryption === 'ssl' || $encryption === 'smtps') {
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-        } elseif ($port === 587 || $encryption === 'tls' || $encryption === 'starttls') {
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        } else {
-            $mail->SMTPSecure = '';
-            $mail->SMTPAutoTLS = false;
-        }
-
-        $verifyPeer = (bool)Config::get('mail.verify_peer', true);
-        $mail->SMTPOptions = [
-            'ssl' => [
-                'verify_peer'       => $verifyPeer,
-                'verify_peer_name'  => $verifyPeer,
-                'allow_self_signed' => !$verifyPeer
-            ]
-        ];
-
-        $smtpUsername = Config::get('mail.username', '');
-        $configuredFrom = Config::get('mail.from.address', '');
-        $fromAddress = (!empty($configuredFrom) && filter_var($configuredFrom, FILTER_VALIDATE_EMAIL))
-            ? $configuredFrom
-            : ($smtpUsername ?: 'noreply@example.com');
-        
-        // Gmail compliance: If sending via Gmail SMTP, From address must match authenticated Gmail user
-        if (str_contains(strtolower((string)Config::get('mail.host', '')), 'gmail.com') && !empty($smtpUsername)) {
-            $fromAddress = $smtpUsername;
-        }
-
-        $fromName = Config::get('mail.from.name', CompanySettingsService::getCompanyName());
-        $mail->setFrom($fromAddress, $fromName);
-
-        $replyToAddress = Config::get('mail.reply_to.address', CompanySettingsService::getCompanyEmail());
-        if (!empty($replyToAddress) && filter_var($replyToAddress, FILTER_VALIDATE_EMAIL)) {
-            $replyToName = Config::get('mail.reply_to.name', $fromName);
-            $mail->addReplyTo($replyToAddress, $replyToName);
-        }
-
-        $mail->addAddress($toEmail, $toName ?? '');
-
-        foreach ($cc as $ccEmail) {
-            if (filter_var($ccEmail, FILTER_VALIDATE_EMAIL)) {
-                $mail->addCC($ccEmail);
-            }
-        }
-        foreach ($bcc as $bccEmail) {
-            if (filter_var($bccEmail, FILTER_VALIDATE_EMAIL)) {
-                $mail->addBCC($bccEmail);
-            }
-        }
-
-        $mail->isHTML(true);
-        $mail->Subject = $subject;
-        $mail->Body    = $htmlBody;
-        $mail->AltBody = $textBody ?: self::htmlToPlainText($htmlBody);
-
-        try {
-            $mail->send();
-            $msgId = $mail->getLastMessageID();
-            return !empty($msgId) ? $msgId : null;
-        } finally {
-            try {
-                $mail->smtpClose();
-            } catch (Throwable $e) {
-                // Ignore close socket errors
-            }
-        }
-    }
-
-    /**
-     * Render an email template wrapped inside the branded master layout
+     * Render an email template using the centralized template service
      */
     public function renderTemplate(string $templateName, array $data = []): string
     {
-        $viewPath = dirname(__DIR__) . '/Views/emails/' . $templateName . '.php';
-        if (!file_exists($viewPath)) {
-            throw new \RuntimeException("Email template view '{$templateName}' not found at: {$viewPath}");
-        }
-
-        // Render template body
-        extract($data, EXTR_SKIP);
-        ob_start();
-        require $viewPath;
-        $content = ob_get_clean();
-
-        // Render master layout with wrapped content
-        $layoutPath = dirname(__DIR__) . '/Views/emails/layouts/master.php';
-        ob_start();
-        $subject = $data['subject'] ?? ('Notification - ' . CompanySettingsService::getCompanyName());
-        $previewText = $data['previewText'] ?? $subject;
-        require $layoutPath;
-        return ob_get_clean();
+        return $this->templateService->render($templateName, $data);
     }
 
     /**
-     * Convert HTML content into structured plain-text fallback
+     * Retry a previously failed email record
      */
-    public static function htmlToPlainText(string $html): string
+    public function retryFailedEmail(int $logId): array
     {
-        // Replace headings & breaks with double newlines
-        $text = preg_replace('/<\/(h[1-6]|p|div|tr)>/i', "\n", $html);
-        $text = preg_replace('/<br\s*\/?>/i', "\n", $text);
-        $text = preg_replace('/<td[^>]*>/i', "  ", $text);
-        // Strip remaining tags
-        $text = strip_tags($text);
-        // Normalize multiple blank lines
-        $text = preg_replace("/\n{3,}/", "\n\n", $text);
-        return trim(html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        return $this->retryService->retry($logId);
+    }
+
+    /**
+     * Send email directly through centralized SMTP transport pipeline
+     */
+    public function sendDirect(string $toEmail, ?string $toName, string $subject, string $htmlBody, ?string $textBody = null, string $emailType = 'general', ?string $referenceType = null, ?int $referenceId = null, array $cc = [], array $bcc = [], int $cooldownMinutes = 0): array
+    {
+        return $this->send($toEmail, $toName, $subject, $htmlBody, $textBody, $emailType, $referenceType, $referenceId, $cc, $bcc, $cooldownMinutes);
+    }
+
+    /**
+     * Process an existing queued or outbox email record (e.g. from CLI email worker)
+     */
+    public function processQueuedEmail(array $logItem): array
+    {
+        $logId = (int)($logItem['id'] ?? 0);
+        if ($logId <= 0) {
+            return ['success' => false, 'error' => 'Invalid email record ID'];
+        }
+        return $this->retryService->retry($logId);
     }
 
     // =========================================================================
@@ -375,14 +244,157 @@ class EmailService
     // =========================================================================
 
     /**
-     * Event: Booking Created -> Send to Customer
+     * 1. Registration OTP (Customer / Employee Onboarding)
+     */
+    public function sendRegistrationOtp(string $email, string $otp, string $flow = 'customer', ?string $recipientName = null): array
+    {
+        $company = CompanySettingsService::getCompanyName();
+        $flowLabel = $flow === 'employee' ? 'Employee Registration' : 'Customer Registration';
+        $subject = "Your Verification Code: {$otp} — {$company}";
+
+        $greetingLead = !empty($recipientName)
+            ? "Hello " . htmlspecialchars($recipientName) . ", please use the 4-digit verification code below to complete your {$company} {$flowLabel}."
+            : "Please use the 4-digit verification code below to verify your email address for your {$company} {$flowLabel}.";
+
+        $html = $this->renderTemplate('auth/otp', [
+            'subject'        => $subject,
+            'previewText'    => "Your 4-digit verification code is {$otp}. Valid for 5 minutes.",
+            'category'       => 'EMAIL VERIFICATION',
+            'heading'        => 'Verify your email address',
+            'subheading'     => "Enter the 4-digit code sent to {$email} to proceed.",
+            'recipientName'  => $recipientName,
+            'recipientEmail' => $email,
+            'greetingLead'   => $greetingLead,
+            'otp'            => $otp,
+            'flow'           => $flow,
+        ]);
+
+        $text = "Your 4-digit verification code for {$company} ({$flowLabel}) is: {$otp}\n\nThis code expires in 5 minutes.\nSecurity note: Do not share this code with anyone.";
+
+        return $this->send($email, $recipientName, $subject, $html, $text, 'email_verification_otp', 'email_verification', null, [], [], 0);
+    }
+
+    /**
+     * 2. Password Recovery OTP
+     */
+    public function sendPasswordRecoveryOtp(string $email, string $otp, ?string $recipientName = null): array
+    {
+        $company = CompanySettingsService::getCompanyName();
+        $subject = "Password Reset Verification Code — {$company}";
+
+        $html = $this->renderTemplate('auth/recovery-password-otp', [
+            'subject'        => $subject,
+            'previewText'    => "Your 4-digit password reset code is {$otp}. Valid for 5 minutes.",
+            'category'       => 'ACCOUNT SECURITY',
+            'heading'        => 'Reset your account password',
+            'subheading'     => 'Use this 4-digit code to securely verify your identity and set a new password.',
+            'recipientName'  => $recipientName,
+            'recipientEmail' => $email,
+            'greetingLead'   => "Hello " . htmlspecialchars($recipientName ?? 'Valued User') . ", we received a request to reset the password for your {$company} account.",
+            'otp'            => $otp,
+            'purpose'        => 'recovery_password',
+        ]);
+
+        $text = "Your password reset verification code for {$company} is: {$otp}\n\nThis verification code expires in 5 minutes.\nSecurity warning: Never share this code with anyone.\nIf you did not request this, please disregard this email.";
+
+        return $this->send($email, $recipientName, $subject, $html, $text, 'account_recovery_otp', 'email_verification', null, [], [], 0);
+    }
+
+    /**
+     * 3. Username Recovery (Private Email Delivery — Never displayed on webpage)
+     */
+    public function sendUsernameRecovery(array $user): array
+    {
+        $company = CompanySettingsService::getCompanyName();
+        $email = strtolower(trim((string)($user['email'] ?? '')));
+        $name = !empty($user['name']) ? $user['name'] : ($user['username'] ?? 'User');
+        $username = $user['username'] ?? '';
+
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return ['success' => false, 'message' => 'User account does not have a valid email address.'];
+        }
+
+        $subject = "Your Username Recovery Request — {$company}";
+
+        $html = $this->renderTemplate('auth/username-recovered', [
+            'subject'        => $subject,
+            'previewText'    => "Your account username has been successfully recovered.",
+            'category'       => 'ACCOUNT SECURITY',
+            'heading'        => 'Your username has been recovered',
+            'subheading'     => 'We received a verified request to recover your account login username.',
+            'recipientName'  => $name,
+            'recipientEmail' => $email,
+            'username'       => $username,
+            'greetingLead'   => "Hello " . htmlspecialchars($name) . ", we received a request to recover your {$company} account username.",
+        ]);
+
+        $text = "Hello {$name},\n\nWe received a request to recover your {$company} account username.\n\nYour verified username is: {$username}\n\nIf you did not request this, please contact our support team immediately.\nFor your security, never share your password or OTP with anyone.\n\nRegards,\n{$company}";
+
+        return $this->send($email, $name, $subject, $html, $text, 'username_recovery', 'users', (int)($user['id'] ?? 0), [], [], 0);
+    }
+
+    /**
+     * 4. Customer Welcome Onboarding
+     */
+    public function sendCustomerWelcome(array $customer): array
+    {
+        $company = CompanySettingsService::getCompanyName();
+        $email = trim((string)($customer['email'] ?? ''));
+        $name = trim((string)($customer['name'] ?? ''));
+
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return ['success' => false, 'message' => 'Customer has no valid email address.'];
+        }
+
+        $subject = "Welcome to {$company} — Your Account is Ready";
+        $html = $this->renderTemplate('customer/welcome', [
+            'customer'    => $customer,
+            'subject'     => $subject,
+            'previewText' => "Thank you for registering with {$company}. Your customer profile is active.",
+            'category'    => 'CUSTOMER ONBOARDING',
+            'heading'     => "Welcome to {$company}",
+            'subheading'  => 'Your customer account has been established successfully.',
+        ]);
+
+        return $this->send($email, $name, $subject, $html, null, 'customer_welcome', 'customer', (int)($customer['id'] ?? 0));
+    }
+
+    /**
+     * 5. Employee Welcome Onboarding
+     */
+    public function sendEmployeeWelcome(array $employee): array
+    {
+        $company = CompanySettingsService::getCompanyName();
+        $email = trim((string)($employee['email'] ?? ''));
+        $name = trim(($employee['first_name'] ?? '') . ' ' . ($employee['last_name'] ?? ''));
+
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return ['success' => false, 'message' => 'Employee has no valid email address.'];
+        }
+
+        $subject = "Welcome to the Team — {$company}";
+        $html = $this->renderTemplate('employee/welcome', [
+            'employee'    => $employee,
+            'subject'     => $subject,
+            'previewText' => "Your employee profile has been created at {$company}.",
+            'category'    => 'STAFF ONBOARDING',
+            'heading'     => "Welcome to the Team, " . htmlspecialchars($employee['first_name'] ?? 'Colleague') . "!",
+            'subheading'  => "Your staff profile has been activated.",
+        ]);
+
+        return $this->send($email, $name, $subject, $html, null, 'employee_welcome', 'employee', (int)($employee['id'] ?? 0));
+    }
+
+    /**
+     * 6. Booking Created (Received / Pending)
      */
     public function sendBookingCreated(array $booking): array
     {
         $company = CompanySettingsService::getCompanyName();
         $customer = $this->resolveCustomerDetails($booking);
-        if (empty($customer['email']) || str_ends_with(strtolower($customer['email']), '@internal.local') || str_ends_with(strtolower($customer['email']), '@voyagego.internal')) {
-            Logger::warning("EmailService: Skipped booking_created email for #{$booking['id']} - Customer has no valid email address.");
+        $email = trim((string)($customer['email'] ?? ''));
+
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return ['success' => false, 'message' => 'Customer has no valid email address.'];
         }
 
@@ -391,847 +403,551 @@ class EmailService
             'booking'     => $booking,
             'customer'    => $customer,
             'subject'     => $subject,
-            'previewText' => "Your reservation {$booking['booking_code']} has been received and is pending confirmation."
+            'previewText' => "Your reservation {$booking['booking_code']} has been received and is pending confirmation.",
+            'category'    => 'BOOKING RESERVATION',
+            'heading'     => 'Booking Request Received',
+            'subheading'  => "Reservation #{$booking['booking_code']} is under operational review.",
         ]);
 
-        return $this->send(
-            $customer['email'],
-            $customer['name'],
-            $subject,
-            $html,
-            null,
-            'booking_created',
-            'booking',
-            (int)$booking['id'],
-            [],
-            [],
-            0 // Lifetime uniqueness for booking_created
-        );
+        return $this->send($email, $customer['name'] ?? null, $subject, $html, null, 'booking_created', 'booking', (int)$booking['id']);
     }
 
     /**
-     * Event: Booking Created (Queued / Asynchronous background delivery)
+     * 7. Booking Confirmation
      */
-    public function queueBookingCreated(array $booking): ?int
+    public function sendBookingConfirmation(array $booking): array
     {
         $company = CompanySettingsService::getCompanyName();
         $customer = $this->resolveCustomerDetails($booking);
-        if (empty($customer['email']) || str_ends_with(strtolower($customer['email']), '@internal.local') || str_ends_with(strtolower($customer['email']), '@voyagego.internal')) {
-            Logger::warning("EmailService [Queued]: Skipped booking_created email for #{$booking['id']} - Customer has no valid email address.");
-            return null;
-        }
+        $email = trim((string)($customer['email'] ?? ''));
 
-        $subject = "Booking Received: {$booking['booking_code']} — {$company}";
-        $html = $this->renderTemplate('booking/created', [
-            'booking'     => $booking,
-            'customer'    => $customer,
-            'subject'     => $subject,
-            'previewText' => "Your reservation {$booking['booking_code']} has been received and is pending confirmation."
-        ]);
-
-        return $this->queue(
-            $customer['email'],
-            $customer['name'],
-            $subject,
-            $html,
-            null,
-            'booking_created',
-            'booking',
-            (int)$booking['id'],
-            [],
-            [],
-            0
-        );
-    }
-
-    /**
-     * Event: Booking Confirmed -> Send to Customer
-     */
-    public function sendBookingConfirmed(array $booking): array
-    {
-        $company = CompanySettingsService::getCompanyName();
-        $customer = $this->resolveCustomerDetails($booking);
-        if (empty($customer['email'])) {
-            Logger::warning("EmailService: Skipped booking_confirmed email for #{$booking['id']} - Customer has no email.");
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return ['success' => false, 'message' => 'Customer has no valid email address.'];
         }
 
-        $subject = "✓ Booking Confirmed: {$booking['booking_code']} — {$company}";
+        $subject = "Booking Confirmed: {$booking['booking_code']} — {$company}";
         $html = $this->renderTemplate('booking/confirmed', [
             'booking'     => $booking,
             'customer'    => $customer,
             'subject'     => $subject,
-            'previewText' => "Great news! Your booking {$booking['booking_code']} is officially confirmed."
+            'previewText' => "Great news! Your booking {$booking['booking_code']} has been confirmed.",
+            'category'    => 'CONFIRMED RESERVATION',
+            'heading'     => 'Booking Confirmed!',
+            'subheading'  => "Your travel booking #{$booking['booking_code']} is locked in and ready.",
         ]);
 
-        return $this->send(
-            $customer['email'],
-            $customer['name'],
-            $subject,
-            $html,
-            null,
-            'booking_confirmed',
-            'booking',
-            (int)$booking['id'],
-            [],
-            [],
-            0 // Lifetime uniqueness for confirmation
-        );
+        return $this->send($email, $customer['name'] ?? null, $subject, $html, null, 'booking_confirmed', 'booking', (int)$booking['id']);
+    }
+
+    // Alias for backward compatibility
+    public function sendBookingConfirmed(array $booking): array
+    {
+        return $this->sendBookingConfirmation($booking);
     }
 
     /**
-     * Event: Booking Cancelled -> Send to Customer and Relevant Administrator
+     * 8. Booking Cancellation
      */
-    public function sendBookingCancelled(array $booking, ?string $reason = null): array
+    public function sendBookingCancellation(array $booking, ?string $reason = null): array
     {
         $company = CompanySettingsService::getCompanyName();
         $customer = $this->resolveCustomerDetails($booking);
-        $subject = "Notice: Booking {$booking['booking_code']} Cancelled — {$company}";
+        $email = trim((string)($customer['email'] ?? ''));
 
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return ['success' => false, 'message' => 'Customer has no valid email address.'];
+        }
+
+        $subject = "Booking Cancellation: {$booking['booking_code']} — {$company}";
         $html = $this->renderTemplate('booking/cancelled', [
             'booking'     => $booking,
             'customer'    => $customer,
             'reason'      => $reason,
             'subject'     => $subject,
-            'previewText' => "Booking {$booking['booking_code']} has been cancelled."
+            'previewText' => "Your reservation {$booking['booking_code']} has been cancelled.",
+            'category'    => 'BOOKING UPDATE',
+            'heading'     => 'Booking Cancelled',
+            'subheading'  => "Reservation #{$booking['booking_code']} has been cancelled.",
         ]);
 
-        // Send to Customer if email present
-        $customerResult = ['success' => false];
-        if (!empty($customer['email'])) {
-            $customerResult = $this->send(
-                $customer['email'],
-                $customer['name'],
-                $subject,
-                $html,
-                null,
-                'booking_cancelled',
-                'booking',
-                (int)$booking['id'],
-                [],
-                [],
-                0
-            );
-        }
+        return $this->send($email, $customer['name'] ?? null, $subject, $html, null, 'booking_cancelled', 'booking', (int)$booking['id']);
+    }
 
-        // Send notice copy to Administrator if configured
-        $adminEmail = Config::get('mail.admin_address');
-        if (!empty($adminEmail) && filter_var($adminEmail, FILTER_VALIDATE_EMAIL)) {
-            $adminSubject = "[ADMIN ALERT] Booking Cancelled: {$booking['booking_code']}";
-            $this->send(
-                $adminEmail,
-                'Operations Desk',
-                $adminSubject,
-                $html,
-                null,
-                'booking_cancelled_admin',
-                'booking',
-                (int)$booking['id'],
-                [],
-                [],
-                0
-            );
-        }
-
-        return $customerResult;
+    // Alias for backward compatibility
+    public function sendBookingCancelled(array $booking, ?string $reason = null): array
+    {
+        return $this->sendBookingCancellation($booking, $reason);
     }
 
     /**
-     * Event: Payment Successful -> Send to Customer
+     * 9. Driver Assignment (Notifies both Driver and Customer)
      */
-    public function sendPaymentSuccessful(array $payment, ?array $invoice = null, ?array $booking = null): array
+    public function sendDriverAssignment(array $dispatch, array $booking, array $vehicle, array $driverProfile): array
     {
         $company = CompanySettingsService::getCompanyName();
-        // Resolve invoice & booking if not supplied
-        if (!$invoice && !empty($payment['invoice_id'])) {
-            $invoiceModel = new Invoice();
-            $invoice = $invoiceModel->find((int)$payment['invoice_id']);
-        }
+        $customer = $this->resolveCustomerDetails($booking);
+        $driverUser = $this->resolveDriverUserDetails($driverProfile);
 
-        if (!$booking && !empty($invoice['booking_id'])) {
-            $bookingModel = new Booking();
-            $booking = $bookingModel->find((int)$invoice['booking_id']);
-        }
+        $results = ['driver' => null, 'customer' => null];
 
-        // Resolve customer
-        $customer = [];
-        if (!empty($invoice['customer_profile_id'])) {
-            $customer = $this->customerModel->find((int)$invoice['customer_profile_id']) ?: [];
-        } elseif (!empty($invoice['customer_id'])) {
-            $customer = $this->userModel->find((int)$invoice['customer_id']) ?: [];
-        } elseif ($booking) {
-            $customer = $this->resolveCustomerDetails($booking);
-        }
-
-        if (empty($customer['email'])) {
-            Logger::warning("EmailService: Skipped payment receipt for payment #{$payment['id']} - Customer email not found.");
-            return ['success' => false, 'message' => 'Customer has no valid email address.'];
-        }
-
-        $formattedAmt = format_currency((float)($payment['amount'] ?? 0));
-        $subject = "Payment Receipt: {$payment['payment_reference']} ({$formattedAmt}) — {$company}";
-
-        $html = $this->renderTemplate('payment/successful', [
-            'payment'     => $payment,
-            'invoice'     => $invoice ?? [],
-            'booking'     => $booking ?? [],
-            'customer'    => $customer,
-            'subject'     => $subject,
-            'previewText' => "Payment of {$formattedAmt} received successfully for {$payment['payment_reference']}."
-        ]);
-
-        return $this->send(
-            $customer['email'],
-            $customer['name'],
-            $subject,
-            $html,
-            null,
-            'payment_successful',
-            'payment',
-            (int)$payment['id'],
-            [],
-            [],
-            0
-        );
-    }
-
-    /**
-     * Event: Driver Assigned -> Send to Assigned Driver AND to Customer
-     */
-    public function sendDriverAssigned(array $dispatch, array $booking, array $vehicle, array $driverProfile): array
-    {
-        $company = CompanySettingsService::getCompanyName();
-        $driverRecipient = $this->resolveDriverDetails($driverProfile);
-        $customerRecipient = $this->resolveCustomerDetails($booking);
-
-        $results = [
-            'driver'   => ['success' => false],
-            'customer' => ['success' => false]
-        ];
-
-        // 1. Send Dispatch Notification to the Assigned Driver Only
-        if (!empty($driverRecipient['email'])) {
-            $driverSubject = "🚍 New Trip Assignment: {$dispatch['dispatch_code']} — {$company}";
-            $driverHtml = $this->renderTemplate('driver/trip-assigned', [
+        // 1. Send duty notification to Driver
+        if (!empty($driverUser['email']) && filter_var($driverUser['email'], FILTER_VALIDATE_EMAIL)) {
+            $subjectDriver = "Duty Assignment: Trip #{$booking['booking_code']} — {$company}";
+            $htmlDriver = $this->renderTemplate('driver/trip-assigned', [
                 'dispatch'    => $dispatch,
                 'booking'     => $booking,
                 'vehicle'     => $vehicle,
-                'driver'      => $driverRecipient,
-                'customer'    => $customerRecipient,
-                'subject'     => $driverSubject,
-                'previewText' => "You have been deployed for trip assignment {$dispatch['dispatch_code']}."
+                'driver'      => array_merge($driverProfile, $driverUser),
+                'customer'    => $customer,
+                'subject'     => $subjectDriver,
+                'previewText' => "New trip assigned to you for " . ($booking['start_date'] ?? ($booking['pickup_date'] ?? 'today')) . ".",
+                'category'    => 'CHAUFFEUR DUTY DISPATCH',
+                'heading'     => 'New Trip Duty Assigned',
+                'subheading'  => "Please review your schedule and report 30 minutes prior to pickup.",
             ]);
 
             $results['driver'] = $this->send(
-                $driverRecipient['email'],
-                $driverRecipient['name'],
-                $driverSubject,
-                $driverHtml,
+                $driverUser['email'],
+                $driverUser['name'] ?? null,
+                $subjectDriver,
+                $htmlDriver,
                 null,
                 'driver_assigned_driver',
                 'dispatch',
-                (int)$dispatch['id'],
-                [],
-                [],
-                0
-            );
-        } else {
-            Logger::warning("EmailService: Assigned driver #{$driverProfile['id']} has no email address on record.");
-        }
-
-        // 2. Send Chauffeur & Vehicle Assigned Notification to Customer
-        if (!empty($customerRecipient['email'])) {
-            $custSubject = "Chauffeur & Fleet Assigned: {$booking['booking_code']} — {$company}";
-            $custHtml = $this->renderTemplate('booking/driver-assigned', [
-                'dispatch'    => $dispatch,
-                'booking'     => $booking,
-                'vehicle'     => $vehicle,
-                'driver'      => $driverRecipient,
-                'customer'    => $customerRecipient,
-                'subject'     => $custSubject,
-                'previewText' => "Your executive chauffeur and vehicle details are ready for reservation {$booking['booking_code']}."
-            ]);
-
-            $results['customer'] = $this->send(
-                $customerRecipient['email'],
-                $customerRecipient['name'],
-                $custSubject,
-                $custHtml,
-                null,
-                'driver_assigned_customer',
-                'dispatch',
-                (int)$dispatch['id'],
-                [],
-                [],
-                0
+                (int)$dispatch['id']
             );
         }
 
-        return $results;
-    }
-
-    /**
-     * Event: Trip Reminder -> Send to Customer and Assigned Driver
-     */
-    public function sendTripReminder(array $dispatch, array $booking, array $vehicle, array $driverProfile): array
-    {
-        $customer = $this->resolveCustomerDetails($booking);
-        $driver = $this->resolveDriverDetails($driverProfile);
-
-        $results = [];
-
-        // Customer Reminder
-        if (!empty($customer['email'])) {
-            $company = CompanySettingsService::getCompanyName();
-        $subject = "⏰ Reminder: Your Departure is Approaching ({$booking['booking_code']}) • {$company}";
-            $html = $this->renderTemplate('trip/reminder', [
+        // 2. Send chauffeur details to Customer
+        if (!empty($customer['email']) && filter_var($customer['email'], FILTER_VALIDATE_EMAIL)) {
+            $subjectCustomer = "Chauffeur & Fleet Assigned: {$booking['booking_code']} — {$company}";
+            $htmlCustomer = $this->renderTemplate('booking/driver-assigned', [
                 'dispatch'    => $dispatch,
                 'booking'     => $booking,
                 'vehicle'     => $vehicle,
-                'driver'      => $driver,
-                'recipient'   => $customer,
-                'subject'     => $subject,
-                'previewText' => "Gentle reminder for your upcoming journey on {$booking['start_date']}."
+                'driver'      => array_merge($driverProfile, $driverUser),
+                'customer'    => $customer,
+                'subject'     => $subjectCustomer,
+                'previewText' => "Chauffeur and vehicle have been assigned for booking {$booking['booking_code']}.",
+                'category'    => 'TRIP OPERATIONS',
+                'heading'     => 'Your Chauffeur Has Been Assigned',
+                'subheading'  => "Chauffeur details for your upcoming trip #{$booking['booking_code']}.",
             ]);
 
             $results['customer'] = $this->send(
                 $customer['email'],
-                $customer['name'],
-                $subject,
-                $html,
+                $customer['name'] ?? null,
+                $subjectCustomer,
+                $htmlCustomer,
                 null,
-                'trip_reminder_customer',
+                'driver_assigned_customer',
                 'dispatch',
-                (int)$dispatch['id'],
-                [],
-                [],
-                360 // Cooldown: 6 hours
-            );
-        }
-
-        // Driver Reminder
-        if (!empty($driver['email'])) {
-            $subject = "⏰ Duty Reminder: Upcoming Trip {$dispatch['dispatch_code']} ({$booking['booking_code']})";
-            $html = $this->renderTemplate('trip/reminder', [
-                'dispatch'    => $dispatch,
-                'booking'     => $booking,
-                'vehicle'     => $vehicle,
-                'driver'      => $driver,
-                'recipient'   => $driver,
-                'subject'     => $subject,
-                'previewText' => "Upcoming duty reminder for {$dispatch['dispatch_code']}."
-            ]);
-
-            $results['driver'] = $this->send(
-                $driver['email'],
-                $driver['name'],
-                $subject,
-                $html,
-                null,
-                'trip_reminder_driver',
-                'dispatch',
-                (int)$dispatch['id'],
-                [],
-                [],
-                360 // Cooldown: 6 hours
+                (int)$dispatch['id']
             );
         }
 
         return $results;
     }
 
+    // Alias for backward compatibility
+    public function sendDriverAssigned(array $dispatch, array $booking, array $vehicle, array $driverProfile): array
+    {
+        return $this->sendDriverAssignment($dispatch, $booking, $vehicle, $driverProfile);
+    }
+
     /**
-     * Event: Trip Started -> Send to Customer
+     * 10. Payment Receipt / Confirmation
+     */
+    public function sendPaymentReceipt(array $payment, ?array $invoice = null, ?array $booking = null): array
+    {
+        $company = CompanySettingsService::getCompanyName();
+
+        if ($invoice && !empty($invoice['booking_code']) && !isset($invoice['invoice_number'])) {
+            $booking = $invoice;
+            $invoice = null;
+        }
+
+        if (!$invoice && !empty($payment['invoice_id'])) {
+            $invoice = (new Invoice())->find((int)$payment['invoice_id']);
+        }
+        if (!$booking && !empty($invoice['booking_id'])) {
+            $booking = (new Booking())->find((int)$invoice['booking_id']);
+        }
+
+        $customer = $booking ? $this->resolveCustomerDetails($booking) : [];
+        if (empty($customer['email']) && !empty($invoice['customer_id'])) {
+            $c = (new Customer())->find((int)$invoice['customer_id']);
+            if ($c) {
+                $customer = ['name' => $c['name'], 'email' => $c['email'], 'phone' => $c['phone']];
+            }
+        }
+        if (empty($customer['email'])) {
+            if (!empty($payment['customer_email'])) {
+                $customer = ['name' => $payment['customer_name'] ?? 'Customer', 'email' => $payment['customer_email'], 'phone' => $payment['customer_phone'] ?? ''];
+            } elseif (!empty($payment['email'])) {
+                $customer = ['name' => $payment['name'] ?? 'Customer', 'email' => $payment['email'], 'phone' => $payment['phone'] ?? ''];
+            }
+        }
+
+        $email = trim((string)($customer['email'] ?? ''));
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return ['success' => false, 'message' => 'Customer has no valid email address.'];
+        }
+
+        $amountFormatted = format_currency($payment['amount'] ?? 0);
+        $subject = "Payment Receipt: " . ($payment['payment_code'] ?? ($payment['receipt_number'] ?? 'Confirmed')) . " — {$company}";
+
+        $html = $this->renderTemplate('payment/successful', [
+            'payment'     => $payment,
+            'invoice'     => $invoice,
+            'booking'     => $booking,
+            'customer'    => $customer,
+            'subject'     => $subject,
+            'previewText' => "Thank you! We received your payment of {$amountFormatted}.",
+            'category'    => 'PAYMENT RECEIPT',
+            'heading'     => 'Payment Received Successfully',
+            'subheading'  => "Thank you! Your payment of {$amountFormatted} has been credited.",
+        ]);
+
+        return $this->send($email, $customer['name'] ?? null, $subject, $html, null, 'payment_successful', 'payment', (int)($payment['id'] ?? 0));
+    }
+
+    // Alias for backward compatibility
+    public function sendPaymentSuccessful(array $payment, ?array $invoice = null, ?array $booking = null): array
+    {
+        return $this->sendPaymentReceipt($payment, $invoice, $booking);
+    }
+
+    /**
+     * 11. Invoice Notification
+     */
+    public function sendInvoiceNotification(array $invoice, ?array $booking = null, ?array $customer = null): array
+    {
+        $company = CompanySettingsService::getCompanyName();
+
+        if (!$booking && !empty($invoice['booking_id'])) {
+            $booking = (new Booking())->find((int)$invoice['booking_id']);
+        }
+
+        if (!$customer && $booking) {
+            $customer = $this->resolveCustomerDetails($booking);
+        } elseif (!$customer && !empty($invoice['customer_id'])) {
+            $c = (new Customer())->find((int)$invoice['customer_id']);
+            if ($c) {
+                $customer = ['name' => $c['name'], 'email' => $c['email'], 'phone' => $c['phone']];
+            }
+        }
+        if (!$customer || empty($customer['email'])) {
+            if (!empty($invoice['customer_email'])) {
+                $customer = ['name' => $invoice['customer_name'] ?? 'Customer', 'email' => $invoice['customer_email'], 'phone' => $invoice['customer_phone'] ?? ''];
+            } elseif (!empty($invoice['email'])) {
+                $customer = ['name' => $invoice['name'] ?? 'Customer', 'email' => $invoice['email'], 'phone' => $invoice['phone'] ?? ''];
+            }
+        }
+
+        $email = trim((string)($customer['email'] ?? ''));
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return ['success' => false, 'message' => 'Customer has no valid email address.'];
+        }
+
+        $subject = "Tax Invoice: {$invoice['invoice_number']} — {$company}";
+        $html = $this->renderTemplate('finance/invoice-notification', [
+            'invoice'     => $invoice,
+            'booking'     => $booking,
+            'customer'    => $customer,
+            'subject'     => $subject,
+            'previewText' => "Your tax invoice {$invoice['invoice_number']} from {$company} is available.",
+            'category'    => 'TAX INVOICE',
+            'heading'     => "Tax Invoice #{$invoice['invoice_number']}",
+            'subheading'  => 'Here is the itemized tax invoice copy for your reservation.',
+        ]);
+
+        return $this->send($email, $customer['name'] ?? null, $subject, $html, null, 'invoice_notification', 'invoice', (int)($invoice['id'] ?? 0));
+    }
+
+    /**
+     * 12. Refund Notification
+     */
+    public function sendRefundNotification(array $refund, ?array $invoice = null, ?array $customer = null): array
+    {
+        $company = CompanySettingsService::getCompanyName();
+
+        if (!$invoice && !empty($refund['invoice_id'])) {
+            $invoice = (new Invoice())->find((int)$refund['invoice_id']);
+        }
+
+        if (!$customer && !empty($invoice['customer_id'])) {
+            $c = (new Customer())->find((int)$invoice['customer_id']);
+            if ($c) {
+                $customer = ['name' => $c['name'], 'email' => $c['email'], 'phone' => $c['phone']];
+            }
+        } elseif (!$customer && !empty($refund['booking_id'])) {
+            $b = (new Booking())->find((int)$refund['booking_id']);
+            if ($b) {
+                $customer = $this->resolveCustomerDetails($b);
+            }
+        }
+        if (!$customer || empty($customer['email'])) {
+            if (!empty($refund['customer_email'])) {
+                $customer = ['name' => $refund['customer_name'] ?? 'Customer', 'email' => $refund['customer_email'], 'phone' => $refund['customer_phone'] ?? ''];
+            } elseif (!empty($refund['email'])) {
+                $customer = ['name' => $refund['name'] ?? 'Customer', 'email' => $refund['email'], 'phone' => $refund['phone'] ?? ''];
+            }
+        }
+
+        $email = trim((string)($customer['email'] ?? ''));
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return ['success' => false, 'message' => 'Customer has no valid email address.'];
+        }
+
+        $amountFormatted = format_currency($refund['amount'] ?? 0);
+        $subject = "Refund Processed: {$refund['refund_number']} — {$company}";
+
+        $html = $this->renderTemplate('finance/refund-confirmation', [
+            'refund'      => $refund,
+            'invoice'     => $invoice,
+            'customer'    => $customer,
+            'subject'     => $subject,
+            'previewText' => "Your refund of {$amountFormatted} for {$refund['refund_number']} has been processed.",
+            'category'    => 'REFUND PROCESSED',
+            'heading'     => 'Refund Confirmation',
+            'subheading'  => "Your refund of {$amountFormatted} has been issued successfully.",
+        ]);
+
+        return $this->send($email, $customer['name'] ?? null, $subject, $html, null, 'refund_processed', 'refund', (int)($refund['id'] ?? 0));
+    }
+
+    /**
+     * 13. Upcoming Trip Reminder
+     */
+    public function sendTripReminder(array $dispatch, array $booking, array $vehicle, array $driverProfile): array
+    {
+        $company = CompanySettingsService::getCompanyName();
+        $customer = $this->resolveCustomerDetails($booking);
+        $email = trim((string)($customer['email'] ?? ''));
+
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return ['success' => false, 'message' => 'Customer has no valid email address.'];
+        }
+
+        $subject = "Trip Reminder: Tomorrow's Travel — {$company}";
+        $html = $this->renderTemplate('trip/reminder', [
+            'dispatch'    => $dispatch,
+            'booking'     => $booking,
+            'vehicle'     => $vehicle,
+            'driver'      => $driverProfile,
+            'customer'    => $customer,
+            'subject'     => $subject,
+            'previewText' => "Reminder for your upcoming trip #{$booking['booking_code']} tomorrow.",
+            'category'    => 'TRIP REMINDER',
+            'heading'     => "Ready for Tomorrow's Trip?",
+            'subheading'  => "Here is a quick reminder of your itinerary details for booking #{$booking['booking_code']}.",
+        ]);
+
+        return $this->send($email, $customer['name'] ?? null, $subject, $html, null, 'trip_reminder', 'dispatch', (int)$dispatch['id'], [], [], 60);
+    }
+
+    /**
+     * 14. Trip Started Notification
      */
     public function sendTripStarted(array $dispatch, array $booking, array $vehicle, array $driverProfile): array
     {
         $company = CompanySettingsService::getCompanyName();
         $customer = $this->resolveCustomerDetails($booking);
-        $driver = $this->resolveDriverDetails($driverProfile);
+        $email = trim((string)($customer['email'] ?? ''));
 
-        if (empty($customer['email'])) {
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return ['success' => false, 'message' => 'Customer has no valid email address.'];
         }
 
-        $subject = "🚀 Your Journey Has Commenced: {$booking['booking_code']} — {$company}";
+        $subject = "Trip Underway: {$booking['booking_code']} — {$company}";
         $html = $this->renderTemplate('trip/started', [
             'dispatch'    => $dispatch,
             'booking'     => $booking,
             'vehicle'     => $vehicle,
-            'driver'      => $driver,
+            'driver'      => $driverProfile,
             'customer'    => $customer,
             'subject'     => $subject,
-            'previewText' => "Your journey for reservation {$booking['booking_code']} has started."
+            'previewText' => "Your chauffeur has commenced the trip. Have a safe journey!",
+            'category'    => 'LIVE TRIP STATUS',
+            'heading'     => 'Your Trip is Underway',
+            'subheading'  => 'Chauffeur has started the journey. Live tracking is active.',
         ]);
 
-        return $this->send(
-            $customer['email'],
-            $customer['name'],
-            $subject,
-            $html,
-            null,
-            'trip_started',
-            'dispatch',
-            (int)$dispatch['id'],
-            [],
-            [],
-            0
-        );
+        return $this->send($email, $customer['name'] ?? null, $subject, $html, null, 'trip_started', 'dispatch', (int)$dispatch['id']);
     }
 
     /**
-     * Event: Trip Completed -> Send to Customer
+     * 15. Trip Completed Notification
      */
     public function sendTripCompleted(array $dispatch, array $booking, array $vehicle, array $driverProfile): array
     {
+        $company = CompanySettingsService::getCompanyName();
         $customer = $this->resolveCustomerDetails($booking);
-        $driver = $this->resolveDriverDetails($driverProfile);
+        $email = trim((string)($customer['email'] ?? ''));
 
-        if (empty($customer['email'])) {
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return ['success' => false, 'message' => 'Customer has no valid email address.'];
         }
 
-        $company = CompanySettingsService::getCompanyName();
-        $subject = "✓ Journey Completed: {$booking['booking_code']} — Thank You for Choosing {$company}";
+        $subject = "Trip Completed: Thank You for Choosing {$company}";
         $html = $this->renderTemplate('trip/completed', [
             'dispatch'    => $dispatch,
             'booking'     => $booking,
             'vehicle'     => $vehicle,
-            'driver'      => $driver,
+            'driver'      => $driverProfile,
             'customer'    => $customer,
             'subject'     => $subject,
-            'previewText' => "Thank you for traveling with {$company}! Your journey recap is ready."
+            'previewText' => "We hope you enjoyed your journey. Here is your trip summary.",
+            'category'    => 'TRIP SUMMARY',
+            'heading'     => 'Trip Completed Successfully',
+            'subheading'  => 'Thank you for traveling with us. We hope you had a pleasant experience.',
         ]);
 
-        return $this->send(
-            $customer['email'],
-            $customer['name'],
-            $subject,
-            $html,
-            null,
-            'trip_completed',
-            'dispatch',
-            (int)$dispatch['id'],
-            [],
-            [],
-            0
-        );
+        return $this->send($email, $customer['name'] ?? null, $subject, $html, null, 'trip_completed', 'dispatch', (int)$dispatch['id']);
     }
 
     /**
-     * Event: Password Reset -> Send to Account Owner
-     */
-    public function sendPasswordReset(array $user, ?string $temporaryPassword = null): array
-    {
-        $company = CompanySettingsService::getCompanyName();
-        if (empty($user['email'])) {
-            return ['success' => false, 'message' => 'User account has no valid email address.'];
-        }
-
-        $subject = "Security Notice: Password Reset for {$user['username']} — {$company}";
-        $html = $this->renderTemplate('account/password-reset', [
-            'user'              => $user,
-            'temporaryPassword' => $temporaryPassword,
-            'subject'           => $subject,
-            'previewText'       => "Your {$company} account credentials have been reset."
-        ]);
-
-        return $this->send(
-            $user['email'],
-            $user['name'] ?? $user['username'],
-            $subject,
-            $html,
-            null,
-            'password_reset',
-            'user',
-            (int)$user['id'],
-            [],
-            [],
-            0
-        );
-    }
-
-    /**
-     * Diagnostic Test Email
+     * 16. Diagnostic Test Email
      */
     public function sendTestEmail(string $recipientEmail): array
     {
+        $recipientEmail = trim($recipientEmail);
+        $cfg = EmailSettingsService::getTransportConfig();
         $company = CompanySettingsService::getCompanyName();
-        $subject = "{$company} SMTP Test Message — " . date('d M Y, h:i A');
+
+        $subject = "SMTP Diagnostic Test — {$company}";
         $html = $this->renderTemplate('test', [
             'recipientEmail' => $recipientEmail,
-            'smtpHost'       => Config::get('mail.host', 'smtp.gmail.com'),
-            'smtpPort'       => Config::get('mail.port', 465),
-            'sender'         => Config::get('mail.from.address', ''),
+            'smtpHost'       => $cfg['host'],
+            'smtpPort'       => $cfg['port'],
+            'sender'         => $cfg['from_address'],
             'subject'        => $subject,
-            'previewText'    => "Diagnostic verification test message from {$company} SMTP system."
+            'previewText'    => "This is a diagnostic SMTP test email dispatched from {$company}.",
+            'category'       => 'SYSTEM DIAGNOSTICS',
+            'heading'        => 'SMTP Diagnostic Test Successful',
+            'subheading'     => 'Your mail transport connection is operational and delivering responsive HTML messages.',
         ]);
 
-        return $this->send(
-            $recipientEmail,
-            'Diagnostic Tester',
-            $subject,
-            $html,
-            null,
-            'test_email',
-            'diagnostic',
-            0,
-            [],
-            [],
-            0
-        );
+        return $this->send($recipientEmail, null, $subject, $html, null, 'test', 'system_diagnostic', null, [], [], 0);
     }
 
-    /**
-     * Event: Customer Registration -> Send Welcome Email
-     */
-    public function sendCustomerWelcome(array $customer): array
+    // =========================================================================
+    // BACKWARD-COMPATIBLE GRACEFUL QUEUE METHOD FALLBACKS
+    // Ensures any legacy call to queue*() triggers direct delivery cleanly
+    // =========================================================================
+
+    public function queue(string $toEmail, ?string $toName, string $subject, string $htmlBody, ?string $textBody = null, string $emailType = 'general', ?string $referenceType = null, ?int $referenceId = null, array $cc = [], array $bcc = [], int $cooldownMinutes = 0): ?int
     {
-        if (empty($customer['email'])) {
-            return ['success' => false, 'message' => 'Customer has no valid email address.'];
-        }
-
-        $code = $customer['customer_code'] ?? ('CUST-' . ($customer['id'] ?? 1));
-        $recipientName = $customer['name'] ?? 'Valued Guest';
-        $company = CompanySettingsService::getCompanyName();
-        $subject = "Welcome to {$company} [{$code}]";
-        $html = $this->renderTemplate('customer/welcome', [
-            'customer'    => $customer,
-            'subject'     => $subject,
-            'previewText' => "Your customer membership account is active."
-        ]);
-
-        return $this->send(
-            $customer['email'],
-            $recipientName,
-            $subject,
-            $html,
-            null,
-            'customer_welcome',
-            'customer',
-            (int)($customer['id'] ?? 0),
-            [],
-            [],
-            0
-        );
+        $res = $this->send($toEmail, $toName, $subject, $htmlBody, $textBody, $emailType, $referenceType, $referenceId, $cc, $bcc, $cooldownMinutes);
+        return $res['log_id'] ?? null;
     }
 
-    /**
-     * Event: Customer Registration -> Queue Welcome Email (Non-blocking background delivery)
-     */
     public function queueCustomerWelcome(array $customer): ?int
     {
-        if (empty($customer['email'])) {
-            return null;
-        }
-
-        $code = $customer['customer_code'] ?? ('CUST-' . ($customer['id'] ?? 1));
-        $recipientName = $customer['name'] ?? 'Valued Guest';
-        $company = CompanySettingsService::getCompanyName();
-        $subject = "Welcome to {$company} [{$code}]";
-        $html = $this->renderTemplate('customer/welcome', [
-            'customer'    => $customer,
-            'subject'     => $subject,
-            'previewText' => "Your customer membership account is active."
-        ]);
-
-        return $this->queue(
-            $customer['email'],
-            $recipientName,
-            $subject,
-            $html,
-            null,
-            'customer_welcome',
-            'customer',
-            (int)($customer['id'] ?? 0),
-            [],
-            [],
-            0
-        );
+        $res = $this->sendCustomerWelcome($customer);
+        return $res['log_id'] ?? null;
     }
 
-    /**
-     * Event: Employee Registration -> Send Welcome Email
-     */
-    public function sendEmployeeWelcome(array $employee): array
-    {
-        if (empty($employee['email'])) {
-            return ['success' => false, 'message' => 'Employee has no valid email address.'];
-        }
-
-        $code = $employee['employee_code'] ?? ('EMP-' . ($employee['id'] ?? 1));
-        $fullName = trim(($employee['first_name'] ?? '') . ' ' . ($employee['last_name'] ?? ''));
-        if (empty($fullName)) {
-            $fullName = $employee['first_name'] ?? 'Team Member';
-        }
-
-        $company = CompanySettingsService::getCompanyName();
-        $subject = "Welcome to {$company} Operations Team [{$code}]";
-        $html = $this->renderTemplate('employee/welcome', [
-            'employee'    => $employee,
-            'subject'     => $subject,
-            'previewText' => "Your staff operations profile has been created."
-        ]);
-
-        return $this->send(
-            $employee['email'],
-            $fullName,
-            $subject,
-            $html,
-            null,
-            'employee_welcome',
-            'employee',
-            (int)($employee['id'] ?? 0),
-            [],
-            [],
-            0
-        );
-    }
-
-    /**
-     * Event: Employee Registration -> Queue Welcome Email (Non-blocking background delivery)
-     */
     public function queueEmployeeWelcome(array $employee): ?int
     {
-        if (empty($employee['email'])) {
-            return null;
-        }
+        $res = $this->sendEmployeeWelcome($employee);
+        return $res['log_id'] ?? null;
+    }
 
-        $code = $employee['employee_code'] ?? ('EMP-' . ($employee['id'] ?? 1));
-        $fullName = trim(($employee['first_name'] ?? '') . ' ' . ($employee['last_name'] ?? ''));
-        if (empty($fullName)) {
-            $fullName = $employee['first_name'] ?? 'Team Member';
-        }
+    public function queueBookingCreated(array $booking): ?int
+    {
+        $res = $this->sendBookingCreated($booking);
+        return $res['log_id'] ?? null;
+    }
 
-        $company = CompanySettingsService::getCompanyName();
-        $subject = "Welcome to {$company} Operations Team [{$code}]";
-        $html = $this->renderTemplate('employee/welcome', [
-            'employee'    => $employee,
-            'subject'     => $subject,
-            'previewText' => "Your staff operations profile has been created."
-        ]);
+    public function queueBookingConfirmed(array $booking): ?int
+    {
+        $res = $this->sendBookingConfirmed($booking);
+        return $res['log_id'] ?? null;
+    }
 
-        return $this->queue(
-            $employee['email'],
-            $fullName,
-            $subject,
-            $html,
-            null,
-            'employee_welcome',
-            'employee',
-            (int)($employee['id'] ?? 0),
-            [],
-            [],
-            0
-        );
+    public function queueBookingCancelled(array $booking, ?string $reason = null): ?int
+    {
+        $res = $this->sendBookingCancelled($booking, $reason);
+        return $res['log_id'] ?? null;
+    }
+
+    public function queuePaymentSuccessful(array $payment, ?array $invoice = null, ?array $booking = null): ?int
+    {
+        $res = $this->sendPaymentSuccessful($payment, $invoice, $booking);
+        return $res['log_id'] ?? null;
+    }
+
+    public function queueDriverAssigned(array $dispatch, array $booking, array $vehicle, array $driverProfile): ?int
+    {
+        $res = $this->sendDriverAssignment($dispatch, $booking, $vehicle, $driverProfile);
+        return $res['driver']['log_id'] ?? ($res['customer']['log_id'] ?? null);
+    }
+
+    public function queueTripStarted(array $dispatch, array $booking, array $vehicle, array $driverProfile): ?int
+    {
+        $res = $this->sendTripStarted($dispatch, $booking, $vehicle, $driverProfile);
+        return $res['log_id'] ?? null;
+    }
+
+    public function queueTripCompleted(array $dispatch, array $booking, array $vehicle, array $driverProfile): ?int
+    {
+        $res = $this->sendTripCompleted($dispatch, $booking, $vehicle, $driverProfile);
+        return $res['log_id'] ?? null;
     }
 
     // =========================================================================
-    // RECIPIENT IDENTITY RESOLUTION HELPERS
+    // INTERNAL RECIPIENT RESOLVERS
     // =========================================================================
 
-    /**
-     * Resolve Customer identity from booking details
-     */
     private function resolveCustomerDetails(array $booking): array
     {
         $customer = [
-            'id'    => null,
             'name'  => $booking['customer_name'] ?? 'Valued Customer',
             'email' => $booking['customer_email'] ?? '',
             'phone' => $booking['customer_phone'] ?? '',
         ];
 
-        // 1. Try Customer Profile table
-        if (!empty($booking['customer_profile_id'])) {
-            $profile = $this->customerModel->find((int)$booking['customer_profile_id']);
-            if ($profile) {
-                $customer['id'] = $profile['id'];
-                $customer['name'] = $profile['name'];
-                $customer['email'] = $profile['email'] ?? $customer['email'];
-                $customer['phone'] = $profile['phone'] ?? $customer['phone'];
-                return $customer;
-            }
-        }
-
-        // 2. Try User table (customer role)
-        if (!empty($booking['customer_id'])) {
-            $user = $this->userModel->find((int)$booking['customer_id']);
-            if ($user) {
-                $customer['id'] = $user['id'];
-                $customer['name'] = $user['name'] ?? $customer['name'];
-                $customer['email'] = $user['email'] ?? $customer['email'];
-                $customer['phone'] = $user['phone'] ?? $customer['phone'];
-                return $customer;
+        if ((empty($customer['email']) || str_ends_with(strtolower($customer['email']), '@internal.local')) && !empty($booking['customer_profile_id'])) {
+            $custModel = new Customer();
+            $custRow = $custModel->find((int)$booking['customer_profile_id']);
+            if ($custRow && !empty($custRow['email']) && !str_ends_with(strtolower($custRow['email']), '@internal.local')) {
+                $customer['name'] = $custRow['name'] ?? $customer['name'];
+                $customer['email'] = $custRow['email'];
+                $customer['phone'] = $custRow['phone'] ?? $customer['phone'];
             }
         }
 
         return $customer;
     }
 
-    /**
-     * Resolve Driver identity from driver profile details
-     */
-    private function resolveDriverDetails(array $driverProfile): array
+    private function resolveDriverUserDetails(array $driverProfile): array
     {
         $driver = [
-            'id'    => $driverProfile['id'] ?? null,
-            'name'  => 'Chauffeur',
-            'email' => '',
-            'phone' => $driverProfile['emergency_contact'] ?? '',
+            'name'  => $driverProfile['name'] ?? 'Driver',
+            'email' => $driverProfile['email'] ?? '',
+            'phone' => $driverProfile['phone'] ?? '',
         ];
 
-        // 1. Check Employee record
-        if (!empty($driverProfile['employee_id'])) {
-            $emp = $this->employeeModel->find((int)$driverProfile['employee_id']);
-            if ($emp) {
+        if (!empty($driverProfile['user_id'])) {
+            $user = (new \App\Models\User())->find((int)$driverProfile['user_id']);
+            if ($user) {
+                $driver['name'] = $user['name'] ?? $driver['name'];
+                $driver['email'] = $user['email'] ?? $driver['email'];
+                $driver['phone'] = $user['phone'] ?? $driver['phone'];
+            }
+        }
+
+        if (empty($driver['email']) && !empty($driverProfile['employee_id'])) {
+            $emp = (new Employee())->find((int)$driverProfile['employee_id']);
+            if ($emp && !empty($emp['email'])) {
                 $driver['name'] = trim(($emp['first_name'] ?? '') . ' ' . ($emp['last_name'] ?? ''));
-                $driver['email'] = $emp['email'] ?? '';
+                $driver['email'] = $emp['email'];
                 $driver['phone'] = $emp['phone'] ?? $driver['phone'];
             }
         }
 
-        // 2. Fallback to User record
-        if (empty($driver['email']) && !empty($driverProfile['user_id'])) {
-            $user = $this->userModel->find((int)$driverProfile['user_id']);
-            if ($user) {
-                if (empty($driver['name']) || $driver['name'] === 'Chauffeur') {
-                    $driver['name'] = $user['name'] ?? 'Chauffeur';
-                }
-                $driver['email'] = $user['email'] ?? '';
-                $driver['phone'] = !empty($user['phone']) ? $user['phone'] : $driver['phone'];
-            }
-        }
-
         return $driver;
-    }
-
-    /**
-     * Retry sending an email that previously failed or was recorded in email_logs
-     */
-    public function retryFailedEmail(int $logId): array
-    {
-        $log = $this->emailLog->find($logId);
-        if (!$log) {
-            return [
-                'success' => false,
-                'message' => "Email log #{$logId} not found.",
-                'error'   => 'Log record not found.'
-            ];
-        }
-
-        // Prevent duplicate delivery: if already sent, disallow retries
-        if ($log['status'] === 'sent') {
-            return [
-                'success'   => false,
-                'duplicate' => true,
-                'message'   => "Email #{$logId} has already been sent successfully. Duplicate delivery prevented.",
-                'error'     => 'Email already sent.'
-            ];
-        }
-
-        $emailType = $log['email_type'] ?? '';
-        $refType = $log['reference_type'] ?? null;
-        $refId = !empty($log['reference_id']) ? (int)$log['reference_id'] : null;
-        $result = ['success' => false, 'message' => 'Unknown email type.'];
-
-        try {
-            switch ($emailType) {
-                case 'customer_welcome':
-                    if ($refId) {
-                        $cust = (new \App\Models\Customer())->find($refId);
-                        if ($cust) {
-                            $result = $this->sendCustomerWelcome($cust);
-                            break;
-                        }
-                    }
-                    $result = $this->send($log['recipient_email'], $log['recipient_name'], $log['subject'], $this->renderTemplate('customer/welcome', ['customer' => ['name' => $log['recipient_name'], 'email' => $log['recipient_email']]]), null, $emailType, $refType, $refId);
-                    break;
-
-                case 'employee_welcome':
-                    if ($refId) {
-                        $emp = (new \App\Models\Employee())->find($refId);
-                        if ($emp) {
-                            $result = $this->sendEmployeeWelcome($emp);
-                            break;
-                        }
-                    }
-                    $result = $this->send($log['recipient_email'], $log['recipient_name'], $log['subject'], $this->renderTemplate('employee/welcome', ['employee' => ['first_name' => $log['recipient_name'], 'last_name' => '', 'email' => $log['recipient_email']]]), null, $emailType, $refType, $refId);
-                    break;
-
-                case 'booking_created':
-                    if ($refId) {
-                        $b = (new \App\Models\Booking())->find($refId);
-                        if ($b) {
-                            $result = $this->sendBookingCreated($b);
-                            break;
-                        }
-                    }
-                    $result = ['success' => false, 'message' => 'Booking entity not found for retry.'];
-                    break;
-
-                case 'booking_confirmed':
-                    if ($refId) {
-                        $b = (new \App\Models\Booking())->find($refId);
-                        if ($b) {
-                            $result = $this->sendBookingConfirmed($b);
-                            break;
-                        }
-                    }
-                    $result = ['success' => false, 'message' => 'Booking entity not found for retry.'];
-                    break;
-
-                case 'booking_cancelled':
-                    if ($refId) {
-                        $b = (new \App\Models\Booking())->find($refId);
-                        if ($b) {
-                            $result = $this->sendBookingCancelled($b, 'Administrative retry');
-                            break;
-                        }
-                    }
-                    $result = ['success' => false, 'message' => 'Booking entity not found for retry.'];
-                    break;
-
-                case 'payment_successful':
-                    if ($refId) {
-                        $p = (new \App\Models\Payment())->find($refId);
-                        if ($p) {
-                            $result = $this->sendPaymentSuccessful($p);
-                            break;
-                        }
-                    }
-                    $result = ['success' => false, 'message' => 'Payment entity not found for retry.'];
-                    break;
-
-                case 'test':
-                    $result = $this->sendTestEmail($log['recipient_email']);
-                    break;
-
-                default:
-                    // Generic fallback for any other registered email template
-                    $result = $this->send(
-                        $log['recipient_email'],
-                        $log['recipient_name'],
-                        $log['subject'],
-                        $this->renderTemplate('test', ['recipientEmail' => $log['recipient_email'], 'smtpHost' => \App\Core\Config::get('mail.host', 'smtp.gmail.com'), 'smtpPort' => 465, 'sender' => \App\Core\Config::get('mail.from.address', '')]),
-                        null,
-                        $emailType,
-                        $refType,
-                        $refId
-                    );
-                    break;
-            }
-        } catch (\Throwable $e) {
-            $result = ['success' => false, 'message' => $e->getMessage(), 'error' => $e->getMessage()];
-        }
-
-        // Record retry outcome into original log record
-        $this->emailLog->recordRetry(
-            $logId,
-            !empty($result['success']) ? 'sent' : 'failed',
-            $result['error'] ?? ($result['message'] ?? null)
-        );
-
-        return $result;
     }
 }

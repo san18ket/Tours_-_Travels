@@ -147,7 +147,19 @@ class InvoiceController extends Controller
         $bookingId = (int)($params['booking_id'] ?? 0);
         try {
             $invoice = $this->billingService->generateInvoice($bookingId);
-            $msg = "Invoice {$invoice['invoice_number']} generated successfully.";
+
+            $emailNotice = '';
+            try {
+                $emailService = new \App\Services\EmailService();
+                $emailRes = $emailService->sendInvoiceNotification($invoice);
+                if (!empty($emailRes['success'])) {
+                    $emailNotice = ' Invoice notification email sent.';
+                }
+            } catch (\Throwable $ne) {
+                // Ignore email failure on invoice generation
+            }
+
+            $msg = "Invoice {$invoice['invoice_number']} generated successfully.{$emailNotice}";
             Session::setFlash('success', $msg);
             if ($request->isAjax()) {
                 return $this->json([
@@ -206,7 +218,8 @@ class InvoiceController extends Controller
             $updatedInvoice = $this->invoiceModel->find($invoiceId);
             $remaining = max(0.0, (float)($updatedInvoice['total_amount'] ?? 0) - (float)($updatedInvoice['paid_amount'] ?? 0));
             $statusText = $remaining <= 0.001 ? "Invoice is now fully paid." : "Remaining amount: " . format_currency($remaining) . ".";
-            $msg = "Payment of " . format_currency((float)$data['amount']) . " recorded successfully. {$statusText}";
+            $emailNotice = !empty($payment['email_sent']) ? " Payment receipt email sent." : "";
+            $msg = "Payment of " . format_currency((float)$data['amount']) . " recorded successfully. {$statusText}{$emailNotice}";
             Session::setFlash('success', $msg);
 
             if ($request->isAjax()) {

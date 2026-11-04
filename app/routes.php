@@ -29,6 +29,7 @@ use App\Controllers\LanguageController;
 use App\Controllers\CompanyController;
 use App\Controllers\EmailOtpController;
 use App\Controllers\AccountRecoveryController;
+use App\Controllers\EmailController;
 
 $router = new Router();
 
@@ -359,15 +360,27 @@ $router->post('/api/mobile/v1/tracking/stop', [MobileApiController::class, 'trac
 $router->post('/api/mobile/v1/gps', [MobileApiController::class, 'syncGps'], ['mobile_auth', 'throttle:gps']);
 
 // -----------------------------------------------------------------------------
-// Notification Settings (Email Notifications Diagnostics)
+// Professional Centralized Email System (Office & Deliverability Management)
 // -----------------------------------------------------------------------------
-$router->get('/office/notification-settings', [App\Controllers\EmailTestController::class, 'index'], ['auth', 'role:admin,dispatcher']);
-$router->post('/office/notification-settings', [App\Controllers\EmailTestController::class, 'sendTest'], ['auth', 'role:admin,dispatcher', 'csrf']);
-$router->get('/office/email/test', [App\Controllers\EmailTestController::class, 'index'], ['auth', 'role:admin,dispatcher']);
-$router->post('/office/email/test', [App\Controllers\EmailTestController::class, 'sendTest'], ['auth', 'role:admin,dispatcher', 'csrf']);
-$router->post('/office/email/retry/{id}', [App\Controllers\EmailTestController::class, 'retry'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->get('/office/emails', [EmailController::class, 'index'], ['auth', 'role:admin,dispatcher']);
+$router->get('/office/emails/history', [EmailController::class, 'history'], ['auth', 'role:admin,dispatcher']);
+$router->get('/office/emails/details/{id}', [EmailController::class, 'details'], ['auth', 'role:admin,dispatcher']);
+$router->post('/office/emails/retry/{id}', [EmailController::class, 'retry'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->get('/office/emails/settings', [EmailController::class, 'settings'], ['auth', 'role:admin']);
+$router->post('/office/emails/test-smtp', [EmailController::class, 'testSmtp'], ['auth', 'role:admin', 'csrf']);
+$router->post('/office/emails/send-test', [EmailController::class, 'sendTest'], ['auth', 'role:admin', 'csrf']);
+$router->get('/office/emails/preview', [EmailController::class, 'preview'], ['auth', 'role:admin,dispatcher']);
+$router->get('/office/emails/preview/render', [EmailController::class, 'previewRender'], ['auth', 'role:admin,dispatcher']);
+
+// Backward-compatible routes mapping to centralized EmailController
+$router->get('/office/notification-settings', [EmailController::class, 'index'], ['auth', 'role:admin,dispatcher']);
+$router->post('/office/notification-settings', [EmailController::class, 'sendTest'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->get('/office/email/test', [EmailController::class, 'index'], ['auth', 'role:admin,dispatcher']);
+$router->post('/office/email/test', [EmailController::class, 'sendTest'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->post('/office/email/retry/{id}', [EmailController::class, 'retry'], ['auth', 'role:admin,dispatcher', 'csrf']);
+$router->get('/office/email/details/{id}', [EmailController::class, 'details'], ['auth', 'role:admin,dispatcher']);
 $router->post('/office/customers/{id}/resend-welcome', [CustomerController::class, 'resendWelcome'], ['auth', 'role:admin,dispatcher', 'csrf']);
 $router->post('/office/employees/{id}/resend-welcome', [EmployeeController::class, 'resendWelcome'], ['auth', 'role:admin,dispatcher', 'csrf']);
-$router->get('/driver/notification-settings', [App\Controllers\EmailTestController::class, 'index'], ['auth', 'role:driver']);
+$router->get('/driver/notification-settings', [EmailController::class, 'index'], ['auth', 'role:driver']);
 
 return $router;

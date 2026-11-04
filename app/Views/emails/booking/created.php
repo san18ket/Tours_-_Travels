@@ -1,84 +1,54 @@
-<!-- Booking Created Template -->
-<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
-    <tr>
-        <td style="padding-bottom: 20px;">
-            <div style="display: inline-block; background-color: #FEF3C7; color: #92400E; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 4px 12px; border-radius: 20px; border: 1px solid #FDE68A;">
-                Booking Created • Pending Confirmation
-            </div>
-            <h1 style="margin: 12px 0 6px 0; font-size: 22px; font-weight: 700; color: #0F172A; line-height: 1.3;">
-                Your Reservation is Confirmed in System
-            </h1>
-            <p style="margin: 0; font-size: 14px; color: #64748B; line-height: 1.5;">
-                Dear <?= e($customer['name'] ?? 'Valued Guest') ?>, thank you for booking with <?= e(\App\Services\CompanySettingsService::getCompanyName()) ?>. We have received your travel itinerary and our operations team is preparing your dispatch.
-            </p>
-        </td>
-    </tr>
+<?php
+/**
+ * Booking Created (Pending Confirmation) Email Template
+ */
+$primary = $themeColors['primary'] ?? '#176B5B';
+$secondary = $themeColors['secondary'] ?? '#16443B';
+$companyName = $companyName ?? \App\Services\CompanySettingsService::getCompanyName();
+$customerName = $customer['name'] ?? 'Valued Guest';
+?>
 
-    <!-- Booking Summary Card -->
+<!-- STATUS BADGE -->
+<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FEF3C7; border: 1px solid #FDE68A; border-radius: 8px; margin-bottom: 18px;">
     <tr>
-        <td style="padding-bottom: 20px;">
-            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; overflow: hidden;">
+        <td style="padding: 12px 18px;">
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
                 <tr>
-                    <td colspan="2" style="background-color: #0F172A; color: #FFFFFF; padding: 12px 18px; font-size: 13px; font-weight: 700; letter-spacing: 0.5px;">
-                        RESERVATION DETAILS: <?= e($booking['booking_code']) ?>
+                    <td align="left" style="font-size: 13.5px; font-weight: 700; color: #92400E;">
+                        ⏳ Reservation Received (Under Review)
                     </td>
-                </tr>
-                <tr>
-                    <td style="padding: 14px 18px; font-size: 13px; color: #64748B; border-bottom: 1px solid #E2E8F0; width: 40%;">Route / Itinerary:</td>
-                    <td style="padding: 14px 18px; font-size: 13px; color: #0F172A; font-weight: 600; border-bottom: 1px solid #E2E8F0;">
-                        <?= e($booking['pickup_address']) ?> <br>
-                        <span style="color: #10B981;">&darr; to</span><br>
-                        <?= e($booking['drop_address']) ?>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px 18px; font-size: 13px; color: #64748B; border-bottom: 1px solid #E2E8F0;">Reporting Time:</td>
-                    <td style="padding: 12px 18px; font-size: 13px; color: #0F172A; font-weight: 600; border-bottom: 1px solid #E2E8F0;">
-                        <?= format_date($booking['start_date']) ?> at <?= date('h:i A', strtotime($booking['pickup_time'] ?? '09:00:00')) ?>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px 18px; font-size: 13px; color: #64748B; border-bottom: 1px solid #E2E8F0;">End / Return Date:</td>
-                    <td style="padding: 12px 18px; font-size: 13px; color: #0F172A; font-weight: 600; border-bottom: 1px solid #E2E8F0;">
-                        <?= format_date($booking['end_date'] ?? $booking['start_date']) ?>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 12px 18px; font-size: 13px; color: #64748B; border-bottom: 1px solid #E2E8F0;">Passengers:</td>
-                    <td style="padding: 12px 18px; font-size: 13px; color: #0F172A; font-weight: 600; border-bottom: 1px solid #E2E8F0;">
-                        <?= (int)($booking['passenger_count'] ?? 1) ?> Guest(s)
-                    </td>
-                </tr>
-                <?php if (!empty($booking['special_requests'])): ?>
-                <tr>
-                    <td style="padding: 12px 18px; font-size: 13px; color: #64748B; border-bottom: 1px solid #E2E8F0;">Special Requests:</td>
-                    <td style="padding: 12px 18px; font-size: 13px; color: #0F172A; border-bottom: 1px solid #E2E8F0;">
-                        <?= nl2br(e($booking['special_requests'])) ?>
-                    </td>
-                </tr>
-                <?php endif; ?>
-                <tr>
-                    <td style="padding: 14px 18px; font-size: 14px; color: #0F172A; font-weight: 700;">Total Amount:</td>
-                    <td style="padding: 14px 18px; font-size: 16px; color: #10B981; font-weight: 800;">
-                        <?= format_currency((float)($booking['total_amount'] ?? 0)) ?>
-                    </td>
-                </tr>
-            </table>
-        </td>
-    </tr>
-
-    <!-- Call to action button -->
-    <tr>
-        <td align="center" style="padding-top: 10px; padding-bottom: 10px;">
-            <table role="presentation" border="0" cellpadding="0" cellspacing="0">
-                <tr>
-                    <td style="border-radius: 8px; background-color: #10B981;">
-                        <a href="<?= e(url('/office/bookings/' . $booking['id'])) ?>" target="_blank" style="display: inline-block; padding: 14px 28px; font-size: 14px; font-weight: 700; color: #FFFFFF; text-decoration: none; border-radius: 8px; letter-spacing: 0.3px;">
-                            View Reservation Details &rarr;
-                        </a>
+                    <td align="right" style="font-size: 12.5px; font-weight: 700; color: <?= e($secondary) ?>;">
+                        Code: <?= e($booking['booking_code']) ?>
                     </td>
                 </tr>
             </table>
         </td>
     </tr>
 </table>
+
+<p style="margin: 0 0 16px 0; font-size: 14px; color: #20352F; line-height: 1.5;">
+    Dear <strong><?= e($customerName) ?></strong>, we have received your travel booking request for <strong><?= e($companyName) ?></strong>. Our dispatch team is reviewing vehicle and chauffeur availability.
+</p>
+
+<!-- ITINERARY DETAILS CARD -->
+<?php
+$cardTitle = 'RESERVATION REQUEST: ' . $booking['booking_code'];
+$pickupTimeFormatted = !empty($booking['pickup_time']) ? date('h:i A', strtotime($booking['pickup_time'])) : 'Scheduled';
+$cardRows = [
+    ['label' => 'Booking Reference', 'value' => $booking['booking_code']],
+    ['label' => 'Pickup Location', 'value' => $booking['pickup_address']],
+    ['label' => 'Destination', 'value' => $booking['drop_address']],
+    ['label' => 'Requested Date', 'value' => format_date($booking['start_date']) . ' at ' . $pickupTimeFormatted],
+    ['label' => 'Passengers', 'value' => ((int)($booking['passenger_count'] ?? 1)) . ' Guest(s)'],
+    ['label' => 'Estimated Total', 'html' => '<span style="font-size: 16px; font-weight: 800; color: ' . e($secondary) . ';">' . format_currency((float)($booking['total_amount'] ?? 0)) . '</span>'],
+];
+require __DIR__ . '/../components/info_card.php';
+?>
+
+<!-- CTA BUTTON -->
+<?php
+$btnText = 'Check Reservation Status';
+$btnUrl = url('/office/bookings/' . $booking['id']);
+$btnColor = $primary;
+require __DIR__ . '/../components/button.php';
+?>

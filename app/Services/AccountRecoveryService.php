@@ -518,19 +518,19 @@ class AccountRecoveryService
     }
 
     /**
-     * Reveal recovered username upon presentation of valid recovery authorization
-     * Immediately consumes the recovery authorization.
+     * Send recovered username PRIVATELY through verified email
+     * The username is NEVER returned to the webpage, JS, or JSON.
      *
-     * @return array ['success' => bool, 'username' => ?string, 'message' => string]
+     * @return array ['success' => bool, 'sent' => bool, 'message' => string]
      */
     public function recoverUsername(string $token): array
     {
         $validated = $this->validateRecoveryAuthorization($token, self::FLOW_USERNAME);
         if (!$validated) {
             return [
-                'success'  => false,
-                'username' => null,
-                'message'  => 'Your recovery authorization is invalid or has expired. Please start over.'
+                'success' => false,
+                'sent'    => false,
+                'message' => 'Your recovery authorization is invalid or has expired. Please start over.'
             ];
         }
 
@@ -546,22 +546,32 @@ class AccountRecoveryService
 
         Session::remove("recovery_auth_" . self::FLOW_USERNAME);
 
-        // Record security audit event
+        // Send username PRIVATELY via email
+        $emailResult = $this->emailService->sendUsernameRecovery($user);
+        $emailSent = !empty($emailResult['success']);
+
+        // Record security audit event (without logging OTP or sensitive secrets)
         $this->auditLog->record(
             'auth_username_recovered',
             'users',
             $user['id'],
             null,
-            ['email' => $user['email']],
+            ['email' => $user['email'], 'email_dispatched' => $emailSent],
             $user['id']
         );
 
-        Logger::security("Account username recovered via email OTP: {$user['username']} ({$user['email']})");
+        Logger::security("Account username recovery completed via email OTP. Private email dispatched to: {$user['email']}");
+
+        if ($emailSent) {
+            $msg = 'Your username recovery request has been completed. If your account was verified, your username has been sent to your registered email address. Please check your inbox.';
+        } else {
+            $msg = 'Your account was verified, but we were unable to deliver the username email at this moment. You can retry from the recovery hub or contact support.';
+        }
 
         return [
-            'success'  => true,
-            'username' => $user['username'],
-            'message'  => 'Username recovered successfully.'
+            'success' => true,
+            'sent'    => $emailSent,
+            'message' => $msg
         ];
     }
 
@@ -630,8 +640,8 @@ class AccountRecoveryService
         try {
             // Invalidate driver mobile device access tokens
             $pdo->prepare("UPDATE `driver_mobile_devices` 
-                           SET `status` = 'revoked', `revoked_at` = NOW() 
-                           WHERE `user_id` = ?")
+                           SET `is_revoked` = 1 
+                           WHERE `driver_id` IN (SELECT id FROM `driver_profiles` WHERE `user_id` = ?)")
                 ->execute([(int)$user['id']]);
 
             // Invalidate any other active OTPs for this user

@@ -150,9 +150,15 @@ class BookingService
             $pdo->commit();
             $created = $this->bookingModel->find($bookingId);
             try {
-                $this->emailService->queueBookingCreated($created);
+                $emailResult = $this->emailService->sendBookingCreated($created);
+                $created['email_sent'] = !empty($emailResult['success']);
+                if (empty($emailResult['success']) && !empty($emailResult['error'])) {
+                    $created['email_error'] = $emailResult['error'];
+                }
             } catch (\Throwable $e) {
-                Logger::warning("Could not queue booking_created email: " . $e->getMessage());
+                Logger::warning("Could not dispatch booking_created email: " . $e->getMessage());
+                $created['email_sent'] = false;
+                $created['email_error'] = $e->getMessage();
             }
             return $created;
         } catch (\Throwable $e) {

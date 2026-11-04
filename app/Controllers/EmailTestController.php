@@ -22,26 +22,73 @@ class EmailTestController extends Controller
     }
 
     /**
-     * Admin view for testing SMTP connectivity and inspecting recent outgoing logs
+     * Admin view for testing SMTP connectivity, background worker telemetry and outbox queue
      */
     public function index(Request $request): Response
     {
-        $logs = $this->emailLog->getRecentLogs(30);
+        $status = $request->get('status');
+        if (!in_array($status, ['pending', 'processing', 'sent', 'failed'], true)) {
+            $status = null;
+        }
+
+        $logs = $this->emailLog->getFilteredLogs($status, 50);
+        $workerHealth = $this->emailLog->getWorkerHealth();
+        $queueCounts = $this->emailLog->getQueueCounts();
 
         // Sanitize and mask sender email for display
         $fromEmail = Config::get('mail.from.address', '');
         $maskedEmail = $this->maskEmail($fromEmail);
 
         return $this->render('office/email/test', [
-            'title'       => 'SMTP Email System Diagnostics',
-            'smtpHost'    => Config::get('mail.host', 'smtp.gmail.com'),
-            'smtpPort'    => Config::get('mail.port', 465),
-            'encryption'  => Config::get('mail.encryption', 'ssl'),
-            'fromName'    => Config::get('mail.from.name', \App\Services\CompanySettingsService::getCompanyName()),
-            'senderEmail' => $maskedEmail,
-            'isConfigured'=> !empty(Config::get('mail.username')) && !empty(Config::get('mail.password')),
-            'logs'        => $logs,
+            'title'        => 'SMTP Email System Diagnostics & Worker Telemetry',
+            'smtpHost'     => Config::get('mail.host', 'smtp.gmail.com'),
+            'smtpPort'     => Config::get('mail.port', 465),
+            'encryption'   => Config::get('mail.encryption', 'ssl'),
+            'fromName'     => Config::get('mail.from.name', \App\Services\CompanySettingsService::getCompanyName()),
+            'senderEmail'  => $maskedEmail,
+            'isConfigured' => !empty(Config::get('mail.username')) && !empty(Config::get('mail.password')),
+            'logs'         => $logs,
+            'statusFilter' => $status,
+            'workerHealth' => $workerHealth,
+            'queueCounts'  => $queueCounts,
         ], 'layouts/office');
+    }
+
+    /**
+     * AJAX endpoint to inspect sanitized email log details
+     */
+    public function details(Request $request, int $id): Response
+    {
+        $log = $this->emailLog->find($id);
+        if (!$log) {
+            return $this->json(['success' => false, 'message' => 'Log not found.'], 404);
+        }
+
+        // Sanitize body to avoid leaking any passwords or auth tokens
+        $htmlBody = $log['html_body'] ?? '';
+        $htmlBody = preg_replace('/(password|token|secret)[=\s:]+[^\s&<"\'\\]+/i', '$1=[REDACTED]', $htmlBody);
+
+        return $this->json([
+            'success' => true,
+            'log'     => [
+                'id'              => (int)$log['id'],
+                'recipient_email' => $log['recipient_email'] ?? ($log['to_email'] ?? ''),
+                'recipient_name'  => $log['recipient_name'] ?? ($log['to_name'] ?? ''),
+                'email_type'      => $log['email_type'],
+                'subject'         => $log['subject'],
+                'status'          => $log['status'],
+                'attempt_count'   => (int)($log['attempt_count'] ?? 0),
+                'max_attempts'    => (int)($log['max_attempts'] ?? 5),
+                'next_attempt_at' => $log['next_attempt_at'],
+                'locked_at'       => $log['locked_at'],
+                'locked_by'       => $log['locked_by'],
+                'sent_at'         => $log['sent_at'],
+                'created_at'      => $log['created_at'],
+                'error_message'   => $log['error_message'],
+                'message_id'      => $log['message_id'],
+                'html_body'       => $htmlBody,
+            ]
+        ]);
     }
 
     /**

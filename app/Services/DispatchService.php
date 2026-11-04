@@ -166,7 +166,8 @@ class DispatchService
             }
 
             try {
-                $this->emailService->sendDriverAssigned($dispatch, $booking, $vehicle, $driver);
+                $emailResults = $this->emailService->sendDriverAssigned($dispatch, $booking, $vehicle, $driver);
+                $dispatch['email_results'] = $emailResults;
             } catch (\Throwable $e) {
                 Logger::warning("Could not dispatch driver assignment email: " . $e->getMessage());
             }

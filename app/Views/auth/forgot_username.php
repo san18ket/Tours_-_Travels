@@ -283,36 +283,27 @@
     </div>
 </div>
 
-<!-- Step 4: Show Recovered Username (Hidden until OTP is verified) -->
+<!-- Step 4: Show Recovery Success Message (Username delivered PRIVATELY via Email) -->
 <div id="forgotUsernameStepSuccess" style="display: none;">
-    <div class="glass-card-header">
-        <div class="glass-card-icon-badge" style="width: 52px; height: 52px; font-size: 1.5rem; border-radius: 50%; background: #ecfdf5; color: #059669; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 0.75rem; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
+    <div class="glass-card-header" style="text-align: center;">
+        <div class="glass-card-icon-badge" style="width: 56px; height: 56px; font-size: 1.6rem; border-radius: 50%; background: #ecfdf5; color: #059669; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 0.85rem; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);">
             <i class="fa-solid fa-circle-check"></i>
         </div>
-        <h2 class="glass-card-title">Username Recovered Successfully</h2>
-        <p class="glass-card-sub">Your account has been verified. You can now use this username to sign in.</p>
+        <h2 class="glass-card-title">Recovery Request Completed</h2>
+        <p class="glass-card-sub" style="margin-top: 0.5rem; line-height: 1.5;">
+            Your account verification has succeeded. For your security and privacy, your username has been sent directly to your registered email address.
+        </p>
     </div>
 
-    <div class="username-result-card">
-        <div class="username-badge-label">Your registered username is:</div>
-        <div class="username-display-val" id="recoveredUsernameDisplay">------</div>
-        <button type="button" class="username-copy-btn" onclick="copyRecoveredUsername()">
-            <i class="fa-regular fa-copy"></i>
-            <span id="copyBtnText">Copy Username</span>
-        </button>
+    <div style="background: rgba(239, 246, 255, 0.9); border: 1.5px solid rgba(37, 99, 235, 0.25); border-radius: 14px; padding: 1.25rem 1.15rem; margin: 1.25rem 0 1.5rem 0; font-size: 0.9rem; color: #1e40af; line-height: 1.5; text-align: center;">
+        <i class="fa-solid fa-envelope-circle-check" style="font-size: 1.4rem; color: #2563eb; margin-bottom: 0.4rem; display: block;"></i>
+        Please check your inbox (and spam or junk folder) for the email containing your registered username.
     </div>
 
     <a href="<?= url('/login') ?>" class="glass-btn-primary" style="margin-bottom: 0.85rem;" data-no-ajax="true" data-native="true" rel="external">
         <i class="fa-solid fa-right-to-bracket"></i>
-        <span>Continue to Login</span>
+        <span>Back to Login</span>
     </a>
-
-    <div class="recovery-nav-row" style="justify-content: center;">
-        <a href="<?= url('/login') ?>" class="recovery-nav-link" data-no-ajax="true" data-native="true" rel="external">
-            <i class="fa-solid fa-arrow-left"></i>
-            <span>Back to Login</span>
-        </a>
-    </div>
 </div>
 
 <!-- Reusable 4-Digit OTP Modal -->
@@ -480,53 +471,21 @@ window.onRecoveryOtpVerified = function(recoveryToken, verifiedEmail) {
         return res.json().then(data => ({ status: res.status, ok: res.ok, data: data }));
     })
     .then(function(res) {
-        if (res.ok && res.data.success && res.data.username) {
-            // Hide Step 1, Show Step 4 (Recovered Username)
+        if (res.ok && res.data.success) {
+            // Hide Step 1, Show Step Success (Username delivered privately via email)
             var step1 = document.getElementById('forgotUsernameStep1');
             var stepSuccess = document.getElementById('forgotUsernameStepSuccess');
-            var userDisplay = document.getElementById('recoveredUsernameDisplay');
 
-            if (userDisplay) {
-                userDisplay.textContent = res.data.username;
-            }
             if (step1) step1.style.display = 'none';
             if (stepSuccess) stepSuccess.style.display = 'block';
         } else {
-            showAlert(res.data.message || 'Unable to retrieve username. Please start over.', true);
+            showAlert((res.data && res.data.message) ? res.data.message : 'Unable to complete recovery request. Please start over.', true);
         }
     })
     .catch(function(err) {
         console.error('Recover username error:', err);
-        showAlert('Failed to retrieve username due to network error.', true);
+        showAlert('Failed to process recovery request due to network error.', true);
     });
 };
-
-function copyRecoveredUsername() {
-    var userDisplay = document.getElementById('recoveredUsernameDisplay');
-    var copyBtn = document.getElementById('copyBtnText');
-    if (!userDisplay) return;
-
-    var text = userDisplay.textContent.trim();
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(function() {
-            if (copyBtn) copyBtn.textContent = 'Copied!';
-            setTimeout(function() {
-                if (copyBtn) copyBtn.textContent = 'Copy Username';
-            }, 2000);
-        });
-    } else {
-        // Fallback
-        var temp = document.createElement('textarea');
-        temp.value = text;
-        document.body.appendChild(temp);
-        temp.select();
-        document.execCommand('copy');
-        document.body.removeChild(temp);
-        if (copyBtn) copyBtn.textContent = 'Copied!';
-        setTimeout(function() {
-            if (copyBtn) copyBtn.textContent = 'Copy Username';
-        }, 2000);
-    }
-}
 </script>
 

@@ -218,17 +218,34 @@ class CustomerController extends Controller
                 ]
             );
 
+            $emailSent = false;
+            $emailError = null;
+            $hasValidEmail = false;
+
             try {
                 $emailService = new \App\Services\EmailService();
                 $fullCust = $this->customerModel->find($customerId);
-                if ($fullCust && !empty($fullCust['email'])) {
-                    $emailService->queueCustomerWelcome($fullCust);
+                if ($fullCust && !empty($fullCust['email']) && !str_ends_with(strtolower($fullCust['email']), '@internal.local') && !str_ends_with(strtolower($fullCust['email']), '@voyagego.internal')) {
+                    $hasValidEmail = true;
+                    $emailResult = $emailService->sendCustomerWelcome($fullCust);
+                    $emailSent = !empty($emailResult['success']);
+                    if (!$emailSent) {
+                        $emailError = $emailResult['error'] ?? ($emailResult['message'] ?? 'SMTP delivery failed');
+                    }
                 }
             } catch (\Throwable $e) {
-                Logger::warning("Could not queue customer welcome email: " . $e->getMessage());
+                Logger::warning("Could not dispatch customer welcome email: " . $e->getMessage());
+                $emailError = $e->getMessage();
             }
 
-            $successMsg = "Customer profile [{$customerCode}] for {$input['name']} registered successfully!";
+            if ($emailSent) {
+                $successMsg = "Customer profile [{$customerCode}] for {$input['name']} registered successfully. Welcome email sent.";
+            } elseif ($hasValidEmail && $emailError) {
+                $successMsg = "Customer profile [{$customerCode}] for {$input['name']} registered successfully, but the welcome email could not be sent. You can retry it from Email Management.";
+            } else {
+                $successMsg = "Customer profile [{$customerCode}] for {$input['name']} registered successfully!";
+            }
+
             Session::setFlash('success', $successMsg);
             if ($request->isAjax()) {
                 return $this->json([

@@ -351,17 +351,34 @@ class EmployeeController extends Controller
                 Session::getUserId()
             );
 
+            $emailSent = false;
+            $emailError = null;
+            $hasValidEmail = false;
+
             try {
                 $emailService = new \App\Services\EmailService();
                 $fullEmp = $this->employeeModel->find($employeeId);
-                if ($fullEmp && !empty($fullEmp['email'])) {
-                    $emailService->queueEmployeeWelcome($fullEmp);
+                if ($fullEmp && !empty($fullEmp['email']) && !str_ends_with(strtolower($fullEmp['email']), '@internal.local') && !str_ends_with(strtolower($fullEmp['email']), '@voyagego.internal')) {
+                    $hasValidEmail = true;
+                    $emailResult = $emailService->sendEmployeeWelcome($fullEmp);
+                    $emailSent = !empty($emailResult['success']);
+                    if (!$emailSent) {
+                        $emailError = $emailResult['error'] ?? ($emailResult['message'] ?? 'SMTP delivery failed');
+                    }
                 }
             } catch (\Throwable $e) {
-                Logger::warning("Could not queue employee welcome email: " . $e->getMessage());
+                Logger::warning("Could not dispatch employee welcome email: " . $e->getMessage());
+                $emailError = $e->getMessage();
             }
 
-            $successMsg = "Employee [{$employeeCode}] {$data['first_name']} {$data['last_name']} successfully registered.";
+            if ($emailSent) {
+                $successMsg = "Employee [{$employeeCode}] {$data['first_name']} {$data['last_name']} successfully registered. Welcome email sent.";
+            } elseif ($hasValidEmail && $emailError) {
+                $successMsg = "Employee [{$employeeCode}] {$data['first_name']} {$data['last_name']} successfully registered, but the welcome email could not be sent. You can retry it from Email Management.";
+            } else {
+                $successMsg = "Employee [{$employeeCode}] {$data['first_name']} {$data['last_name']} successfully registered.";
+            }
+
             Session::setFlash('success', $successMsg);
             if ($request->isAjax()) {
                 return $this->json([

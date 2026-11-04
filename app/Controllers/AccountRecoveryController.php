@@ -102,7 +102,7 @@ class AccountRecoveryController extends Controller
     }
 
     /**
-     * Reveal Recovered Username using verified authorization token
+     * Complete username recovery by privately emailing username to verified address
      */
     public function recoverUsername(Request $request): Response
     {
@@ -111,22 +111,24 @@ class AccountRecoveryController extends Controller
 
             if (empty($token)) {
                 return Response::json([
-                    'success'  => false,
-                    'username' => null,
-                    'message'  => 'Missing recovery authorization token.'
+                    'success' => false,
+                    'message' => 'Missing recovery authorization token.'
                 ], 422);
             }
 
             $result = $this->recoveryService->recoverUsername($token);
 
             $status = $result['success'] ? 200 : 422;
-            return Response::json($result, $status);
+            return Response::json([
+                'success' => $result['success'],
+                'sent'    => $result['sent'] ?? false,
+                'message' => $result['message'],
+            ], $status);
         } catch (Throwable $e) {
             Logger::error("AccountRecoveryController::recoverUsername exception: " . $e->getMessage());
             return Response::json([
-                'success'  => false,
-                'username' => null,
-                'message'  => 'Failed to recover username. Please try again.'
+                'success' => false,
+                'message' => 'Failed to process username recovery. Please try again.'
             ], 500);
         }
     }

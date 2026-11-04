@@ -83,12 +83,22 @@ class DispatchController extends Controller
             );
 
             $notifInfo = $dispatch['notification_info'] ?? null;
+            $emailResults = $dispatch['email_results'] ?? [];
+            $emailNotes = [];
+            if (!empty($emailResults['driver']['success'])) {
+                $emailNotes[] = 'chauffeur';
+            }
+            if (!empty($emailResults['customer']['success'])) {
+                $emailNotes[] = 'customer';
+            }
+            $emailAlertText = !empty($emailNotes) ? ' Email alert dispatched to ' . implode(' and ', $emailNotes) . '.' : '';
+
             if (!empty($notifInfo['employee_name'])) {
                 $recipient = $notifInfo['employee_name'];
                 $phone = !empty($notifInfo['employee_phone']) ? " ({$notifInfo['employee_phone']})" : "";
-                Session::setFlash('success', "Trip deployment successful! Dispatch Code: {$dispatch['dispatch_code']} — Duty notification dispatched to {$recipient}{$phone}.");
+                Session::setFlash('success', "Trip deployment successful! Dispatch Code: {$dispatch['dispatch_code']} — Duty notification dispatched to {$recipient}{$phone}.{$emailAlertText}");
             } else {
-                Session::setFlash('success', "Trip deployment successful! Dispatch Code: {$dispatch['dispatch_code']}");
+                Session::setFlash('success', "Trip deployment successful! Dispatch Code: {$dispatch['dispatch_code']}.{$emailAlertText}");
             }
             return $this->redirect(url("/office/trips/history"));
         } catch (Throwable $e) {

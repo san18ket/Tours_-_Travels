@@ -280,6 +280,20 @@ $invoiceActions = '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-item
                     notice.innerText = 'Remaining after payment: ₹ ' + rem.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
                 }
             }
+
+            document.addEventListener('DOMContentLoaded', function() {
+                const payForm = document.getElementById('recordPaymentForm');
+                if (payForm) {
+                    payForm.addEventListener('submit', function() {
+                        const btn = payForm.querySelector('button[type="submit"]');
+                        if (btn) {
+                            btn.style.pointerEvents = 'none';
+                            btn.style.opacity = '0.85';
+                            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin" style="margin-right: 6px;"></i> Recording Payment & Sending Receipt...';
+                        }
+                    });
+                }
+            });
         </script>
         <?php else: ?>
         <div class="vg-card" style="border: 1.5px solid #A7F3D0; background: #ECFDF5;">
