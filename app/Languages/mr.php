@@ -374,6 +374,7 @@ return [
     'auth.quick_dev_creds' => 'त्वरित विकास क्रेडेन्शियल',
     'auth.remember_me' => 'माझी माहिती लक्षात ठेवा',
     'auth.forgot_password' => 'पासवर्ड विसरलात?',
+    'auth.forgot_username_or_password' => 'वापरकर्ता नाव किंवा पासवर्ड विसरलात?',
     'auth.new_password' => 'नवीन पासवर्ड',
     'auth.confirm_password' => 'पासवर्डची पुष्टी करा',
     'auth.current_password' => 'सध्याचा पासवर्ड',

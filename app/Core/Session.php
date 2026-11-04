@@ -17,30 +17,36 @@ class Session
 
         $sessionConfig = Config::get('security.session');
 
-        ini_set('session.use_strict_mode', '1');
-        ini_set('session.use_only_cookies', '1');
-        ini_set('session.cookie_httponly', '1');
+        if (!headers_sent()) {
+            ini_set('session.use_strict_mode', '1');
+            ini_set('session.use_only_cookies', '1');
+            ini_set('session.cookie_httponly', '1');
 
-        session_name($sessionConfig['name'] ?? 'TOURS_SESSID');
+            session_name($sessionConfig['name'] ?? 'TOURS_SESSID');
 
-        $cookieDomain = '';
-        if (!empty($_SERVER['HTTP_HOST'])) {
-            $parsedHost = explode(':', $_SERVER['HTTP_HOST'])[0];
-            if ($parsedHost !== 'localhost' && !filter_var($parsedHost, FILTER_VALIDATE_IP)) {
-                $cookieDomain = $parsedHost;
+            $cookieDomain = '';
+            if (!empty($_SERVER['HTTP_HOST'])) {
+                $parsedHost = explode(':', $_SERVER['HTTP_HOST'])[0];
+                if ($parsedHost !== 'localhost' && !filter_var($parsedHost, FILTER_VALIDATE_IP)) {
+                    $cookieDomain = $parsedHost;
+                }
             }
+
+            session_set_cookie_params([
+                'lifetime' => $sessionConfig['lifetime'] ?? 7200,
+                'path'     => '/',
+                'domain'   => $cookieDomain,
+                'secure'   => (bool)($sessionConfig['cookie_secure'] ?? false),
+                'httponly' => true,
+                'samesite' => $sessionConfig['cookie_samesite'] ?? 'Lax',
+            ]);
         }
 
-        session_set_cookie_params([
-            'lifetime' => $sessionConfig['lifetime'] ?? 7200,
-            'path'     => '/',
-            'domain'   => $cookieDomain,
-            'secure'   => (bool)($sessionConfig['cookie_secure'] ?? false),
-            'httponly' => true,
-            'samesite' => $sessionConfig['cookie_samesite'] ?? 'Lax',
-        ]);
-
-        session_start();
+        if (session_status() !== PHP_SESSION_ACTIVE && !headers_sent()) {
+            session_start();
+        } elseif (session_status() !== PHP_SESSION_ACTIVE) {
+            @session_start();
+        }
         self::$started = true;
 
         // Check for session idle timeout
@@ -94,7 +100,7 @@ class Session
     {
         if (session_status() === PHP_SESSION_ACTIVE) {
             $_SESSION = [];
-            if (ini_get('session.use_cookies')) {
+            if (!headers_sent() && ini_get('session.use_cookies')) {
                 $params = session_get_cookie_params();
                 setcookie(
                     session_name(),

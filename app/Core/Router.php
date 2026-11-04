@@ -171,7 +171,7 @@ class Router
                                 'path' => $request->getPath()
                             ]);
 
-                            if ($request->isJson() || str_starts_with($request->getPath(), '/api/')) {
+                            if ($request->isJson() || $request->isAjax() || str_starts_with($request->getPath(), '/api/')) {
                                 return Response::json(['success' => false, 'error' => 'Invalid or expired CSRF security token.'], 403);
                             }
 

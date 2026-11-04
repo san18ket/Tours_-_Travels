@@ -374,6 +374,7 @@ return [
     'auth.quick_dev_creds' => 'Quick-Fill Development Credentials',
     'auth.remember_me' => 'Remember Me',
     'auth.forgot_password' => 'Forgot Password?',
+    'auth.forgot_username_or_password' => 'Forgot Username or Password?',
     'auth.new_password' => 'New Password',
     'auth.confirm_password' => 'Confirm Password',
     'auth.current_password' => 'Current Password',

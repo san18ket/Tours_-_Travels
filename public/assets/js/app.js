@@ -887,7 +887,17 @@
             document.addEventListener('submit', (e) => {
                 const form = e.target;
                 if (!form || form.tagName !== 'FORM') return;
-                if (form.getAttribute('data-no-ajax') === 'true' || form.dataset.noAjax === 'true') {
+
+                // Never intercept if default has already been prevented by custom handler
+                if (e.defaultPrevented) return;
+
+                // Never intercept forms inside authentication layouts or marked data-no-ajax/data-native
+                if (document.body.classList.contains('auth-body') || 
+                    form.closest('.auth-stage, .auth-body, .glass-login-card') ||
+                    form.getAttribute('data-no-ajax') === 'true' || 
+                    form.dataset.noAjax === 'true' ||
+                    form.getAttribute('data-native') === 'true' ||
+                    form.dataset.native === 'true') {
                     if (window.VoyageValidation && !window.VoyageValidation.validateForm(form)) {
                         e.preventDefault();
                         return;
@@ -908,7 +918,7 @@
                 if (typeof form.onsubmit === 'function') {
                     try {
                         const result = form.onsubmit(e);
-                        if (result === false) return;
+                        if (result === false || e.defaultPrevented) return;
                     } catch (err) {
                         console.warn('Form onsubmit check failed:', err);
                     }
@@ -1047,8 +1057,18 @@
             if (link.target === '_blank') return false;
             if (link.hasAttribute('download')) return false;
 
-            // Strict Native Navigation Rule: Never intercept any link marked with data-no-ajax="true"
-            if (link.getAttribute('data-no-ajax') === 'true' || link.dataset.noAjax === 'true' || link.closest('[data-no-ajax="true"]')) {
+            // Strict Native Navigation Rule: Never intercept any link marked with data-no-ajax="true", data-native="true", or rel="external"
+            if (link.getAttribute('data-no-ajax') === 'true' || 
+                link.dataset.noAjax === 'true' || 
+                link.getAttribute('data-native') === 'true' || 
+                link.dataset.native === 'true' || 
+                link.getAttribute('rel') === 'external' || 
+                link.closest('[data-no-ajax="true"], [data-native="true"], [rel="external"]')) {
+                return false;
+            }
+
+            // Strict Native Navigation Rule: Never intercept inside authentication pages
+            if (document.body.classList.contains('auth-body') || link.closest('.auth-stage, .auth-body, .glass-login-card')) {
                 return false;
             }
 
@@ -1059,6 +1079,12 @@
 
             const href = link.getAttribute('href');
             if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:') || href.includes('/logout')) {
+                return false;
+            }
+
+            // Strict Native Navigation Rule: Never intercept authentication or account recovery routes
+            const authPathRegex = /(\/login|\/register|\/forgot-|\/reset-password|\/logout)/i;
+            if (authPathRegex.test(href) || (link.pathname && authPathRegex.test(link.pathname))) {
                 return false;
             }
 
@@ -1167,6 +1193,14 @@
             const parser = new DOMParser();
             const newDoc = parser.parseFromString(htmlText, 'text/html');
 
+            // If navigating between authentication pages or to an auth page, trigger clean native redirect
+            const currentHasAuth = document.body.classList.contains('auth-body') || !!document.querySelector('.auth-stage, .glass-login-card');
+            const newHasAuth = newDoc.body.classList.contains('auth-body') || !!newDoc.querySelector('.auth-stage, .glass-login-card');
+            if (currentHasAuth || newHasAuth) {
+                window.location.href = url;
+                return;
+            }
+
             // Check if layout changed (e.g. auth vs dashboard)
             const currentHasSidebar = !!document.getElementById('sidebar');
             const newHasSidebar = !!newDoc.getElementById('sidebar');
@@ -1177,6 +1211,12 @@
                 document.body.innerHTML = newDoc.body.innerHTML;
                 this.executeScripts(document.body);
             } else {
+                const hasTargetContainer = document.querySelector('.main-content, #sidebar, .topbar, .card');
+                if (!hasTargetContainer) {
+                    window.location.href = url;
+                    return;
+                }
+
                 const newSidebar = newDoc.querySelector('#sidebar');
                 const currSidebar = document.querySelector('#sidebar');
                 if (newSidebar && currSidebar) {

@@ -27,7 +27,11 @@ echo "======================================================\n";
 $router = new Router();
 require APP_ROOT . '/app/routes.php';
 
-$getReq = new Request([], [], [], [], [], ['REQUEST_METHOD' => 'GET', 'REQUEST_URI' => '/login']);
+$getReq = new Request([], [], [
+    'REQUEST_METHOD' => 'GET',
+    'REQUEST_URI'    => '/login',
+    'SCRIPT_NAME'    => '/index.php'
+]);
 $getRes = $router->dispatch($getReq);
 $html = $getRes->getContent();
 
@@ -40,15 +44,19 @@ assertCondition(strpos($html, 'text-security: disc') !== false, "CSS defines tex
 
 // 2. Test AJAX POST /login authentication
 $_SESSION = [];
+$csrfToken = \App\Core\Csrf::getToken();
 $postReq = new Request([], [
     'login'    => 'owner',
     'password' => 'owner123',
     'remember' => '1',
-], [], [], [], [
+    '_csrf_token' => $csrfToken,
+], [
     'REQUEST_METHOD' => 'POST',
     'REQUEST_URI'    => '/login',
+    'SCRIPT_NAME'    => '/index.php',
     'HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest',
-    'HTTP_ACCEPT' => 'application/json'
+    'HTTP_ACCEPT' => 'application/json',
+    'HTTP_X_CSRF_TOKEN' => $csrfToken
 ]);
 
 $postRes = $router->dispatch($postReq);
@@ -59,14 +67,18 @@ assertCondition(!empty($json) && !empty($json['success']), "AJAX POST /login ret
 assertCondition(!empty($json['redirect']), "AJAX POST /login returns redirect target: " . ($json['redirect'] ?? ''));
 
 // 3. Test Invalid Credentials
+$csrfToken = \App\Core\Csrf::getToken();
 $badReq = new Request([], [
     'login'    => 'owner',
     'password' => 'WrongPassword999!',
-], [], [], [], [
+    '_csrf_token' => $csrfToken,
+], [
     'REQUEST_METHOD' => 'POST',
     'REQUEST_URI'    => '/login',
+    'SCRIPT_NAME'    => '/index.php',
     'HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest',
-    'HTTP_ACCEPT' => 'application/json'
+    'HTTP_ACCEPT' => 'application/json',
+    'HTTP_X_CSRF_TOKEN' => $csrfToken
 ]);
 
 $badRes = $router->dispatch($badReq);

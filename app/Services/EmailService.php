@@ -81,7 +81,7 @@ class EmailService
             ];
         }
 
-        if ($cooldownMinutes === 0 && !empty($referenceType) && !empty($referenceId)) {
+        if ($cooldownMinutes === 0 && !empty($referenceType) && !empty($referenceId) && !in_array($emailType, ['email_verification_otp', 'account_recovery_otp'], true)) {
             $pdo = \App\Core\Database::getConnection();
             $stmt = $pdo->prepare("SELECT COUNT(*) FROM `email_logs` WHERE `email_type` = ? AND `reference_type` = ? AND `reference_id` = ?");
             $stmt->execute([$emailType, $referenceType, $referenceId]);
@@ -99,7 +99,7 @@ class EmailService
 
         // 3. Configure and transmit via PHPMailer
         try {
-            $this->executeSmtpSend($toEmail, $toName, $subject, $htmlBody, $textBody, $cc, $bcc);
+            $messageId = $this->executeSmtpSend($toEmail, $toName, $subject, $htmlBody, $textBody, $cc, $bcc);
 
             // Record successful dispatch
             $logId = $this->emailLog->record(
@@ -111,17 +111,19 @@ class EmailService
                 $referenceId,
                 'sent',
                 null,
-                $idempotencyHash
+                $idempotencyHash,
+                $messageId
             );
 
-            Logger::info("EmailService: Dispatched {$emailType} [{$referenceType}:{$referenceId}] to {$toEmail}");
+            Logger::info("EmailService: Dispatched {$emailType} [{$referenceType}:{$referenceId}] to {$toEmail}" . ($messageId ? " (MsgID: {$messageId})" : ""));
 
             return [
-                'success'   => true,
-                'message'   => 'Email transmitted successfully.',
-                'duplicate' => false,
-                'log_id'    => $logId,
-                'error'     => null
+                'success'    => true,
+                'message'    => 'Email transmitted successfully.',
+                'duplicate'  => false,
+                'log_id'     => $logId,
+                'message_id' => $messageId,
+                'error'      => null
             ];
         } catch (Throwable $e) {
             // Sanitize error message to ensure passwords are NEVER leaked
@@ -240,9 +242,9 @@ class EmailService
         ?string $textBody = null,
         array $cc = [],
         array $bcc = []
-    ): void {
+    ): ?string {
         if (str_ends_with(strtolower($toEmail), '@example.com') || str_ends_with(strtolower($toEmail), '@test.local') || str_ends_with(strtolower($toEmail), '@testdomain.org')) {
-            return;
+            return '<test-' . bin2hex(random_bytes(8)) . '@local.test>';
         }
 
         $mail = new PHPMailer(true);
@@ -253,7 +255,6 @@ class EmailService
         $mail->SMTPAuth   = (bool)Config::get('mail.auth', true);
         $mail->Username   = Config::get('mail.username', '');
         $mail->Password   = Config::get('mail.password', '');
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
         $mail->Timeout    = (int)Config::get('mail.timeout', 15);
         $mail->CharSet    = 'UTF-8';
 
@@ -282,6 +283,12 @@ class EmailService
         $fromAddress = (!empty($configuredFrom) && filter_var($configuredFrom, FILTER_VALIDATE_EMAIL))
             ? $configuredFrom
             : ($smtpUsername ?: 'noreply@example.com');
+        
+        // Gmail compliance: If sending via Gmail SMTP, From address must match authenticated Gmail user
+        if (str_contains(strtolower((string)Config::get('mail.host', '')), 'gmail.com') && !empty($smtpUsername)) {
+            $fromAddress = $smtpUsername;
+        }
+
         $fromName = Config::get('mail.from.name', CompanySettingsService::getCompanyName());
         $mail->setFrom($fromAddress, $fromName);
 
@@ -309,7 +316,17 @@ class EmailService
         $mail->Body    = $htmlBody;
         $mail->AltBody = $textBody ?: self::htmlToPlainText($htmlBody);
 
-        $mail->send();
+        try {
+            $mail->send();
+            $msgId = $mail->getLastMessageID();
+            return !empty($msgId) ? $msgId : null;
+        } finally {
+            try {
+                $mail->smtpClose();
+            } catch (Throwable $e) {
+                // Ignore close socket errors
+            }
+        }
     }
 
     /**

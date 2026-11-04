@@ -1,9 +1,9 @@
 /**
- * Tours Progressive Web App Service Worker (v5.0)
+ * Tours Progressive Web App Service Worker (v5.1)
  * Network-First for dynamic navigation & assets, offline fallback shell, and Web Push Notifications
  */
 
-const CACHE_NAME = 'tours-shell-v5.0';
+const CACHE_NAME = 'tours-shell-v5.1';
 const STATIC_ASSETS = [
     'assets/css/app.css',
     'assets/js/app.js',
@@ -19,6 +19,8 @@ const PRIVATE_ROUTE_PATTERNS = [
     /\/api\//,
     /\/login/,
     /\/logout/,
+    /\/forgot-/,
+    /\/reset-password/,
     /\/setup/,
     /\/private_uploads/
 ];

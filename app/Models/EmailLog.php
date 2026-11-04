@@ -17,6 +17,7 @@ class EmailLog extends Model
         'reference_type',
         'reference_id',
         'idempotency_hash',
+        'message_id',
         'status',
         'retry_count',
         'last_attempt_at',
@@ -69,7 +70,8 @@ class EmailLog extends Model
         ?int $referenceId,
         string $status,
         ?string $errorMessage = null,
-        ?string $idempotencyHash = null
+        ?string $idempotencyHash = null,
+        ?string $messageId = null
     ): int {
         if ($idempotencyHash === null) {
             $idempotencyHash = self::makeHash($emailType, $referenceType, $referenceId, $recipientEmail);
@@ -94,6 +96,7 @@ class EmailLog extends Model
             'reference_type'   => $referenceType,
             'reference_id'     => $referenceId,
             'idempotency_hash' => $idempotencyHash,
+            'message_id'       => $messageId,
             'status'           => $validStatus,
             'retry_count'      => 0,
             'last_attempt_at'  => date('Y-m-d H:i:s'),

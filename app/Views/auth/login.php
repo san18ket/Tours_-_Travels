@@ -455,8 +455,8 @@
             <input type="checkbox" name="remember" id="remember" value="1" checked>
             <span><?= e(__('auth.remember_me', 'Remember Me')) ?></span>
         </label>
-        <a href="<?= url('/forgot-password') ?>" class="glass-forgot-link">
-            <?= e(__('auth.forgot_password', 'Forgot Password?')) ?>
+        <a href="<?= url('/forgot-account') ?>" class="glass-forgot-link" data-no-ajax="true" data-native="true" rel="external">
+            <?= e(__('auth.forgot_username_or_password', 'Forgot Username or Password?')) ?>
         </a>
     </div>
 

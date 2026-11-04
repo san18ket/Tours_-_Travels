@@ -28,6 +28,7 @@ use App\Controllers\MobileApiController;
 use App\Controllers\LanguageController;
 use App\Controllers\CompanyController;
 use App\Controllers\EmailOtpController;
+use App\Controllers\AccountRecoveryController;
 
 $router = new Router();
 
@@ -72,6 +73,24 @@ $router->post('/language/set', [LanguageController::class, 'setLanguage'], ['csr
 $router->get('/login', [AuthController::class, 'showLogin']);
 $router->post('/login', [AuthController::class, 'login'], ['csrf', 'throttle:login']);
 $router->post('/logout', [AuthController::class, 'logout'], ['csrf']);
+
+// -----------------------------------------------------------------------------
+// Account Recovery (Forgot Username & Forgot Password with 4-Digit Email OTP)
+// -----------------------------------------------------------------------------
+$router->get('/forgot-account', [AccountRecoveryController::class, 'showRecoveryHub']);
+
+// Option A: Forgot Username
+$router->get('/forgot-username', [AccountRecoveryController::class, 'showForgotUsername']);
+$router->post('/forgot-username/send-otp', [AccountRecoveryController::class, 'sendUsernameOtp'], ['csrf', 'throttle:api']);
+$router->post('/forgot-username/verify-otp', [AccountRecoveryController::class, 'verifyUsernameOtp'], ['csrf']);
+$router->post('/forgot-username/recover', [AccountRecoveryController::class, 'recoverUsername'], ['csrf']);
+
+// Option B: Forgot Password
+$router->get('/forgot-password', [AccountRecoveryController::class, 'showForgotPassword']);
+$router->post('/forgot-password/send-otp', [AccountRecoveryController::class, 'sendPasswordOtp'], ['csrf', 'throttle:api']);
+$router->post('/forgot-password/verify-otp', [AccountRecoveryController::class, 'verifyPasswordOtp'], ['csrf']);
+$router->get('/forgot-password/reset', [AccountRecoveryController::class, 'showResetPassword']);
+$router->post('/forgot-password/reset', [AccountRecoveryController::class, 'resetPassword'], ['csrf']);
 
 // -----------------------------------------------------------------------------
 // Setup Wizard (Database Initialization & Migrations)
