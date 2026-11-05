@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?= csrf_meta() ?>
     <meta name="base-url" content="<?= url('/') ?>">
+    <meta name="user-id" content="<?= auth_id() ?: 'guest' ?>">
     <meta name="sw-url" content="<?= url('/sw.js') ?>">
     <meta name="gps-update-url" content="<?= url('/api/gps/update') ?>">
     <title><?= e($title ?? 'Chauffeur Console') ?> - <?= e(company_name()) ?></title>
@@ -706,7 +707,7 @@
                                 <div class="topbar-menu-head-meta">
                                     <strong class="topbar-menu-name"><?= e($user['name'] ?? 'Driver') ?></strong>
                                     <span class="topbar-menu-role-pill"><?= e(__('role.driver', 'Driver')) ?></span>
-                                    <span class="topbar-menu-email"><?= e($user['phone'] ?? $user['email'] ?? $user['username'] ?? 'driver@manaswi.com') ?></span>
+                                    <span class="topbar-menu-email"><?= e($user['phone'] ?? $user['email'] ?? $user['username'] ?? '') ?></span>
                                 </div>
                             </div>
                             <div class="topbar-menu-divider"></div>
@@ -789,7 +790,7 @@
             <!-- Branded Clean Light Footer -->
             <footer class="app-footer">
                 <div>
-                    &copy; <?= date('Y') ?> <strong>MANASWI <?= e(__('app.tours_travels', 'Tours & Travels')) ?></strong>. <?= e(__('footer.all_rights_reserved', 'All rights reserved.')) ?>
+                    &copy; <?= date('Y') ?> <strong><?= e(company_display_name()) ?></strong>. <?= e(__('footer.all_rights_reserved', 'All rights reserved.')) ?>
                 </div>
                 <div>
                     <a href="#privacy"><?= e(__('footer.privacy', 'Privacy Policy')) ?></a>
@@ -845,8 +846,9 @@
     <!-- Professional Custom PWA Installation Modal -->
     <?php require dirname(__DIR__) . '/components/pwa_install_modal.php'; ?>
 
-    <script src="<?= asset('js/app.js') ?>?v=3.0"></script>
-    <script src="<?= asset('js/tours-pwa.js') ?>?v=5.0"></script>
+    <script src="<?= asset('js/tours-cache.js') ?>?v=1.0"></script>
+    <script src="<?= asset('js/app.js') ?>?v=3.1"></script>
+    <script src="<?= asset('js/tours-pwa.js') ?>?v=5.1"></script>
     <script>
         function toggleUserDropdown(e) {
             if (e) {

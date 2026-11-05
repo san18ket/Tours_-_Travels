@@ -25,7 +25,7 @@ class PaymentGatewayService
             'key_id'         => 'rzp_test_ToursTravelsTest2026',
             'key_secret'     => 'ToursTravelsSecretKey2026',
             'webhook_secret' => 'ToursTravelsWebhookSecret2026',
-            'company_name'   => 'MANASWI Tours & Travels',
+            'company_name'   => function_exists('company_display_name') ? company_display_name() : 'Tours & Travels',
             'theme_color'    => '#176B5B',
         ];
 
@@ -131,7 +131,7 @@ class PaymentGatewayService
             'amount_paise'   => $amountInPaise,
             'currency'       => $currency,
             'key_id'         => $this->config['key_id'],
-            'company_name'   => $this->config['company_name'] ?? 'MANASWI Tours & Travels',
+            'company_name'   => function_exists('company_display_name') ? company_display_name() : ($this->config['company_name'] ?? 'Tours & Travels'),
             'theme_color'    => $this->config['theme_color'] ?? '#176B5B',
             'invoice_number' => $invoice['invoice_number'],
             'invoice_id'     => $invoiceId,

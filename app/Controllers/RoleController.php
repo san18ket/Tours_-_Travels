@@ -99,6 +99,8 @@ class RoleController extends Controller
                 Session::getUserId()
             );
 
+            \App\Services\ReferenceDataService::invalidate('dropdown_options');
+
             if ($request->isJson() || $request->wantsJson()) {
                 return $this->json([
                     'success' => true,
@@ -174,6 +176,8 @@ class RoleController extends Controller
                 $updateData,
                 Session::getUserId()
             );
+
+            \App\Services\ReferenceDataService::invalidate('dropdown_options');
 
             if ($request->isJson() || $request->wantsJson()) {
                 return $this->json(['success' => true, 'message' => 'Role updated successfully.']);
@@ -550,6 +554,8 @@ class RoleController extends Controller
                 ['count' => count($permissionIds)],
                 Session::getUserId()
             );
+
+            \App\Services\ReferenceDataService::invalidate('dropdown_options');
 
             if ($isAjax) {
                 return $this->json([

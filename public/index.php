@@ -1,8 +1,16 @@
 <?php
 /**
- * VoyageGo Tours & Travels
+ * Tours & Travels Management System
  * Single Web Entry Point
  */
+
+// If using PHP built-in web server, serve existing static files directly
+if (php_sapi_name() === 'cli-server') {
+    $staticPath = __DIR__ . parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
+    if (file_exists($staticPath) && !is_dir($staticPath)) {
+        return false;
+    }
+}
 
 require_once dirname(__DIR__) . '/app/bootstrap.php';
 

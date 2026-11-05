@@ -6,7 +6,7 @@
 $authUser = auth_user() ?: ($user ?? []);
 $authUserName = $authUser['name'] ?? $authUser['username'] ?? ($user['name'] ?? 'Admin');
 $authUserRole = ucfirst(auth_role() ?: ($userRole ?? 'Super Admin'));
-$authUserEmail = $authUser['email'] ?? ($user['email'] ?? 'admin@manaswi.com');
+$authUserEmail = $authUser['email'] ?? ($user['email'] ?? '');
 $currLocale = \App\Core\Language::getLocale();
 $dashLangs = [
     'en' => ['native' => 'English', 'name' => 'English', 'flag' => '🇬🇧'],

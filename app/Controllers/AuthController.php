@@ -25,8 +25,14 @@ class AuthController extends Controller
             return $this->redirectBasedOnRole(Session::getUserRole());
         }
 
+        // Check if persistent Remember Me token is present
+        $rememberedUser = $this->authService->attemptRememberMeLogin();
+        if ($rememberedUser) {
+            return $this->redirectBasedOnRole(Session::getUserRole());
+        }
+
         $response = $this->render('auth/login', [
-            'title' => 'Sign In - MANASWI Tours & Travels'
+            'title' => 'Sign In - ' . company_display_name()
         ], 'layouts/auth');
 
         $response->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0, post-check=0, pre-check=0');
@@ -50,7 +56,8 @@ class AuthController extends Controller
                 throw new ValidationException('Password is required.');
             }
 
-            $user = $this->authService->login($loginIdentifier, $password);
+            $remember = !empty($input['remember']) && ($input['remember'] === '1' || $input['remember'] === 'true' || $input['remember'] === 'on');
+            $user = $this->authService->login($loginIdentifier, $password, $remember);
 
             // Clear login throttle key on success
             $ip = $request->getClientIp();

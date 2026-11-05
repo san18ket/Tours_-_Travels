@@ -58,8 +58,9 @@ class Dispatch extends Model
         return $stmt->fetchAll();
     }
 
-    public function getAllWithDetails(): array
+    public function getAllWithDetails(?int $limit = null): array
     {
+        $limitClause = ($limit !== null && $limit > 0) ? "LIMIT " . (int)$limit : "";
         $sql = "SELECT d.*, b.booking_code, b.pickup_address, b.drop_address, b.start_date, b.end_date,
                        v.vehicle_number, v.make_model,
                        COALESCE(u_drv.name, CONCAT(e_drv.first_name, ' ', e_drv.last_name)) as driver_name,
@@ -75,7 +76,8 @@ class Dispatch extends Model
                 LEFT JOIN `users` u_drv ON dp.user_id = u_drv.id
                 LEFT JOIN `employees` e_drv ON dp.employee_id = e_drv.id
                 LEFT JOIN `users` u_admin ON d.assigned_by = u_admin.id
-                ORDER BY d.id DESC";
+                ORDER BY d.id DESC
+                {$limitClause}";
         $stmt = $this->getPdo()->query($sql);
         return $stmt->fetchAll() ?: [];
     }

@@ -160,6 +160,7 @@ class CompanyController extends Controller
         }
 
         CompanySettingsService::clearCache();
+        \App\Services\ReferenceDataService::invalidate('company_branding');
 
         $this->auditLog->log(
             Session::getUserId() ?? 1,
@@ -283,6 +284,7 @@ class CompanyController extends Controller
         ]);
 
         CompanySettingsService::clearCache();
+        \App\Services\ReferenceDataService::invalidate('company_branding');
 
         $this->auditLog->log(
             Session::getUserId() ?? 1,
@@ -326,6 +328,7 @@ class CompanyController extends Controller
                 'updated_at' => date('Y-m-d H:i:s'),
             ]);
             CompanySettingsService::clearCache();
+        \App\Services\ReferenceDataService::invalidate('company_branding');
         }
 
         $friendlyName = ucwords(str_replace('_', ' ', $type));
@@ -357,6 +360,7 @@ class CompanyController extends Controller
                 'updated_at' => date('Y-m-d H:i:s'),
             ]);
             CompanySettingsService::clearCache();
+        \App\Services\ReferenceDataService::invalidate('company_branding');
         }
 
         if ($request->isAjax()) {

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?= csrf_meta() ?>
     <meta name="base-url" content="<?= url('/') ?>">
+    <meta name="user-id" content="<?= auth_id() ?: 'guest' ?>">
     <title><?= e($title ?? 'Admin Dashboard') ?> - <?= e(company_display_name()) ?></title>
     <?php
         $cssVer = @filemtime(dirname(__DIR__, 3) . '/public/assets/css/app.css') ?: time();
@@ -34,7 +35,7 @@
     <div id="sidebarBackdrop" class="sidebar-backdrop" onclick="closeSidebar()" aria-hidden="true"></div>
 
     <div class="app-wrapper">
-        <!-- Frosted Glass Sidebar Navigation (MANASWI Tours & Travels) -->
+        <!-- Frosted Glass Sidebar Navigation -->
         <aside class="sidebar" id="sidebar" aria-label="<?= e(__('sidebar.menu')) ?>">
             <div class="sidebar-header">
                 <a href="<?= url('/office/dashboard') ?>" class="brand-logo" title="<?= e(company_display_name()) ?>" data-no-ajax="true">
@@ -660,7 +661,7 @@
                                 <div class="topbar-menu-head-meta">
                                     <strong class="topbar-menu-name"><?= e($user['name'] ?? 'Admin') ?></strong>
                                     <span class="topbar-menu-role-pill"><?= e($userRole ?? 'Super Admin') ?></span>
-                                    <span class="topbar-menu-email"><?= e($user['email'] ?? $user['username'] ?? 'admin@manaswi.com') ?></span>
+                                    <span class="topbar-menu-email"><?= e($user['email'] ?? $user['username'] ?? '') ?></span>
                                 </div>
                             </div>
                             <div class="topbar-menu-divider"></div>
@@ -800,8 +801,9 @@
     <!-- Professional Custom PWA Installation Modal -->
     <?php require dirname(__DIR__) . '/components/pwa_install_modal.php'; ?>
 
-    <script src="<?= asset('js/app.js') ?>?v=3.0"></script>
-    <script src="<?= asset('js/tours-pwa.js') ?>?v=5.0"></script>
+    <script src="<?= asset('js/tours-cache.js') ?>?v=1.0"></script>
+    <script src="<?= asset('js/app.js') ?>?v=3.1"></script>
+    <script src="<?= asset('js/tours-pwa.js') ?>?v=5.1"></script>
     <script>
         function toggleUserDropdown(e) {
             if (e) {
@@ -894,6 +896,9 @@
                 var sidebar = document.getElementById('sidebar');
                 if (sidebar && sidebar.classList.contains('collapsed')) {
                     sidebar.classList.remove('collapsed');
+                    if (window.ToursPrefs && typeof window.ToursPrefs.set === 'function') {
+                        window.ToursPrefs.set('sidebar_collapsed', false);
+                    }
                     localStorage.setItem('vg_sidebar_collapsed', 'false');
                     var toggleBtn = document.getElementById('sidebarToggleBtn');
                     if (toggleBtn) toggleBtn.classList.remove('is-collapsed');

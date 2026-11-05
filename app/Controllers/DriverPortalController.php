@@ -491,6 +491,9 @@ class DriverPortalController extends Controller
                 'password' => $hashedPassword
             ]);
 
+            // Revoke all persistent tokens on password change
+            (new \App\Services\AuthService())->revokeAllUserRememberTokens($userId);
+
             $this->auditLog->record('driver_password_changed', 'users', $userId, null, null, $userId);
 
             Session::setFlash('success', 'Your password has been changed securely.');

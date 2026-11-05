@@ -465,6 +465,28 @@
         items.classList.remove('expanded');
     }
 
+    // Helper: Isolated User Preferences for Sidebar
+    function setSidebarPref(collapsed) {
+        if (window.ToursPrefs && typeof window.ToursPrefs.set === 'function') {
+            window.ToursPrefs.set('sidebar_collapsed', collapsed);
+        }
+        try {
+            localStorage.setItem('vg_sidebar_collapsed', collapsed ? 'true' : 'false');
+        } catch (e) {}
+    }
+
+    function getSidebarPref() {
+        if (window.ToursPrefs && typeof window.ToursPrefs.get === 'function') {
+            const val = window.ToursPrefs.get('sidebar_collapsed', null);
+            if (val !== null) return Boolean(val);
+        }
+        try {
+            return localStorage.getItem('vg_sidebar_collapsed') === 'true';
+        } catch (e) {
+            return false;
+        }
+    }
+
     window.toggleCategory = function (categoryId) {
         if (isAccordionTransitioning) return;
 
@@ -472,7 +494,7 @@
         // If sidebar is collapsed (icon-only mode), clicking a category expands the sidebar to reveal options
         if (sidebar && sidebar.classList.contains('collapsed')) {
             sidebar.classList.remove('collapsed');
-            localStorage.setItem('vg_sidebar_collapsed', 'false');
+            setSidebarPref(false);
             const toggleBtn = document.getElementById('sidebarToggleBtn');
             if (toggleBtn) toggleBtn.classList.remove('is-collapsed');
             openDropdown(categoryId);
@@ -533,7 +555,7 @@
         const sidebar = document.getElementById('sidebar');
         if (sidebar && sidebar.classList.contains('collapsed')) {
             sidebar.classList.remove('collapsed');
-            localStorage.setItem('vg_sidebar_collapsed', 'false');
+            setSidebarPref(false);
             const toggleBtn = document.getElementById('sidebarToggleBtn');
             if (toggleBtn) toggleBtn.classList.remove('is-collapsed');
         }
@@ -607,7 +629,7 @@
             if (toggleBtn) toggleBtn.classList.toggle('is-collapsed', isNowActive);
         } else {
             const isCollapsed = sidebar.classList.toggle('collapsed');
-            localStorage.setItem('vg_sidebar_collapsed', isCollapsed ? 'true' : 'false');
+            setSidebarPref(isCollapsed);
             if (toggleBtn) {
                 toggleBtn.classList.toggle('is-collapsed', isCollapsed);
             }
@@ -624,8 +646,8 @@
         const sidebar = document.getElementById('sidebar');
         const toggleBtn = document.getElementById('sidebarToggleBtn');
         if (sidebar && window.innerWidth > 900) {
-            const savedCollapsed = localStorage.getItem('vg_sidebar_collapsed');
-            if (savedCollapsed === 'true') {
+            const isCollapsed = getSidebarPref();
+            if (isCollapsed) {
                 sidebar.classList.add('collapsed');
                 if (toggleBtn) {
                     toggleBtn.classList.add('is-collapsed');
@@ -1696,6 +1718,12 @@
         setupLanguageDropdown();
         VoyageValidation.init();
         VoyageAjax.init();
+
+        // Smart reference caching auto-hydration
+        if (window.ToursForms) {
+            window.ToursForms.hydrateLocations();
+            window.ToursForms.hydratePaymentMethods();
+        }
     }
 
     // Initialize on DOM Ready or immediately if DOM is already ready

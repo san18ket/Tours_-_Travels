@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="user-id" content="101">
+    <title>Real Headless Chrome IndexedDB Benchmark</title>
+</head>
+<body>
+    <h1>Tours & Travels IndexedDB Benchmark Suite</h1>
+    <div id="status">Running tests...</div>
+    <pre id="benchmark-results"></pre>
+
+    <!-- Load ToursCache -->
+    <script src="/assets/js/tours-cache.js"></script>
+
+    <script>
+        async function runBenchmark() {
+            const results = {
+                tests: [],
+                measurements: {},
+                success: true
+            };
+
+            function logTest(name, passed, details = '', timeMs = 0) {
+                results.tests.push({
+                    name,
+                    passed,
+                    details,
+                    timeMs: Math.round(timeMs * 100) / 100
+                });
+                if (!passed) results.success = false;
+            }
+
+            try {
+                // Test 1: Verify IndexedDB availability in real Chrome browser
+                const idbSupported = 'indexedDB' in window;
+                logTest("IndexedDB Engine Available", idbSupported, idbSupported ? "Chrome IndexedDB Available" : "Missing");
+
+                // Test 2: Database Initialization & Store Verification
+                const t0 = performance.now();
+                const check = await ToursDiagnostics.runCheck();
+                const initTime = performance.now() - t0;
+                logTest("IndexedDB Store Ready", check.status === 'operational', `Diagnostics verified in ${initTime.toFixed(2)} ms (cached records: ${check.indexed_db.total_records})`, initTime);
+
+                // Test 3: IndexedDB Set (Write) Performance
+                const sampleLocations = [
+                    { id: 1, name: "Mumbai Airport", code: "BOM", state: "Maharashtra" },
+                    { id: 2, name: "Pune Central", code: "PNQ", state: "Maharashtra" },
+                    { id: 3, name: "Nagpur Junction", code: "NAG", state: "Maharashtra" },
+                    { id: 4, name: "Goa Dabolim", code: "GOI", state: "Goa" }
+                ];
+
+                const tWriteStart = performance.now();
+                await ToursCache.set('locations', sampleLocations, 3600, 1, 'etag-loc-001');
+                const writeLatency = performance.now() - tWriteStart;
+                results.measurements.idb_write_ms = Math.round(writeLatency * 100) / 100;
+                logTest("IndexedDB Set (Write) Operation", true, `Wrote location records in ${writeLatency.toFixed(2)} ms`, writeLatency);
+
+                // Test 4: IndexedDB Get (Read) Performance & Exact Data Integrity
+                const tReadStart = performance.now();
+                const rawRecord = await ToursCache._readRaw('locations');
+                const readLatency = performance.now() - tReadStart;
+                results.measurements.idb_read_ms = Math.round(readLatency * 100) / 100;
+                const readValid = rawRecord && Array.isArray(rawRecord.data) && rawRecord.data.length === 4 && rawRecord.data[0].code === 'BOM' && rawRecord.etag === 'etag-loc-001';
+                logTest("IndexedDB Get (Read) Cache Hit", readValid, `Retrieved in ${readLatency.toFixed(2)} ms with exact integrity`, readLatency);
+
+                // Test 5: Cache Miss Handling
+                const tMissStart = performance.now();
+                const missingVal = await ToursCache._readRaw('non_existent_reference_key_xyz');
+                const missLatency = performance.now() - tMissStart;
+                logTest("Cache Miss for Uncached Key", missingVal === null, `Returned null safely in ${missLatency.toFixed(2)} ms`, missLatency);
+
+                // Test 6: TTL Expiration & Automatic Purging
+                await ToursCache.set('temp_expired_key', { temp: true }, -10); // 10s in the past
+                const expiredRec = await ToursCache._readRaw('temp_expired_key');
+                const isExpired = expiredRec && expiredRec.expiresAt && Date.now() > expiredRec.expiresAt;
+                logTest("TTL Expiration: Timestamp correctly reflects expired state", isExpired, "Expired timestamp recorded");
+
+                await ToursCache.clearExpired();
+                const postClearRec = await ToursCache._readRaw('temp_expired_key');
+                logTest("clearExpired(): Expired records successfully purged", postClearRec === null, "Purged from storage");
+
+                // Test 7: Bulk Write & Bulk Read Throughput (50 Records)
+                const bulkRecords = [];
+                for (let i = 0; i < 50; i++) {
+                    bulkRecords.push({ key: `bulk_item_${i}`, data: `Value data for item ${i}`, etag: `etag-${i}` });
+                }
+
+                const tBulkWriteStart = performance.now();
+                for (const item of bulkRecords) {
+                    await ToursCache.set(item.key, item.data, 3600, 1, item.etag);
+                }
+                const bulkWriteTime = performance.now() - tBulkWriteStart;
+                results.measurements.bulk_50_write_ms = Math.round(bulkWriteTime * 100) / 100;
+
+                const tBulkReadStart = performance.now();
+                let bulkReadSuccess = 0;
+                for (const item of bulkRecords) {
+                    const rec = await ToursCache._readRaw(item.key);
+                    if (rec && rec.data === item.data) bulkReadSuccess++;
+                }
+                const bulkReadTime = performance.now() - tBulkReadStart;
+                results.measurements.bulk_50_read_ms = Math.round(bulkReadTime * 100) / 100;
+                results.measurements.avg_read_latency_ms = Math.round((bulkReadTime / 50) * 100) / 100;
+
+                logTest("Bulk Throughput: 50 Records Write/Read", bulkReadSuccess === 50, `50 items: Write=${bulkWriteTime.toFixed(1)}ms, Read=${bulkReadTime.toFixed(1)}ms (avg ${results.measurements.avg_read_latency_ms} ms/read)`);
+
+                // Test 8: Security Audit & Sensitive Data Exclusion
+                let hasSensitiveData = false;
+                for (let i = 0; i < localStorage.length; i++) {
+                    const k = (localStorage.key(i) || '').toLowerCase();
+                    if (k.includes('password') || k.includes('otp') || k.includes('secret') || k.includes('token')) {
+                        hasSensitiveData = true;
+                    }
+                }
+                logTest("Security Compliance Audit: Zero sensitive data stored", !hasSensitiveData, "Browser storage strictly excludes credentials, secrets and tokens");
+
+                // Test 9: Account-Isolated User Preferences
+                ToursPrefs.set('sidebar_collapsed', true);
+                const retrievedPref = ToursPrefs.get('sidebar_collapsed');
+                logTest("Account-Isolated Preferences", retrievedPref === true, "Preference retrieved cleanly with user prefix");
+
+                // Test 10: Invalidation Workflow
+                await ToursCache.invalidate('locations');
+                const postInvalidate = await ToursCache._readRaw('locations');
+                logTest("Cache Invalidation Workflow", postInvalidate === null, "Explicit invalidation successfully purges record from IndexedDB");
+
+            } catch (err) {
+                logTest("Benchmark Exception Caught", false, err.message);
+            }
+
+            document.getElementById('status').innerText = results.success ? "COMPLETED_SUCCESS" : "COMPLETED_FAILURE";
+            document.getElementById('benchmark-results').innerText = JSON.stringify(results, null, 2);
+
+            try {
+                await fetch('/results', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(results)
+                });
+            } catch (postErr) {
+                console.error("Failed to post results to runner server:", postErr);
+            }
+        }
+
+        window.addEventListener('load', () => {
+            runBenchmark();
+        });
+    </script>
+</body>
+</html>

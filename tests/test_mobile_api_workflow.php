@@ -3,11 +3,15 @@
  * Test Suite: Mobile API Authentication, Driver Devices & Offline GPS Telemetry Queue
  */
 require_once __DIR__ . '/../app/bootstrap.php';
+require_once __DIR__ . '/TestEnvironment.php';
 
+use Tests\TestEnvironment;
 use App\Core\Database;
 use App\Core\Request;
 use App\Models\User;
 use App\Models\DriverProfile;
+
+$pdo = TestEnvironment::init();
 
 $passed = 0;
 $failed = 0;

@@ -39,8 +39,9 @@ class Invoice extends Model
         return $row ?: null;
     }
 
-    public function getAllWithDetails(): array
+    public function getAllWithDetails(?int $limit = null): array
     {
+        $limitClause = ($limit !== null && $limit > 0) ? "LIMIT " . (int)$limit : "";
         $sql = "SELECT inv.*, b.booking_code,
                        COALESCE(c.name, u.name) as customer_name,
                        COALESCE(c.email, u.email) as customer_email,
@@ -49,7 +50,8 @@ class Invoice extends Model
                 LEFT JOIN `bookings` b ON inv.booking_id = b.id
                 LEFT JOIN `customers` c ON inv.customer_profile_id = c.id
                 LEFT JOIN `users` u ON inv.customer_id = u.id
-                ORDER BY inv.id DESC";
+                ORDER BY inv.id DESC
+                {$limitClause}";
         $stmt = $this->getPdo()->query($sql);
         return $stmt->fetchAll();
     }

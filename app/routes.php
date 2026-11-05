@@ -30,6 +30,7 @@ use App\Controllers\CompanyController;
 use App\Controllers\EmailOtpController;
 use App\Controllers\AccountRecoveryController;
 use App\Controllers\EmailController;
+use App\Controllers\ReferenceDataController;
 
 $router = new Router();
 
@@ -352,6 +353,17 @@ $router->get('/driver/duty', function ($request) {
 $router->post('/api/gps/update', [ApiController::class, 'updateGps'], ['auth', 'role:driver', 'csrf', 'throttle:gps']);
 $router->get('/api/fleet/live', [ApiController::class, 'fleetLive'], ['auth', 'role:admin,dispatcher', 'throttle:api']);
 $router->get('/api/sync/status', [ApiController::class, 'syncStatus']);
+
+// -----------------------------------------------------------------------------
+// Safe Reference Data & Browser Cache Synchronization APIs
+// -----------------------------------------------------------------------------
+$router->get('/api/reference/versions', [ReferenceDataController::class, 'versions']);
+$router->get('/api/reference/company-public', [ReferenceDataController::class, 'companyPublic']);
+$router->get('/api/reference/app-config', [ReferenceDataController::class, 'appConfig']);
+$router->get('/api/reference/locations', [ReferenceDataController::class, 'locations'], ['auth']);
+$router->get('/api/reference/vehicle-categories', [ReferenceDataController::class, 'vehicleCategories'], ['auth']);
+$router->get('/api/reference/payment-methods', [ReferenceDataController::class, 'paymentMethods'], ['auth']);
+$router->get('/api/reference/dropdown-options', [ReferenceDataController::class, 'dropdownOptions'], ['auth']);
 
 // -----------------------------------------------------------------------------
 // Versioned Mobile Driver API (Native Background Tracking & Offline Sync)

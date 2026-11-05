@@ -242,6 +242,9 @@ class AccountRecoveryService
                            WHERE `driver_id` IN (SELECT id FROM `driver_profiles` WHERE `user_id` = ?)")
                 ->execute([(int)$user['id']]);
 
+            // Revoke all persistent Remember Me tokens across all devices
+            (new \App\Services\AuthService())->revokeAllUserRememberTokens((int)$user['id']);
+
             // Invalidate any other active OTPs for this user
             $pdo->prepare("UPDATE `email_verifications` 
                            SET `status` = 'invalidated' 

@@ -41,9 +41,10 @@ class Booking extends Model
         return $row ?: null;
     }
 
-    public function getAllDetailed(string $filter = '', array $params = []): array
+    public function getAllDetailed(string $filter = '', array $params = [], ?int $limit = null): array
     {
         $whereClause = $filter ? "WHERE {$filter}" : "";
+        $limitClause = ($limit !== null && $limit > 0) ? "LIMIT " . (int)$limit : "";
         $sql = "SELECT b.*,
                        COALESCE(c.name, u.name) as customer_name,
                        COALESCE(c.email, u.email) as customer_email,
@@ -64,7 +65,8 @@ class Booking extends Model
                 LEFT JOIN `users` u_drv ON dp.user_id = u_drv.id
                 LEFT JOIN `invoices` inv ON b.id = inv.booking_id
                 {$whereClause}
-                ORDER BY b.id DESC";
+                ORDER BY b.id DESC
+                {$limitClause}";
         $stmt = $this->getPdo()->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll();

@@ -15,7 +15,7 @@ return [
         'key_id'         => getenv('RAZORPAY_KEY_ID') ?: 'rzp_test_ToursTravelsTest2026',
         'key_secret'     => getenv('RAZORPAY_KEY_SECRET') ?: 'ToursTravelsSecretKey2026',
         'webhook_secret' => getenv('RAZORPAY_WEBHOOK_SECRET') ?: 'ToursTravelsWebhookSecret2026',
-        'company_name'   => 'MANASWI Tours & Travels',
+        'company_name'   => getenv('APP_NAME') ?: 'Tours & Travels',
         'theme_color'    => '#176B5B',
     ],
 

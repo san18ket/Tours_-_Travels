@@ -43,7 +43,12 @@ class Config
         $file = array_shift($parts);
 
         if (!isset(self::$configs[$file])) {
-            self::$configs[$file] = [];
+            $configPath = dirname(dirname(__DIR__)) . '/config/' . $file . '.php';
+            if (file_exists($configPath)) {
+                self::$configs[$file] = require $configPath;
+            } else {
+                self::$configs[$file] = [];
+            }
         }
 
         $current = &self::$configs[$file];

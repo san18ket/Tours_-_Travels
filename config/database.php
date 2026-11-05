@@ -6,12 +6,12 @@
 
 return [
     'default' => [
-        'driver'    => 'mysql',
-        'host'      => '127.0.0.1',
-        'port'      => 3306,
-        'database'  => 'tours_travels_db',
-        'username'  => 'root',
-        'password'  => '',
+        'driver'    => getenv('DB_DRIVER') ?: 'mysql',
+        'host'      => getenv('DB_HOST') ?: '127.0.0.1',
+        'port'      => (int)(getenv('DB_PORT') ?: 3306),
+        'database'  => getenv('DB_DATABASE') ?: 'tours_travels_db',
+        'username'  => getenv('DB_USERNAME') ?: 'root',
+        'password'  => getenv('DB_PASSWORD') !== false ? getenv('DB_PASSWORD') : '',
         'charset'   => 'utf8mb4',
         'collation' => 'utf8mb4_unicode_ci',
         'options'   => [
@@ -24,12 +24,12 @@ return [
 
     // Account with privileges to create databases, tables and indexes
     'installer' => [
-        'driver'    => 'mysql',
-        'host'      => '127.0.0.1',
-        'port'      => 3306,
-        'database'  => 'tours_travels_db',
-        'username'  => 'root',
-        'password'  => '',
+        'driver'    => getenv('DB_DRIVER') ?: 'mysql',
+        'host'      => getenv('DB_HOST') ?: '127.0.0.1',
+        'port'      => (int)(getenv('DB_PORT') ?: 3306),
+        'database'  => getenv('DB_DATABASE') ?: 'tours_travels_db',
+        'username'  => getenv('DB_USERNAME') ?: 'root',
+        'password'  => getenv('DB_PASSWORD') !== false ? getenv('DB_PASSWORD') : '',
         'charset'   => 'utf8mb4',
         'collation' => 'utf8mb4_unicode_ci',
         'options'   => [

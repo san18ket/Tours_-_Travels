@@ -4,7 +4,7 @@
  */
 
 return [
-    'name' => 'MANASWI Tours & Travels',
+    'name' => 'Tours & Travels Management System',
     'tagline' => 'Safe Journey • Happy Memories',
     'version' => '2.0.0',
     'env' => 'production', // 'development' or 'production'
@@ -21,10 +21,10 @@ return [
         'customer' => 'Customer / Client'
     ],
 
-    // Default contact / branding
-    'support_email' => 'contact@manaswitravels.com',
-    'support_phone' => '+91 98220 12345',
-    'company_address' => 'Manaswi Tours & Travels, Main Office Road, Maharashtra, India',
+    // Default contact / branding (Neutral system fallbacks; database company_profiles is source of truth)
+    'support_email' => '',
+    'support_phone' => '',
+    'company_address' => '',
     
     // Key directories
     'paths' => [

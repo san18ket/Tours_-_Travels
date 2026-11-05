@@ -32,11 +32,16 @@ class Session
                 }
             }
 
+            $isHttps = (bool)($sessionConfig['cookie_secure'] ?? false)
+                || (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+                || (isset($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443)
+                || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+
             session_set_cookie_params([
                 'lifetime' => $sessionConfig['lifetime'] ?? 7200,
                 'path'     => '/',
                 'domain'   => $cookieDomain,
-                'secure'   => (bool)($sessionConfig['cookie_secure'] ?? false),
+                'secure'   => $isHttps,
                 'httponly' => true,
                 'samesite' => $sessionConfig['cookie_samesite'] ?? 'Lax',
             ]);
@@ -72,6 +77,17 @@ class Session
         }
     }
 
+    /**
+     * Release PHP session file lock for read-only concurrent processing
+     */
+    public static function closeWrite(): void
+    {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+            self::$started = false;
+        }
+    }
+
     public static function set(string $key, mixed $value): void
     {
         self::start();
@@ -98,8 +114,8 @@ class Session
 
     public static function destroy(): void
     {
+        $_SESSION = [];
         if (session_status() === PHP_SESSION_ACTIVE) {
-            $_SESSION = [];
             if (!headers_sent() && ini_get('session.use_cookies')) {
                 $params = session_get_cookie_params();
                 setcookie(
@@ -113,8 +129,8 @@ class Session
                 );
             }
             session_destroy();
-            self::$started = false;
         }
+        self::$started = false;
     }
 
     /**

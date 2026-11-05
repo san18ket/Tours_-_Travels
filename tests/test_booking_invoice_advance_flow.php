@@ -3,9 +3,13 @@
  * Test Suite: Booking Creation -> Invoice Generation -> Advance Payment -> Remaining Payment -> Finance Ledger
  */
 
-require 'app/bootstrap.php';
+require_once __DIR__ . '/../app/bootstrap.php';
+require_once __DIR__ . '/TestEnvironment.php';
 
+use Tests\TestEnvironment;
 use App\Core\Database;
+
+$pdo = TestEnvironment::init();
 use App\Models\Booking;
 use App\Models\Invoice;
 use App\Models\Payment;

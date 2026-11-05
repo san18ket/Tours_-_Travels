@@ -606,9 +606,10 @@ $statOnTime = '96 %';
                 <i class="fa-solid fa-headset"></i>
             </div>
             <h4 style="font-size:1.2rem; font-weight:800; color:#0C2B52; margin:0 0 0.35rem;">Central Operations Desk</h4>
-            <p style="font-size:0.88rem; color:#64748B; margin:0 0 1.25rem;">MANASWI Tours &amp; Travels 24/7 Chauffeur Dispatch Hotline</p>
-            <a href="tel:+919876543210" class="btn-modal-submit btn-modal-blue" style="display:inline-flex; align-items:center; gap:8px; text-decoration:none; font-size:1rem; padding:0.75rem 1.75rem; border-radius:9999px;">
-                <i class="fa-solid fa-phone-volume"></i> Call +91 98765 43210
+            <p style="font-size:0.88rem; color:#64748B; margin:0 0 1.25rem;"><?= e(company_display_name()) ?> 24/7 Chauffeur Dispatch Hotline</p>
+            <?php $dispatchPhone = company_phone() ?: '+91 98765 43210'; ?>
+            <a href="tel:<?= preg_replace('/[^\+0-9]/', '', $dispatchPhone) ?>" class="btn-modal-submit btn-modal-blue" style="display:inline-flex; align-items:center; gap:8px; text-decoration:none; font-size:1rem; padding:0.75rem 1.75rem; border-radius:9999px;">
+                <i class="fa-solid fa-phone-volume"></i> Call <?= e($dispatchPhone) ?>
             </a>
         </div>
         <div class="driver-modal-footer">

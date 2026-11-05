@@ -1,6 +1,6 @@
 <?php
 /**
- * MANASWI TOURS & TRAVELS — OFFICIAL EMPLOYEE SALARY SLIP
+ * Tours & Travels — OFFICIAL EMPLOYEE SALARY SLIP
  * Corporate Formatted Payslip Receipt (Print & PDF Compatible)
  */
 $monthName = date('F Y', mktime(0, 0, 0, (int)$payslip['month'], 10, (int)$payslip['year']));
@@ -25,10 +25,10 @@ $isPaid = $payslip['payment_status'] === 'paid';
         <!-- Corporate Letterhead -->
         <div style="display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 1.5rem; border-bottom: 2px solid var(--brand-primary); margin-bottom: 1.5rem;">
             <div style="display: flex; align-items: center; gap: 1rem;">
-                <img src="<?= asset('images/manaswi-logo.svg') ?>" alt="MANASWI Logo" style="height: 52px; width: auto;" onerror="this.style.display='none'">
+                <img src="<?= e(company_logo_url()) ?>" alt="<?= e(company_display_name()) ?>" style="height: 52px; width: auto; object-fit: contain;" onerror="this.style.display='none'">
                 <div>
-                    <h1 style="font-size: 1.45rem; font-weight: 800; color: var(--vg-navy-900); margin: 0; letter-spacing: -0.5px;">MANASWI TOURS &amp; TRAVELS</h1>
-                    <div style="font-size: 0.85rem; color: var(--brand-primary); font-weight: 700;">Safe Journey • Happy Memories</div>
+                    <h1 style="font-size: 1.45rem; font-weight: 800; color: var(--vg-navy-900); margin: 0; letter-spacing: -0.5px;"><?= e(company_display_name()) ?></h1>
+                    <div style="font-size: 0.85rem; color: var(--brand-primary); font-weight: 700;"><?= e(company_tagline() ?: 'Safe Journey • Happy Memories') ?></div>
                     <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">Fleet Operations &amp; Commercial Transport Logistics</div>
                 </div>
             </div>
@@ -195,7 +195,7 @@ $isPaid = $payslip['payment_status'] === 'paid';
             </div>
             <div style="text-align: right;">
                 <div style="height: 40px; display: flex; align-items: flex-end; justify-content: flex-end;">
-                    <span style="font-family: cursive; font-size: 1.1rem; color: var(--brand-primary);">Manaswi Accounts</span>
+                    <span style="font-family: cursive; font-size: 1.1rem; color: var(--brand-primary);"><?= e(company_owner() ?: (company_display_name() . ' Accounts')) ?></span>
                 </div>
                 <div style="border-top: 1px solid #94a3b8; width: 180px; margin-left: auto; padding-top: 4px; font-weight: 600; color: var(--vg-navy-900);">Authorized Signatory</div>
             </div>

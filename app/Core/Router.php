@@ -239,6 +239,11 @@ class Router
 
                 case 'auth':
                     if (!Session::isLoggedIn()) {
+                        $remembered = (new \App\Services\AuthService())->attemptRememberMeLogin();
+                        if ($remembered) {
+                            break;
+                        }
+
                         if ($request->isJson() || str_starts_with($request->getPath(), '/api/')) {
                             return Response::json(['error' => 'Authentication required.'], 401);
                         }
@@ -250,7 +255,10 @@ class Router
 
                 case 'role':
                     if (!Session::isLoggedIn()) {
-                        return Response::redirect(url('/login'));
+                        $remembered = (new \App\Services\AuthService())->attemptRememberMeLogin();
+                        if (!$remembered) {
+                            return Response::redirect(url('/login'));
+                        }
                     }
                     $allowedRoles = explode(',', $arg ?? '');
                     $userRole = Session::getUserRole();

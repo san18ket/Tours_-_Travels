@@ -326,6 +326,11 @@ class UserController extends Controller
 
             $this->userModel->update($id, $updateData);
 
+            // If account is deactivated, revoke all persistent Remember Me tokens immediately
+            if ($data['status'] !== 'active') {
+                (new \App\Services\AuthService())->revokeAllUserRememberTokens($id);
+            }
+
             // Audit log without passwords
             $this->auditLog->record(
                 'user_updated',
@@ -485,6 +490,9 @@ class UserController extends Controller
 
             $newHash = password_hash($data['password'], PASSWORD_BCRYPT, ['cost' => 12]);
             $this->userModel->updatePassword($id, $newHash);
+
+            // Revoke all persistent Remember Me tokens across all devices on password reset
+            (new \App\Services\AuthService())->revokeAllUserRememberTokens($id);
 
             // Audit logging without exposing password or hash
             $this->auditLog->record(

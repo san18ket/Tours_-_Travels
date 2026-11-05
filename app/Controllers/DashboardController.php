@@ -41,7 +41,7 @@ class DashboardController extends Controller
 
         // 1. Core Operational KPIs
         $totalBookings = $this->bookingModel->count();
-        $todayBookings = (int)$pdo->query("SELECT COUNT(*) FROM `bookings` WHERE DATE(`created_at`) = CURDATE()")->fetchColumn();
+        $todayBookings = (int)$pdo->query("SELECT COUNT(*) FROM `bookings` WHERE `created_at` >= CURDATE() AND `created_at` < DATE_ADD(CURDATE(), INTERVAL 1 DAY)")->fetchColumn();
         $todayDepartures = (int)$pdo->query("SELECT COUNT(*) FROM `bookings` WHERE `start_date` = CURDATE()")->fetchColumn();
         
         $activeTrips = $this->dispatchModel->count("`status` IN ('assigned', 'driver_accepted', 'en_route_pickup', 'trip_started')");
@@ -101,17 +101,14 @@ class DashboardController extends Controller
             GROUP BY `vehicle_type`");
         $fleetByCategory = $fleetCategoryStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
-        // 5. Active Live Dispatches (Radar)
-        $activeDispatches = $this->dispatchModel->getAllWithDetails();
-        $liveDispatches = array_slice($activeDispatches, 0, 6);
+        // 5. Active Live Dispatches (Radar - optimized LIMIT 6)
+        $liveDispatches = $this->dispatchModel->getAllWithDetails(6);
 
-        // 6. Recent Bookings Ledger
-        $recentBookings = $this->bookingModel->getAllDetailed('', []);
-        $recentBookings = array_slice($recentBookings, 0, 7);
+        // 6. Recent Bookings Ledger (optimized LIMIT 7)
+        $recentBookings = $this->bookingModel->getAllDetailed('', [], 7);
 
-        // 7. Recent Invoices
-        $recentInvoices = $this->invoiceModel->getAllWithDetails();
-        $recentInvoices = array_slice($recentInvoices, 0, 5);
+        // 7. Recent Invoices (optimized LIMIT 5)
+        $recentInvoices = $this->invoiceModel->getAllWithDetails(5);
 
         // 8. Available Chauffeurs & Ready Fleet
         $availChauffeursStmt = $pdo->query("SELECT dp.*, 

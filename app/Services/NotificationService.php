@@ -118,7 +118,8 @@ class NotificationService
         ]);
 
         // 4. Build Professional SMS / WhatsApp Dispatch Text
-        $smsText = "MANASWI TOURS & TRAVELS — TRIP DUTY DISPATCH\n"
+        $compTitle = strtoupper(function_exists('company_display_name') ? company_display_name() : 'TOURS & TRAVELS');
+        $smsText = "{$compTitle} — TRIP DUTY DISPATCH\n"
             . "Hello {$recipientName} ({$employeeCode}),\n"
             . "You have been assigned to Trip Duty: {$dispatchCode} (Booking: {$bookingCode})\n\n"
             . "• Route: {$pickupLoc} -> {$dropLoc}\n"

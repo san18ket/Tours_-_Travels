@@ -14,8 +14,6 @@
         $jsVer  = @filemtime(dirname(__DIR__, 3) . '/public/assets/js/app.js') ?: time();
         $imgLgVer = @filemtime(dirname(__DIR__, 3) . '/public/assets/images/login-scenic-desktop.jpg') ?: time();
         $imgSmVer = @filemtime(dirname(__DIR__, 3) . '/public/assets/images/login-scenic-mobile.jpg') ?: time();
-        $emblemVer = @filemtime(dirname(__DIR__, 3) . '/public/assets/images/manaswi-emblem.png') ?: time();
-        $iconVer = @filemtime(dirname(__DIR__, 3) . '/public/assets/images/manaswi-icon.png') ?: time();
     ?>
 
     <!-- Favicon & PWA Manifest -->
@@ -33,8 +31,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     
     <!-- Core Application CSS with Cache Busting -->
+    <meta name="user-id" content="guest">
     <link rel="stylesheet" href="<?= asset('css/app.css') ?>?v=<?= $cssVer ?>">
     
+    <script src="<?= asset('js/tours-cache.js') ?>?v=1.0" defer></script>
     <script src="<?= asset('js/app.js') ?>?v=<?= $jsVer ?>" defer></script>
 
     <style>

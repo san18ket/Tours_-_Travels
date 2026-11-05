@@ -6,8 +6,12 @@
  */
 
 require_once __DIR__ . '/../app/bootstrap.php';
+require_once __DIR__ . '/TestEnvironment.php';
 
+use Tests\TestEnvironment;
 use App\Core\Database;
+
+$pdo = TestEnvironment::init();
 use App\Core\Session;
 use App\Core\Request;
 use App\Core\Csrf;
