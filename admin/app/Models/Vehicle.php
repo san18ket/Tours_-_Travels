@@ -1,0 +1,111 @@
+<?php
+namespace App\Models;
+
+use App\Core\Model;
+use App\Core\Database;
+use PDO;
+
+class Vehicle extends Model
+{
+    protected string $table = 'vehicles';
+    protected array $fillable = [
+        'vehicle_number', 'make_model', 'vehicle_type', 'seating_capacity',
+        'fuel_type', 'status', 'odometer_km', 'registration_expiry', 'insurance_expiry',
+        'vehicle_photo', 'rc_document_file', 'document_type'
+    ];
+
+    public function getAvailable(): array
+    {
+        return $this->where("`status` = 'available'", [], 'make_model ASC');
+    }
+
+    public function countFiltered(?string $search = null, ?string $type = null, ?string $status = null): int
+    {
+        $pdo = Database::getConnection();
+        $conditions = ["1=1"];
+        $params = [];
+
+        if (!empty($search)) {
+            $conditions[] = "(vehicle_number LIKE ? OR make_model LIKE ?)";
+            $term = "%{$search}%";
+            $params[] = $term;
+            $params[] = $term;
+        }
+
+        if (!empty($type)) {
+            $conditions[] = "vehicle_type = ?";
+            $params[] = $type;
+        }
+
+        if (!empty($status)) {
+            $conditions[] = "status = ?";
+            $params[] = $status;
+        }
+
+        $sql = "SELECT COUNT(*) FROM `vehicles` WHERE " . implode(' AND ', $conditions);
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        return (int)$stmt->fetchColumn();
+    }
+
+    public function getPaginated(?string $search = null, ?string $type = null, ?string $status = null, int $page = 1, int $perPage = 10): array
+    {
+        $pdo = Database::getConnection();
+        $conditions = ["1=1"];
+        $params = [];
+
+        if (!empty($search)) {
+            $conditions[] = "(vehicle_number LIKE ? OR make_model LIKE ?)";
+            $term = "%{$search}%";
+            $params[] = $term;
+            $params[] = $term;
+        }
+
+        if (!empty($type)) {
+            $conditions[] = "vehicle_type = ?";
+            $params[] = $type;
+        }
+
+        if (!empty($status)) {
+            $conditions[] = "status = ?";
+            $params[] = $status;
+        }
+
+        $offset = max(0, ($page - 1) * $perPage);
+        $sql = "SELECT * FROM `vehicles` WHERE " . implode(' AND ', $conditions) . " ORDER BY id DESC LIMIT ? OFFSET ?";
+
+        $stmt = $pdo->prepare($sql);
+        $paramIdx = 1;
+        foreach ($params as $p) {
+            $stmt->bindValue($paramIdx++, $p, PDO::PARAM_STR);
+        }
+        $stmt->bindValue($paramIdx++, $perPage, PDO::PARAM_INT);
+        $stmt->bindValue($paramIdx++, $offset, PDO::PARAM_INT);
+
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Get aggregate metric counts for fleet directory in a single query
+     */
+    public function getSummaryCounts(): array
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->query("
+            SELECT 
+                COUNT(*) as total_all,
+                COALESCE(SUM(CASE WHEN `status` = 'available' THEN 1 ELSE 0 END), 0) as total_available,
+                COALESCE(SUM(CASE WHEN `status` = 'on_trip' THEN 1 ELSE 0 END), 0) as total_on_trip,
+                COALESCE(SUM(CASE WHEN `status` = 'maintenance' THEN 1 ELSE 0 END), 0) as total_maintenance
+            FROM `{$this->table}`
+        ");
+        $data = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+        return [
+            'total_all'         => (int)($data['total_all'] ?? 0),
+            'total_available'   => (int)($data['total_available'] ?? 0),
+            'total_on_trip'      => (int)($data['total_on_trip'] ?? 0),
+            'total_maintenance' => (int)($data['total_maintenance'] ?? 0),
+        ];
+    }
+}

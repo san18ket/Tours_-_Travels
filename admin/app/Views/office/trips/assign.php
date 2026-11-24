@@ -1,0 +1,941 @@
+<?php
+/**
+ * Dispatch & Assign Trip
+ * Modern Luxury Form UI Matching Customers Create Architecture
+ * Fully Mobile Responsive & App-Optimized
+ */
+?>
+
+<div class="modern-form-wrapper">
+
+    <!-- Modern Form Header Bar with Back Navigation & Live Badge -->
+    <div class="modern-form-header-bar">
+        <div class="modern-header-left">
+            <a href="<?= url('/office/trips/history') ?>" class="modern-back-btn" title="<?= e(__('common.back', [], 'Back to Trip History')) ?>" aria-label="<?= e(__('common.back', [], 'Back')) ?>">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <div class="modern-header-icon-pill">
+                <i class="fa-solid fa-paper-plane"></i>
+            </div>
+            <div class="modern-header-meta">
+                <h1 class="modern-form-title"><?= e(__('trip_form.assign_title', [], 'Dispatch & Assign Trip')) ?></h1>
+                <p class="modern-form-subtitle"><?= e(__('trip_form.assign_subtitle', [], 'Allocate commercial vehicle and licensed driver to confirmed booking.')) ?></p>
+            </div>
+        </div>
+
+        <div class="modern-header-right">
+            <span class="dispatch-console-badge">
+                <span class="dispatch-pulse-dot"></span>
+                <span><?= e(__('trip_form.dispatch_console', [], 'Live Dispatch Console')) ?></span>
+            </span>
+        </div>
+    </div>
+
+    <!-- Master Form Container -->
+    <form action="<?= url('/office/trips/assign') ?>" method="POST" id="assignTripForm" novalidate>
+        <?= csrf_field() ?>
+
+        <div class="modern-form-card">
+            <!-- Section 1: Reservation Manifest -->
+            <div class="modern-section-header">
+                <div class="modern-section-badge">
+                    <i class="fa-solid fa-file-invoice"></i>
+                </div>
+                <div class="modern-section-meta">
+                    <h2 class="modern-section-title"><?= e(__('trip_form.manifest_title', [], 'Select Confirmed Reservation')) ?></h2>
+                    <p class="modern-section-sub"><?= e(__('trip_form.manifest_sub', [], 'Choose a tour booking to bind commercial vehicle and driver deployment.')) ?></p>
+                </div>
+            </div>
+
+            <!-- Booking Selection -->
+            <div class="modern-form-group" style="margin-bottom: 1.5rem;">
+                <label class="modern-form-label" for="booking_id">
+                    <?= e(__('trip_form.select_booking', [], 'Reservation Manifest')) ?> <span class="req">*</span>
+                </label>
+                <div class="modern-input-wrapper">
+                    <span class="modern-input-icon"><i class="fa-solid fa-clipboard-list"></i></span>
+                    <select id="booking_id" name="booking_id" class="modern-select-pill" required onchange="onBookingChange(this)">
+                        <option value=""><?= e(__('trip_form.choose_booking', [], 'Choose a Confirmed Tour Reservation...')) ?></option>
+                        <?php if ($selectedBooking): ?>
+                            <option value="<?= (int)$selectedBooking['id'] ?>" selected 
+                                    data-passengers="<?= (int)$selectedBooking['passenger_count'] ?>" 
+                                    data-route="<?= e($selectedBooking['pickup_address']) ?> → <?= e($selectedBooking['drop_address']) ?>" 
+                                    data-pickup="<?= e($selectedBooking['pickup_address']) ?>"
+                                    data-drop="<?= e($selectedBooking['drop_address']) ?>"
+                                    data-date="<?= format_date($selectedBooking['start_date']) ?>">
+                                <?= e($selectedBooking['booking_code']) ?> — <?= e($selectedBooking['customer_name'] ?? 'Guest') ?> (<?= (int)$selectedBooking['passenger_count'] ?> <?= e(__('common.guests', [], 'guests')) ?>) · <?= format_date($selectedBooking['start_date']) ?>
+                            </option>
+                        <?php endif; ?>
+                        <?php foreach ($pendingBookings as $b): ?>
+                            <?php if ($selectedBooking && $selectedBooking['id'] == $b['id']) continue; ?>
+                            <option value="<?= (int)$b['id'] ?>" 
+                                    data-passengers="<?= (int)$b['passenger_count'] ?>" 
+                                    data-route="<?= e($b['pickup_address']) ?> → <?= e($b['drop_address']) ?>" 
+                                    data-pickup="<?= e($b['pickup_address']) ?>"
+                                    data-drop="<?= e($b['drop_address']) ?>"
+                                    data-date="<?= format_date($b['start_date']) ?>">
+                                <?= e($b['booking_code']) ?> — (<?= (int)$b['passenger_count'] ?> <?= e(__('common.guests', [], 'guests')) ?>) · <?= format_date($b['start_date']) ?> (<?= e($b['pickup_address']) ?>)
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Modern Luxury Booking Route Summary Box -->
+            <div id="bookingSummaryBox" class="trip-manifest-summary-card" style="display: <?= $selectedBooking ? 'block' : 'none' ?>;">
+                <div class="trip-summary-header">
+                    <span class="trip-summary-badge"><i class="fa-solid fa-route"></i> <?= e(__('trip_form.itinerary_details', [], 'Itinerary Route Details')) ?></span>
+                    <span class="trip-summary-status"><i class="fa-solid fa-circle-check"></i> <?= e(__('trip_form.confirmed_reservation', [], 'Confirmed Reservation')) ?></span>
+                </div>
+                
+                <!-- Transit Route Itinerary Display -->
+                <div class="trip-itinerary-timeline">
+                    <div class="trip-itinerary-point trip-point-pickup">
+                        <span class="trip-point-indicator pickup-dot"><i class="fa-solid fa-circle-dot"></i></span>
+                        <div class="trip-point-content">
+                            <span class="trip-point-label"><?= e(__('trip_form.pickup_location', [], 'Pickup Location')) ?></span>
+                            <span id="summaryPickupText" class="trip-point-address"><?= $selectedBooking ? e($selectedBooking['pickup_address']) : '' ?></span>
+                        </div>
+                    </div>
+                    <div class="trip-itinerary-connector">
+                        <span class="connector-line"></span>
+                    </div>
+                    <div class="trip-itinerary-point trip-point-drop">
+                        <span class="trip-point-indicator drop-pin"><i class="fa-solid fa-location-dot"></i></span>
+                        <div class="trip-point-content">
+                            <span class="trip-point-label"><?= e(__('trip_form.drop_location', [], 'Drop Location')) ?></span>
+                            <span id="summaryDropText" class="trip-point-address"><?= $selectedBooking ? e($selectedBooking['drop_address']) : '' ?></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fallback Simple Route View for Parsed Strings -->
+                <div id="summaryRoute" class="trip-summary-route" style="display: none;">
+                    <?= $selectedBooking ? e($selectedBooking['pickup_address']) . ' → ' . e($selectedBooking['drop_address']) : '' ?>
+                </div>
+
+                <div id="summaryMeta" class="trip-summary-meta">
+                    <?php if ($selectedBooking): ?>
+                        <span class="trip-summary-meta-item"><i class="fa-solid fa-users"></i> <?= e(__('trip_form.passenger_count', [], 'Passenger Count')) ?>: <strong><?= (int)$selectedBooking['passenger_count'] ?> <?= e(__('common.guests', [], 'guests')) ?></strong></span>
+                        <span class="trip-summary-meta-dot" aria-hidden="true">•</span>
+                        <span class="trip-summary-meta-item"><i class="fa-solid fa-calendar-day"></i> <?= e(__('trip_form.departure_date', [], 'Departure Date')) ?>: <strong><?= format_date($selectedBooking['start_date']) ?></strong></span>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Section 2: Fleet & Driver Deployment -->
+            <div class="modern-section-header" style="margin-top: 2rem;">
+                <div class="modern-section-badge">
+                    <i class="fa-solid fa-car-side"></i>
+                </div>
+                <div class="modern-section-meta">
+                    <h2 class="modern-section-title"><?= e(__('trip_form.deployment_title', [], 'Vehicle & Driver Assignment')) ?></h2>
+                    <p class="modern-section-sub"><?= e(__('trip_form.deployment_sub', [], 'Pair an available commercial vehicle with an on-duty verified driver.')) ?></p>
+                </div>
+            </div>
+
+            <div class="modern-form-grid-2">
+                <!-- Vehicle Selection -->
+                <div class="modern-form-group">
+                    <label class="modern-form-label" for="vehicle_id">
+                        <?= e(__('trip_form.assign_vehicle', [], 'Commercial Vehicle')) ?> <span class="req">*</span>
+                    </label>
+                    <div class="modern-input-wrapper">
+                        <span class="modern-input-icon"><i class="fa-solid fa-car"></i></span>
+                        <select id="vehicle_id" name="vehicle_id" class="modern-select-pill" required>
+                            <option value=""><?= e(__('trip_form.choose_vehicle', [], 'Choose Vehicle...')) ?></option>
+                            <?php if (empty($availableVehicles)): ?>
+                                <option value="" disabled><?= e(__('trip_form.no_vehicles', [], 'No vehicles currently available')) ?></option>
+                            <?php else: ?>
+                                <?php foreach ($availableVehicles as $v): ?>
+                                    <option value="<?= (int)$v['id'] ?>">
+                                        <?= e($v['make_model']) ?> (<?= e($v['vehicle_number']) ?>) · <?= (int)$v['seating_capacity'] ?> Seats · <?= strtoupper(e($v['fuel_type'])) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Driver Selection -->
+                <div class="modern-form-group">
+                    <label class="modern-form-label" for="driver_id">
+                        <?= e(__('trip_form.assign_driver', [], 'Assigned Driver')) ?> <span class="req">*</span>
+                    </label>
+                    <div class="modern-input-wrapper">
+                        <span class="modern-input-icon"><i class="fa-solid fa-id-badge"></i></span>
+                        <select id="driver_id" name="driver_id" class="modern-select-pill" required>
+                            <option value=""><?= e(__('trip_form.choose_driver', [], 'Choose Driver...')) ?></option>
+                            <?php if (empty($availableDrivers)): ?>
+                                <option value="" disabled><?= e(__('trip_form.no_drivers', [], 'No drivers currently available')) ?></option>
+                            <?php else: ?>
+                                <?php foreach ($availableDrivers as $d): ?>
+                                    <option value="<?= (int)$d['id'] ?>">
+                                        <?= e($d['name']) ?> (<?= e($d['phone']) ?>) · License: <?= e($d['license_number']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Optional Driver Compensation / Trip Amount -->
+            <div class="modern-form-group" style="margin-top: 1.5rem; margin-bottom: 0.5rem;">
+                <div class="field-label-row">
+                    <label class="modern-form-label" for="driver_trip_amount" style="margin-bottom: 0;">
+                        <?= e(__('trip_form.driver_amount', [], 'Driver Trip Amount')) ?>
+                    </label>
+                    <span class="field-optional-badge"><?= e(__('common.optional', [], 'Optional')) ?></span>
+                </div>
+                <div class="modern-input-wrapper">
+                    <span class="modern-input-icon"><i class="fa-solid fa-indian-rupee-sign"></i></span>
+                    <input type="number" 
+                           id="driver_trip_amount" 
+                           name="driver_trip_amount" 
+                           class="modern-input-pill" 
+                           step="0.01" 
+                           min="0" 
+                           placeholder="<?= e(__('placeholder.enter_trip_amount_for_driver_e', 'Enter trip amount for driver (e.g. 5000.00)')) ?>" 
+                           autocomplete="off">
+                </div>
+                <p class="field-helper-text">
+                    <?= e(__('trip_form.driver_amount_desc', [], 'Operational payout for the driver. Completely independent from customer billing. Leave empty if unspecified.')) ?>
+                </p>
+            </div>
+
+            <!-- Bottom Actions -->
+            <div class="modern-form-actions">
+                <a href="<?= url('/office/trips/history') ?>" class="modern-btn-cancel">
+                    <i class="fa-solid fa-xmark"></i> <?= e(__('form.cancel', [], 'Cancel')) ?>
+                </a>
+                <button type="submit" class="modern-btn-submit" id="btnDeployTrip">
+                    <i class="fa-solid fa-paper-plane"></i> <span><?= e(__('trip_form.deploy_btn', [], 'Deploy Live Trip')) ?></span>
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+function onBookingChange(sel) {
+    const opt = sel.options[sel.selectedIndex];
+    const box = document.getElementById('bookingSummaryBox');
+    if (!opt || !opt.value) {
+        if (box) box.style.display = 'none';
+        return;
+    }
+    const route = opt.getAttribute('data-route') || '';
+    let pickup = opt.getAttribute('data-pickup') || '';
+    let drop = opt.getAttribute('data-drop') || '';
+    const date = opt.getAttribute('data-date') || '';
+    const pass = opt.getAttribute('data-passengers') || '1';
+
+    // Parse route if pickup / drop data attributes were not set directly
+    if ((!pickup || !drop) && route.indexOf('→') !== -1) {
+        const parts = route.split('→');
+        pickup = parts[0].trim();
+        drop = parts[1].trim();
+    }
+
+    const sPickup = document.getElementById('summaryPickupText');
+    const sDrop = document.getElementById('summaryDropText');
+    const sRoute = document.getElementById('summaryRoute');
+    const sMeta = document.getElementById('summaryMeta');
+
+    if (sPickup) sPickup.textContent = pickup || route || 'Pickup Location';
+    if (sDrop) sDrop.textContent = drop || 'Destination Drop Location';
+    if (sRoute) sRoute.textContent = route;
+
+    if (sMeta) {
+        sMeta.innerHTML = '<span class="trip-summary-meta-item"><i class="fa-solid fa-users"></i> ' + 
+                          'Passenger Count: <strong>' + pass + ' guests</strong></span>' +
+                          '<span class="trip-summary-meta-dot" aria-hidden="true">•</span>' +
+                          '<span class="trip-summary-meta-item"><i class="fa-solid fa-calendar-day"></i> ' + 
+                          'Departure Date: <strong>' + date + '</strong></span>';
+    }
+    if (box) {
+        box.style.display = 'block';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const deployForm = document.getElementById('assignTripForm');
+    const deployBtn = document.getElementById('btnDeployTrip');
+    if (deployForm && deployBtn) {
+        deployForm.addEventListener('submit', function(e) {
+            if (!deployForm.checkValidity()) {
+                return; // Let standard HTML5 validation highlight missing required fields
+            }
+            deployBtn.style.pointerEvents = 'none';
+            deployBtn.style.opacity = '0.85';
+            deployBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>' + <?= json_encode(__('trip_form.deploying_alerts', 'Deploying Trip & Dispatching Alerts...')) ?> + '</span>';
+        });
+    }
+});
+</script>
+
+<style>
+/* Full-Width Workspace Form Wrapper & Master Card */
+.modern-form-wrapper {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0.25rem 0 3.5rem;
+    box-sizing: border-box;
+}
+
+.modern-form-card {
+    width: 100%;
+    max-width: 100%;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 20px;
+    padding: 2.25rem 2.5rem;
+    box-shadow: 0 6px 24px rgba(15, 23, 42, 0.05);
+    box-sizing: border-box;
+}
+
+/* Modern Form Header Bar */
+.modern-form-header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.modern-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 0;
+    flex: 1;
+}
+
+.modern-back-btn {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    border: 1.5px solid #DCE6F2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #0C2B52;
+    font-size: 1.05rem;
+    box-shadow: 0 4px 12px rgba(12, 43, 82, 0.05);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none;
+    flex-shrink: 0;
+}
+
+.modern-back-btn:hover {
+    background: #E8F4F0;
+    border-color: #176B5B;
+    color: #176B5B;
+    transform: translateX(-3px);
+    box-shadow: 0 6px 16px rgba(23, 107, 91, 0.18);
+}
+
+.modern-header-icon-pill {
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
+    border-radius: 14px;
+    background: #E8F4F0;
+    color: #176B5B;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    box-shadow: inset 0 0 0 1px rgba(23, 107, 91, 0.18);
+}
+
+.modern-header-meta {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.modern-form-title {
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: #0C2B52;
+    margin: 0;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    word-break: break-word;
+}
+
+.modern-form-subtitle {
+    font-size: 0.88rem;
+    color: #64748B;
+    margin: 0.25rem 0 0 0;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+/* Dispatch Console Live Badge */
+.modern-header-right {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.dispatch-console-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #F0FDF4;
+    border: 1px solid #BBF7D0;
+    color: #15803D;
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 0.45rem 0.95rem;
+    border-radius: 9999px;
+    letter-spacing: 0.02em;
+}
+
+.dispatch-pulse-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22C55E;
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+    animation: dispatchPulse 1.8s infinite;
+}
+
+@keyframes dispatchPulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+/* Section Header inside Card */
+.modern-section-header {
+    display: flex;
+    align-items: center;
+    gap: 1.15rem;
+    margin-bottom: 1.75rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1.5px solid #F1F5F9;
+}
+
+.modern-section-badge {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    border-radius: 14px;
+    background: #E8F4F0;
+    color: #176B5B;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    box-shadow: inset 0 0 0 1px rgba(23, 107, 91, 0.15);
+}
+
+.modern-section-meta {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.modern-section-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #0C2B52;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.modern-section-sub {
+    font-size: 0.85rem;
+    color: #64748B;
+    margin: 0.25rem 0 0 0;
+    line-height: 1.35;
+}
+
+/* Modern Pill Inputs & Selects */
+.modern-form-group {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.modern-form-label {
+    display: flex;
+    align-items: center;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #0C2B52;
+    margin-bottom: 0.5rem;
+}
+
+.modern-form-label .req {
+    color: #EF4444;
+    margin-left: 3px;
+    font-weight: 700;
+}
+
+.modern-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.modern-input-icon {
+    position: absolute;
+    left: 1.15rem;
+    color: #176B5B;
+    font-size: 1rem;
+    pointer-events: none;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modern-select-pill {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    height: 48px;
+    padding: 0 2.5rem 0 2.85rem;
+    background-color: #FFFFFF;
+    border: 1.5px solid #CBD5E1;
+    border-radius: 9999px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #0C2B52;
+    transition: all 0.2s ease;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1.15rem center;
+    background-size: 16px;
+    cursor: pointer;
+    box-sizing: border-box;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.modern-select-pill:focus {
+    border-color: #176B5B;
+    box-shadow: 0 0 0 3px rgba(23, 107, 91, 0.14);
+}
+
+.modern-input-pill {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    height: 48px;
+    padding: 0 1.25rem 0 2.85rem;
+    background: #FFFFFF;
+    border: 1.5px solid #CBD5E1;
+    border-radius: 9999px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #0C2B52;
+    transition: all 0.2s ease;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.modern-input-pill:focus {
+    border-color: #176B5B;
+    box-shadow: 0 0 0 3px rgba(23, 107, 91, 0.14);
+}
+
+.field-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.45rem;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.field-optional-badge {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: #64748B;
+    background: #F1F5F9;
+    padding: 2px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.field-helper-text {
+    font-size: 0.78rem;
+    color: #64748B;
+    margin: 0.4rem 0 0 0.25rem;
+    line-height: 1.4;
+}
+
+/* 2-Column Responsive Form Grid */
+.modern-form-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Manifest Route Summary Box */
+.trip-manifest-summary-card {
+    background: linear-gradient(135deg, #F8FAFD 0%, #F1F6FA 100%);
+    border: 1.5px solid #B2D8CF;
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.75rem;
+    box-shadow: 0 4px 14px rgba(23, 107, 91, 0.04);
+    box-sizing: border-box;
+}
+
+.trip-summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.85rem;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px dashed #CBD5E1;
+}
+
+.trip-summary-badge {
+    font-size: 0.78rem;
+    color: #176B5B;
+    text-transform: uppercase;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.trip-summary-status {
+    font-size: 0.78rem;
+    color: #059669;
+    font-weight: 700;
+    background: #E8F5E9;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Transit Route Itinerary Timeline */
+.trip-itinerary-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin: 0.75rem 0;
+}
+
+.trip-itinerary-point {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    position: relative;
+}
+
+.trip-point-indicator {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    margin-top: 2px;
+}
+
+.pickup-dot {
+    background: #DCFCE7;
+    color: #16A34A;
+}
+
+.drop-pin {
+    background: #FEE2E2;
+    color: #DC2626;
+}
+
+.trip-itinerary-connector {
+    padding-left: 11px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+}
+
+.connector-line {
+    width: 2px;
+    height: 100%;
+    background: #CBD5E1;
+}
+
+.trip-point-content {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+}
+
+.trip-point-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    color: #64748B;
+    line-height: 1.2;
+}
+
+.trip-point-address {
+    font-size: 0.96rem;
+    font-weight: 700;
+    color: #0C2B52;
+    line-height: 1.4;
+    margin-top: 2px;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+.trip-summary-meta {
+    font-size: 0.85rem;
+    color: #64748B;
+    margin-top: 0.75rem;
+    padding-top: 0.65rem;
+    border-top: 1px dashed #CBD5E1;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.trip-summary-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.trip-summary-meta-dot {
+    color: #CBD5E1;
+}
+
+/* Modern Form Action Buttons */
+.modern-form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2.25rem;
+    padding-top: 1.75rem;
+    border-top: 1.5px solid #F1F5F9;
+}
+
+.modern-btn-cancel {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: #FFFFFF;
+    border: 1.5px solid #CBD5E1;
+    color: #475569;
+    padding: 0.75rem 1.75rem;
+    border-radius: 9999px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.modern-btn-cancel:hover {
+    background: #F8FAFC;
+    border-color: #94A3B8;
+    color: #1E293B;
+}
+
+.modern-btn-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #176B5B 0%, #0F493E 100%);
+    color: #FFFFFF;
+    padding: 0.75rem 2.25rem;
+    border-radius: 9999px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 14px rgba(23, 107, 91, 0.25);
+    box-sizing: border-box;
+}
+
+.modern-btn-submit:hover {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
+    transform: translateY(-1px);
+}
+
+.modern-btn-submit:active {
+    transform: translateY(0);
+}
+
+/* ==========================================================================
+   Responsive Mobile Polish (App-Like Adaptive Form)
+   ========================================================================== */
+@media (max-width: 768px) {
+    .modern-form-wrapper {
+        padding: 0 0 2rem;
+    }
+
+    .modern-form-header-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.85rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .modern-header-left {
+        gap: 0.75rem;
+    }
+
+    .modern-back-btn {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        font-size: 0.95rem;
+    }
+
+    .modern-header-icon-pill {
+        display: none; /* Keep clean app header on mobile with just back button & meta */
+    }
+
+    .modern-form-title {
+        font-size: 1.25rem;
+    }
+
+    .modern-form-subtitle {
+        font-size: 0.82rem;
+    }
+
+    .modern-header-right {
+        align-self: flex-start;
+    }
+
+    .modern-form-card {
+        padding: 1.35rem 1rem;
+        border-radius: 18px;
+    }
+
+    .modern-section-header {
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+        padding-bottom: 1rem;
+    }
+
+    .modern-section-badge {
+        width: 42px;
+        height: 42px;
+        min-width: 42px;
+        font-size: 1.1rem;
+    }
+
+    .modern-section-title {
+        font-size: 1.05rem;
+    }
+
+    .modern-section-sub {
+        font-size: 0.8rem;
+    }
+
+    .modern-form-grid-2 {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+        margin-bottom: 1.25rem;
+    }
+
+    /* Prevent iOS Safari auto-zoom by enforcing 16px font-size */
+    .modern-select-pill,
+    .modern-input-pill {
+        font-size: 16px;
+        height: 50px;
+    }
+
+    .trip-manifest-summary-card {
+        padding: 1rem;
+        border-radius: 14px;
+    }
+
+    .trip-point-address {
+        font-size: 0.9rem;
+    }
+
+    .trip-summary-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.4rem;
+    }
+
+    .trip-summary-meta-dot {
+        display: none;
+    }
+
+    .modern-form-actions {
+        flex-direction: column-reverse;
+        width: 100%;
+        gap: 0.75rem;
+        margin-top: 1.75rem;
+        padding-top: 1.25rem;
+    }
+
+    .modern-btn-cancel,
+    .modern-btn-submit {
+        width: 100%;
+        height: 48px;
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .modern-form-card {
+        padding: 1.15rem 0.85rem;
+    }
+
+    .modern-form-title {
+        font-size: 1.15rem;
+    }
+
+    .modern-section-header {
+        align-items: flex-start;
+    }
+
+    .trip-summary-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.4rem;
+    }
+}
+</style>

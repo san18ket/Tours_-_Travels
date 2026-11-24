@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="<?= e(\App\Core\Language::getLocale()) ?>">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <?= csrf_meta() ?>
+    <meta name="base-url" content="<?= url('/') ?>">
+    <meta name="user-id" content="<?= auth_id() ?: 'guest' ?>">
+    <title><?= e($title ?? 'Admin Dashboard') ?> - <?= e(company_display_name()) ?></title>
+    <?php
+        $cssVer = @filemtime(dirname(__DIR__, 3) . '/public/assets/css/app.css') ?: time();
+        $pwaCssVer = @filemtime(dirname(__DIR__, 3) . '/public/assets/css/tours-pwa.css') ?: time();
+
+        $rawUri = $_SERVER['REQUEST_URI'] ?? '/';
+        $path = parse_url($rawUri, PHP_URL_PATH) ?? '/';
+
+        // Normalize path by stripping base directory if app runs in a subfolder
+        $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+        $baseDir = rtrim(str_replace('\\', '/', dirname($scriptName)), '/');
+        if ($baseDir !== '' && $baseDir !== '/' && $baseDir !== '.' && str_starts_with($path, $baseDir)) {
+            $path = substr($path, strlen($baseDir));
+        }
+        $currPath = '/' . trim($path, '/');
+        if ($currPath === '') {
+            $currPath = '/';
+        }
+        $isDashboardActive = ($currPath === '/office/dashboard' || $currPath === '/office' || $currPath === '/');
+    ?>
+    <link rel="stylesheet" href="<?= asset('css/app.css') ?>?v=<?= $cssVer ?>">
+    <link rel="stylesheet" href="<?= asset('css/tours-pwa.css') ?>?v=<?= $pwaCssVer ?>">
+    <!-- Favicon & PWA Branding Metadata -->
+    <link rel="icon" type="image/png" href="<?= e(pwa_icon_url()) ?>">
+    <link rel="apple-touch-icon" href="<?= e(pwa_icon_url()) ?>">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="<?= e(pwa_app_name()) ?>">
+    <meta name="application-name" content="<?= e(pwa_app_name()) ?>">
+    <meta name="app-version" content="<?= e(app_version()) ?>">
+    <meta name="theme-color" content="<?= e(company_primary_color()) ?>">
+    <link rel="manifest" href="<?= url('/manifest.json') ?>?v=<?= pwa_version() ?>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+    <script>
+        window.VoyageTranslations = <?= json_encode(\App\Core\Language::getJsTranslations(), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+        (function() {
+            try {
+                var c = localStorage.getItem('vg_sidebar_collapsed');
+                if (c === 'true' && window.innerWidth > 900) {
+                    document.documentElement.classList.add('sidebar-collapsed');
+                }
+            } catch(e) {}
+        })();
+    </script>
+</head>
+<body class="<?= !empty($_COOKIE['vg_sidebar_collapsed']) && $_COOKIE['vg_sidebar_collapsed'] === 'true' ? 'sidebar-collapsed' : '' ?> <?= !empty($isDashboardActive) ? 'is-dashboard-page' : '' ?>">
+    <div id="offlineBanner" class="offline-banner" style="display: none;" role="alert" aria-live="polite">
+        <div class="offline-banner-content">
+            <span class="offline-banner-icon" aria-hidden="true">⚠️</span>
+            <span id="offlineBannerText"><?= e(trim(str_replace(['⚠️', '⚠'], '', __('js.offline_banner')))) ?></span>
+        </div>
+        <button type="button" class="offline-banner-close" onclick="document.getElementById('offlineBanner').style.display='none'" aria-label="<?= e(__('common.dismiss', 'Dismiss')) ?>">&times;</button>
+    </div>
+
+    <div id="sidebarBackdrop" class="sidebar-backdrop" onclick="closeSidebar()" aria-hidden="true"></div>
+
+    <div class="app-wrapper">
+        <!-- Frosted Glass Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar" aria-label="<?= e(__('sidebar.menu')) ?>">
+            <div class="sidebar-header">
+                <a href="<?= url('/office/dashboard') ?>" class="brand-logo" title="<?= e(company_display_name()) ?>" data-no-ajax="true">
+                    <?php if (has_company_logo()): ?>
+                        <img src="<?= e(company_logo_url()) ?>" alt="<?= e(company_display_name()) ?>" class="brand-logo-img" style="object-fit: contain;">
+                    <?php else: ?>
+                        <div class="brand-logo-icon-badge">
+                            <i class="fa-solid fa-building"></i>
+                        </div>
+                    <?php endif; ?>
+                    <div class="brand-name">
+                        <span class="brand-title" data-live-app-name><?= e(pwa_app_name()) ?></span>
+                        <?php if (has_company_name()): ?>
+                            <?php if (!empty(company_tagline())): ?>
+                                <span class="brand-tagline"><?= e(company_tagline()) ?></span>
+                            <?php else: ?>
+                                <span class="brand-subtitle-main"><?= e(__('app.tours_travels', 'Tours & Travels')) ?></span>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                    </div>
+                </a>
+                <button type="button" class="sidebar-close-btn" onclick="closeSidebar()" aria-label="<?= e(__('sidebar.close_navigation', 'Close Navigation')) ?>">&times;</button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <?php
+                    $rawUri = $_SERVER['REQUEST_URI'] ?? '/';
+                    $path = parse_url($rawUri, PHP_URL_PATH) ?? '/';
+
+                    // Normalize path by stripping base directory if app runs in a subfolder
+                    $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+                    $baseDir = rtrim(str_replace('\\', '/', dirname($scriptName)), '/');
+                    if ($baseDir !== '' && $baseDir !== '/' && $baseDir !== '.' && str_starts_with($path, $baseDir)) {
+                        $path = substr($path, strlen($baseDir));
+                    }
+                    $currPath = '/' . trim($path, '/');
+                    if ($currPath === '') {
+                        $currPath = '/';
+                    }
+
+                    $role = auth_role();
+
+                    // Helper for prefix checks with boundary
+                    $isPrefix = function(string $prefix) use ($currPath): bool {
+                        return $currPath === $prefix || str_starts_with($currPath, rtrim($prefix, '/') . '/');
+                    };
+
+                    // Category Active Determinations (controls parent category expansion)
+                    $isDashboardActive = ($currPath === '/office/dashboard' || $currPath === '/office' || $currPath === '/');
+                    $isBookingsActive  = $isPrefix('/office/bookings');
+                    $isCustomersActive = $isPrefix('/office/customers');
+                    $isVehiclesActive  = $isPrefix('/office/vehicles');
+                    $isDriversActive   = ($isPrefix('/office/employees') || $isPrefix('/office/drivers'));
+                    $isFinanceActive   = ($isPrefix('/office/finance') || $isPrefix('/office/invoices'));
+                    $isTripsActive     = ($isPrefix('/office/trips') || $isPrefix('/office/dispatch'));
+                    $isTrackingActive  = $isPrefix('/office/tracking');
+                    $isCompanyDetailsActive = ($currPath === '/office/company/details' || $currPath === '/office/company');
+                    $isCompanyAppActive     = ($currPath === '/office/company/app');
+                    $isCompanyActive        = ($isCompanyDetailsActive || $isCompanyAppActive || $isPrefix('/office/company'));
+                    $isSettingsActive  = ($isPrefix('/office/users') || $isPrefix('/office/roles') || $isPrefix('/office/role-permission') || $isPrefix('/office/backups') || $isPrefix('/office/notification-settings') || $isPrefix('/office/email'));
+
+                    $isFinanceOverviewActive        = ($currPath === '/office/finance' || $currPath === '/office/finance/dashboard');
+                    $isFinanceInvoicesActive        = $isPrefix('/office/invoices');
+                    $isFinanceRefundsActive         = $isPrefix('/office/finance/refunds');
+                    $isFinancePaymentsActive        = ($currPath === '/office/finance/payments');
+                    $isFinancePendingPaymentsActive = ($currPath === '/office/finance/pending-payments');
+                    $isFinanceExpensesActive        = ($currPath === '/office/finance/expenses');
+                    $isFinanceExpCategoriesActive   = $isPrefix('/office/finance/expense-categories');
+                    $isFinancePayrollActive         = ($currPath === '/office/finance/payroll');
+                    $isFinanceAdvancesActive        = $isPrefix('/office/finance/advances');
+                    $isFinancePayslipsActive        = ($currPath === '/office/finance/payslips');
+                    $isFinanceSalaryHistoryActive   = $isPrefix('/office/finance/salary-history');
+                    $isFinanceDriverPaymentsActive  = ($currPath === '/office/finance/driver-payments');
+                    $isFinanceAccountsActive        = ($isPrefix('/office/finance/accounts') || $currPath === '/office/finance/account-details');
+                    $isFinanceTxnsActive            = ($isPrefix('/office/finance/transactions') || $currPath === '/office/finance/transaction-details');
+
+                    // Financial Reports Sub-Routes Active
+                    $isFinanceReportsOverviewActive = ($currPath === '/office/finance/reports');
+                    $isFinanceReportIncomeActive    = ($currPath === '/office/finance/reports/income');
+                    $isFinanceReportExpensesActive  = ($currPath === '/office/finance/reports/expenses');
+                    $isFinanceReportPLActive        = ($currPath === '/office/finance/reports/profit-loss');
+                    $isFinanceReportDuesActive      = ($currPath === '/office/finance/reports/customer-dues');
+                    $isFinanceReportSalaryActive    = ($currPath === '/office/finance/reports/salary');
+
+                    // Level 2 Subcategory Active Determinations
+                    $isSubCatPaymentsActive = ($isFinanceInvoicesActive || $isFinanceRefundsActive || $isFinancePaymentsActive || $isFinancePendingPaymentsActive);
+                    $isSubCatExpensesActive = ($isFinanceExpensesActive || $isFinanceExpCategoriesActive);
+                    $isSubCatSalaryActive   = ($isFinancePayrollActive || $isFinanceAdvancesActive || $isFinancePayslipsActive || $isFinanceSalaryHistoryActive || $isFinanceDriverPaymentsActive);
+                    $isSubCatCashBankActive = ($isFinanceAccountsActive || $isFinanceTxnsActive);
+                    $isSubCatReportsActive  = $isPrefix('/office/finance/reports');
+                    $isFinanceReportsHubActive = $isSubCatReportsActive;
+
+                    $canViewFinance                 = (in_array(strtolower($role ?? ''), ['admin', 'owner', 'superadmin'], true) || has_permission('finance.view'));
+
+                    $isTripAssignActive  = ($isPrefix('/office/trips/assign') || $isPrefix('/office/dispatch'));
+                    $isTripHistoryActive = $isPrefix('/office/trips/history');
+
+                    $isUsersActive        = $isPrefix('/office/users');
+                    $isRolesActive        = ($isPrefix('/office/roles') || $isPrefix('/office/role-permission'));
+                    $isBackupsActive      = $isPrefix('/office/backups');
+                    $isNotificationActive = ($currPath === '/office/notifications' || $isPrefix('/office/notifications') || $currPath === '/office/notification-settings' || $isPrefix('/office/notification-settings'));
+                    $isNotificationSettingsActive = ($currPath === '/office/notification-settings' || $isPrefix('/office/notification-settings'));
+                    $isEmailActive        = ($isPrefix('/office/emails') || $isPrefix('/office/email'));
+                    $isTripCategoriesActive = ($isPrefix('/office/trip-categories') || $isPrefix('/office/bookings/categories'));
+                    $isSettingsActive     = ($isUsersActive || $isRolesActive || $isBackupsActive || $isNotificationSettingsActive || $isEmailActive || $isTripCategoriesActive);
+                ?>
+
+                <!-- 1. Dashboard (Direct Link) -->
+                <div class="sidebar-category" id="cat-dashboard">
+                    <a href="<?= url('/office/dashboard') ?>" class="category-header direct-link <?= $isDashboardActive ? 'has-active' : '' ?>" id="cat-dashboard-header" data-title="<?= e(__('sidebar.dashboard', 'Dashboard')) ?>" data-no-ajax="true">
+                        <span class="category-label">
+                            <span class="category-icon-wrap">
+                                <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                            </span>
+                            <span class="category-title"><?= e(__('sidebar.dashboard', 'Dashboard')) ?></span>
+                        </span>
+                        <span class="category-header-right">
+                            <?php if ($isDashboardActive): ?>
+                                <span class="active-dot" style="display:none;"></span>
+                            <?php endif; ?>
+                        </span>
+                    </a>
+                </div>
+
+                <!-- 2. Bookings (Direct Link) -->
+                <div class="sidebar-category" id="cat-bookings">
+                    <a href="<?= url('/office/bookings') ?>" class="category-header direct-link <?= $isBookingsActive ? 'has-active' : '' ?>" id="cat-bookings-header" data-title="<?= e(__('sidebar.bookings', 'Bookings')) ?>" data-no-ajax="true">
+                        <span class="category-label">
+                            <span class="category-icon-wrap">
+                                <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            </span>
+                            <span class="category-title"><?= e(__('sidebar.bookings', 'Bookings')) ?></span>
+                        </span>
+                        <span class="category-header-right">
+                            <?php if ($isBookingsActive): ?>
+                                <span class="active-dot" style="display:none;"></span>
+                            <?php endif; ?>
+                        </span>
+                    </a>
+                </div>
+
+                <!-- 3. Customers (Direct Link) -->
+                <div class="sidebar-category" id="cat-customers">
+                    <a href="<?= url('/office/customers') ?>" class="category-header direct-link <?= $isCustomersActive ? 'has-active' : '' ?>" id="cat-customers-header" data-title="<?= e(__('sidebar.customers', 'Customers')) ?>" data-no-ajax="true">
+                        <span class="category-label">
+                            <span class="category-icon-wrap">
+                                <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                            </span>
+                            <span class="category-title"><?= e(__('sidebar.customers', 'Customers')) ?></span>
+                        </span>
+                        <span class="category-header-right">
+                            <?php if ($isCustomersActive): ?>
+                                <span class="active-dot" style="display:none;"></span>
+                            <?php endif; ?>
+                        </span>
+                    </a>
+                </div>
+
+                <!-- 4. Vehicles (Direct Link) -->
+                <div class="sidebar-category" id="cat-vehicles">
+                    <a href="<?= url('/office/vehicles') ?>" class="category-header direct-link <?= $isVehiclesActive ? 'has-active' : '' ?>" id="cat-vehicles-header" data-title="<?= e(__('sidebar.vehicles', 'Vehicles')) ?>" data-no-ajax="true">
+                        <span class="category-label">
+                            <span class="category-icon-wrap">
+                                <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 17a5 5 0 01-.916-9.916 5.002 5.002 0 019.832 0A5.002 5.002 0 0116 17m-7-5l3-3m0 0l3 3m-3-3v12"></path></svg>
+                            </span>
+                            <span class="category-title"><?= e(__('sidebar.vehicles', 'Vehicles')) ?></span>
+                        </span>
+                        <span class="category-header-right">
+                            <?php if ($isVehiclesActive): ?>
+                                <span class="active-dot" style="display:none;"></span>
+                            <?php endif; ?>
+                        </span>
+                    </a>
+                </div>
+
+                <!-- 5. Drivers (Employees) (Direct Link) -->
+                <div class="sidebar-category" id="cat-drivers">
+                    <a href="<?= url('/office/employees') ?>" class="category-header direct-link <?= $isDriversActive ? 'has-active' : '' ?>" id="cat-drivers-header" data-title="<?= e(__('sidebar.employees', 'Employees')) ?>" data-no-ajax="true">
+                        <span class="category-label">
+                            <span class="category-icon-wrap">
+                                <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path></svg>
+                            </span>
+                            <span class="category-title"><?= e(__('sidebar.employees', 'Employees')) ?></span>
+                        </span>
+                        <span class="category-header-right">
+                            <?php if ($isDriversActive): ?>
+                                <span class="active-dot" style="display:none;"></span>
+                            <?php endif; ?>
+                        </span>
+                    </a>
+                </div>
+
+                <!-- 6. Finance Management -->
+                <?php if ($canViewFinance): ?>
+                <div class="sidebar-category" id="cat-finance">
+                    <button type="button" class="category-header <?= $isFinanceActive ? 'has-active open' : '' ?>" id="cat-finance-header" data-title="<?= e(__('sidebar.finance', 'Finance')) ?>" onclick="toggleCategory('cat-finance')" aria-expanded="<?= $isFinanceActive ? 'true' : 'false' ?>">
+                        <span class="category-label">
+                            <span class="category-icon-wrap">
+                                <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </span>
+                            <span class="category-title"><?= e(__('sidebar.finance', 'Finance')) ?></span>
+                        </span>
+                        <span class="category-header-right">
+                            <svg class="category-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </span>
+                    </button>
+                    <div class="sidebar-category-items <?= $isFinanceActive ? 'expanded' : '' ?>" id="cat-finance-items">
+                        <div class="category-items-inner">
+                            <a href="<?= url('/office/finance') ?>" class="nav-link <?= $isFinanceOverviewActive ? 'active' : '' ?>" data-no-ajax="true">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                                    <span class="nav-text"><?= e(__('sidebar.finance_dashboard', 'Finance Dashboard')) ?></span>
+                                </span>
+                            </a>
+
+                            <!-- 1. Customer Payments Submenu -->
+                            <div class="sidebar-subcategory" id="subcat-finance-payments">
+                                <button type="button" class="subcategory-header <?= $isSubCatPaymentsActive ? 'has-active open' : '' ?>" id="subcat-finance-payments-header" onclick="toggleSubCategory('subcat-finance-payments', event)" aria-expanded="<?= $isSubCatPaymentsActive ? 'true' : 'false' ?>">
+                                    <span class="subcategory-label">
+                                        <span class="subcategory-icon-wrap">
+                                            <svg class="subcategory-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                        </span>
+                                        <span class="subcategory-title"><?= e(__('sidebar.customer_payments', 'Customer Payments')) ?></span>
+                                    </span>
+                                    <span class="subcategory-header-right">
+                                        <svg class="subcategory-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                    </span>
+                                </button>
+                                <div class="sidebar-subcategory-items <?= $isSubCatPaymentsActive ? 'expanded' : '' ?>" id="subcat-finance-payments-items">
+                                    <div class="subcategory-items-inner">
+                                        <a href="<?= url('/office/invoices') ?>" class="nav-link <?= $isFinanceInvoicesActive ? 'active' : '' ?>" data-no-ajax="true">
+                                            <span class="nav-link-left">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                                <span class="nav-text"><?= e(__('sidebar.invoices', 'Invoices')) ?></span>
+                                            </span>
+                                        </a>
+                                        <a href="<?= url('/office/finance/refunds') ?>" class="nav-link <?= $isFinanceRefundsActive ? 'active' : '' ?>" data-no-ajax="true">
+                                            <span class="nav-link-left">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-1a4 4 0 00-4-4H4m0 0l3-3m-3 3l3 3m5 4v1a3 3 0 003 3h6a3 3 0 003-3v-6a3 3 0 00-3-3h-1"></path></svg>
+                                                <span class="nav-text"><?= e(__('sidebar.refunds', 'Refunds')) ?></span>
+                                            </span>
+                                        </a>
+                                        <a href="<?= url('/office/finance/payments') ?>" class="nav-link <?= $isFinancePaymentsActive ? 'active' : '' ?>" data-no-ajax="true">
+                                            <span class="nav-link-left">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                                                <span class="nav-text"><?= e(__('sidebar.payment_history', 'Payment History')) ?></span>
+                                            </span>
+                                        </a>
+                                        <a href="<?= url('/office/finance/pending-payments') ?>" class="nav-link <?= $isFinancePendingPaymentsActive ? 'active' : '' ?>" data-no-ajax="true">
+                                            <span class="nav-link-left">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                <span class="nav-text"><?= e(__('sidebar.pending_payments', 'Pending Payments')) ?></span>
+                                            </span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 2. Business Expenses Submenu -->
+                            <div class="sidebar-subcategory" id="subcat-finance-expenses">
+                                <button type="button" class="subcategory-header <?= $isSubCatExpensesActive ? 'has-active open' : '' ?>" id="subcat-finance-expenses-header" onclick="toggleSubCategory('subcat-finance-expenses', event)" aria-expanded="<?= $isSubCatExpensesActive ? 'true' : 'false' ?>">
+                                    <span class="subcategory-label">
+                                        <span class="subcategory-icon-wrap">
+                                            <svg class="subcategory-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg>
+                                        </span>
+                                        <span class="subcategory-title"><?= e(__('sidebar.business_expenses', 'Business Expenses')) ?></span>
+                                    </span>
+                                    <span class="subcategory-header-right">
+                                        <svg class="subcategory-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                    </span>
+                                </button>
+                                <div class="sidebar-subcategory-items <?= $isSubCatExpensesActive ? 'expanded' : '' ?>" id="subcat-finance-expenses-items">
+                                    <div class="subcategory-items-inner">
+                                        <a href="<?= url('/office/finance/expenses') ?>" class="nav-link <?= $isFinanceExpensesActive ? 'active' : '' ?>" data-no-ajax="true">
+                                            <span class="nav-link-left">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                                <span class="nav-text"><?= e(__('sidebar.expenses', 'Expenses')) ?></span>
+                                            </span>
+                                        </a>
+                                        <a href="<?= url('/office/finance/expense-categories') ?>" class="nav-link <?= $isFinanceExpCategoriesActive ? 'active' : '' ?>" data-no-ajax="true">
+                                            <span class="nav-link-left">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                                                <span class="nav-text"><?= e(__('sidebar.expense_categories', 'Expense Categories')) ?></span>
+                                            </span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 3. Staff Salary Submenu -->
+                            <div class="sidebar-subcategory" id="subcat-finance-salary">
+                                <button type="button" class="subcategory-header <?= $isSubCatSalaryActive ? 'has-active open' : '' ?>" id="subcat-finance-salary-header" onclick="toggleSubCategory('subcat-finance-salary', event)" aria-expanded="<?= $isSubCatSalaryActive ? 'true' : 'false' ?>">
+                                    <span class="subcategory-label">
+                                        <span class="subcategory-icon-wrap">
+                                            <svg class="subcategory-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                        </span>
+                                        <span class="subcategory-title"><?= e(__('sidebar.staff_salary', 'Staff Salary')) ?></span>
+                                    </span>
+                                    <span class="subcategory-header-right">
+                                        <svg class="subcategory-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                    </span>
+                                </button>
+                                <div class="sidebar-subcategory-items <?= $isSubCatSalaryActive ? 'expanded' : '' ?>" id="subcat-finance-salary-items">
+                                    <div class="subcategory-items-inner">
+                                        <a href="<?= url('/office/finance/payroll') ?>" class="nav-link <?= $isFinancePayrollActive ? 'active' : '' ?>" data-no-ajax="true">
+                                            <span class="nav-link-left">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                                <span class="nav-text"><?= e(__('sidebar.payroll', 'Payroll')) ?></span>
+                                            </span>
+                                        </a>
+                                        <a href="<?= url('/office/finance/advances') ?>" class="nav-link <?= $isFinanceAdvancesActive ? 'active' : '' ?>" data-no-ajax="true">
+                                            <span class="nav-link-left">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                <span class="nav-text"><?= e(__('sidebar.salary_advances', 'Salary Advances')) ?></span>
+                                            </span>
+                                        </a>
+                                        <a href="<?= url('/office/finance/payslips') ?>" class="nav-link <?= $isFinancePayslipsActive ? 'active' : '' ?>" data-no-ajax="true">
+                                            <span class="nav-link-left">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                                <span class="nav-text"><?= e(__('sidebar.payslips', 'Payslips')) ?></span>
+                                            </span>
+                                        </a>
+                                        <a href="<?= url('/office/finance/driver-payments') ?>" class="nav-link <?= $isFinanceDriverPaymentsActive ? 'active' : '' ?>" data-no-ajax="true">
+                                            <span class="nav-link-left">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                                <span class="nav-text"><?= e(__('sidebar.driver_payments', 'Driver Trip Payments')) ?></span>
+                                            </span>
+                                        </a>
+                                        <a href="<?= url('/office/finance/salary-history') ?>" class="nav-link <?= $isFinanceSalaryHistoryActive ? 'active' : '' ?>" data-no-ajax="true">
+                                            <span class="nav-link-left">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                <span class="nav-text"><?= e(__('sidebar.salary_history', 'Salary History')) ?></span>
+                                            </span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 4. Cash & Bank Submenu -->
+                            <div class="sidebar-subcategory" id="subcat-finance-cashbank">
+                                <button type="button" class="subcategory-header <?= $isSubCatCashBankActive ? 'has-active open' : '' ?>" id="subcat-finance-cashbank-header" onclick="toggleSubCategory('subcat-finance-cashbank', event)" aria-expanded="<?= $isSubCatCashBankActive ? 'true' : 'false' ?>">
+                                    <span class="subcategory-label">
+                                        <span class="subcategory-icon-wrap">
+                                            <svg class="subcategory-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                                        </span>
+                                        <span class="subcategory-title"><?= e(__('sidebar.cash_bank', 'Cash & Bank')) ?></span>
+                                    </span>
+                                    <span class="subcategory-header-right">
+                                        <svg class="subcategory-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                    </span>
+                                </button>
+                                <div class="sidebar-subcategory-items <?= $isSubCatCashBankActive ? 'expanded' : '' ?>" id="subcat-finance-cashbank-items">
+                                    <div class="subcategory-items-inner">
+                                        <a href="<?= url('/office/finance/accounts') ?>" class="nav-link <?= $isFinanceAccountsActive ? 'active' : '' ?>" data-no-ajax="true">
+                                            <span class="nav-link-left">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                                                <span class="nav-text"><?= e(__('sidebar.accounts', 'Accounts')) ?></span>
+                                            </span>
+                                        </a>
+                                        <a href="<?= url('/office/finance/transactions') ?>" class="nav-link <?= $isFinanceTxnsActive ? 'active' : '' ?>" data-no-ajax="true">
+                                            <span class="nav-link-left">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                                                <span class="nav-text"><?= e(__('sidebar.transactions', 'Transactions')) ?></span>
+                                            </span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 5. Financial Reports Submenu -->
+                            <div class="sidebar-subcategory" id="subcat-finance-reports">
+                                <button type="button" class="subcategory-header <?= $isSubCatReportsActive ? 'has-active open' : '' ?>" id="subcat-finance-reports-header" onclick="toggleSubCategory('subcat-finance-reports', event)" aria-expanded="<?= $isSubCatReportsActive ? 'true' : 'false' ?>">
+                                    <span class="subcategory-label">
+                                        <span class="subcategory-icon-wrap">
+                                            <svg class="subcategory-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                                        </span>
+                                        <span class="subcategory-title"><?= e(__('sidebar.financial_reports', 'Financial Reports')) ?></span>
+                                    </span>
+                                    <span class="subcategory-header-right">
+                                        <svg class="subcategory-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                    </span>
+                                </button>
+                                <div class="sidebar-subcategory-items <?= $isSubCatReportsActive ? 'expanded' : '' ?>" id="subcat-finance-reports-items">
+                                    <div class="subcategory-items-inner">
+                                        <a href="<?= url('/office/finance/reports') ?>" class="nav-link <?= $isFinanceReportsOverviewActive ? 'active' : '' ?>" data-no-ajax="true">
+                                            <span class="nav-link-left">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                                <span class="nav-text"><?= e(__('sidebar.reports_overview', 'Reports Overview')) ?></span>
+                                            </span>
+                                        </a>
+                                        <a href="<?= url('/office/finance/reports/income') ?>" class="nav-link <?= $isFinanceReportIncomeActive ? 'active' : '' ?>" data-no-ajax="true">
+                                            <span class="nav-link-left">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                                                <span class="nav-text"><?= e(__('sidebar.income_report', 'Income Report')) ?></span>
+                                            </span>
+                                        </a>
+                                        <a href="<?= url('/office/finance/reports/expenses') ?>" class="nav-link <?= $isFinanceReportExpensesActive ? 'active' : '' ?>" data-no-ajax="true">
+                                            <span class="nav-link-left">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path></svg>
+                                                <span class="nav-text"><?= e(__('sidebar.expense_report', 'Expense Report')) ?></span>
+                                            </span>
+                                        </a>
+                                        <a href="<?= url('/office/finance/reports/profit-loss') ?>" class="nav-link <?= $isFinanceReportPLActive ? 'active' : '' ?>" data-no-ajax="true">
+                                            <span class="nav-link-left">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                                                <span class="nav-text"><?= e(__('sidebar.profit_loss_report', 'Profit & Loss Report')) ?></span>
+                                            </span>
+                                        </a>
+                                        <a href="<?= url('/office/finance/reports/customer-dues') ?>" class="nav-link <?= $isFinanceReportDuesActive ? 'active' : '' ?>" data-no-ajax="true">
+                                            <span class="nav-link-left">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                <span class="nav-text"><?= e(__('sidebar.customer_dues_report', 'Customer Dues Report')) ?></span>
+                                            </span>
+                                        </a>
+                                        <a href="<?= url('/office/finance/reports/salary') ?>" class="nav-link <?= $isFinanceReportSalaryActive ? 'active' : '' ?>" data-no-ajax="true">
+                                            <span class="nav-link-left">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                                <span class="nav-text"><?= e(__('sidebar.salary_report', 'Salary Report')) ?></span>
+                                            </span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <!-- 7. Trip Operations -->
+                <div class="sidebar-category" id="cat-trips">
+                    <button type="button" class="category-header <?= $isTripsActive ? 'has-active open' : '' ?>" id="cat-trips-header" data-title="<?= e(__('sidebar.trip_operations', 'Trip Operations')) ?>" onclick="toggleCategory('cat-trips')" aria-expanded="<?= $isTripsActive ? 'true' : 'false' ?>">
+                        <span class="category-label">
+                            <span class="category-icon-wrap">
+                                <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+                            </span>
+                            <span class="category-title"><?= e(__('sidebar.trip_operations', 'Trips')) ?></span>
+                        </span>
+                        <span class="category-header-right">
+                            <svg class="category-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </span>
+                    </button>
+                    <div class="sidebar-category-items <?= $isTripsActive ? 'expanded' : '' ?>" id="cat-trips-items">
+                        <div class="category-items-inner">
+                            <a href="<?= url('/office/trips/assign') ?>" class="nav-link <?= $isTripAssignActive ? 'active' : '' ?>" data-no-ajax="true">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                                    <span class="nav-text"><?= e(__('sidebar.assign_trip', 'Assign Trip')) ?></span>
+                                </span>
+                            </a>
+                            <a href="<?= url('/office/trips/history') ?>" class="nav-link <?= $isTripHistoryActive ? 'active' : '' ?>" data-no-ajax="true">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <span class="nav-text"><?= e(__('sidebar.trip_history', 'Trip History')) ?></span>
+                                </span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 8. Live Tracking -->
+                <div class="sidebar-category" id="cat-tracking">
+                    <a href="<?= url('/office/tracking') ?>" class="category-header direct-link <?= $isTrackingActive ? 'has-active' : '' ?>" id="cat-tracking-header" data-title="<?= e(__('sidebar.live_tracking', 'Tracking')) ?>" data-no-ajax="true">
+                        <span class="category-label">
+                            <span class="category-icon-wrap">
+                                <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            </span>
+                            <span class="category-title"><?= e(__('sidebar.live_tracking', 'Tracking')) ?></span>
+                        </span>
+                        <span class="category-header-right">
+                            <span class="pulse-indicator"></span>
+                        </span>
+                    </a>
+                </div>
+
+                <!-- 9. Reports & Audits (Direct Link) -->
+                <div class="sidebar-category" id="cat-reports">
+                    <a href="<?= url('/office/finance/reports') ?>" class="category-header direct-link <?= $isFinanceReportsHubActive ? 'has-active' : '' ?>" id="cat-reports-header" data-title="<?= e(__('sidebar.reports', 'Reports')) ?>" data-no-ajax="true">
+                        <span class="category-label">
+                            <span class="category-icon-wrap">
+                                <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                            </span>
+                            <span class="category-title"><?= e(__('sidebar.reports', 'Reports')) ?></span>
+                        </span>
+                        <span class="category-header-right">
+                            <?php if ($isFinanceReportsHubActive): ?>
+                                <span class="active-dot" style="display:none;"></span>
+                            <?php endif; ?>
+                        </span>
+                    </a>
+                </div>
+
+                <!-- 10. Company Management (Dropdown) -->
+                <?php if ($role === 'admin'): ?>
+                <div class="sidebar-category" id="cat-company">
+                    <button type="button" class="category-header <?= $isCompanyActive ? 'has-active open' : '' ?>" id="cat-company-header" data-title="<?= e(__('sidebar.company_management', 'Company Management')) ?>" onclick="toggleCategory('cat-company')" aria-expanded="<?= $isCompanyActive ? 'true' : 'false' ?>">
+                        <span class="category-label">
+                            <span class="category-icon-wrap">
+                                <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                            </span>
+                            <span class="category-title"><?= e(__('sidebar.company_management', 'Company Management')) ?></span>
+                        </span>
+                        <span class="category-header-right">
+                            <svg class="category-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </span>
+                    </button>
+                    <div class="sidebar-category-items <?= $isCompanyActive ? 'expanded' : '' ?>" id="cat-company-items">
+                        <div class="category-items-inner">
+                            <a href="<?= url('/office/company/details') ?>" class="nav-link <?= $isCompanyDetailsActive ? 'active' : '' ?>" data-no-ajax="true">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                                    <span class="nav-text"><?= e(__('sidebar.company_details', 'Company Details')) ?></span>
+                                </span>
+                            </a>
+                            <a href="<?= url('/office/company/app') ?>" class="nav-link <?= $isCompanyAppActive ? 'active' : '' ?>" data-no-ajax="true">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                    <span class="nav-text"><?= e(__('sidebar.app_details', 'App Details')) ?></span>
+                                </span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <!-- 11. Settings & Access -->
+                <?php if ($role === 'admin'): ?>
+                <div class="sidebar-category" id="cat-settings">
+                    <button type="button" class="category-header <?= $isSettingsActive ? 'has-active open' : '' ?>" id="cat-settings-header" data-title="<?= e(__('sidebar.settings', 'Settings')) ?>" onclick="toggleCategory('cat-settings')" aria-expanded="<?= $isSettingsActive ? 'true' : 'false' ?>">
+                        <span class="category-label">
+                            <span class="category-icon-wrap">
+                                <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            </span>
+                            <span class="category-title"><?= e(__('sidebar.settings', 'Settings')) ?></span>
+                        </span>
+                        <span class="category-header-right">
+                            <svg class="category-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </span>
+                    </button>
+                    <div class="sidebar-category-items <?= $isSettingsActive ? 'expanded' : '' ?>" id="cat-settings-items">
+                        <div class="category-items-inner">
+                            <a href="<?= url('/office/users') ?>" class="nav-link <?= $isUsersActive ? 'active' : '' ?>" data-no-ajax="true">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                                    <span class="nav-text"><?= e(__('sidebar.users', 'Staff Accounts')) ?></span>
+                                </span>
+                            </a>
+                            <a href="<?= url('/office/roles') ?>" class="nav-link <?= $isRolesActive ? 'active' : '' ?>" data-no-ajax="true">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                                    <span class="nav-text"><?= e(__('sidebar.roles_permissions', 'Roles & Permissions')) ?></span>
+                                </span>
+                            </a>
+                            <a href="<?= url('/office/notification-settings') ?>" class="nav-link <?= $isNotificationSettingsActive ? 'active' : '' ?>" data-no-ajax="true">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                                    <span class="nav-text"><?= e(__('sidebar.notification_settings', 'Notification Settings')) ?></span>
+                                </span>
+                            </a>
+                            <a href="<?= url('/office/emails') ?>" class="nav-link <?= $isEmailActive ? 'active' : '' ?>" data-no-ajax="true">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                    <span class="nav-text"><?= e(__('sidebar.email_center', 'Email Center')) ?></span>
+                                </span>
+                            </a>
+                            <a href="<?= url('/office/trip-categories') ?>" class="nav-link <?= $isTripCategoriesActive ? 'active' : '' ?>" data-no-ajax="true">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                                    <span class="nav-text"><?= e(__('sidebar.trip_categories', 'Trip Categories')) ?></span>
+                                </span>
+                            </a>
+                            <a href="<?= url('/office/backups') ?>" class="nav-link <?= $isBackupsActive ? 'active' : '' ?>" data-no-ajax="true">
+                                <span class="nav-link-left">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
+                                    <span class="nav-text"><?= e(__('nav.backup', 'Database Backups')) ?></span>
+                                </span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+</nav>
+
+            <div class="sidebar-footer">
+                <div class="user-badge">
+                    <div class="user-avatar"><?= strtoupper(substr($user['name'] ?? 'A', 0, 1)) ?></div>
+                    <div class="user-info">
+                        <div class="user-name"><?= e($user['name'] ?? 'Admin') ?></div>
+                        <div class="user-role"><?= e($userRole ?? 'Super Admin') ?></div>
+                    </div>
+                </div>
+                <form action="<?= url('/logout') ?>" method="POST" data-no-ajax="true" style="margin:0;">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="btn btn-outline btn-sm" title="<?= e(__('sidebar.logout', 'Sign Out')) ?>" aria-label="<?= e(__('sidebar.logout', 'Sign Out')) ?>" style="min-height:36px; padding: 0.35rem 0.65rem;">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    </button>
+                </form>
+            </div>
+        </aside>
+        <!-- Reference: /office/company/create -->
+
+        <!-- Main Content Wrapper -->
+        <div class="main-wrapper">
+            <!-- Mobile Top Navbar (Matches mobile_dashbord.jpeg in LG Screen Forest Teal theme - across all pages) -->
+            <?php require dirname(__DIR__) . '/components/mobile_topbar.php'; ?>
+
+            <!-- Frosted Glass Topbar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button type="button" class="sidebar-toggle-btn" id="sidebarToggleBtn" onclick="toggleSidebarCollapse()" aria-label="<?= e(__('topbar.toggle_nav', 'Toggle Navigation')) ?>" title="<?= e(__('topbar.toggle_nav', 'Toggle Navigation')) ?>">
+                        <svg class="toggle-icon-sidebar" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path class="toggle-arrow" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                        <svg class="toggle-icon-mobile" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+
+                    <!-- Omnisearch Bar (Matches Reference Image) -->
+                    <form action="<?= url('/office/bookings') ?>" method="GET" class="topbar-search-form">
+                        <svg class="topbar-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        <input type="text" name="q" class="topbar-search-input" placeholder="<?= e(__('topbar.search_placeholder', 'Search bookings, customers, vehicles, drivers...')) ?>" autocomplete="off">
+                    </form>
+                </div>
+
+                <div class="topbar-actions">
+
+                    <!-- Change Language Icon Dropdown (Professional Multi-Language Switcher) -->
+                    <?php require dirname(__DIR__) . '/components/language_switcher.php'; ?>
+
+                    <!-- Fullscreen Toggle Button -->
+                    <button type="button" class="topbar-icon-btn" title="<?= e(__('topbar.fullscreen', 'Toggle Fullscreen')) ?>" aria-label="<?= e(__('topbar.fullscreen', 'Toggle Fullscreen')) ?>" onclick="toggleAppFullscreen()">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                        </svg>
+                    </button>
+
+                    <!-- Desktop Topbar Notification Bell (Visible on LG/Desktop, Hidden on SM/Mobile) -->
+                    <?php
+                        $deskUnreadCount = (int)($unreadNotifCount ?? 0);
+                        $deskNotifications = !empty($topbarNotifications) ? $topbarNotifications : [];
+                        $deskBadgeDisplay = $deskUnreadCount > 0 ? 'inline-flex' : 'none';
+                        $deskBadgeText = $deskUnreadCount > 99 ? '99+' : $deskUnreadCount;
+                    ?>
+                    <div class="topbar-notif-wrap" id="topbarNotifWrap">
+                        <button type="button" class="topbar-icon-btn notif-bell-btn" id="desktopNotifBtn" onclick="toggleOfficeNotifDropdown(event)" title="<?= e(__('nav.notifications', 'Notifications')) ?>" aria-label="<?= e(__('nav.notifications', 'Notifications')) ?>" aria-haspopup="true" aria-expanded="false" style="text-decoration: none; cursor: pointer;">
+                            <span class="notif-badge-target">
+                                <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                                </svg>
+                                <span class="nav-badge-pill" id="desktopNotifBadge" data-count="<?= $deskUnreadCount ?>" style="display: <?= $deskBadgeDisplay ?>;" <?= $deskUnreadCount > 0 ? 'title="' . $deskUnreadCount . ' unread notifications"' : '' ?>><?= $deskUnreadCount > 0 ? $deskBadgeText : '' ?></span>
+                            </span>
+                        </button>
+
+                        <!-- Notification Dropdown Popover -->
+                        <div class="topbar-notif-box" id="topbarNotifBox" onclick="event.stopPropagation()">
+                            <!-- Header: Alert Icon + Title + Red Badge -->
+                            <div class="notif-box-head">
+                                <div class="notif-box-head-left">
+                                    <svg width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="notif-box-head-icon">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                                    </svg>
+                                    <h4 class="notif-box-head-title"><?= e(__('nav.notifications', 'Notifications')) ?></h4>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <span class="notif-box-head-badge" id="dropdownHeaderBadge" data-count="<?= $deskUnreadCount ?>" style="display: <?= $deskBadgeDisplay ?>;"><?= $deskUnreadCount > 0 ? $deskBadgeText : '' ?></span>
+                                    <?php if ($deskUnreadCount > 0): ?>
+                                        <button type="button" class="btn btn-sm btn-outline" onclick="markAllNotificationsLayoutRead(event)" title="<?= e(__('notification.mark_all_read', 'Mark all read')) ?>" style="font-size: 0.72rem; padding: 0.2rem 0.5rem; border-radius: 6px; color: #176B5B; border-color: rgba(23,107,91,0.25);">
+                                            <i class="fa-solid fa-check-double"></i> <?= e(__('notification.mark_all_read', 'Mark all read')) ?>
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+
+                            <!-- Scrollable Notification Feed -->
+                            <div class="notif-box-body" id="desktopNotifFeed">
+                                <?php if (!empty($deskNotifications)): ?>
+                                    <div class="notif-box-section-items">
+                                        <?php foreach ($deskNotifications as $n): ?>
+                                            <?php
+                                                $isUnread = empty($n['is_read']);
+                                                $nTitle = $n['title'] ?? 'Notification';
+                                                $nSub = time_ago($n['created_at']);
+                                                $refType = $n['reference_type'] ?? '';
+                                                $refId = $n['reference_id'] ?? null;
+                                                $targetUrl = url('/office/notifications');
+                                                if ($refType === 'dispatches' && $refId) {
+                                                    $targetUrl = url('/office/trips/assign');
+                                                } elseif ($refType === 'bookings' && $refId) {
+                                                    $targetUrl = url('/office/bookings/' . $refId);
+                                                } elseif ($refType === 'invoices' && $refId) {
+                                                    $targetUrl = url('/office/invoices/' . $refId);
+                                                }
+                                            ?>
+                                            <a href="<?= $targetUrl ?>" class="notif-box-item <?= $isUnread ? 'is-unread' : '' ?>" id="topNotifItem_<?= (int)$n['id'] ?>" onclick="markSingleNotifReadAsync(event, <?= (int)$n['id'] ?>)">
+                                                <div class="notif-box-item-icon <?= $isUnread ? 'notif-box-icon-red' : 'notif-box-icon-amber' ?>">
+                                                    <i class="fa-solid <?= $refType === 'dispatches' ? 'fa-bus' : ($refType === 'bookings' ? 'fa-calendar-check' : ($refType === 'invoices' ? 'fa-file-invoice-dollar' : 'fa-bell')) ?>"></i>
+                                                </div>
+                                                <div class="notif-box-item-info">
+                                                    <div class="notif-box-item-head">
+                                                        <span class="notif-box-item-name" title="<?= e($nTitle) ?>"><?= e($nTitle) ?></span>
+                                                        <?php if ($isUnread): ?>
+                                                            <span class="notif-item-unread-dot" title="<?= e(__('notification.unread_alert', 'Unread Alert')) ?>"></span>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                    <span class="notif-box-item-sub"><?= e($nSub) ?></span>
+                                                </div>
+                                                <div class="notif-box-item-arrow">
+                                                    <i class="fa-solid fa-chevron-right"></i>
+                                                </div>
+                                            </a>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="notif-box-empty">
+                                        <div class="notif-box-empty-icon"><i class="fa-regular fa-bell-slash"></i></div>
+                                        <div class="notif-box-empty-title"><?= e(__('notification.all_caught_up', 'All caught up!')) ?></div>
+                                        <div class="notif-box-empty-sub"><?= e(__('notification.no_new_alerts', 'No new notifications. Alerts for dispatches, bookings, and payments will appear here.')) ?></div>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <!-- Footer: View All Link & Settings Link -->
+                            <div class="notif-box-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 0.65rem 1rem; border-top: 1px solid rgba(22, 68, 59, 0.08); background: rgba(247, 248, 244, 0.6);">
+                                <a href="<?= url('/office/notifications') ?>" class="notif-box-footer-link" style="font-weight: 700; color: #176B5B; text-decoration: none; font-size: 0.85rem;">
+                                    <?= e(__('notification.view_all', 'View All Notifications')) ?> &rarr;
+                                </a>
+                                <a href="<?= url('/office/notification-settings') ?>" title="<?= e(__('notification.settings', 'Notification Settings')) ?>" style="color: #72827A; font-size: 0.88rem; padding: 0.25rem 0.5rem; border-radius: 6px;" aria-label="<?= e(__('notification.settings', 'Notification Settings')) ?>">
+                                    <i class="fa-solid fa-gear"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- User Profile Chip with Dropdown -->
+                    <div class="topbar-user-profile" id="topbarUserProfile" onclick="toggleUserDropdown(event)" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false" aria-label="<?= e(__('topbar.view_profile', 'User Profile Menu')) ?>">
+                        <div class="topbar-avatar-wrap">
+                            <?php if (!empty($user['profile_photo'])): ?>
+                                <img src="<?= e(customer_avatar_url($user['profile_photo'])) ?>" class="topbar-avatar-img" alt="<?= e($user['name'] ?? 'Admin') ?>" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+                                <div class="topbar-avatar" style="display:none;"><?= strtoupper(substr($user['name'] ?? 'A', 0, 1)) ?></div>
+                            <?php else: ?>
+                                <div class="topbar-avatar"><?= strtoupper(substr($user['name'] ?? 'A', 0, 1)) ?></div>
+                            <?php endif; ?>
+                        </div>
+                        <div class="topbar-user-meta">
+                            <span class="topbar-user-name"><?= e($user['name'] ?? 'Admin') ?></span>
+                            <span class="topbar-user-role"><?= e($userRole ?? 'Super Admin') ?></span>
+                        </div>
+                        <svg class="topbar-user-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+
+                        <!-- Professional Profile Dropdown -->
+                        <div class="topbar-user-menu" id="topbarUserMenu" role="menu" aria-labelledby="topbarUserProfile" onclick="event.stopPropagation()">
+                            <div class="topbar-menu-user-head">
+                                <div class="topbar-menu-head-avatar">
+                                    <?php if (!empty($user['profile_photo'])): ?>
+                                        <img src="<?= e(customer_avatar_url($user['profile_photo'])) ?>" alt="<?= e($user['name'] ?? 'Admin') ?>" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+                                        <div class="topbar-avatar" style="display:none;"><?= strtoupper(substr($user['name'] ?? 'A', 0, 1)) ?></div>
+                                    <?php else: ?>
+                                        <div class="topbar-avatar"><?= strtoupper(substr($user['name'] ?? 'A', 0, 1)) ?></div>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="topbar-menu-head-meta">
+                                    <strong class="topbar-menu-name"><?= e($user['name'] ?? 'Admin') ?></strong>
+                                    <span class="topbar-menu-role-pill"><?= e($userRole ?? 'Super Admin') ?></span>
+                                    <span class="topbar-menu-email"><?= e($user['email'] ?? $user['username'] ?? '') ?></span>
+                                </div>
+                            </div>
+                            <div class="topbar-menu-divider"></div>
+                            <?php $topOfficeProfileUrl = (auth_role() === 'driver') ? url('/driver/profile') : url('/office/users'); ?>
+                            <a href="<?= $topOfficeProfileUrl ?>" class="topbar-menu-item" role="menuitem" data-no-ajax="true">
+                                <div class="topbar-menu-icon" style="background: rgba(23, 107, 91, 0.1); color: #176B5B;">
+                                    <i class="fa-solid fa-user-circle"></i>
+                                </div>
+                                <div class="topbar-menu-text">
+                                    <span class="topbar-menu-title"><?= e(__('topbar.view_profile', 'View Profile')) ?></span>
+                                    <span class="topbar-menu-sub"><?= e(__('topbar.profile_desc', 'Personal account & settings')) ?></span>
+                                </div>
+                                <i class="fa-solid fa-chevron-right topbar-menu-arrow"></i>
+                            </a>
+                            <button type="button" class="topbar-menu-item tours-install-action tours-install-btn" role="menuitem" onclick="triggerToursInstall(event)" style="background:none; border:none; width:100%; text-align:left; cursor:pointer;">
+                                <div class="topbar-menu-icon" style="background: rgba(23, 107, 91, 0.1); color: #176B5B;">
+                                    <i class="fa-solid fa-cloud-arrow-down"></i>
+                                </div>
+                                <div class="topbar-menu-text">
+                                    <span class="topbar-menu-title install-btn-label"><?= __('pwa.install_app_name', ['name' => e(pwa_app_name())]) ?></span>
+                                    <span class="topbar-menu-sub"><?= e(__('sidebar.install_app_sub', 'Launch as standalone app')) ?></span>
+                                </div>
+                                <i class="fa-solid fa-download topbar-menu-arrow"></i>
+                            </button>
+                            <a href="<?= url('/office/notification-settings') ?>" class="topbar-menu-item" role="menuitem" data-no-ajax="true">
+                                <div class="topbar-menu-icon" style="background: rgba(59, 130, 246, 0.1); color: #3B82F6;">
+                                    <i class="fa-solid fa-bell"></i>
+                                </div>
+                                <div class="topbar-menu-text">
+                                    <span class="topbar-menu-title"><?= e(__('sidebar.notification_settings', 'Notification Settings')) ?></span>
+                                    <span class="topbar-menu-sub"><?= e(__('sidebar.web_push_alerts_sub', 'Web push alerts & devices')) ?></span>
+                                </div>
+                                <i class="fa-solid fa-chevron-right topbar-menu-arrow"></i>
+                            </a>
+                            <div class="topbar-menu-divider"></div>
+                            <form action="<?= url('/logout') ?>" method="POST" data-no-ajax="true" style="margin:0; width:100%;" onsubmit="var b = this.querySelector('button'); if(b){ b.disabled = true; b.style.opacity = '0.7'; var t = b.querySelector('.topbar-menu-title'); if(t) t.textContent = '<?= e(__('topbar.sign_out_desc', 'Signing out...')) ?>'; }">
+                                <?= csrf_field() ?>
+                                <button type="submit" class="topbar-menu-item topbar-logout-item" role="menuitem">
+                                    <div class="topbar-menu-icon" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">
+                                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                                    </div>
+                                    <div class="topbar-menu-text">
+                                        <span class="topbar-menu-title" style="color: #ef4444;"><?= e(__('sidebar.logout', 'Logout')) ?></span>
+                                        <span class="topbar-menu-sub"><?= e(__('topbar.sign_out_desc', 'Sign out of your session')) ?></span>
+                                    </div>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Page Content Body -->
+            <main class="main-content <?= !empty($isDashboardActive) ? 'dashboard-main-content' : '' ?>">
+                <!-- Floating Toast Notifications -->
+                <?php $activeFlashes = !empty($flashes) ? $flashes : \App\Core\Session::getAllFlashes(); ?>
+                <?php if (!empty($activeFlashes)): ?>
+                <script>
+                    (function() {
+                        var f = <?= json_encode($activeFlashes, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+                        var emit = function() {
+                            if (typeof window.vgNotify === 'function') {
+                                for (var k in f) {
+                                    if (f.hasOwnProperty(k)) window.vgNotify(f[k], k);
+                                }
+                            } else {
+                                setTimeout(emit, 40);
+                            }
+                        };
+                        if (document.readyState === 'loading') {
+                            document.addEventListener('DOMContentLoaded', emit);
+                        } else {
+                            emit();
+                        }
+                    })();
+                </script>
+                <?php endif; ?>
+
+                <?= $content ?>
+            </main>
+
+            <!-- Branded Clean Light Footer -->
+            <footer class="app-footer <?= !empty($isDashboardActive) ? 'dashboard-app-footer' : '' ?>">
+                <div>
+                    &copy; <?= date('Y') ?> <strong><?= e(company_display_name()) ?></strong>. <?= e(__('footer.all_rights', 'All rights reserved.')) ?>
+                </div>
+                <div>
+                    <a href="#privacy"><?= e(__('footer.privacy', 'Privacy Policy')) ?></a>
+                    <a href="#terms"><?= e(__('footer.terms', 'Terms & Conditions')) ?></a>
+                    <a href="#help"><?= e(__('footer.help', 'Help & Support')) ?></a>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Mobile Adaptive Bottom Navigation (Curved Notch Design matching bottom navbar.jpeg) -->
+    <nav class="bottom-nav notched-bottom-nav" aria-label="<?= e(__('sidebar.menu', 'Mobile Bottom Navigation')) ?>">
+        <div class="notched-nav-bg" aria-hidden="true">
+            <svg viewBox="0 0 375 64" preserveAspectRatio="none">
+                <path d="M 0,0 L 142,0 C 153,0 159,8 165,19 C 172,32 179,35 187.5,35 C 196,35 203,32 210,19 C 216,8 222,0 233,0 L 375,0 L 375,64 L 0,64 Z" fill="#ffffff" />
+            </svg>
+        </div>
+
+        <!-- Center Elevated Notch FAB Button (Positioned at exact 50% mathematical center) -->
+        <button type="button" class="bottom-nav-fab-btn" onclick="toggleSidebar()" aria-label="<?= e(__('sidebar.menu', 'Open Navigation Menu')) ?>" title="<?= e(__('sidebar.menu', 'Open Navigation Menu')) ?>">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="22" height="22">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+        </button>
+
+        <div class="bottom-nav-inner">
+            <a href="<?= url('/office/dashboard') ?>" class="bottom-nav-item <?= $isDashboardActive ? 'active' : '' ?>" data-no-ajax="true">
+                <svg fill="currentColor" viewBox="0 0 24 24" width="20" height="20"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                <span><?= e(__('sidebar.dashboard', 'Home')) ?></span>
+            </a>
+            <a href="<?= url('/office/bookings') ?>" class="bottom-nav-item <?= $isBookingsActive ? 'active' : '' ?>" data-no-ajax="true">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <span><?= e(__('sidebar.bookings', 'Bookings')) ?></span>
+            </a>
+
+            <!-- Center slot spacer (Ensures left 2 items and right 2 items are 100% symmetric) -->
+            <div class="bottom-nav-center-slot" aria-hidden="true"></div>
+
+            <a href="<?= url('/office/trips/assign') ?>" class="bottom-nav-item <?= $isTripsActive ? 'active' : '' ?>" data-no-ajax="true">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <span><?= e(__('sidebar.trips', 'Trips')) ?></span>
+            </a>
+            <a href="<?= url('/office/notifications') ?>" class="bottom-nav-item nav-notif-item <?= $isNotificationActive ? 'active' : '' ?>" data-no-ajax="true">
+                <span class="notif-badge-target">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                    <span class="nav-badge-pill" id="mobileNotifBadge" data-count="<?= $deskUnreadCount ?>" style="display: <?= $deskBadgeDisplay ?>;" <?= $deskUnreadCount > 0 ? 'title="' . $deskUnreadCount . ' unread notifications"' : '' ?>><?= $deskUnreadCount > 0 ? $deskBadgeText : '' ?></span>
+                </span>
+                <span><?= e(__('nav.notifications', 'Notifications')) ?></span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Professional Custom PWA Installation Modal -->
+    <?php require dirname(__DIR__) . '/components/pwa_install_modal.php'; ?>
+
+    <script src="<?= asset('js/tours-cache.js') ?>?v=1.0"></script>
+    <script src="<?= asset('js/app.js') ?>?v=3.1"></script>
+    <script src="<?= asset('js/table-cards.js') ?>?v=2.0"></script>
+    <script src="<?= asset('js/tours-pwa.js') ?>?v=5.1"></script>
+    <script>
+        function toggleUserDropdown(e) {
+            if (e) {
+                e.stopPropagation();
+            }
+            var chip = document.getElementById('topbarUserProfile');
+            if (!chip) return;
+            var wasOpen = chip.classList.contains('is-open');
+
+            // Close language dropdown if open
+            var langDrop = document.getElementById('vgLanguageDropdown');
+            if (langDrop) {
+                langDrop.classList.remove('is-open');
+                var langBtn = langDrop.querySelector('.vg-lang-btn');
+                if (langBtn) langBtn.setAttribute('aria-expanded', 'false');
+            }
+
+            if (wasOpen) {
+                chip.classList.remove('is-open');
+                chip.setAttribute('aria-expanded', 'false');
+            } else {
+                chip.classList.add('is-open');
+                chip.setAttribute('aria-expanded', 'true');
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            var chip = document.getElementById('topbarUserProfile');
+            if (chip && !chip.contains(e.target)) {
+                chip.classList.remove('is-open');
+                chip.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                var chip = document.getElementById('topbarUserProfile');
+                if (chip) {
+                    chip.classList.remove('is-open');
+                    chip.setAttribute('aria-expanded', 'false');
+                }
+                var langDrop = document.getElementById('vgLanguageDropdown');
+                if (langDrop) {
+                    langDrop.classList.remove('is-open');
+                    var langBtn = langDrop.querySelector('.vg-lang-btn');
+                    if (langBtn) langBtn.setAttribute('aria-expanded', 'false');
+                }
+            }
+        });
+
+        function toggleAppFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(function(err) {});
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+
+        // Mobile Topbar Dropdown Toggles (Active Across All Pages)
+        function toggleMvLang(e) {
+            if (e) e.stopPropagation();
+            var pDrop = document.getElementById('mvProfileDropdown');
+            var lDrop = document.getElementById('mvLangDropdown');
+            if (pDrop) pDrop.classList.remove('is-open');
+            if (lDrop) lDrop.classList.toggle('is-open');
+        }
+
+        function toggleMvProfile(e) {
+            if (e) e.stopPropagation();
+            var lDrop = document.getElementById('mvLangDropdown');
+            var pDrop = document.getElementById('mvProfileDropdown');
+            if (lDrop) lDrop.classList.remove('is-open');
+            if (pDrop) pDrop.classList.toggle('is-open');
+        }
+
+        document.addEventListener('click', function(e) {
+            var lDrop = document.getElementById('mvLangDropdown');
+            var pDrop = document.getElementById('mvProfileDropdown');
+            if (lDrop && !lDrop.contains(e.target)) lDrop.classList.remove('is-open');
+            if (pDrop && !pDrop.contains(e.target)) pDrop.classList.remove('is-open');
+        });
+
+        // Subcategory Accordion Toggle (Finance Multi-Level Nested Dropdowns)
+        if (typeof window.toggleSubCategory !== 'function') {
+            window.toggleSubCategory = function(subCatId, e) {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                var sidebar = document.getElementById('sidebar');
+                if (sidebar && sidebar.classList.contains('collapsed')) {
+                    sidebar.classList.remove('collapsed');
+                    document.body.classList.remove('sidebar-collapsed');
+                    document.documentElement.classList.remove('sidebar-collapsed');
+                    if (window.ToursPrefs && typeof window.ToursPrefs.set === 'function') {
+                        window.ToursPrefs.set('sidebar_collapsed', false);
+                    }
+                    localStorage.setItem('vg_sidebar_collapsed', 'false');
+                    var toggleBtn = document.getElementById('sidebarToggleBtn');
+                    if (toggleBtn) toggleBtn.classList.remove('is-collapsed');
+                    if (typeof window.recalculateTableLayouts === 'function') {
+                        window.recalculateTableLayouts();
+                    }
+                }
+                var targetHeader = document.getElementById(subCatId + '-header');
+                var targetItems = document.getElementById(subCatId + '-items');
+                if (!targetHeader || !targetItems) return;
+
+                var isExpanded = targetHeader.getAttribute('aria-expanded') === 'true' || targetItems.classList.contains('expanded');
+                var parentContainer = targetHeader.closest('.category-items-inner') || document;
+                var allSubcatHeaders = parentContainer.querySelectorAll('.subcategory-header');
+
+                allSubcatHeaders.forEach(function(header) {
+                    if (header !== targetHeader && (header.getAttribute('aria-expanded') === 'true' || header.classList.contains('open'))) {
+                        header.setAttribute('aria-expanded', 'false');
+                        header.classList.remove('open');
+                        var hId = header.id.replace('-header', '');
+                        var items = document.getElementById(hId + '-items');
+                        if (items) items.classList.remove('expanded');
+                    }
+                });
+
+                if (isExpanded) {
+                    targetHeader.setAttribute('aria-expanded', 'false');
+                    targetHeader.classList.remove('open');
+                    targetItems.classList.remove('expanded');
+                } else {
+                    targetHeader.setAttribute('aria-expanded', 'true');
+                    targetHeader.classList.add('open');
+                    targetItems.classList.add('expanded');
+                }
+            };
+        }
+
+        // Global Office Notification System Dropdown & Badge Synchronization
+        function toggleOfficeNotifDropdown(e) {
+            if (e) e.stopPropagation();
+            var nWrap = document.getElementById('topbarNotifWrap');
+            var uProfile = document.getElementById('topbarUserProfile');
+            if (uProfile) uProfile.classList.remove('is-open');
+            if (nWrap) {
+                var isOpen = nWrap.classList.toggle('is-open');
+                var btn = document.getElementById('topbarNotifBtn');
+                if (btn) btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            }
+        }
+
+        function formatNotifBadgeText(count) {
+            var c = parseInt(count, 10);
+            if (isNaN(c) || c <= 0) return '';
+            return c > 99 ? '99+' : String(c);
+        }
+
+        function updateGlobalNotifCount(count) {
+            var c = parseInt(count, 10);
+            if (isNaN(c) || c < 0) c = 0;
+            var dBadge = document.getElementById('desktopNotifBadge');
+            var mBadge = document.getElementById('mobileNotifBadge');
+            var hBadge = document.getElementById('dropdownHeaderBadge');
+            var pBadge = document.getElementById('pageNotifBadge');
+            var formatted = formatNotifBadgeText(c);
+
+            [dBadge, mBadge].forEach(function(el) {
+                if (!el) return;
+                el.setAttribute('data-count', c);
+                if (c > 0) {
+                    el.textContent = formatted;
+                    el.setAttribute('title', c + ' unread notifications');
+                    el.style.display = 'inline-flex';
+                } else {
+                    el.textContent = '';
+                    el.removeAttribute('title');
+                    el.style.display = 'none';
+                }
+            });
+
+            if (hBadge) {
+                hBadge.setAttribute('data-count', c);
+                if (c > 0) {
+                    hBadge.textContent = formatted;
+                    hBadge.style.display = 'inline-flex';
+                } else {
+                    hBadge.textContent = '0';
+                    hBadge.style.display = 'none';
+                }
+            }
+
+            if (pBadge) {
+                pBadge.setAttribute('data-count', c);
+                if (c > 0) {
+                    pBadge.textContent = c;
+                    pBadge.style.display = 'inline-flex';
+                } else {
+                    pBadge.textContent = '0';
+                    pBadge.style.display = 'none';
+                }
+            }
+        }
+
+        async function markSingleNotifReadAsync(e, id) {
+            var item = document.getElementById('topNotifItem_' + id) || document.getElementById('notifItem_' + id);
+            if (item) {
+                item.classList.remove('is-unread');
+                var dot = item.querySelector('.notif-item-unread-dot');
+                if (dot) dot.remove();
+            }
+            try {
+                var token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                var res = await fetch('<?= url('/office/notifications/') ?>' + id + '/read', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': token,
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                var data = await res.json();
+                if (data.success && typeof data.unread_count !== 'undefined') {
+                    updateGlobalNotifCount(data.unread_count);
+                }
+            } catch (err) {
+                console.error('Error marking notification read:', err);
+            }
+        }
+
+        async function markAllNotificationsLayoutRead(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            try {
+                var token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                var res = await fetch('<?= url('/office/notifications/mark-all-read') ?>', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': token,
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                var data = await res.json();
+                if (data.success) {
+                    updateGlobalNotifCount(0);
+                    var feed = document.getElementById('desktopNotifFeed');
+                    if (feed) {
+                        feed.querySelectorAll('.is-unread').forEach(function(el) {
+                            el.classList.remove('is-unread');
+                            var dot = el.querySelector('.notif-item-unread-dot');
+                            if (dot) dot.remove();
+                        });
+                    }
+                    var pItems = document.querySelectorAll('.office-notif-card.is-unread');
+                    pItems.forEach(function(c) {
+                        c.classList.remove('is-unread');
+                    });
+                    if (typeof window.vgNotify === 'function') {
+                        window.vgNotify('All notifications marked as read', 'success');
+                    }
+                }
+            } catch (err) {
+                console.error('Error marking all notifications read:', err);
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            var nWrap = document.getElementById('topbarNotifWrap');
+            if (nWrap && !nWrap.contains(e.target)) {
+                nWrap.classList.remove('is-open');
+                var btn = document.getElementById('topbarNotifBtn');
+                if (btn) btn.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        // BFCache revalidation protection: force server-side route guard execution on browser history navigation
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        });
+    </script>
+</body>
+</html>

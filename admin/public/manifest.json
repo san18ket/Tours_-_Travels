@@ -1,0 +1,37 @@
+{
+    "name": "MS-Tours",
+    "short_name": "MS-Tours",
+    "description": "MS-Tours Fleet Operations, Booking & Driver Suite",
+    "start_url": "./",
+    "scope": "./",
+    "display": "standalone",
+    "background_color": "#0B192C",
+    "theme_color": "#176B5B",
+    "orientation": "any",
+    "icons": [
+        {
+            "src": "storage/company/logo/logo_937de0388c6fad12742cf2ea9a9b4e98.png?v=1795453585",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "storage/company/logo/logo_937de0388c6fad12742cf2ea9a9b4e98.png?v=1795453585",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "storage/company/logo/logo_937de0388c6fad12742cf2ea9a9b4e98.png?v=1795453585",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "storage/company/logo/logo_937de0388c6fad12742cf2ea9a9b4e98.png?v=1795453585",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}

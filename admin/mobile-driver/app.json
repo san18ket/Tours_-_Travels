@@ -1,0 +1,43 @@
+{
+  "name": "DriverPortal",
+  "displayName": "Driver Portal",
+  "expo": {
+    "name": "Driver Portal",
+    "slug": "driver-portal",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0B192C"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tours.chauffeur",
+      "infoPlist": {
+        "UIBackgroundModes": ["location", "fetch", "processing"],
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Continuous background location access is required during active passenger trips and duty shifts to transmit telemetry to dispatch operations.",
+        "NSLocationWhenInUseUsageDescription": "Location access is required to track trip routes and estimate pickup arrivals."
+      }
+    },
+    "android": {
+      "package": "com.tours.chauffeur",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0B192C"
+      },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION",
+        "WAKE_LOCK",
+        "RECEIVE_BOOT_COMPLETED",
+        "POST_NOTIFICATIONS"
+      ]
+    }
+  }
+}

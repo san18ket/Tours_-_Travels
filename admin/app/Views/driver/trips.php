@@ -1,0 +1,2131 @@
+<?php
+/**
+ * My Assigned Trips View — Dedicated Driver Portal
+ * Executive UI/UX Architecture adhering to Owner/Office Customer Directory standard (/office/customers)
+ * Features live AJAX filtering, one-row 4-column KPI cards on LG, unified controls, modern table, and responsive layout.
+ */
+
+$search         = $search ?? '';
+$status         = $status ?? '';
+$currStatus     = strtolower($status);
+$date           = $date ?? '';
+$totRec         = (int)($total ?? count($trips ?? []));
+$currP          = (int)($page ?? 1);
+$pSize          = (int)($perPage ?? 10);
+$from           = $totRec > 0 ? (($currP - 1) * $pSize) + 1 : 0;
+$to             = min($currP * $pSize, $totRec);
+
+$buildFilterUrl = function(array $overrides = []) use ($search, $status, $date, $pSize) {
+    $q = [];
+    $s  = array_key_exists('search', $overrides) ? $overrides['search'] : $search;
+    $st = array_key_exists('status', $overrides) ? $overrides['status'] : $status;
+    $dt = array_key_exists('date', $overrides) ? $overrides['date'] : $date;
+    $pp = array_key_exists('per_page', $overrides) ? $overrides['per_page'] : $pSize;
+    $pg = $overrides['page'] ?? null;
+
+    if (!empty($s))  $q['search']   = $s;
+    if (!empty($st)) $q['status']   = $st;
+    if (!empty($dt)) $q['date']     = $dt;
+    if (!empty($pp) && $pp != 10)   $q['per_page'] = $pp;
+    if (!empty($pg) && $pg > 1)     $q['page']     = $pg;
+
+    return url('/driver/trips' . (!empty($q) ? '?' . http_build_query($q) : ''));
+};
+?>
+
+<div class="bookings-page-view driver-portal-view">
+    <!-- 1. DESKTOP ONLY: Unified Page Header (Exact Executive Customer Directory Architecture) -->
+    <div class="desktop-header-wrapper">
+        <?= render_page_header([
+            'title'       => __('sidebar.assigned_trips', 'My Assigned Trips'),
+            'description' => __('driver.current_assignment', 'Active transit operations, client pickups, and scheduled fleet dispatches assigned to your driver profile.'),
+            'badge'       => 'Active Duty',
+            'breadcrumbs' => [
+                ['label' => __('sidebar.dashboard', 'Dashboard'), 'url' => url('/driver/dashboard')],
+                ['label' => __('sidebar.assigned_trips', 'Assigned Trips'), 'url' => ''],
+            ],
+            'actions'     => '<a href="' . url('/driver/history') . '" class="btn btn-outline" style="border-radius:10px; font-weight:700;"><i class="fa-solid fa-clock-rotate-left" style="margin-right:6px;"></i><span>Trip History</span></a>' .
+                             '<a href="' . url('/driver/dashboard') . '" class="btn btn-primary" style="margin-left:8px; border-radius:10px; font-weight:700;"><i class="fa-solid fa-gauge" style="margin-right:6px;"></i><span>Console</span></a>',
+        ]) ?>
+    </div>
+
+    <!-- 2. DESKTOP ONLY: Top KPI Summary Cards (STRICT ONE ROW ON LG >= 992px) -->
+    <div class="booking-kpi-grid" id="customersKpiGrid">
+        <!-- Card 1: All Trips -->
+        <div class="booking-kpi-card <?= empty($currStatus) ? 'is-selected' : '' ?>" data-status="" role="button" tabindex="0" title="<?= e(__('tooltip.click_to_view_all_active_assig', 'Click to view all active assignments')) ?>">
+            <div class="booking-kpi-top">
+                <span class="booking-kpi-label">All Trips</span>
+                <span class="booking-kpi-icon icon-teal">
+                    <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                </span>
+            </div>
+            <div class="booking-kpi-val" data-count="<?= (int)($totalAll ?? $totRec) ?>"><?= number_format($totalAll ?? $totRec) ?></div>
+            <div class="booking-kpi-sub">
+                <span>All active manifests</span>
+                <span class="kpi-filter-tag"><i class="fa-solid fa-arrow-right"></i></span>
+            </div>
+        </div>
+
+        <!-- Card 2: Awaiting Response -->
+        <div class="booking-kpi-card <?= $currStatus === 'assigned' ? 'is-selected' : '' ?>" data-status="assigned" role="button" tabindex="0" title="<?= e(__('tooltip.click_to_filter_newly_assigned', 'Click to filter newly assigned trips awaiting response')) ?>">
+            <div class="booking-kpi-top">
+                <span class="booking-kpi-label">Awaiting Response</span>
+                <span class="booking-kpi-icon icon-amber">
+                    <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </span>
+            </div>
+            <div class="booking-kpi-val" data-count="<?= (int)($totalAssigned ?? 0) ?>"><?= number_format($totalAssigned ?? 0) ?></div>
+            <div class="booking-kpi-sub">
+                <span class="pulse-dot"></span>
+                <span>Requires confirmation</span>
+                <span class="kpi-filter-tag"><i class="fa-solid fa-arrow-right"></i></span>
+            </div>
+        </div>
+
+        <!-- Card 3: Accepted -->
+        <div class="booking-kpi-card <?= $currStatus === 'driver_accepted' ? 'is-selected' : '' ?>" data-status="driver_accepted" role="button" tabindex="0" title="<?= e(__('tooltip.click_to_filter_accepted_trips', 'Click to filter accepted trips ready for departure')) ?>">
+            <div class="booking-kpi-top">
+                <span class="booking-kpi-label">Accepted</span>
+                <span class="booking-kpi-icon icon-emerald">
+                    <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </span>
+            </div>
+            <div class="booking-kpi-val" data-count="<?= (int)($totalAccepted ?? 0) ?>"><?= number_format($totalAccepted ?? 0) ?></div>
+            <div class="booking-kpi-sub">
+                <span class="pulse-dot" style="background:#10B981; box-shadow:0 0 0 2px rgba(16,185,129,0.25);"></span>
+                <span>Staged for pickup</span>
+                <span class="kpi-filter-tag"><i class="fa-solid fa-arrow-right"></i></span>
+            </div>
+        </div>
+
+        <!-- Card 4: Active -->
+        <div class="booking-kpi-card <?= in_array($currStatus, ['trip_started', 'en_route_pickup'], true) ? 'is-selected' : '' ?>" data-status="trip_started" role="button" tabindex="0" title="<?= e(__('tooltip.click_to_filter_live_in_transi', 'Click to filter live in-transit trips')) ?>">
+            <div class="booking-kpi-top">
+                <span class="booking-kpi-label">Active</span>
+                <span class="booking-kpi-icon icon-navy">
+                    <svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </span>
+            </div>
+            <div class="booking-kpi-val" data-count="<?= (int)($totalStarted ?? 0) ?>"><?= number_format($totalStarted ?? 0) ?></div>
+            <div class="booking-kpi-sub">
+                <span>Live in-transit missions</span>
+                <span class="kpi-filter-tag"><i class="fa-solid fa-arrow-right"></i></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. DESKTOP ONLY: Compact Filter Bar (Exact Architecture from Customer Directory) -->
+    <form method="GET" action="<?= url('/driver/trips') ?>" class="filter-bar-compact" id="customerFilterForm" data-no-ajax="true" onsubmit="event.preventDefault(); return false;">
+        <div class="fbc-search" id="fbcSearchWrapper">
+            <i class="fa-solid fa-magnifying-glass fbc-search-icon" id="fbcSearchIcon"></i>
+            <input type="text" name="search" id="searchInput" placeholder="<?= e(__('placeholder.search_trips_by_booking_code_p', 'Search trips by booking code, passenger, route, vehicle...')) ?>" value="<?= e($search ?? '') ?>" autocomplete="off">
+            <button type="button" class="fbc-search-clear" id="searchClearBtn" style="<?= empty($search) ? 'display:none;' : '' ?>" title="<?= e(__('common.clear', 'Clear search')) ?>">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <select name="status" id="statusInput" title="<?= e(__('tooltip.filter_by_status', 'Filter by Status')) ?>">
+            <option value="" <?= empty($currStatus) ? 'selected' : '' ?>>All Statuses</option>
+            <option value="assigned" <?= $currStatus === 'assigned' ? 'selected' : '' ?>>Awaiting Response</option>
+            <option value="driver_accepted" <?= $currStatus === 'driver_accepted' ? 'selected' : '' ?>>Accepted &amp; Ready</option>
+            <option value="trip_started" <?= in_array($currStatus, ['trip_started', 'en_route_pickup'], true) ? 'selected' : '' ?>>Active / In Transit</option>
+        </select>
+
+        <div class="fbc-date-wrap">
+            <input type="date" name="date" id="dateInput" class="fbc-date-input" value="<?= e($date ?? '') ?>" title="<?= e(__('tooltip.filter_by_pickup_date', 'Filter by Pickup Date')) ?>">
+        </div>
+
+        <select name="per_page" id="perPageInput" title="<?= e(__('common.records_per_page', 'Records per page')) ?>">
+            <?php foreach ([5, 10, 15, 20, 25, 50, 100] as $opt): ?>
+                <option value="<?= $opt ?>" <?= $pSize == $opt ? 'selected' : '' ?>><?= $opt ?> per page</option>
+            <?php endforeach; ?>
+        </select>
+
+        <div class="fbc-actions">
+            <button type="button" class="fbc-btn" id="refreshBtn" title="<?= e(__('btn.refresh', 'Refresh')) ?>" data-no-ajax="true"><i class="fa-solid fa-rotate-right"></i></button>
+        </div>
+
+        <div class="fbc-actions-end" id="fbcClearWrapper">
+            <?php if (!empty($search) || !empty($status) || !empty($date)): ?>
+                <button type="button" class="fbc-btn fbc-btn-clear" id="filterClearBtn" title="<?= e(__('common.reset_filters', 'Clear Filters')) ?>" data-no-ajax="true"><i class="fa-solid fa-xmark"></i> <span>Clear</span></button>
+            <?php endif; ?>
+        </div>
+    </form>
+
+    <!-- 4. MOBILE ONLY: Top App Bar, Search, Drawer & Status Scroll -->
+    <div class="mv-bookings-header">
+        <div class="mv-top-bar">
+            <div class="mv-top-bar-left">
+                <a href="<?= url('/driver/dashboard') ?>" class="mv-back-btn" title="<?= e(__('common.back_to_dashboard', 'Back to Dashboard')) ?>">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+                <h2 class="mv-page-title">Assigned Trips</h2>
+            </div>
+            <a href="<?= url('/driver/history') ?>" class="mv-add-btn">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span>History</span>
+            </a>
+        </div>
+
+        <!-- Mobile Search Bar & Filter Toggle -->
+        <div class="mv-search-bar-wrap">
+            <form method="GET" action="<?= url('/driver/trips') ?>" class="mv-search-form" id="mvSearchForm" data-no-ajax="true" onsubmit="event.preventDefault(); return false;">
+                <div class="mv-search-input-box">
+                    <i class="fa-solid fa-magnifying-glass mv-search-ico" id="mvSearchIcon"></i>
+                    <input type="text" name="search" id="mvSearchInput" placeholder="<?= e(__('placeholder.search_by_code_guest_route', 'Search by code, guest, route...')) ?>" value="<?= e($search ?? '') ?>" autocomplete="off">
+                    <button type="button" class="mv-search-clear" id="mvSearchClearBtn" style="<?= empty($search) ? 'display:none;' : '' ?>" title="<?= e(__('common.clear', 'Clear search')) ?>">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <button type="button" class="mv-filter-toggle" id="mvFilterToggleBtn" onclick="toggleMobileFilter()" title="<?= e(__('common.filter', 'Filter options')) ?>">
+                    <i class="fa-solid fa-sliders"></i>
+                </button>
+            </form>
+
+            <!-- Collapsible Mobile Filter Panel -->
+            <div class="mv-filter-panel" id="mvFilterPanel" style="display: none;">
+                <div class="mv-filter-row" style="margin-bottom: 0.75rem;">
+                    <label for="mvDateInput" style="font-weight: 600; font-size: 0.82rem; color: #475569;">Date:</label>
+                    <input type="date" name="date" id="mvDateInput" class="form-control" value="<?= e($date ?? '') ?>" style="font-size: 0.85rem; padding: 0.4rem 0.65rem;">
+                </div>
+                <div class="mv-filter-row">
+                    <label for="mvPerPageSelect" style="font-weight: 600; font-size: 0.82rem; color: #475569;">Per Page:</label>
+                    <select name="per_page" id="mvPerPageSelect" style="font-size: 0.85rem; padding: 0.4rem 0.65rem; border: 1px solid #CBD5E1; border-radius: 6px;">
+                        <?php foreach ([10, 20, 30, 50] as $opt): ?>
+                            <option value="<?= $opt ?>" <?= $pSize == $opt ? 'selected' : '' ?>><?= $opt ?> per page</option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Horizontal Scrollable Status Pills -->
+        <?php
+            $makeStatusUrl = function(string $st) use ($search, $pSize, $date) {
+                $p = [];
+                if (!empty($st)) $p['status'] = $st;
+                if (!empty($search)) $p['search'] = $search;
+                if (!empty($date)) $p['date'] = $date;
+                if (!empty($pSize) && $pSize != 10) $p['per_page'] = $pSize;
+                return url('/driver/trips' . (!empty($p) ? '?' . http_build_query($p) : ''));
+            };
+        ?>
+        <div class="mv-status-scroll" id="customersMvStatusScroll">
+            <a href="<?= $makeStatusUrl('') ?>" class="mv-pill <?= empty($currStatus) ? 'active' : '' ?>" data-status="" data-no-ajax="true">
+                <span>All Trips</span>
+                <span class="mv-pill-cnt"><?= (int)($totalAll ?? $totRec) ?></span>
+            </a>
+            <a href="<?= $makeStatusUrl('assigned') ?>" class="mv-pill <?= $currStatus === 'assigned' ? 'active' : '' ?>" data-status="assigned" data-no-ajax="true">
+                <span>Awaiting</span>
+                <span class="mv-pill-cnt"><?= (int)($totalAssigned ?? 0) ?></span>
+            </a>
+            <a href="<?= $makeStatusUrl('driver_accepted') ?>" class="mv-pill <?= $currStatus === 'driver_accepted' ? 'active' : '' ?>" data-status="driver_accepted" data-no-ajax="true">
+                <span>Accepted</span>
+                <span class="mv-pill-cnt"><?= (int)($totalAccepted ?? 0) ?></span>
+            </a>
+            <a href="<?= $makeStatusUrl('trip_started') ?>" class="mv-pill <?= in_array($currStatus, ['trip_started', 'en_route_pickup'], true) ? 'active' : '' ?>" data-status="trip_started" data-no-ajax="true">
+                <span>Active</span>
+                <span class="mv-pill-cnt"><?= (int)($totalStarted ?? 0) ?></span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 5. All Assigned Trips Section: Desktop PMS Modern Table + Mobile App Cards -->
+    <section class="recent-bookings-section" id="tripsSection">
+        <div class="section-header">
+            <h3 class="section-title">All Assigned Trips</h3>
+            <div class="total-records-box">
+                <i class="fa-solid fa-layer-group"></i>
+                <span class="total-records-label">Total Records:</span>
+                <span class="total-records-badge" id="totalRecordsPill"><?= number_format($totRec) ?></span>
+            </div>
+        </div>
+
+        <!-- Modern Table for Large Screens (Matching Customer Directory Architecture) -->
+        <div class="modern-table-container">
+            <table class="modern-table" id="tripsTable">
+                <thead>
+                    <tr>
+                        <th class="text-center col-priority-1" style="width: 50px;">#</th>
+                        <th class="text-center col-priority-2" data-column-priority="secondary" style="width: 75px;"><?= e(__('table.profile', 'Profile')) ?></th>
+                        <th class="col-priority-1"><?= e(__('table.trip_ref', 'Trip Reference')) ?></th>
+                        <th class="col-priority-1"><?= e(__('table.passenger_contact', 'Passenger / Contact')) ?></th>
+                        <th class="col-priority-2" data-column-priority="secondary"><?= e(__('table.route_itinerary', 'Route Itinerary')) ?></th>
+                        <th class="col-priority-3 col-optional" data-column-priority="optional"><?= e(__('table.assigned_fleet', 'Assigned Fleet')) ?></th>
+                        <th class="text-center col-priority-1" style="width: 120px;"><?= e(__('table.status', 'Status')) ?></th>
+                        <th class="text-center col-priority-1" style="width: 75px;"><?= e(__('common.actions', 'Actions')) ?></th>
+                    </tr>
+                </thead>
+                <tbody id="tripsTableBody">
+                    <?php if (empty($trips)): ?>
+                    <tr>
+                        <td colspan="8">
+                            <div class="no-data-message">
+                                <div class="no-data-icon"><i class="fa-regular fa-folder-open"></i></div>
+                                <h4 style="font-weight:700;color:#1e293b;margin-bottom:6px;">No trips assigned yet</h4>
+                                <p class="text-muted" style="margin:0;">No assigned journeys match your current search or filter parameters.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php else: ?>
+                        <?php foreach ($trips as $i => $t):
+                            $serial = (($currP - 1) * $pSize) + $i + 1;
+                            $st = strtolower($t['status'] ?? 'assigned');
+                            $statusPillClass = match($st) {
+                                'assigned'         => 'warning',
+                                'driver_accepted'  => 'info',
+                                'trip_started',
+                                'en_route_pickup'  => 'completed',
+                                default            => 'cancelled'
+                            };
+                            $statusLabel = dispatch_status_label($st);
+                            $initial = strtoupper(mb_substr($t['customer_name'] ?? 'G', 0, 1));
+                            $avatarUrl = customer_avatar_url($t['customer_avatar'] ?? null);
+                        ?>
+                        <tr>
+                            <!-- 1. Serial Number (#) -->
+                            <td class="text-center col-priority-1">
+                                <div class="cust-serial-num"><?= $serial ?></div>
+                            </td>
+
+                            <!-- 2. Profile Image / Monogram -->
+                            <td class="text-center col-priority-2" data-column-priority="secondary">
+                                <div class="cust-table-avatar-wrap">
+                                    <?php if (!empty($avatarUrl)): ?>
+                                        <img src="<?= e($avatarUrl) ?>" alt="<?= e($t['customer_name'] ?? 'Guest') ?>" class="cust-table-avatar-img" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+                                        <div class="cust-table-monogram" style="display: none;"><?= e($initial) ?></div>
+                                    <?php else: ?>
+                                        <div class="cust-table-monogram"><?= e($initial) ?></div>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+
+                            <!-- 3. Trip Reference & Schedule -->
+                            <td class="col-priority-1">
+                                <div class="cust-client-details-cell">
+                                    <div class="cust-name-row">
+                                        <a href="<?= url('/driver/trips/' . $t['id']) ?>" class="cust-full-name" title="<?= e(__('tooltip.view_trip_itinerary_details', 'View trip itinerary details')) ?>">
+                                            <?= e($t['booking_code']) ?>
+                                        </a>
+                                        <span class="cust-code-pill"><?= e($t['dispatch_code']) ?></span>
+                                    </div>
+                                    <div class="cust-email-row">
+                                        <i class="fa-solid fa-calendar-day cust-email-icon"></i>
+                                        <span><?= format_date($t['start_date']) ?> &bull; <?= e($t['pickup_time'] ? date('h:i A', strtotime($t['pickup_time'])) : 'Scheduled') ?></span>
+                                    </div>
+                                    <div style="margin-top: 4px; font-size: 0.78rem; color: #16443B; font-weight: 700; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                        <span><i class="fa-solid fa-wallet" style="font-size: 0.72rem; color: #176B5B;"></i> Fee: <?= ($t['driver_trip_amount'] !== null && $t['driver_trip_amount'] !== '') ? format_currency((float)$t['driver_trip_amount']) : 'Not specified' ?></span>
+                                        <?php if (!empty($t['driver_payment_status'])): ?>
+                                            <?= render_status_badge($t['driver_payment_status'], 'driver_payment') ?>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- 4. Passenger / Mobile No. -->
+                            <td class="col-priority-1">
+                                <div class="cust-phone-cell">
+                                    <div style="font-weight: 700; color: #0F172A; font-size: 0.88rem; display: flex; align-items: center; gap: 6px;">
+                                        <i class="fa-solid fa-user" style="color: #64748B; font-size: 0.76rem;"></i>
+                                        <span><?= e($t['customer_name'] ?? 'VIP Guest') ?></span>
+                                    </div>
+                                    <?php if (!empty($t['customer_phone'])): ?>
+                                        <a href="tel:<?= e($t['customer_phone']) ?>" class="cust-primary-phone" title="<?= e(__('tooltip.call_passenger', 'Call passenger')) ?>">
+                                            <i class="fa-solid fa-phone cust-phone-icon"></i>
+                                            <span><?= e($t['customer_phone']) ?></span>
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+
+                            <!-- 5. Route Itinerary (From & To) -->
+                            <td class="col-priority-2" data-column-priority="secondary">
+                                <div class="cust-address-cell">
+                                    <div class="cust-address-line" title="<?= e($t['pickup_address']) ?>">
+                                        <span style="color: #10B981; font-weight: 900; margin-right: 4px;">●</span>
+                                        <span><strong>From:</strong> <?= e($t['pickup_address']) ?></span>
+                                    </div>
+                                    <div class="cust-address-sub" title="<?= e($t['drop_address']) ?>">
+                                        <span style="color: #EF4444; font-weight: 900; margin-right: 4px;">●</span>
+                                        <span><strong>To:</strong> <?= e($t['drop_address']) ?></span>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- 6. Assigned Fleet -->
+                            <td class="col-priority-3 col-optional" data-column-priority="optional">
+                                <div class="cust-bookings-cell" style="align-items: flex-start;">
+                                    <div style="font-weight: 800; color: #16443B; font-size: 0.92rem; display: flex; align-items: center; gap: 6px;">
+                                        <i class="fa-solid fa-car" style="color: #176B5B; font-size: 0.8rem;"></i>
+                                        <span><?= e($t['vehicle_number']) ?></span>
+                                    </div>
+                                    <span class="cust-bookings-lbl" style="text-transform: none; font-size: 0.74rem;"><?= e($t['make_model']) ?></span>
+                                </div>
+                            </td>
+
+                            <!-- 7. Status Pill with pulse dot -->
+                            <td class="text-center col-priority-1">
+                                <span class="cust-toggle-pill <?= $statusPillClass ?>">
+                                    <span class="toggle-pulse-dot <?= $statusPillClass ?>"></span>
+                                    <span class="toggle-label-text"><?= $statusLabel ?></span>
+                                </span>
+                            </td>
+
+                            <!-- 8. Actions Menu (3-Dots Popup) -->
+                            <td class="text-center col-priority-1">
+                                <div class="table-action-buttons">
+                                    <button type="button" class="action-toggle-btn" onclick="toggleActions(this, event)" title="<?= e(__('common.actions', 'Actions')) ?>">
+                                        <i class="fa-solid fa-ellipsis"></i>
+                                    </button>
+                                    <div class="action-btns-popup">
+                                        <a href="<?= url('/driver/trips/' . $t['id']) ?>" class="action-btn-table view" title="<?= e(__('tooltip.view_itinerary', 'View Itinerary')) ?>">
+                                            <i class="fa-solid fa-eye"></i>
+                                        </a>
+                                        <?php if ($st === 'assigned'): ?>
+                                            <form action="<?= url('/driver/trips/' . $t['id'] . '/accept') ?>" method="POST" style="margin:0; display:inline;" data-no-ajax="true">
+                                                <?= csrf_field() ?>
+                                                <button type="submit" class="action-btn-table dispatch" style="border:none; cursor:pointer;" title="<?= e(__('tooltip.accept_assignment', 'Accept Assignment')) ?>">
+                                                    <i class="fa-solid fa-check"></i>
+                                                </button>
+                                            </form>
+                                            <a href="<?= url('/driver/trips/' . $t['id']) ?>" class="action-btn-table delete" style="color:#EF4444;" title="<?= e(__('tooltip.unable_to_accept', 'Unable to Accept')) ?>">
+                                                <i class="fa-solid fa-xmark"></i>
+                                            </a>
+                                        <?php elseif ($st === 'driver_accepted'): ?>
+                                            <a href="<?= url('/driver/trips/' . $t['id']) ?>" class="action-btn-table edit" style="color:#10B981;" title="<?= e(__('tooltip.start_trip', 'Start Trip')) ?>">
+                                                <i class="fa-solid fa-play"></i>
+                                            </a>
+                                        <?php elseif (in_array($st, ['en_route_pickup', 'trip_started'], true)): ?>
+                                            <a href="<?= url('/driver/trips/' . $t['id']) ?>" class="action-btn-table dispatch" style="color:#2563EB;" title="<?= e(__('tooltip.complete_trip', 'Complete Trip')) ?>">
+                                                <i class="fa-solid fa-flag-checkered"></i>
+                                            </a>
+                                            <a href="<?= url('/driver/location') ?>" class="action-btn-table view" style="color:#176B5B;" title="<?= e(__('tooltip.live_location', 'Live Location')) ?>">
+                                                <i class="fa-solid fa-satellite-dish"></i>
+                                            </a>
+                                        <?php endif; ?>
+                                        <?php if (!empty($t['customer_phone'])): ?>
+                                            <a href="tel:<?= e($t['customer_phone']) ?>" class="action-btn-table edit" title="<?= e(__('tooltip.call_passenger', 'Call Passenger')) ?>">
+                                                <i class="fa-solid fa-phone"></i>
+                                            </a>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Mobile Booking Cards List -->
+        <div class="cards-grid" id="tripsCards">
+            <?php if (empty($trips)): ?>
+                <div class="no-data-message" style="background:#FFFFFF; border-radius:14px; border:1px solid #E2E8F0; padding:2rem 1rem;">
+                    <div class="no-data-icon"><i class="fa-regular fa-folder-open"></i></div>
+                    <h4 style="font-weight:700;color:#1e293b;margin-bottom:6px;">No trips assigned yet</h4>
+                    <p class="text-muted" style="margin:0;">No assigned journeys match your current search or filter parameters.</p>
+                </div>
+            <?php else: ?>
+                <?php foreach ($trips as $t):
+                    $st = strtolower($t['status'] ?? 'assigned');
+                    $statusPillClass = match($st) {
+                        'assigned'         => 'warning',
+                        'driver_accepted'  => 'info',
+                        'trip_started',
+                        'en_route_pickup'  => 'completed',
+                        default            => 'cancelled'
+                    };
+                    $statusLabel = dispatch_status_label($st);
+                    $initial = strtoupper(mb_substr($t['customer_name'] ?? 'G', 0, 1));
+                    $avatarUrl = customer_avatar_url($t['customer_avatar'] ?? null);
+                ?>
+                <div class="mv-booking-card-wrapper">
+                    <a href="<?= url('/driver/trips/' . $t['id']) ?>" class="mv-booking-card">
+                        <!-- Left: Avatar Monogram (Full-bleed circular avatar) -->
+                        <div class="mv-thumb-wrap is-avatar">
+                            <?php if (!empty($avatarUrl)): ?>
+                                <img src="<?= e($avatarUrl) ?>" alt="<?= e($t['customer_name'] ?? 'Guest') ?>" class="mv-thumb-avatar-img" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+                                <div class="mv-thumb-avatar" style="display: none;"><?= e($initial) ?></div>
+                            <?php else: ?>
+                                <div class="mv-thumb-avatar"><?= e($initial) ?></div>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- Middle: Details -->
+                        <div class="mv-details">
+                            <div class="mv-tour-title" title="<?= e($t['booking_code']) ?>">
+                                <?= e($t['booking_code']) ?>
+                                <span class="cust-code-pill" style="margin-left: 4px;"><?= e($t['dispatch_code']) ?></span>
+                            </div>
+                            <div class="mv-date-duration">
+                                <i class="fa-solid fa-user"></i>
+                                <span><?= e($t['customer_name'] ?? 'Guest') ?></span>
+                                <?php if (!empty($t['customer_phone'])): ?>
+                                    &bull; <span><?= e($t['customer_phone']) ?></span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="mv-passenger" style="color:#059669;">
+                                <i class="fa-solid fa-location-dot" style="color:#10B981;"></i>
+                                <span>From: <?= e($t['pickup_address']) ?></span>
+                            </div>
+                            <div class="mv-passenger" style="color:#DC2626;">
+                                <i class="fa-solid fa-location-dot" style="color:#EF4444;"></i>
+                                <span>To: <?= e($t['drop_address']) ?></span>
+                            </div>
+                            <div class="mv-vehicle">
+                                <i class="fa-solid fa-car"></i>
+                                <span><?= e($t['vehicle_number']) ?> &bull; <?= format_date($t['start_date']) ?></span>
+                            </div>
+                            <div class="mv-driver-amount" style="font-size: 11.5px; color: #16443B; font-weight: 700; margin-top: 3px;">
+                                <i class="fa-solid fa-wallet" style="font-size: 10px; color: #176B5B;"></i>
+                                <span>Fee: <?= ($t['driver_trip_amount'] !== null && $t['driver_trip_amount'] !== '') ? format_currency((float)$t['driver_trip_amount']) : 'Not specified' ?></span>
+                            </div>
+                        </div>
+
+                        <!-- Right: Status Pill & Time -->
+                        <div class="mv-right-col">
+                            <span class="cust-toggle-pill <?= $statusPillClass ?>" style="padding:2px 7px;">
+                                <span class="toggle-pulse-dot <?= $statusPillClass ?>"></span>
+                                <span class="toggle-label-text"><?= $statusLabel ?></span>
+                            </span>
+                            <div class="mv-price"><?= e($t['pickup_time'] ? date('h:i A', strtotime($t['pickup_time'])) : 'Scheduled') ?></div>
+                        </div>
+                    </a>
+
+                    <!-- 3-Dots Quick Action Popup -->
+                    <div class="mv-card-actions">
+                        <button type="button" class="mv-action-dots-btn" onclick="toggleCardActions(this, event)" title="<?= e(__('common.actions', 'Actions')) ?>">
+                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                        </button>
+                        <div class="card-btns-popup">
+                            <a href="<?= url('/driver/trips/' . $t['id']) ?>" class="action-btn-table view" title="<?= e(__('tooltip.view_itinerary', 'View Itinerary')) ?>">
+                                <i class="fa-solid fa-eye"></i>
+                            </a>
+                            <?php if ($st === 'assigned'): ?>
+                                <form action="<?= url('/driver/trips/' . $t['id'] . '/accept') ?>" method="POST" style="margin:0; display:inline;" data-no-ajax="true">
+                                    <?= csrf_field() ?>
+                                    <button type="submit" class="action-btn-table dispatch" style="border:none; cursor:pointer;" title="<?= e(__('tooltip.accept', 'Accept')) ?>">
+                                        <i class="fa-solid fa-check"></i>
+                                    </button>
+                                </form>
+                                <a href="<?= url('/driver/trips/' . $t['id']) ?>" class="action-btn-table delete" style="color:#EF4444;" title="<?= e(__('tooltip.unable_to_accept', 'Unable to Accept')) ?>">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </a>
+                            <?php elseif ($st === 'driver_accepted'): ?>
+                                <a href="<?= url('/driver/trips/' . $t['id']) ?>" class="action-btn-table edit" style="color:#10B981;" title="<?= e(__('tooltip.start_trip', 'Start Trip')) ?>">
+                                    <i class="fa-solid fa-play"></i>
+                                </a>
+                            <?php elseif (in_array($st, ['en_route_pickup', 'trip_started'], true)): ?>
+                                <a href="<?= url('/driver/trips/' . $t['id']) ?>" class="action-btn-table dispatch" style="color:#2563EB;" title="<?= e(__('tooltip.complete_trip', 'Complete Trip')) ?>">
+                                    <i class="fa-solid fa-flag-checkered"></i>
+                                </a>
+                                <a href="<?= url('/driver/location') ?>" class="action-btn-table view" style="color:#176B5B;" title="<?= e(__('tooltip.live_location', 'Live Location')) ?>">
+                                    <i class="fa-solid fa-satellite-dish"></i>
+                                </a>
+                            <?php endif; ?>
+                            <?php if (!empty($t['customer_phone'])): ?>
+                                <a href="tel:<?= e($t['customer_phone']) ?>" class="action-btn-table edit" title="<?= e(__('tooltip.call', 'Call')) ?>">
+                                    <i class="fa-solid fa-phone"></i>
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
+    </section>
+
+    <!-- 6. Modern Pagination (Exact Customer Directory & Driver History Architecture) -->
+    <?php
+        $buildPageUrl = function(int $p) use ($search, $status, $date, $pSize) {
+            $q = [];
+            if (!empty($search)) $q['search'] = $search;
+            if (!empty($status)) $q['status'] = $status;
+            if (!empty($date))   $q['date']   = $date;
+            if (!empty($pSize) && $pSize != 10) $q['per_page'] = $pSize;
+            $q['page'] = $p;
+            return url('/driver/trips?' . http_build_query($q));
+        };
+    ?>
+    <div id="tripsPaginationWrapper">
+        <?php if (($totalPages ?? 1) > 1): ?>
+        <div class="pagination-wrapper">
+            <div class="pagination-info">Showing <span><?= $from ?>&ndash;<?= $to ?></span> of <span><?= $totRec ?></span> trip(s)</div>
+            <div class="pagination">
+                <a href="<?= $buildPageUrl(max(1, $currP - 1)) ?>" class="<?= $currP <= 1 ? 'disabled' : '' ?>" title="<?= e(__('pagination.previous', 'Previous Page')) ?>" data-page="<?= max(1, $currP - 1) ?>" data-no-ajax="true">&#10094;</a>
+                <?php
+                    $rangeStart = max(1, $currP - 1);
+                    $rangeEnd   = min($totalPages, $rangeStart + 2);
+                    if ($rangeEnd - $rangeStart < 2 && $rangeStart > 1) {
+                        $rangeStart = max(1, $rangeEnd - 2);
+                    }
+                    for ($i = $rangeStart; $i <= $rangeEnd; $i++):
+                ?>
+                    <a href="<?= $buildPageUrl($i) ?>" class="<?= $i === $currP ? 'active' : '' ?>" data-page="<?= $i ?>" data-no-ajax="true"><?= $i ?></a>
+                <?php endfor; ?>
+                <?php if ($rangeEnd < $totalPages): ?>
+                    <span class="dots">...</span>
+                    <a href="<?= $buildPageUrl($totalPages) ?>" class="<?= $currP === $totalPages ? 'active' : '' ?>" data-page="<?= $totalPages ?>" data-no-ajax="true"><?= $totalPages ?></a>
+                <?php endif; ?>
+                <a href="<?= $buildPageUrl(min($totalPages, $currP + 1)) ?>" class="<?= $currP >= $totalPages ? 'disabled' : '' ?>" title="<?= e(__('pagination.next', 'Next Page')) ?>" data-page="<?= min($totalPages, $currP + 1) ?>" data-no-ajax="true">&#10095;</a>
+            </div>
+        </div>
+        <?php endif; ?>
+    </div>
+</div>
+
+<script>
+    /* ========================================================================= */
+    /* Complete Driver Trips Live AJAX Filter Engine (Without Page Reload)       */
+    /* ========================================================================= */
+    (function initDriverTripsAjaxFilter() {
+        let abortCtrl = null;
+        let searchTimer = null;
+
+        const baseUrl = '<?= url('/driver/trips') ?>';
+
+        function getParams(page = 1) {
+            const searchInput = document.getElementById('searchInput');
+            const mvSearchInput = document.getElementById('mvSearchInput');
+            const statusInput = document.getElementById('statusInput');
+            const dateInput = document.getElementById('dateInput');
+            const mvDateInput = document.getElementById('mvDateInput');
+            const perPageInput = document.getElementById('perPageInput');
+            const mvPerPageSelect = document.getElementById('mvPerPageSelect');
+
+            const sVal = (searchInput ? searchInput.value : (mvSearchInput ? mvSearchInput.value : '')).trim();
+            const stVal = statusInput ? statusInput.value : '';
+            const dtVal = (dateInput ? dateInput.value : (mvDateInput ? mvDateInput.value : '')).trim();
+            const ppVal = perPageInput ? perPageInput.value : (mvPerPageSelect ? mvPerPageSelect.value : '10');
+
+            const p = new URLSearchParams();
+            if (sVal) p.set('search', sVal);
+            if (stVal) p.set('status', stVal);
+            if (dtVal) p.set('date', dtVal);
+            if (ppVal && ppVal !== '10') p.set('per_page', ppVal);
+            if (page && page > 1) p.set('page', page);
+
+            return { params: p, searchVal: sVal, statusVal: stVal, dateVal: dtVal, perPageVal: ppVal, pageNum: page };
+        }
+
+        function filterTripsAjax(page = 1) {
+            const { params, searchVal } = getParams(page);
+            const queryStr = params.toString();
+            const targetUrl = queryStr ? `${baseUrl}?${queryStr}` : baseUrl;
+
+            if (abortCtrl) {
+                abortCtrl.abort();
+            }
+            abortCtrl = new AbortController();
+
+            const section = document.getElementById('tripsSection');
+            const searchIcon = document.getElementById('fbcSearchIcon');
+            const mvSearchIcon = document.getElementById('mvSearchIcon');
+            const searchClearBtn = document.getElementById('searchClearBtn');
+            const mvSearchClearBtn = document.getElementById('mvSearchClearBtn');
+
+            if (section) section.classList.add('is-filtering');
+            if (searchIcon) searchIcon.className = 'fa-solid fa-spinner fa-spin fbc-search-icon';
+            if (mvSearchIcon) mvSearchIcon.className = 'fa-solid fa-spinner fa-spin mv-search-ico';
+
+            if (searchClearBtn) searchClearBtn.style.display = searchVal ? 'inline-flex' : 'none';
+            if (mvSearchClearBtn) mvSearchClearBtn.style.display = searchVal ? 'inline-flex' : 'none';
+
+            fetch(targetUrl, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'text/html,application/xhtml+xml'
+                },
+                signal: abortCtrl.signal
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.text();
+            })
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                // 1. Update Trips Section (Table, mobile cards, empty state)
+                const newSection = doc.getElementById('tripsSection');
+                const currSection = document.getElementById('tripsSection');
+                if (newSection && currSection) {
+                    currSection.innerHTML = newSection.innerHTML;
+                }
+
+                // 2. Update Pagination Wrapper
+                const newPagination = doc.getElementById('tripsPaginationWrapper');
+                const currPagination = document.getElementById('tripsPaginationWrapper');
+                if (newPagination && currPagination) {
+                    currPagination.innerHTML = newPagination.innerHTML;
+                }
+
+                // 3. Update Top KPI Summary Grid
+                const newKpi = doc.getElementById('customersKpiGrid');
+                const currKpi = document.getElementById('customersKpiGrid');
+                if (newKpi && currKpi) {
+                    currKpi.innerHTML = newKpi.innerHTML;
+                    animateKpiNumbers(currKpi);
+                }
+
+                // 4. Update Mobile Status Scroll Pills
+                const newMvPills = doc.getElementById('customersMvStatusScroll');
+                const currMvPills = document.getElementById('customersMvStatusScroll');
+                if (newMvPills && currMvPills) {
+                    currMvPills.innerHTML = newMvPills.innerHTML;
+                }
+
+                // 5. Update Clear Button in filter bar
+                const newClearWrap = doc.getElementById('fbcClearWrapper');
+                const currClearWrap = document.getElementById('fbcClearWrapper');
+                if (newClearWrap && currClearWrap) {
+                    currClearWrap.innerHTML = newClearWrap.innerHTML;
+                }
+
+                try {
+                    window.history.replaceState({ path: targetUrl }, '', targetUrl);
+                } catch (e) {}
+            })
+            .catch(err => {
+                if (err.name !== 'AbortError') {
+                    console.error('Trips AJAX filter failed:', err);
+                }
+            })
+            .finally(() => {
+                if (section) section.classList.remove('is-filtering');
+                if (searchIcon) searchIcon.className = 'fa-solid fa-magnifying-glass fbc-search-icon';
+                if (mvSearchIcon) mvSearchIcon.className = 'fa-solid fa-magnifying-glass mv-search-ico';
+            });
+        }
+
+        function animateKpiNumbers(container) {
+            if (!container) return;
+            const vals = container.querySelectorAll('.booking-kpi-val[data-count]');
+            vals.forEach(el => {
+                const target = parseInt(el.getAttribute('data-count'), 10) || 0;
+                const duration = 250;
+                const startTime = performance.now();
+                function step(now) {
+                    const progress = Math.min((now - startTime) / duration, 1);
+                    const current = Math.round(progress * target);
+                    el.textContent = current.toLocaleString();
+                    if (progress < 1) {
+                        requestAnimationFrame(step);
+                    } else {
+                        el.textContent = target.toLocaleString();
+                    }
+                }
+                requestAnimationFrame(step);
+            });
+        }
+
+        // Live Debounced Search
+        const searchInput = document.getElementById('searchInput');
+        const mvSearchInput = document.getElementById('mvSearchInput');
+
+        function handleSearchInput(val) {
+            if (searchInput && searchInput.value !== val) searchInput.value = val;
+            if (mvSearchInput && mvSearchInput.value !== val) mvSearchInput.value = val;
+
+            const searchClearBtn = document.getElementById('searchClearBtn');
+            const mvSearchClearBtn = document.getElementById('mvSearchClearBtn');
+            if (searchClearBtn) searchClearBtn.style.display = val ? 'inline-flex' : 'none';
+            if (mvSearchClearBtn) mvSearchClearBtn.style.display = val ? 'inline-flex' : 'none';
+
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => {
+                filterTripsAjax(1);
+            }, 300);
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => handleSearchInput(e.target.value));
+        }
+        if (mvSearchInput) {
+            mvSearchInput.addEventListener('input', (e) => handleSearchInput(e.target.value));
+        }
+
+        // Form Submit listener
+        const filterForm = document.getElementById('customerFilterForm');
+        if (filterForm) {
+            filterForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                filterTripsAjax(1);
+            });
+        }
+        const mvForm = document.getElementById('mvSearchForm');
+        if (mvForm) {
+            mvForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                filterTripsAjax(1);
+            });
+        }
+
+        // Dropdown & Date changes
+        const statusInput = document.getElementById('statusInput');
+        const dateInput = document.getElementById('dateInput');
+        const mvDateInput = document.getElementById('mvDateInput');
+        const perPageInput = document.getElementById('perPageInput');
+        const mvPerPageSelect = document.getElementById('mvPerPageSelect');
+
+        if (statusInput) statusInput.addEventListener('change', () => filterTripsAjax(1));
+        if (dateInput) {
+            dateInput.addEventListener('change', () => {
+                if (mvDateInput) mvDateInput.value = dateInput.value;
+                filterTripsAjax(1);
+            });
+        }
+        if (mvDateInput) {
+            mvDateInput.addEventListener('change', () => {
+                if (dateInput) dateInput.value = mvDateInput.value;
+                filterTripsAjax(1);
+            });
+        }
+        if (perPageInput) {
+            perPageInput.addEventListener('change', () => {
+                if (mvPerPageSelect) mvPerPageSelect.value = perPageInput.value;
+                filterTripsAjax(1);
+            });
+        }
+        if (mvPerPageSelect) {
+            mvPerPageSelect.addEventListener('change', () => {
+                if (perPageInput) perPageInput.value = mvPerPageSelect.value;
+                filterTripsAjax(1);
+            });
+        }
+
+        // Apply and Refresh buttons
+        const applyBtn = document.getElementById('filterApplyBtn');
+        const refreshBtn = document.getElementById('refreshBtn');
+
+        if (applyBtn) {
+            applyBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                filterTripsAjax(1);
+            });
+        }
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (searchInput) searchInput.value = '';
+                if (mvSearchInput) mvSearchInput.value = '';
+                if (statusInput) statusInput.value = '';
+                if (dateInput) dateInput.value = '';
+                if (mvDateInput) mvDateInput.value = '';
+                if (perPageInput) perPageInput.value = '10';
+                if (mvPerPageSelect) mvPerPageSelect.value = '10';
+                filterTripsAjax(1);
+            });
+        }
+
+        // Global Event Delegation for Dynamic Elements
+        document.addEventListener('click', function(e) {
+            // 1. KPI Card Click
+            const card = e.target.closest('.booking-kpi-card');
+            if (card && card.closest('#customersKpiGrid')) {
+                e.preventDefault();
+                const targetStatus = card.getAttribute('data-status') ?? '';
+                if (statusInput) statusInput.value = targetStatus;
+                filterTripsAjax(1);
+                return;
+            }
+
+            // 2. Mobile Status Pills
+            const pill = e.target.closest('.mv-pill');
+            if (pill && pill.closest('#customersMvStatusScroll')) {
+                e.preventDefault();
+                const targetStatus = pill.getAttribute('data-status') ?? '';
+                if (statusInput) statusInput.value = targetStatus;
+                filterTripsAjax(1);
+                return;
+            }
+
+            // 3. Clear Filters Button
+            const clearBtn = e.target.closest('#filterClearBtn, #searchClearBtn, #mvSearchClearBtn');
+            if (clearBtn) {
+                e.preventDefault();
+                if (clearBtn.id === 'searchClearBtn' || clearBtn.id === 'mvSearchClearBtn') {
+                    if (searchInput) searchInput.value = '';
+                    if (mvSearchInput) mvSearchInput.value = '';
+                } else {
+                    if (searchInput) searchInput.value = '';
+                    if (mvSearchInput) mvSearchInput.value = '';
+                    if (statusInput) statusInput.value = '';
+                    if (dateInput) dateInput.value = '';
+                    if (mvDateInput) mvDateInput.value = '';
+                    if (perPageInput) perPageInput.value = '10';
+                    if (mvPerPageSelect) mvPerPageSelect.value = '10';
+                }
+                filterTripsAjax(1);
+                return;
+            }
+
+            // 4. Pagination Links
+            const pageLink = e.target.closest('#tripsPaginationWrapper .pagination a[data-page]');
+            if (pageLink && !pageLink.classList.contains('disabled') && !pageLink.classList.contains('active')) {
+                e.preventDefault();
+                const p = parseInt(pageLink.getAttribute('data-page'), 10) || 1;
+                filterTripsAjax(p);
+                const section = document.getElementById('tripsSection');
+                if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                return;
+            }
+        });
+
+        // Initialize animated numbers on load
+        animateKpiNumbers(document.getElementById('customersKpiGrid'));
+    })();
+
+    /* ========================================================================= */
+    /* 3-Dots Action Popups Toggle & Mobile Filters                              */
+    /* ========================================================================= */
+    function toggleActions(btn, e) {
+        e.stopPropagation();
+        const popup = btn.nextElementSibling;
+        if (!popup) return;
+        const isOpen = popup.classList.contains('open') || popup.classList.contains('show');
+        document.querySelectorAll('.action-btns-popup.open, .action-btns-popup.show, .card-btns-popup.open, .card-btns-popup.show').forEach(p => {
+            p.classList.remove('open', 'show');
+        });
+        if (!isOpen) {
+            popup.classList.add('open', 'show');
+        }
+    }
+
+    function toggleCardActions(btn, e) {
+        e.stopPropagation();
+        const popup = btn.nextElementSibling;
+        if (!popup) return;
+        const isOpen = popup.classList.contains('open') || popup.classList.contains('show');
+        document.querySelectorAll('.action-btns-popup.open, .action-btns-popup.show, .card-btns-popup.open, .card-btns-popup.show').forEach(p => {
+            p.classList.remove('open', 'show');
+        });
+        if (!isOpen) {
+            popup.classList.add('open', 'show');
+        }
+    }
+
+    function toggleMobileFilter() {
+        const p = document.getElementById('mvFilterPanel');
+        const b = document.getElementById('mvFilterToggleBtn');
+        if (p) {
+            const isHidden = p.style.display === 'none' || p.style.display === '';
+            p.style.display = isHidden ? 'block' : 'none';
+            if (b) b.classList.toggle('active', isHidden);
+        }
+    }
+
+    // Close action popups when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.table-action-buttons') && !e.target.closest('.mv-card-actions')) {
+            document.querySelectorAll('.action-btns-popup.open, .action-btns-popup.show, .card-btns-popup.open, .card-btns-popup.show').forEach(p => {
+                p.classList.remove('open', 'show');
+            });
+        }
+    });
+</script>
+
+<style>
+/* ========================================================================= */
+/* Exact Office Customer Directory Page Layout & Breakpoint Alignment       */
+/* ========================================================================= */
+.bookings-page-view {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
+
+/* ========================================================================= */
+/* Sleek AJAX Filtering Animations & Loading State                           */
+/* ========================================================================= */
+.recent-bookings-section {
+    position: relative;
+    transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), filter 0.22s ease;
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid rgba(22, 68, 59, 0.08);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+
+.recent-bookings-section.is-filtering {
+    opacity: 0.42;
+    pointer-events: none;
+    filter: grayscale(0.2);
+}
+
+/* ========================================================================= */
+/* STRICT ONE ROW ON LG / DESKTOP (>= 992px) — 4-Column KPI Grid             */
+/* ========================================================================= */
+.booking-kpi-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 16px;
+    margin-bottom: 24px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+@media (min-width: 992px) {
+    .booking-kpi-grid {
+        display: grid !important;
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        gap: 16px;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 991px) {
+    .booking-kpi-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 14px;
+    }
+}
+
+@media (max-width: 768px) {
+    .booking-kpi-grid {
+        display: none !important;
+    }
+}
+
+.booking-kpi-card {
+    background: #FFFFFF;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 16px;
+    padding: 14px 18px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 104px;
+    min-width: 0;
+    box-sizing: border-box;
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), 
+                box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), 
+                border-color 0.22s ease,
+                background-color 0.22s ease;
+}
+
+.booking-kpi-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px -4px rgba(15, 23, 42, 0.08), 0 4px 8px -2px rgba(15, 23, 42, 0.03);
+    border-color: #CBD5E1;
+}
+
+.booking-kpi-card:active {
+    transform: scale(0.985);
+}
+
+.booking-kpi-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    gap: 8px;
+}
+
+.booking-kpi-label {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #64748B;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.booking-kpi-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.icon-teal { background: #ECFDF5; color: #0D9488; }
+.icon-amber { background: #FEF3C7; color: #D97706; }
+.icon-emerald { background: #E0F2FE; color: #0284C7; }
+.icon-navy { background: #F1F5F9; color: #475569; }
+
+.booking-kpi-val {
+    font-size: 24px;
+    font-weight: 800;
+    color: #0F172A;
+    line-height: 1.15;
+    margin: 3px 0 3px;
+    letter-spacing: -0.02em;
+}
+
+.booking-kpi-sub {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    color: #64748B;
+    line-height: 1.2;
+    margin-top: auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pulse-dot {
+    width: 7px;
+    height: 7px;
+    background: #F59E0B;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
+}
+
+.booking-kpi-card .kpi-filter-tag {
+    margin-left: auto;
+    font-size: 11px;
+    color: #94A3B8;
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+}
+
+.booking-kpi-card:hover .kpi-filter-tag,
+.booking-kpi-card.is-selected .kpi-filter-tag {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Card Selected Gradients (Matching /office/customers tokens) */
+.booking-kpi-card[data-status=""].is-selected {
+    border-color: #0D9488;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.16), 0 10px 24px rgba(13, 148, 136, 0.08);
+    background: linear-gradient(180deg, #FFFFFF 0%, #F0FDFA 100%);
+}
+.booking-kpi-card[data-status=""].is-selected .kpi-filter-tag { color: #0D9488; font-weight: 700; }
+
+.booking-kpi-card[data-status="assigned"].is-selected {
+    border-color: #F59E0B;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.16), 0 10px 24px rgba(245, 158, 11, 0.08);
+    background: linear-gradient(180deg, #FFFFFF 0%, #FFFBEB 100%);
+}
+.booking-kpi-card[data-status="assigned"].is-selected .kpi-filter-tag { color: #F59E0B; font-weight: 700; }
+
+.booking-kpi-card[data-status="driver_accepted"].is-selected {
+    border-color: #10B981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.16), 0 10px 24px rgba(16, 185, 129, 0.08);
+    background: linear-gradient(180deg, #FFFFFF 0%, #ECFDF5 100%);
+}
+.booking-kpi-card[data-status="driver_accepted"].is-selected .kpi-filter-tag { color: #10B981; font-weight: 700; }
+
+.booking-kpi-card[data-status="trip_started"].is-selected {
+    border-color: #0284C7;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.16), 0 10px 24px rgba(2, 132, 199, 0.08);
+    background: linear-gradient(180deg, #FFFFFF 0%, #F0F9FF 100%);
+}
+.booking-kpi-card[data-status="trip_started"].is-selected .kpi-filter-tag { color: #0284C7; font-weight: 700; }
+
+/* ========================================================================= */
+/* Exact Customer Directory Compact Filter Bar (Height: 40px Uniformity)     */
+/* ========================================================================= */
+.filter-bar-compact {
+    display: flex !important;
+    align-items: center;
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 12px 16px;
+    margin-bottom: 22px;
+    border: 1px solid rgba(22, 68, 59, 0.12);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+    gap: 10px;
+    flex-wrap: wrap;
+    box-sizing: border-box;
+}
+
+.fbc-search {
+    position: relative;
+    flex: 1 1 260px;
+    min-width: 200px;
+    display: flex;
+    align-items: center;
+}
+
+.fbc-search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 14px;
+    pointer-events: none;
+}
+
+.fbc-search input {
+    width: 100%;
+    height: 40px;
+    padding: 9px 36px 9px 36px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #1e293b;
+    background: #f8fafc;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+    box-sizing: border-box;
+}
+
+.fbc-search input:focus {
+    border-color: #176B5B;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(23, 107, 91, 0.12);
+}
+
+.fbc-search-clear {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #94A3B8;
+    cursor: pointer;
+    padding: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    border-radius: 50%;
+    transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.fbc-search-clear:hover {
+    color: #0F172A;
+    background: rgba(0, 0, 0, 0.06);
+}
+
+.filter-bar-compact select,
+.filter-bar-compact .fbc-date-input {
+    height: 40px;
+    padding: 9px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #475569;
+    background: #f8fafc;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+    box-sizing: border-box;
+}
+
+.filter-bar-compact select:focus,
+.filter-bar-compact .fbc-date-input:focus {
+    border-color: #176B5B;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(23, 107, 91, 0.12);
+}
+
+.fbc-date-wrap {
+    display: flex;
+    align-items: center;
+}
+
+.fbc-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.fbc-actions-end {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.fbc-btn {
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #475569;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+.fbc-btn i {
+    font-size: 14px;
+    color: #176B5B;
+}
+
+.fbc-btn:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #1e293b;
+    transform: translateY(-1px);
+}
+
+.fbc-btn-clear {
+    background: #fff1f2;
+    border-color: #fecaca;
+    color: #ef4444;
+}
+
+.fbc-btn-clear:hover {
+    background: #ef4444;
+    border-color: #ef4444;
+    color: #fff;
+}
+
+.fbc-btn-clear i {
+    color: inherit;
+}
+
+/* ========================================================================= */
+/* Modern Table Container & Emerald Forest Header                            */
+/* ========================================================================= */
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.section-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #0F172A;
+    margin: 0;
+}
+
+.total-records-box {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: #64748B;
+}
+
+.total-records-badge {
+    background: #0F172A;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.8rem;
+}
+
+.modern-table-container {
+    overflow-x: hidden;
+    padding: 0;
+    background: #ffffff;
+}
+
+.modern-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.88rem;
+    text-align: left;
+}
+
+.modern-table thead {
+    background: linear-gradient(135deg, #176B5B, #16443B);
+}
+
+.modern-table thead tr th:first-child {
+    border-top-left-radius: 0;
+}
+
+.modern-table thead tr th:last-child {
+    border-top-right-radius: 0;
+}
+
+.modern-table th {
+    padding: 14px 14px;
+    color: #ffffff !important;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.modern-table tbody td {
+    padding: 12px 14px;
+    border-bottom: 1px solid #F1F5F9;
+    color: #334155;
+    vertical-align: middle;
+    font-size: 13.5px;
+}
+
+.modern-table tbody tr {
+    transition: background 0.18s ease;
+}
+
+.modern-table tbody tr:hover {
+    background: linear-gradient(135deg, rgba(23, 107, 91, 0.04), rgba(214, 183, 122, 0.05));
+}
+
+/* ========================================================================= */
+/* Table Cell Components (Exact Customer Directory Match)                    */
+/* ========================================================================= */
+.cust-serial-num {
+    font-weight: 700;
+    color: #64748B;
+    font-size: 0.88rem;
+}
+
+.cust-table-avatar-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 44px;
+    height: 44px;
+}
+
+.cust-table-avatar-img {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #176B5B;
+    box-shadow: 0 2px 8px rgba(23, 107, 91, 0.18);
+    background: #E8F4F0;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.cust-table-avatar-img:hover {
+    transform: scale(1.08);
+    box-shadow: 0 4px 12px rgba(23, 107, 91, 0.3);
+}
+
+.cust-table-monogram {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #176B5B 0%, #0F493E 100%);
+    color: #FFFFFF;
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 8px rgba(23, 107, 91, 0.25);
+    text-transform: uppercase;
+}
+
+.cust-client-details-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.cust-name-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.cust-full-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #0C2B52;
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+.cust-full-name:hover {
+    color: #176B5B;
+    text-decoration: underline;
+}
+
+.cust-code-pill {
+    display: inline-flex;
+    align-items: center;
+    background: #E8F4F0;
+    color: #176B5B;
+    border: 1px solid #B2D8CF;
+    border-radius: 6px;
+    padding: 1px 7px;
+    font-family: monospace;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.cust-email-row {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.82rem;
+    color: #64748B;
+}
+
+.cust-email-icon {
+    font-size: 0.78rem;
+    color: #94A3B8;
+}
+
+.cust-phone-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.cust-primary-phone {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #0F172A;
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+.cust-primary-phone:hover {
+    color: #176B5B;
+}
+
+.cust-phone-icon {
+    font-size: 0.76rem;
+    color: #176B5B;
+}
+
+.cust-bookings-cell {
+    display: flex;
+    flex-direction: column;
+}
+
+.cust-bookings-lbl {
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: #64748B;
+}
+
+.cust-address-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+    color: #334155;
+    max-width: 280px;
+}
+
+.cust-address-line {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    font-weight: 600;
+    color: #0F172A;
+    line-height: 1.35;
+    white-space: normal;
+    word-break: break-word;
+}
+
+.cust-address-sub {
+    font-size: 0.78rem;
+    color: #64748B;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    line-height: 1.3;
+}
+
+/* Status Pills with Glowing Pulse Dots */
+.cust-toggle-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    transition: all 0.2s ease;
+}
+
+.cust-toggle-pill.completed {
+    background: #E8F7F0;
+    color: #059669;
+}
+
+.cust-toggle-pill.warning {
+    background: #FEF3C7;
+    color: #D97706;
+}
+
+.cust-toggle-pill.info {
+    background: #E0F2FE;
+    color: #0284C7;
+}
+
+.cust-toggle-pill.cancelled {
+    background: #F1F5F9;
+    color: #64748B;
+}
+
+.toggle-pulse-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    transition: background-color 0.2s ease;
+}
+
+.toggle-pulse-dot.completed {
+    background: #059669;
+    box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.25);
+}
+
+.toggle-pulse-dot.warning {
+    background: #D97706;
+    box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.25);
+}
+
+.toggle-pulse-dot.info {
+    background: #0284C7;
+    box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.25);
+}
+
+.toggle-pulse-dot.cancelled {
+    background: #94A3B8;
+}
+
+/* ========================================================================= */
+/* 3-Dots Action Popups & Buttons                                            */
+/* ========================================================================= */
+.table-action-buttons {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.action-toggle-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid #CBD5E1;
+    background: #fff;
+    color: #475569;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.action-toggle-btn:hover {
+    background: #F1F5F9;
+    color: #0F172A;
+    border-color: #94A3B8;
+}
+
+.action-btns-popup {
+    position: absolute;
+    top: 50%;
+    right: calc(100% + 8px);
+    transform: translateY(-50%) scale(0.85);
+    background: #fff;
+    border: 1px solid #CBD5E1;
+    border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
+    padding: 6px 8px;
+    display: none;
+    gap: 6px;
+    align-items: center;
+    z-index: 100;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.action-btns-popup.open,
+.action-btns-popup.show {
+    display: flex !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    transform: translateY(-50%) scale(1) !important;
+}
+
+.action-btn-table {
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-size: 0.82rem;
+    transition: all 0.15s ease;
+}
+
+.action-btn-table.view { background: #E0F2FE; color: #0284C7; }
+.action-btn-table.view:hover { background: #BAE6FD; }
+
+.action-btn-table.dispatch { background: #DCFCE7; color: #16A34A; }
+.action-btn-table.dispatch:hover { background: #BBF7D0; }
+
+.action-btn-table.edit { background: #FEF3C7; color: #D97706; }
+.action-btn-table.edit:hover { background: #FDE68A; }
+
+.action-btn-table.delete {
+    background: #FEE2E2;
+    color: #DC2626;
+}
+.action-btn-table.delete:hover {
+    background: #DC2626 !important;
+    color: #FFF !important;
+}
+
+/* Empty state message */
+.no-data-message {
+    padding: 3rem 1.5rem;
+    text-align: center;
+}
+
+.no-data-icon {
+    font-size: 2.5rem;
+    color: #94A3B8;
+    margin-bottom: 0.75rem;
+}
+
+/* ========================================================================= */
+/* Pagination Architecture (Exact Customer Directory Match)                   */
+/* ========================================================================= */
+.pagination-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    border-top: 1px solid #E2E8F0;
+    background: #fff;
+    border-radius: 0 0 16px 16px;
+    margin-bottom: 2rem;
+}
+
+.pagination-info {
+    font-size: 0.88rem;
+    color: #64748B;
+}
+
+.pagination-info span {
+    font-weight: 700;
+    color: #0F172A;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.pagination a {
+    min-width: 34px;
+    height: 34px;
+    padding: 0 8px;
+    border-radius: 8px;
+    border: 1px solid #E2E8F0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #334155;
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+
+.pagination a:hover:not(.disabled):not(.active) {
+    background: #F1F5F9;
+    border-color: #CBD5E1;
+}
+
+.pagination a.active {
+    background: #0F172A;
+    color: #fff;
+    border-color: #0F172A;
+}
+
+.pagination a.disabled {
+    color: #CBD5E1;
+    cursor: not-allowed;
+    border-color: #E2E8F0;
+}
+
+.pagination .dots {
+    color: #94A3B8;
+    padding: 0 4px;
+}
+
+/* ========================================================================= */
+/* Mobile Specific Styles (< 769px)                                          */
+/* ========================================================================= */
+.mv-bookings-header {
+    display: none;
+    margin-bottom: 12px;
+}
+
+.mv-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0 12px 0;
+}
+
+.mv-top-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.mv-back-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: #F1F5F9;
+    color: #334155;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.mv-page-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #0F172A;
+    margin: 0;
+}
+
+.mv-add-btn {
+    padding: 0.45rem 0.85rem;
+    background: linear-gradient(135deg, #176B5B 0%, #125748 100%);
+    color: #fff;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.82rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mv-search-bar-wrap {
+    margin-bottom: 10px;
+}
+
+.mv-search-form {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.mv-search-input-box {
+    position: relative;
+    flex: 1;
+}
+
+.mv-search-ico {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94A3B8;
+    font-size: 0.85rem;
+}
+
+.mv-search-input-box input {
+    width: 100%;
+    padding: 0.5rem 2rem 0.5rem 2rem;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    outline: none;
+}
+
+.mv-search-clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #94A3B8;
+    cursor: pointer;
+}
+
+.mv-filter-toggle {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    background: #fff;
+    color: #334155;
+    cursor: pointer;
+}
+
+.mv-filter-panel {
+    background: #fff;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.mv-filter-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.mv-status-scroll {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+}
+
+.mv-status-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.mv-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    background: #fff;
+    border: 1px solid #E2E8F0;
+    color: #475569;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.mv-pill.active {
+    background: #0EA5E9;
+    color: #fff;
+    border-color: #0EA5E9;
+}
+
+.mv-pill-cnt {
+    background: rgba(0,0,0,0.06);
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+}
+
+.mv-pill.active .mv-pill-cnt {
+    background: rgba(255,255,255,0.25);
+}
+
+.cards-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.75rem;
+}
+
+.mv-booking-card-wrapper {
+    position: relative;
+    background: #fff;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.mv-booking-card {
+    display: flex;
+    align-items: flex-start;
+    padding: 0.85rem;
+    padding-right: 48px;
+    text-decoration: none;
+    gap: 10px;
+}
+
+/* Mobile thumb avatar styles handled cleanly and globally via .mv-thumb-wrap.is-avatar in app.css */
+
+.mv-details {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.mv-tour-title {
+    font-weight: 700;
+    color: #0F172A;
+    font-size: 0.92rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mv-date-duration, .mv-passenger, .mv-vehicle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: #475569;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mv-right-col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.mv-price {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748B;
+}
+
+.mv-card-actions {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    z-index: 10;
+}
+
+.mv-action-dots-btn {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    color: #64748B;
+    border-radius: 9px;
+    font-size: 13.5px;
+    cursor: pointer;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+.mv-action-dots-btn:hover {
+    background: #FFFFFF;
+    color: #176B5B;
+    border-color: #CBD5E1;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.mv-card-actions.open .mv-action-dots-btn,
+.mv-card-actions.is-open .mv-action-dots-btn,
+.mv-action-dots-btn:active {
+    background: #176B5B !important;
+    color: #FFFFFF !important;
+    border-color: #176B5B !important;
+}
+
+.card-btns-popup {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    bottom: auto;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px -4px rgba(15, 23, 42, 0.14), 0 4px 6px -2px rgba(15, 23, 42, 0.05);
+    display: none;
+    gap: 6px;
+    padding: 6px 8px;
+    z-index: 50;
+    align-items: center;
+    transform-origin: top right;
+}
+
+.card-btns-popup.open,
+.card-btns-popup.show {
+    display: flex !important;
+}
+
+/* Responsive display switches matching Office Customer Directory */
+@media (max-width: 768px) {
+    .desktop-header-wrapper,
+    .booking-kpi-grid,
+    .filter-bar-compact,
+    .modern-table-container {
+        display: none !important;
+    }
+    .mv-bookings-header {
+        display: block !important;
+    }
+    .cards-grid {
+        display: flex !important;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .pagination-wrapper {
+        flex-direction: column;
+        gap: 0.75rem;
+        align-items: center;
+    }
+}
+
+@media (min-width: 769px) {
+    .mv-bookings-header,
+    .cards-grid {
+        display: none !important;
+    }
+    .desktop-header-wrapper {
+        display: block !important;
+    }
+    .booking-kpi-grid {
+        display: grid !important;
+    }
+    .filter-bar-compact {
+        display: flex !important;
+    }
+    .modern-table-container {
+        display: block !important;
+    }
+}
+</style>

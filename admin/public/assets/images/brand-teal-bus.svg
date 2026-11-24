@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="48" height="48">
+  <defs>
+    <linearGradient id="tealBusGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#176B5B"/>
+      <stop offset="100%" stop-color="#125748"/>
+    </linearGradient>
+  </defs>
+  <!-- Bus Outer Body -->
+  <path d="M8 18 C8 14 11 12 16 12 L48 12 C53 12 56 14 56 18 L57 38 C57 41 55 43 52 43 L52 48 C52 49.5 50.5 50.5 49 50.5 C47.5 50.5 46 49.5 46 48 L46 43 L18 43 L18 48 C18 49.5 16.5 50.5 15 50.5 C13.5 50.5 12 49.5 12 48 L12 43 C9 43 7 41 7 38 Z" fill="url(#tealBusGrad)"/>
+  <!-- Front Windshield & Windows in Warm Ivory Tint -->
+  <path d="M12 16 C12 14.5 13.5 14 16 14 L48 14 C50.5 14 52 14.5 52 16 L52 28 L12 28 Z" fill="#EAF2ED"/>
+  <!-- Window Dividers -->
+  <rect x="24" y="14" width="2" height="14" fill="#176B5B"/>
+  <rect x="38" y="14" width="2" height="14" fill="#176B5B"/>
+  <!-- Headlights in Champagne Gold -->
+  <circle cx="14" cy="35" r="3" fill="#D6B77A"/>
+  <circle cx="50" cy="35" r="3" fill="#D6B77A"/>
+  <!-- Grille -->
+  <rect x="22" y="34" width="20" height="2" rx="1" fill="#FFFFFF" opacity="0.85"/>
+  <rect x="25" y="38" width="14" height="2" rx="1" fill="#FFFFFF" opacity="0.85"/>
+  <!-- Wheels -->
+  <circle cx="16" cy="46" r="3" fill="#16443B"/>
+  <circle cx="48" cy="46" r="3" fill="#16443B"/>
+</svg>

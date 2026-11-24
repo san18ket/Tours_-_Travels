@@ -1,0 +1,29 @@
+/* ==========================================================================
+   HARMONIZED LEGACY STYLESHEET ALIAS
+   All styles have been unified into the master design system: app.css
+   Theme: Forest Teal + Warm Ivory + Champagne Sand + Light Glassmorphism
+   ========================================================================== */
+
+@import url('app.css');
+
+:root {
+  --navy-dark: var(--brand-secondary);
+  --navy-sidebar: var(--surface-background);
+  --navy-surface: var(--surface-solid);
+  --gold-primary: var(--brand-accent);
+  --gold-hover: #CCA866;
+  --gold-secondary: #B89658;
+  --gold-glow: rgba(214, 183, 122, 0.25);
+
+  --bg-canvas: var(--page-background);
+  --card-bg: var(--surface-background);
+  --text-primary: var(--text-primary);
+  --text-muted: var(--text-muted);
+  --border-light: rgba(22, 68, 59, 0.12);
+  --border-dark: rgba(255, 255, 255, 0.90);
+
+  --success-color: var(--status-success);
+  --danger-color: var(--status-danger);
+  --warning-color: var(--status-warning);
+  --info-color: var(--status-info);
+}

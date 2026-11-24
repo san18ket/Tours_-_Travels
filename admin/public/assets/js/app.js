@@ -1,0 +1,2427 @@
+/**
+ * Tours & Travels - Core Client JavaScript
+ * Vanilla JS with PWA integration, Telemetry, and Offline handling
+ */
+
+(function () {
+    'use strict';
+
+    // Global Client Translation Helper
+    function __trans(key, fallback) {
+        if (window.VoyageTranslations && typeof window.VoyageTranslations[key] === 'string') {
+            return window.VoyageTranslations[key];
+        }
+        return fallback !== undefined ? fallback : key;
+    }
+    window.__trans = __trans;
+
+    // Global CSRF Token Retrieval
+    function getCsrfToken() {
+        const meta = document.querySelector('meta[name="csrf-token"]');
+        return meta ? meta.getAttribute('content') : '';
+    }
+
+    // Network status listener
+    function setupNetworkListener() {
+        const offlineBanner = document.getElementById('offlineBanner');
+        if (!offlineBanner) return;
+
+        // Ensure banner is hidden by default on initialization
+        offlineBanner.style.display = 'none';
+
+        const isLocalHost = Boolean(
+            window.location.hostname === 'localhost' ||
+            window.location.hostname === '127.0.0.1' ||
+            window.location.hostname === '[::1]' ||
+            window.location.hostname.match(/^192\.168\./) ||
+            window.location.hostname.match(/^10\./) ||
+            window.location.hostname.match(/^172\.(1[6-9]|2[0-9]|3[0-1])\./) ||
+            window.location.hostname.endsWith('.local') ||
+            window.location.protocol === 'file:'
+        );
+
+        function showOffline() {
+            const bannerText = document.getElementById('offlineBannerText');
+            let message = __trans('js.offline_banner', 'Offline Mode: Live telemetry synchronization paused. Changes will sync once connection returns.');
+            message = message.replace(/^[⚠️⚠\s]+/, '');
+            if (bannerText) {
+                bannerText.textContent = message;
+            } else {
+                offlineBanner.innerText = '⚠️ ' + message;
+            }
+            offlineBanner.style.display = 'flex';
+        }
+
+        function hideOffline() {
+            offlineBanner.style.display = 'none';
+        }
+
+        // On localhost/intranet environments, navigator.onLine can be false if there is no WAN probe
+        // even though local server & telemetry are active. Only probe if not on localhost.
+        if (!isLocalHost && navigator.onLine === false) {
+            fetch(window.location.href, { method: 'HEAD', cache: 'no-store' })
+                .then(function () { hideOffline(); })
+                .catch(function () { showOffline(); });
+        }
+
+        window.addEventListener('online', function () {
+            hideOffline();
+        });
+
+        window.addEventListener('offline', function () {
+            fetch(window.location.href, { method: 'HEAD', cache: 'no-store' })
+                .then(function () { hideOffline(); })
+                .catch(function () { showOffline(); });
+        });
+    }
+
+    // Auto dismiss alert flash messages after 5 seconds
+    function setupAlertAutoDismiss() {
+        const alerts = document.querySelectorAll('.alert-dismissible');
+        alerts.forEach(alert => {
+            setTimeout(() => {
+                alert.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateY(-10px)';
+                setTimeout(() => alert.remove(), 400);
+            }, 5000);
+        });
+    }
+
+    // Global CSRF Token Retrieval
+    function getCsrfToken() {
+        const meta = document.querySelector('meta[name="csrf-token"]');
+        if (meta && meta.getAttribute('content')) {
+            return meta.getAttribute('content');
+        }
+        const input = document.querySelector('input[name="_csrf_token"], input[name="csrf_token"], input[name="_token"]');
+        return input ? input.value : '';
+    }
+    window.getCsrfToken = getCsrfToken;
+
+    // Subdirectory-aware GPS API Endpoint Resolver
+    function getGpsUpdateUrl() {
+        const meta = document.querySelector('meta[name="gps-update-url"]');
+        if (meta && meta.getAttribute('content')) {
+            return meta.getAttribute('content');
+        }
+        const baseMeta = document.querySelector('meta[name="base-url"]');
+        if (baseMeta && baseMeta.getAttribute('content')) {
+            const base = baseMeta.getAttribute('content').replace(/\/$/, '');
+            return (base ? base : '') + '/api/gps/update';
+        }
+        if (window.VoyageConfig && window.VoyageConfig.gpsUpdateUrl) {
+            return window.VoyageConfig.gpsUpdateUrl;
+        }
+        return '/api/gps/update';
+    }
+    window.getGpsUpdateUrl = getGpsUpdateUrl;
+
+    // Driver Live GPS Telemetry Engine
+    window.VoyageTelemetry = {
+        watchId: null,
+        isTracking: false,
+        updateUrl: null,
+        lastSuccessfulSync: null,
+        lastCoords: null,
+        highAccuracyMode: true,
+
+        // Callbacks
+        onRawFix: null,
+        onServerConfirmed: null,
+        onError: null,
+        onStateChange: null,
+
+        getResolvedUrl: function () {
+            return this.updateUrl || getGpsUpdateUrl();
+        },
+
+        start: function (updateUrl, options) {
+            if (updateUrl) {
+                this.updateUrl = updateUrl;
+            } else if (!this.updateUrl) {
+                this.updateUrl = getGpsUpdateUrl();
+            }
+
+            // If already tracking, clear the old watcher first
+            if (this.isTracking && this.watchId !== null) {
+                navigator.geolocation.clearWatch(this.watchId);
+                this.watchId = null;
+            }
+
+            // 1. Browser Geolocation Support Check
+            if (!navigator.geolocation) {
+                const msg = 'Geolocation is not supported by this browser or device.';
+                this.notifyError(msg, 'unsupported');
+                return false;
+            }
+
+            // 2. HTTPS / Secure Context Check
+            if (window.isSecureContext === false && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                const msg = 'Geolocation requires a secure connection (HTTPS). Current connection is insecure (HTTP).';
+                this.notifyError(msg, 'insecure_context');
+                return false;
+            }
+
+            this.isTracking = true;
+            this.highAccuracyMode = options?.enableHighAccuracy !== undefined ? options.enableHighAccuracy : true;
+            this.notifyState(true);
+
+            const radarIndicator = document.getElementById('gpsRadarIndicator');
+            const statusText = document.getElementById('gpsStatusText');
+            if (radarIndicator) radarIndicator.style.display = 'inline-block';
+            if (statusText) statusText.innerText = this.highAccuracyMode ? 'Acquiring Satellite GPS Signal...' : 'Acquiring Network Location...';
+
+            this.startWatcher(options);
+            return true;
+        },
+
+        startWatcher: function (options) {
+            const highAcc = this.highAccuracyMode;
+            this.watchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    this.lastCoords = position.coords;
+                    this.notifyRawFix(position.coords);
+                    this.sendLocation(position.coords).catch(() => { });
+                },
+                (error) => {
+                    this.handleGeoError(error, options);
+                },
+                {
+                    enableHighAccuracy: highAcc,
+                    maximumAge: options?.maximumAge ?? (highAcc ? 3000 : 30000),
+                    timeout: options?.timeout ?? (highAcc ? 12000 : 20000)
+                }
+            );
+        },
+
+        sendLocation: function (coords, overrideUrl) {
+            const token = getCsrfToken();
+            const targetUrl = overrideUrl || this.getResolvedUrl();
+            const payload = {
+                latitude: Number(coords.latitude.toFixed(8)),
+                longitude: Number(coords.longitude.toFixed(8)),
+                accuracy: coords.accuracy != null ? Number(coords.accuracy.toFixed(1)) : null,
+                speed_kmh: coords.speed != null ? Number((coords.speed * 3.6).toFixed(1)) : 0.0,
+                heading_degrees: coords.heading != null && !isNaN(coords.heading) ? Number(coords.heading.toFixed(1)) : null,
+                _csrf_token: token
+            };
+
+            return fetch(targetUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': token,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(payload)
+            })
+                .then(async (res) => {
+                    let data = null;
+                    try {
+                        data = await res.json();
+                    } catch (e) {
+                        data = { success: false, error: 'Server returned non-JSON response (HTTP ' + res.status + ')' };
+                    }
+
+                    if (!res.ok || data.success !== true) {
+                        const errorMsg = data.error || ('Server rejected telemetry update (HTTP ' + res.status + ')');
+                        throw new Error(errorMsg);
+                    }
+
+                    // Strict confirmation: only update when the server explicitly confirms!
+                    this.lastSuccessfulSync = new Date();
+                    const lastSync = document.getElementById('lastGpsSyncTime');
+                    if (lastSync) {
+                        lastSync.innerText = data.data?.formatted_time || this.lastSuccessfulSync.toLocaleTimeString();
+                    }
+
+                    const statusText = document.getElementById('gpsStatusText');
+                    if (statusText && this.isTracking) {
+                        statusText.innerText = 'Live GPS Streaming (' + (data.data?.policy === 'active_trip' ? 'Trip ' + (data.data?.booking_code || '') : 'On Duty') + ')';
+                    }
+
+                    this.notifyServerConfirmed(coords, data);
+                    return data;
+                })
+                .catch((err) => {
+                    console.warn('Telemetry transmission error:', err.message);
+                    this.notifyError(err.message, 'api_error', err);
+                    throw err;
+                });
+        },
+
+        handleGeoError: function (error, options) {
+            let msg = 'Could not acquire GPS fix: ' + (error.message || 'Unknown GPS error');
+            let type = 'geolocation_error';
+
+            if (error.code === 1) { // PERMISSION_DENIED
+                msg = 'GPS permission denied. Please allow location access in your browser address bar/settings.';
+                type = 'permission_denied';
+                this.stop(); // Stop polling when user explicitly denies
+            } else if (error.code === 2) { // POSITION_UNAVAILABLE
+                msg = 'GPS signal unavailable. Ensure device location hardware/services are enabled.';
+                type = 'position_unavailable';
+            } else if (error.code === 3) { // TIMEOUT
+                // Adaptive Fallback: If high-accuracy satellite lock timed out (common on desktop/indoor), switch to network
+                if (this.highAccuracyMode) {
+                    console.warn('High-accuracy GPS timed out. Switching to standard network/Wi-Fi positioning...');
+                    this.highAccuracyMode = false;
+                    const statusText = document.getElementById('gpsStatusText');
+                    if (statusText) statusText.innerText = 'Satellite timeout. Acquiring Wi-Fi / Network location...';
+                    if (this.isTracking && this.watchId !== null) {
+                        navigator.geolocation.clearWatch(this.watchId);
+                        this.startWatcher(options);
+                    }
+                    return;
+                }
+                msg = 'Location request timed out. Please check Windows location services or retry.';
+                type = 'timeout';
+            }
+
+            const statusText = document.getElementById('gpsStatusText');
+            if (statusText) statusText.innerText = msg;
+
+            this.notifyError(msg, type, error);
+        },
+
+        stop: function () {
+            if (this.watchId !== null) {
+                navigator.geolocation.clearWatch(this.watchId);
+                this.watchId = null;
+            }
+            this.isTracking = false;
+            this.highAccuracyMode = true;
+
+            const radarIndicator = document.getElementById('gpsRadarIndicator');
+            const statusText = document.getElementById('gpsStatusText');
+            if (radarIndicator) radarIndicator.style.display = 'none';
+            if (statusText) statusText.innerText = 'Standby (Sharing Stopped)';
+
+            this.notifyState(false);
+        },
+
+        notifyRawFix: function (coords) {
+            if (typeof this.onRawFix === 'function') {
+                try { this.onRawFix(coords); } catch (e) { console.error(e); }
+            }
+            window.dispatchEvent(new CustomEvent('voyage:gps-raw', { detail: { coords } }));
+        },
+
+        notifyServerConfirmed: function (coords, data) {
+            if (typeof this.onServerConfirmed === 'function') {
+                try { this.onServerConfirmed(coords, data); } catch (e) { console.error(e); }
+            }
+            window.dispatchEvent(new CustomEvent('voyage:gps-confirmed', { detail: { coords, data } }));
+        },
+
+        notifyError: function (message, type, raw) {
+            if (typeof this.onError === 'function') {
+                try { this.onError(message, type, raw); } catch (e) { console.error(e); }
+            }
+            window.dispatchEvent(new CustomEvent('voyage:gps-error', { detail: { message, type, raw } }));
+        },
+
+        notifyState: function (isTracking) {
+            if (typeof this.onStateChange === 'function') {
+                try { this.onStateChange(isTracking); } catch (e) { console.error(e); }
+            }
+            window.dispatchEvent(new CustomEvent('voyage:gps-state', { detail: { isTracking } }));
+        }
+    };
+
+    // PWA Service Worker Registration with dynamic subdirectory resolution & explicit scope
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            const swMeta = document.querySelector('meta[name="sw-url"]');
+            let swUrl = swMeta ? swMeta.getAttribute('content') : null;
+            let baseUrl = '';
+
+            const baseMeta = document.querySelector('meta[name="base-url"]');
+            if (baseMeta) {
+                baseUrl = baseMeta.getAttribute('content').replace(/\/$/, '');
+            } else {
+                // Auto-detect subdirectory from app.js script source if base-url meta is omitted
+                const scriptEl = document.querySelector('script[src*="app.js"]');
+                if (scriptEl) {
+                    try {
+                        const parsedUrl = new URL(scriptEl.src, window.location.origin);
+                        const assetIdx = parsedUrl.pathname.indexOf('/assets/');
+                        if (assetIdx !== -1) {
+                            baseUrl = parsedUrl.pathname.substring(0, assetIdx);
+                        }
+                    } catch (e) {
+                        // ignore
+                    }
+                }
+            }
+
+            if (!swUrl) {
+                swUrl = baseUrl ? (baseUrl + '/sw.js') : '/sw.js';
+            }
+
+            const regOptions = baseUrl ? { scope: baseUrl + '/' } : {};
+
+            navigator.serviceWorker.register(swUrl, regOptions)
+                .then(reg => {
+                    console.log('ServiceWorker registered successfully with scope:', reg.scope);
+                })
+                .catch(err => {
+                    console.warn('ServiceWorker registration skipped or unsupported in context:', err);
+                });
+        });
+    }
+
+    // Modal Helpers & Scroll-Lock Management
+    function syncBodyModalState() {
+        const activeModals = document.querySelectorAll('.modal-backdrop-custom, .modal-backdrop');
+        let hasOpenModal = false;
+        for (let i = 0; i < activeModals.length; i++) {
+            const m = activeModals[i];
+            const style = window.getComputedStyle(m);
+            if (style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0') {
+                hasOpenModal = true;
+                break;
+            }
+        }
+        if (hasOpenModal) {
+            document.body.classList.add('modal-open');
+        } else {
+            document.body.classList.remove('modal-open');
+        }
+    }
+
+    window.openModal = function (modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'flex';
+            document.body.classList.add('modal-open');
+            const bodyCustom = modal.querySelector('.modal-body-custom');
+            if (bodyCustom) {
+                bodyCustom.scrollTop = 0;
+            }
+        }
+    };
+
+    window.closeModal = function (modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'none';
+        }
+        syncBodyModalState();
+    };
+
+    // Close modal when clicking outside backdrop
+    window.addEventListener('click', function (e) {
+        if (e.target && e.target.classList && (e.target.classList.contains('modal-backdrop') || e.target.classList.contains('modal-backdrop-custom'))) {
+            e.target.style.display = 'none';
+            syncBodyModalState();
+        }
+    });
+
+    // Close on Escape key press
+    window.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' || e.key === 'Esc') {
+            const openModals = document.querySelectorAll('.modal-backdrop-custom, .modal-backdrop');
+            let closedAny = false;
+            openModals.forEach(function (m) {
+                if (m.style.display === 'flex' || m.style.display === 'block') {
+                    m.style.display = 'none';
+                    closedAny = true;
+                }
+            });
+            if (closedAny) {
+                syncBodyModalState();
+            }
+        }
+    });
+
+    // Mobile Sidebar Drawer Toggle
+    window.toggleSidebar = function () {
+        const sidebar = document.getElementById('sidebar');
+        const backdrop = document.getElementById('sidebarBackdrop');
+        if (sidebar) {
+            sidebar.classList.toggle('active');
+            if (backdrop) {
+                backdrop.classList.toggle('active');
+            }
+        }
+    };
+
+    window.closeSidebar = function () {
+        const sidebar = document.getElementById('sidebar');
+        const backdrop = document.getElementById('sidebarBackdrop');
+        const toggleBtn = document.getElementById('sidebarToggleBtn');
+        if (sidebar) {
+            sidebar.classList.remove('active');
+        }
+        if (backdrop) {
+            backdrop.classList.remove('active');
+        }
+        if (toggleBtn && window.innerWidth <= 900) {
+            toggleBtn.classList.remove('is-collapsed');
+        }
+    };
+
+    // Auto-close sidebar on responsive devices when any navigation link is clicked
+    document.addEventListener('click', function (e) {
+        const link = e.target.closest('#sidebar a[href], .sidebar a[href]');
+        if (!link) return;
+
+        const href = link.getAttribute('href');
+        if (!href || href === '#' || href.startsWith('javascript:')) return;
+
+        // If sidebar is active or viewport is mobile/tablet, close drawer smoothly
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar && (sidebar.classList.contains('active') || window.innerWidth <= 1024)) {
+            window.closeSidebar();
+        }
+    });
+
+    // =========================================================================
+    // Professional Single-Dropdown Accordion Engine
+    // Default: All dropdowns closed.
+    // Accordion Rule: If one dropdown is open and user clicks another, first close
+    // the currently open dropdown, and after that open the clicked dropdown.
+    // =========================================================================
+    let isAccordionTransitioning = false;
+
+    function openDropdown(catId) {
+        const header = document.getElementById(catId + '-header');
+        const items = document.getElementById(catId + '-items');
+        if (!header || !items) return;
+
+        header.setAttribute('aria-expanded', 'true');
+        header.classList.add('open');
+        items.classList.add('expanded');
+    }
+
+    function closeDropdown(catId) {
+        const header = document.getElementById(catId + '-header');
+        const items = document.getElementById(catId + '-items');
+        if (!header || !items) return;
+
+        header.setAttribute('aria-expanded', 'false');
+        header.classList.remove('open');
+        items.classList.remove('expanded');
+    }
+
+    // Helper: Isolated User Preferences for Sidebar
+    function setSidebarPref(collapsed) {
+        if (window.ToursPrefs && typeof window.ToursPrefs.set === 'function') {
+            window.ToursPrefs.set('sidebar_collapsed', collapsed);
+        }
+        try {
+            localStorage.setItem('vg_sidebar_collapsed', collapsed ? 'true' : 'false');
+        } catch (e) {}
+    }
+
+    function getSidebarPref() {
+        if (window.ToursPrefs && typeof window.ToursPrefs.get === 'function') {
+            const val = window.ToursPrefs.get('sidebar_collapsed', null);
+            if (val !== null) return Boolean(val);
+        }
+        try {
+            return localStorage.getItem('vg_sidebar_collapsed') === 'true';
+        } catch (e) {
+            return false;
+        }
+    }
+
+    window.toggleCategory = function (categoryId) {
+        if (isAccordionTransitioning) return;
+
+        const sidebar = document.getElementById('sidebar');
+        // If sidebar is collapsed (icon-only mode), clicking a category expands the sidebar to reveal options
+        if (sidebar && sidebar.classList.contains('collapsed')) {
+            sidebar.classList.remove('collapsed');
+            setSidebarPref(false);
+            const toggleBtn = document.getElementById('sidebarToggleBtn');
+            if (toggleBtn) toggleBtn.classList.remove('is-collapsed');
+            openDropdown(categoryId);
+            return;
+        }
+
+        const targetHeader = document.getElementById(categoryId + '-header');
+        const targetItems = document.getElementById(categoryId + '-items');
+        if (!targetHeader || !targetItems) return;
+
+        const isCurrentlyExpanded = targetHeader.getAttribute('aria-expanded') === 'true' || targetItems.classList.contains('expanded');
+
+        // Locate any currently open dropdown (different from clicked)
+        const allHeaders = document.querySelectorAll('.category-header');
+        let currentlyOpenId = null;
+
+        allHeaders.forEach(header => {
+            const hId = header.id.replace('-header', '');
+            if (hId !== categoryId && (header.getAttribute('aria-expanded') === 'true' || header.classList.contains('open'))) {
+                currentlyOpenId = hId;
+            }
+        });
+
+        if (isCurrentlyExpanded) {
+            // Dropdown is already open: toggle it closed
+            closeDropdown(categoryId);
+        } else {
+            // Dropdown needs to open
+            if (currentlyOpenId) {
+                // FIRST: close the open dropdown
+                isAccordionTransitioning = true;
+                closeDropdown(currentlyOpenId);
+
+                // AFTER THAT: open the clicked dropdown after close animation starts
+                setTimeout(() => {
+                    openDropdown(categoryId);
+                    isAccordionTransitioning = false;
+                }, 220); // 220ms smooth sequence
+            } else {
+                // No open dropdown: open immediately
+                openDropdown(categoryId);
+            }
+        }
+    };
+
+    // =========================================================================
+    // Professional Multi-Level Subcategory Accordion Engine (Finance)
+    // =========================================================================
+    let isSubAccordionTransitioning = false;
+
+    window.toggleSubCategory = function (subCatId, event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        if (isSubAccordionTransitioning) return;
+
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar && sidebar.classList.contains('collapsed')) {
+            sidebar.classList.remove('collapsed');
+            setSidebarPref(false);
+            const toggleBtn = document.getElementById('sidebarToggleBtn');
+            if (toggleBtn) toggleBtn.classList.remove('is-collapsed');
+        }
+
+        const targetHeader = document.getElementById(subCatId + '-header');
+        const targetItems = document.getElementById(subCatId + '-items');
+        if (!targetHeader || !targetItems) return;
+
+        const isCurrentlyExpanded = targetHeader.getAttribute('aria-expanded') === 'true' || targetItems.classList.contains('expanded');
+
+        // Locate any currently open sibling subcategory inside the parent container
+        const parentContainer = targetHeader.closest('.category-items-inner') || document;
+        const allSubcatHeaders = parentContainer.querySelectorAll('.subcategory-header');
+        let openSiblingId = null;
+
+        allSubcatHeaders.forEach(header => {
+            const hId = header.id.replace('-header', '');
+            if (hId !== subCatId && (header.getAttribute('aria-expanded') === 'true' || header.classList.contains('open'))) {
+                openSiblingId = hId;
+            }
+        });
+
+        function closeSubcat(id) {
+            const h = document.getElementById(id + '-header');
+            const it = document.getElementById(id + '-items');
+            if (h) {
+                h.setAttribute('aria-expanded', 'false');
+                h.classList.remove('open');
+            }
+            if (it) it.classList.remove('expanded');
+        }
+
+        function openSubcat(id) {
+            const h = document.getElementById(id + '-header');
+            const it = document.getElementById(id + '-items');
+            if (h) {
+                h.setAttribute('aria-expanded', 'true');
+                h.classList.add('open');
+            }
+            if (it) it.classList.add('expanded');
+        }
+
+        if (isCurrentlyExpanded) {
+            closeSubcat(subCatId);
+        } else {
+            if (openSiblingId) {
+                isSubAccordionTransitioning = true;
+                closeSubcat(openSiblingId);
+                setTimeout(() => {
+                    openSubcat(subCatId);
+                    isSubAccordionTransitioning = false;
+                }, 180);
+            } else {
+                openSubcat(subCatId);
+            }
+        }
+    };
+
+    // Professional Sidebar Collapse Engine:
+    // On Desktop (>900px): collapses sidebar into an icon-only mini-rail.
+    // On Mobile (<=900px): toggles off-canvas drawer navigation.
+    window.toggleSidebarCollapse = function () {
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('sidebarToggleBtn');
+        if (!sidebar) return;
+
+        if (window.innerWidth <= 900) {
+            const isNowActive = sidebar.classList.toggle('active');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (backdrop) backdrop.classList.toggle('active', isNowActive);
+            if (toggleBtn) toggleBtn.classList.toggle('is-collapsed', isNowActive);
+        } else {
+            const isCollapsed = sidebar.classList.toggle('collapsed');
+            if (document.body) document.body.classList.toggle('sidebar-collapsed', isCollapsed);
+            if (document.documentElement) document.documentElement.classList.toggle('sidebar-collapsed', isCollapsed);
+            setSidebarPref(isCollapsed);
+            if (toggleBtn) {
+                toggleBtn.classList.toggle('is-collapsed', isCollapsed);
+            }
+            window.dispatchEvent(new Event('resize'));
+            if (typeof window.recalculateTableLayouts === 'function') {
+                window.recalculateTableLayouts();
+            }
+        }
+    };
+
+    // Aliases for backward compatibility
+    window.toggleDesktopSidebar = window.toggleSidebarCollapse;
+
+    // Initialize Sidebar State:
+    // When any dropdown list page is open, keep that current page dropdown open.
+    // Close all other dropdowns.
+    function initSidebarState() {
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('sidebarToggleBtn');
+        if (sidebar && window.innerWidth > 900) {
+            const isCollapsed = getSidebarPref();
+            if (isCollapsed) {
+                sidebar.classList.add('collapsed');
+                if (document.body) document.body.classList.add('sidebar-collapsed');
+                if (document.documentElement) document.documentElement.classList.add('sidebar-collapsed');
+                if (toggleBtn) {
+                    toggleBtn.classList.add('is-collapsed');
+                }
+            } else {
+                if (document.body) document.body.classList.remove('sidebar-collapsed');
+                if (document.documentElement) document.documentElement.classList.remove('sidebar-collapsed');
+            }
+        }
+
+        // Detect if the current page belongs to a dropdown category
+        let activeCatId = null;
+        const activeLink = document.querySelector('.sidebar-nav .nav-link.active');
+        if (activeLink) {
+            const activeItems = activeLink.closest('.sidebar-category-items');
+            if (activeItems && activeItems.id) {
+                activeCatId = activeItems.id.replace('-items', '');
+            }
+        }
+
+        if (!activeCatId) {
+            const activeHeader = document.querySelector('.category-header.has-active, .category-header.open');
+            if (activeHeader && activeHeader.id) {
+                activeCatId = activeHeader.id.replace('-header', '');
+            }
+        }
+
+        if (!activeCatId) {
+            const activeItems = document.querySelector('.sidebar-category-items.expanded');
+            if (activeItems && activeItems.id) {
+                activeCatId = activeItems.id.replace('-items', '');
+            }
+        }
+
+        // Keep current page dropdown open; ensure all other dropdowns are closed
+        document.querySelectorAll('.category-header').forEach(header => {
+            const catId = header.id.replace('-header', '');
+            if (activeCatId && catId === activeCatId) {
+                openDropdown(catId);
+            } else {
+                closeDropdown(catId);
+            }
+        });
+    }
+
+    // Accessible Language Switcher Dropdown Interaction & Keyboard Navigation
+    function setupLanguageDropdown() {
+        if (!window.vgToggleLanguageDropdown) {
+            window.vgToggleLanguageDropdown = function (btn, event) {
+                if (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                const dropdown = btn ? btn.closest('.vg-lang-dropdown') : null;
+                if (!dropdown) return;
+                const wasOpen = dropdown.classList.contains('is-open');
+
+                // Close all language dropdowns
+                document.querySelectorAll('.vg-lang-dropdown.is-open').forEach(d => {
+                    d.classList.remove('is-open');
+                    const b = d.querySelector('.vg-lang-btn');
+                    if (b) b.setAttribute('aria-expanded', 'false');
+                });
+
+                // If not open before, open now
+                if (!wasOpen) {
+                    dropdown.classList.add('is-open');
+                    btn.setAttribute('aria-expanded', 'true');
+                }
+            };
+        }
+
+        if (window.__vgLangDropdownAppBound) return;
+        window.__vgLangDropdownAppBound = true;
+
+        // Global delegated click handler for language dropdown buttons and click-outside
+        document.addEventListener('click', (e) => {
+            const trigger = e.target.closest('.vg-lang-btn');
+            const dropdown = trigger ? trigger.closest('.vg-lang-dropdown') : null;
+
+            if (trigger && dropdown) {
+                window.vgToggleLanguageDropdown(trigger, e);
+                return;
+            }
+
+            // Click outside closes all language dropdowns
+            if (!e.target.closest('.vg-lang-dropdown')) {
+                document.querySelectorAll('.vg-lang-dropdown.is-open').forEach(d => {
+                    d.classList.remove('is-open');
+                    const btn = d.querySelector('.vg-lang-btn');
+                    if (btn) btn.setAttribute('aria-expanded', 'false');
+                });
+            }
+        });
+
+        // Global Keyboard Navigation for Language Switchers
+        document.addEventListener('keydown', (e) => {
+            const openDropdown = document.querySelector('.vg-lang-dropdown.is-open');
+
+            // Escape closes dropdown and returns focus to button
+            if (e.key === 'Escape' && openDropdown) {
+                e.preventDefault();
+                openDropdown.classList.remove('is-open');
+                const trigger = openDropdown.querySelector('.vg-lang-btn');
+                if (trigger) {
+                    trigger.setAttribute('aria-expanded', 'false');
+                    trigger.focus();
+                }
+                return;
+            }
+
+            // Arrow down or Enter/Space on closed button opens dropdown
+            const focusedTrigger = document.activeElement ? document.activeElement.closest('.vg-lang-btn') : null;
+            if (focusedTrigger && !openDropdown) {
+                if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    window.vgToggleLanguageDropdown(focusedTrigger, e);
+                    const dd = focusedTrigger.closest('.vg-lang-dropdown');
+                    if (dd) {
+                        const firstItem = dd.querySelector('.vg-lang-item');
+                        if (firstItem) firstItem.focus();
+                    }
+                }
+                return;
+            }
+
+            // Navigation within open menu
+            if (openDropdown && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Home' || e.key === 'End')) {
+                const items = Array.from(openDropdown.querySelectorAll('.vg-lang-item'));
+                if (!items.length) return;
+                const currentIndex = items.indexOf(document.activeElement);
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const next = (currentIndex + 1) % items.length;
+                    items[next].focus();
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    const prev = (currentIndex - 1 + items.length) % items.length;
+                    items[prev].focus();
+                } else if (e.key === 'Home') {
+                    e.preventDefault();
+                    items[0].focus();
+                } else if (e.key === 'End') {
+                    e.preventDefault();
+                    items[items.length - 1].focus();
+                }
+            }
+        });
+    }
+
+    // =========================================================================
+    // Full AJAX SPA & Form Engine
+    // All buttons, forms, table filters, actions & navigation operate via AJAX
+    // =========================================================================
+    const VoyageAjax = {
+        progressBarEl: null,
+        progressTimer: null,
+        isNavigating: false,
+        initialized: false,
+
+        init: function () {
+            if (this.initialized) return;
+            this.initialized = true;
+            this.setupTopProgressBar();
+            this.setupFormSubmissions();
+            this.setupLinkNavigation();
+            this.setupActionButtons();
+            this.setupPopState();
+            this.scanAndToastFlashes();
+        },
+
+        // 1. Top Loading Progress Bar
+        setupTopProgressBar: function () {
+            if (document.getElementById('vg-top-progress-bar')) {
+                this.progressBarEl = document.getElementById('vg-top-progress-bar');
+                return;
+            }
+            const bar = document.createElement('div');
+            bar.id = 'vg-top-progress-bar';
+            document.body.appendChild(bar);
+            this.progressBarEl = bar;
+        },
+
+        startProgress: function () {
+            if (!this.progressBarEl) this.setupTopProgressBar();
+            const bar = this.progressBarEl;
+            if (!bar) return;
+            clearTimeout(this.progressTimer);
+            bar.style.transition = 'width 0.2s ease-out, opacity 0.2s ease';
+            bar.style.opacity = '1';
+            bar.style.width = '25%';
+
+            this.progressTimer = setTimeout(() => {
+                if (bar) bar.style.width = '70%';
+            }, 180);
+        },
+
+        finishProgress: function () {
+            const bar = this.progressBarEl;
+            if (!bar) return;
+            clearTimeout(this.progressTimer);
+            bar.style.width = '100%';
+            setTimeout(() => {
+                bar.style.opacity = '0';
+                setTimeout(() => {
+                    bar.style.width = '0%';
+                }, 300);
+            }, 200);
+        },
+
+        // 2. Button Loading State (with context-aware action labels)
+        setButtonLoading: function (btn, isLoading, customText) {
+            if (!btn) return;
+            if (isLoading) {
+                if (!btn.dataset.vgOriginalHtml) {
+                    btn.dataset.vgOriginalHtml = btn.innerHTML;
+                }
+                btn.disabled = true;
+                btn.classList.add('is-loading');
+                btn.setAttribute('aria-busy', 'true');
+
+                const btnText = (btn.textContent || '').trim();
+                let labelText = customText;
+                if (!labelText) {
+                    const form = btn.closest('form');
+                    const action = ((form ? form.getAttribute('action') : '') || window.location.pathname).toLowerCase();
+                    if (action.includes('/bookings')) {
+                        labelText = __trans('js.saving_booking', 'Saving booking...');
+                    } else if (action.includes('/customers')) {
+                        labelText = __trans('js.saving_customer', 'Saving customer...');
+                    } else if (action.includes('/employees')) {
+                        labelText = __trans('js.saving_employee', 'Saving employee...');
+                    } else if (action.includes('/expenses')) {
+                        labelText = __trans('js.saving_expense', 'Saving expense...');
+                    } else if (action.includes('/payments') || action.includes('/finance')) {
+                        labelText = __trans('js.processing_payment', 'Processing payment...');
+                    } else if (action.includes('/dispatches') || action.includes('/assign')) {
+                        labelText = __trans('js.assigning_trip', 'Assigning trip...');
+                    } else {
+                        const isSave = /save|create|update|register|store|assign|submit/i.test(btnText) || btn.type === 'submit' || btn.classList.contains('modern-btn-submit');
+                        labelText = isSave ? __trans('js.saving', 'Saving...') : __trans('js.processing', 'Processing...');
+                    }
+                }
+
+                btn.innerHTML = `<span class="vg-btn-spinner" aria-hidden="true" style="display:inline-block;margin-right:6px;vertical-align:middle;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px;animation:vg-spin 0.8s linear infinite;vertical-align:middle;"><circle cx="12" cy="12" r="10" stroke-width="3" stroke-dasharray="32" stroke-linecap="round"></circle></svg></span> <span>${labelText}</span>`;
+            } else {
+                if (btn.dataset.vgOriginalHtml) {
+                    btn.innerHTML = btn.dataset.vgOriginalHtml;
+                    delete btn.dataset.vgOriginalHtml;
+                }
+                btn.disabled = false;
+                btn.classList.remove('is-loading');
+                btn.removeAttribute('aria-busy');
+            }
+        },
+
+        // 3. Universal Floating Message System (3-Second Auto-Dismiss with Visual Countdown)
+        toast: function (message, type = 'success', duration = 3000) {
+            if (!message) return;
+            window.vgNotify(message, type, duration);
+        },
+
+        // Helper: Check if URL triggers file download / export
+        isDownloadUrl: function (url) {
+            if (!url) return false;
+            const clean = url.toLowerCase().split('?')[0];
+            return (
+                clean.includes('/download') ||
+                clean.includes('/export') ||
+                clean.endsWith('.pdf') ||
+                clean.endsWith('.sql') ||
+                clean.endsWith('.zip') ||
+                clean.endsWith('.csv') ||
+                clean.endsWith('.xlsx')
+            );
+        },
+
+        // 4. Form Submissions Interception
+        setupFormSubmissions: function () {
+            document.addEventListener('submit', (e) => {
+                const form = e.target;
+                if (!form || form.tagName !== 'FORM') return;
+
+                // Never intercept if default has already been prevented by custom handler
+                if (e.defaultPrevented) return;
+
+                // Never intercept forms inside authentication layouts or marked data-no-ajax/data-native
+                if (document.body.classList.contains('auth-body') || 
+                    form.closest('.auth-stage, .auth-body, .glass-login-card') ||
+                    form.getAttribute('data-no-ajax') === 'true' || 
+                    form.dataset.noAjax === 'true' ||
+                    form.getAttribute('data-native') === 'true' ||
+                    form.dataset.native === 'true') {
+                    if (window.VoyageValidation && !window.VoyageValidation.validateForm(form)) {
+                        e.preventDefault();
+                        return;
+                    }
+                    const nativeBtn = e.submitter || form.querySelector('button[type="submit"], input[type="submit"]');
+                    if (nativeBtn) {
+                        this.setButtonLoading(nativeBtn, true);
+                    }
+                    return;
+                }
+                if (form.classList.contains('vg-lang-form')) return; // handled by language component
+
+                const action = form.getAttribute('action') || window.location.href;
+                if (action.includes('/logout') || (form.action && form.action.includes('/logout'))) return; // Native core PHP logout
+                if (this.isDownloadUrl(action)) return;
+
+                // Respect custom onsubmit function if registered
+                if (typeof form.onsubmit === 'function') {
+                    try {
+                        const result = form.onsubmit(e);
+                        if (result === false || e.defaultPrevented) return;
+                    } catch (err) {
+                        console.warn('Form onsubmit check failed:', err);
+                    }
+                }
+
+                // Universal constraint validation without browser popup alerts
+                if (window.VoyageValidation && !window.VoyageValidation.validateForm(form)) {
+                    e.preventDefault();
+                    return;
+                }
+
+                e.preventDefault();
+                this.submitForm(form, e.submitter);
+            });
+        },
+
+        submitForm: function (form, submitter) {
+            // Guard against rapid duplicate submissions
+            if (form.dataset.submitting === 'true') {
+                return;
+            }
+
+            const confirmMsg = form.getAttribute('data-confirm');
+            if (confirmMsg && !window.confirm(confirmMsg)) return;
+
+            const btn = submitter || form.querySelector('button[type="submit"], input[type="submit"], button:not([type="button"])');
+            const allSubmitBtns = form.querySelectorAll('button[type="submit"], input[type="submit"], button:not([type="button"])');
+
+            // Lock form state
+            form.dataset.submitting = 'true';
+            allSubmitBtns.forEach(b => { b.disabled = true; });
+
+            this.setButtonLoading(btn, true);
+            this.startProgress();
+
+            const action = form.getAttribute('action') || window.location.href;
+            const method = (form.getAttribute('method') || 'GET').toUpperCase();
+
+            // GET forms (search, filter, pagination queries)
+            if (method === 'GET') {
+                const formData = new FormData(form);
+                const searchParams = new URLSearchParams();
+                for (const [key, val] of formData.entries()) {
+                    if (val !== '') searchParams.append(key, val);
+                }
+                const cleanBase = action.split('?')[0];
+                const queryString = searchParams.toString();
+                const targetUrl = queryString ? `${cleanBase}?${queryString}` : cleanBase;
+
+                delete form.dataset.submitting;
+                allSubmitBtns.forEach(b => { b.disabled = false; });
+                this.navigate(targetUrl, { pushState: true, submitterBtn: btn });
+                return;
+            }
+
+            // POST forms (data mutations, creates, edits, actions)
+            const formData = new FormData(form);
+            if (submitter && submitter.name && !formData.has(submitter.name)) {
+                formData.append(submitter.name, submitter.value || '');
+            }
+
+            fetch(action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                    'Accept': 'text/html,application/xhtml+xml,application/json'
+                }
+            })
+                .then(async (response) => {
+                    const contentType = response.headers.get('content-type') || '';
+                    if (contentType.includes('application/json')) {
+                        const data = await response.json();
+                        this.handleJsonResult(data, form, response);
+                    } else {
+                        const htmlText = await response.text();
+                        this.applyHtml(htmlText, response.url || action, true);
+                    }
+                })
+                .catch((err) => {
+                    console.error('Form AJAX error:', err);
+                    this.toast('Request failed. Please check network connection.', 'error');
+                })
+                .finally(() => {
+                    delete form.dataset.submitting;
+                    allSubmitBtns.forEach(b => { b.disabled = false; });
+                    this.setButtonLoading(btn, false);
+                    this.finishProgress();
+                });
+        },
+
+        handleJsonResult: function (data, form, response) {
+            // Only toast if not redirecting, as destination page delivers the persistent session flash
+            if (data.message && !data.redirect) {
+                this.toast(data.message, data.success ? 'success' : 'error');
+            }
+
+            if (data.redirect) {
+                this.navigate(data.redirect, { pushState: true });
+                return;
+            }
+
+            if (data.errors && typeof data.errors === 'object') {
+                Object.keys(data.errors).forEach(field => {
+                    const el = form ? (form.querySelector(`[name="${field}"]`) || form.querySelector(`#${field}`)) : null;
+                    if (el) {
+                        el.classList.add('is-invalid');
+                        const errorMsg = Array.isArray(data.errors[field]) ? data.errors[field][0] : data.errors[field];
+                        let feedback = el.parentElement.querySelector('.invalid-feedback');
+                        if (!feedback) {
+                            feedback = document.createElement('div');
+                            feedback.className = 'invalid-feedback';
+                            feedback.style.color = '#EF4444';
+                            feedback.style.fontSize = '0.8rem';
+                            feedback.style.marginTop = '0.25rem';
+                            el.parentElement.appendChild(feedback);
+                        }
+                        feedback.textContent = errorMsg;
+                    }
+                });
+                const firstErr = Object.values(data.errors)[0];
+                const msg = Array.isArray(firstErr) ? firstErr[0] : (typeof firstErr === 'string' ? firstErr : 'Validation failed.');
+                this.toast(msg, 'error');
+            }
+        },
+
+        // 5. Link Navigation Interception (SPA)
+        setupLinkNavigation: function () {
+            document.addEventListener('click', (e) => {
+                const link = e.target.closest('a');
+                if (!link) return;
+
+                // Handle data-confirm links
+                const confirmMsg = link.getAttribute('data-confirm');
+                if (confirmMsg && !window.confirm(confirmMsg)) {
+                    e.preventDefault();
+                    return;
+                }
+
+                if (this.shouldInterceptLink(link, e)) {
+                    e.preventDefault();
+                    this.navigate(link.href, { pushState: true });
+                }
+            });
+        },
+
+        shouldInterceptLink: function (link, e) {
+            if (!link || e.button !== 0) return false; // left-click only
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return false; // allow opening in new tab
+            if (link.target === '_blank') return false;
+            if (link.hasAttribute('download')) return false;
+
+            // Strict Native Navigation Rule: Never intercept any link marked with data-no-ajax="true", data-native="true", or rel="external"
+            if (link.getAttribute('data-no-ajax') === 'true' || 
+                link.dataset.noAjax === 'true' || 
+                link.getAttribute('data-native') === 'true' || 
+                link.dataset.native === 'true' || 
+                link.getAttribute('rel') === 'external' || 
+                link.closest('[data-no-ajax="true"], [data-native="true"], [rel="external"]')) {
+                return false;
+            }
+
+            // Strict Native Navigation Rule: Never intercept inside authentication pages
+            if (document.body.classList.contains('auth-body') || link.closest('.auth-stage, .auth-body, .glass-login-card')) {
+                return false;
+            }
+
+            // Strict Native Navigation Rule: Never intercept sidebar, drawer, brand, bottom nav, or topbar menu links
+            if (link.closest('#sidebar, .sidebar, aside, .bottom-nav, .notched-bottom-nav, .brand-logo, .sidebar-header, .sidebar-nav, .sidebar-footer, .topbar-user-menu, .mv-dash-menu, .driver-sidebar, .driver-bottom-nav, .topbar-left, .topbar-profile-chip, .user-badge')) {
+                return false;
+            }
+
+            const href = link.getAttribute('href');
+            if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:') || href.includes('/logout')) {
+                return false;
+            }
+
+            // Strict Native Navigation Rule: Never intercept authentication or account recovery routes
+            const authPathRegex = /(\/login|\/register|\/forgot-|\/reset-password|\/logout)/i;
+            if (authPathRegex.test(href) || (link.pathname && authPathRegex.test(link.pathname))) {
+                return false;
+            }
+
+            if (this.isDownloadUrl(link.href)) return false;
+
+            try {
+                const url = new URL(link.href, window.location.origin);
+                return url.origin === window.location.origin;
+            } catch (err) {
+                return false;
+            }
+        },
+
+        // 6. Action Buttons Setup (Buttons with data-ajax-action or custom triggers)
+        setupActionButtons: function () {
+            document.addEventListener('click', (e) => {
+                const actionBtn = e.target.closest('[data-ajax-action]');
+                if (!actionBtn) return;
+
+                const confirmMsg = actionBtn.getAttribute('data-confirm');
+                if (confirmMsg && !window.confirm(confirmMsg)) {
+                    e.preventDefault();
+                    return;
+                }
+
+                e.preventDefault();
+                const actionUrl = actionBtn.getAttribute('data-ajax-action');
+                const method = (actionBtn.getAttribute('data-method') || 'POST').toUpperCase();
+
+                this.setButtonLoading(actionBtn, true);
+                this.startProgress();
+
+                const formData = new FormData();
+                formData.append('_token', getCsrfToken());
+
+                fetch(actionUrl, {
+                    method: method,
+                    body: (method === 'POST' || method === 'PUT') ? formData : null,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': getCsrfToken(),
+                        'Accept': 'text/html,application/xhtml+xml,application/json'
+                    }
+                })
+                    .then(async (response) => {
+                        const contentType = response.headers.get('content-type') || '';
+                        if (contentType.includes('application/json')) {
+                            const data = await response.json();
+                            this.handleJsonResult(data, null, response);
+                        } else {
+                            const htmlText = await response.text();
+                            this.applyHtml(htmlText, response.url || window.location.href, true);
+                        }
+                    })
+                    .catch((err) => {
+                        console.error('Action AJAX error:', err);
+                        this.toast('Action could not be completed.', 'error');
+                    })
+                    .finally(() => {
+                        this.setButtonLoading(actionBtn, false);
+                        this.finishProgress();
+                    });
+            });
+        },
+
+        // 7. Navigation Engine (Fetch & Live DOM Swap)
+        navigate: function (url, options = { pushState: true, submitterBtn: null }) {
+            if (window.OfficeActionMenu && typeof window.OfficeActionMenu.closeAll === 'function') {
+                window.OfficeActionMenu.closeAll();
+            }
+            if (this.isNavigating && !options.submitterBtn) return;
+            this.isNavigating = true;
+            this.startProgress();
+
+            const fadeTargets = document.querySelectorAll('#sidebar, .topbar, .main-content, .bottom-nav, .card');
+            fadeTargets.forEach(el => el.classList.add('vg-page-fading'));
+
+            fetch(url, {
+                cache: 'no-cache',
+                headers: {
+                    'Accept': 'text/html,application/xhtml+xml',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(async (res) => {
+                    if (!res.ok && res.status >= 500) {
+                        throw new Error(`Server returned HTTP ${res.status}`);
+                    }
+                    const finalUrl = res.url || url;
+                    const htmlText = await res.text();
+                    this.applyHtml(htmlText, finalUrl, options.pushState !== false);
+                })
+                .catch((err) => {
+                    console.error('Navigation Error:', err);
+                    this.toast('Failed to load page. Please try again.', 'error');
+                })
+                .finally(() => {
+                    this.isNavigating = false;
+                    if (options.submitterBtn) {
+                        this.setButtonLoading(options.submitterBtn, false);
+                    }
+                    this.finishProgress();
+                    fadeTargets.forEach(el => el.classList.remove('vg-page-fading'));
+                });
+        },
+
+        // 8. Live DOM Swap & Script Execution
+        applyHtml: function (htmlText, url, pushState = true) {
+            const parser = new DOMParser();
+            const newDoc = parser.parseFromString(htmlText, 'text/html');
+
+            // If navigating between authentication pages or to an auth page, trigger clean native redirect
+            const currentHasAuth = document.body.classList.contains('auth-body') || !!document.querySelector('.auth-stage, .glass-login-card');
+            const newHasAuth = newDoc.body.classList.contains('auth-body') || !!newDoc.querySelector('.auth-stage, .glass-login-card');
+            if (currentHasAuth || newHasAuth) {
+                window.location.href = url;
+                return;
+            }
+
+            // Check if layout changed (e.g. auth vs dashboard)
+            const currentHasSidebar = !!document.getElementById('sidebar');
+            const newHasSidebar = !!newDoc.getElementById('sidebar');
+
+            if (currentHasSidebar !== newHasSidebar) {
+                document.body.className = newDoc.body.className;
+                document.body.setAttribute('style', newDoc.body.getAttribute('style') || '');
+                document.body.innerHTML = newDoc.body.innerHTML;
+                this.executeScripts(document.body);
+            } else {
+                const hasTargetContainer = document.querySelector('.main-content, #sidebar, .topbar, .card');
+                if (!hasTargetContainer) {
+                    window.location.href = url;
+                    return;
+                }
+
+                const newSidebar = newDoc.querySelector('#sidebar');
+                const currSidebar = document.querySelector('#sidebar');
+                if (newSidebar && currSidebar) {
+                    currSidebar.innerHTML = newSidebar.innerHTML;
+                    this.executeScripts(currSidebar);
+                }
+
+                const newTopbar = newDoc.querySelector('.topbar');
+                const currTopbar = document.querySelector('.topbar');
+                if (newTopbar && currTopbar) {
+                    currTopbar.innerHTML = newTopbar.innerHTML;
+                    this.executeScripts(currTopbar);
+                }
+
+                const newMain = newDoc.querySelector('.main-content');
+                const currMain = document.querySelector('.main-content');
+                if (newMain && currMain) {
+                    currMain.innerHTML = newMain.innerHTML;
+                    this.executeScripts(currMain);
+                } else {
+                    const newCard = newDoc.querySelector('.card');
+                    const currCard = document.querySelector('.card');
+                    if (newCard && currCard) {
+                        currCard.innerHTML = newCard.innerHTML;
+                        this.executeScripts(currCard);
+                    }
+                }
+
+                const newBottom = newDoc.querySelector('.bottom-nav');
+                const currBottom = document.querySelector('.bottom-nav');
+                if (newBottom && currBottom) {
+                    currBottom.innerHTML = newBottom.innerHTML;
+                    this.executeScripts(currBottom);
+                }
+            }
+
+            // Sync document title and HTML lang attribute
+            if (newDoc.title) document.title = newDoc.title;
+            if (newDoc.documentElement && newDoc.documentElement.lang) {
+                document.documentElement.lang = newDoc.documentElement.lang;
+            }
+
+            // Update CSRF token if new page has meta token
+            const newCsrf = newDoc.querySelector('meta[name="csrf-token"]');
+            if (newCsrf && newCsrf.getAttribute('content')) {
+                const curCsrf = document.querySelector('meta[name="csrf-token"]');
+                if (curCsrf) curCsrf.setAttribute('content', newCsrf.getAttribute('content'));
+            }
+
+            // Sync window.VoyageTranslations if present
+            newDoc.querySelectorAll('script').forEach(s => {
+                if (s.textContent.includes('window.VoyageTranslations')) {
+                    try {
+                        const m = s.textContent.match(/window\.VoyageTranslations\s*=\s*(\{[\s\S]*?\});/);
+                        if (m && m[1]) {
+                            window.VoyageTranslations = JSON.parse(m[1]);
+                        }
+                    } catch (e) { }
+                }
+            });
+
+            // Update browser history
+            if (pushState && url && url !== window.location.href) {
+                window.history.pushState({}, '', url);
+            }
+
+            // Scan and toast any flash alerts in the new content
+            this.scanAndToastFlashes();
+
+            // Smooth scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Re-initialize core UI systems
+            setupAlertAutoDismiss();
+            initSidebarState();
+            setupLanguageDropdown();
+
+            // Broadcast page load event
+            try {
+                window.dispatchEvent(new CustomEvent('app:pageLoaded', { detail: { url } }));
+            } catch (e) { }
+        },
+
+        // Helper: Execute inline scripts in newly swapped DOM containers
+        executeScripts: function (container) {
+            if (!container) return;
+            const scripts = container.querySelectorAll('script');
+            scripts.forEach(oldScript => {
+                if (oldScript.src) {
+                    if (document.querySelector(`script[src="${oldScript.src}"]`)) return;
+                }
+                const newScript = document.createElement('script');
+                Array.from(oldScript.attributes).forEach(attr => {
+                    newScript.setAttribute(attr.name, attr.value);
+                });
+                newScript.textContent = oldScript.textContent;
+                oldScript.parentNode.replaceChild(newScript, oldScript);
+            });
+        },
+
+        // Helper: Extract flash alerts from HTML and display modern toasts
+        scanAndToastFlashes: function () {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                if (alert.dataset.vgToasted === 'true') return;
+                alert.dataset.vgToasted = 'true';
+                const text = alert.textContent.replace(/×/g, '').trim();
+                if (!text) return;
+
+                let type = 'info';
+                if (alert.classList.contains('alert-success')) type = 'success';
+                else if (alert.classList.contains('alert-danger') || alert.classList.contains('alert-error')) type = 'error';
+                else if (alert.classList.contains('alert-warning')) type = 'warning';
+
+                this.toast(text, type);
+            });
+        },
+
+        // 9. Browser History PopState
+        setupPopState: function () {
+            window.addEventListener('popstate', () => {
+                this.navigate(window.location.href, { pushState: false });
+            });
+        }
+    };
+
+    window.VoyageAjax = VoyageAjax;
+
+    // =========================================================================
+    // Modern Luxury Floating Message System
+    // Automatically dismissed after 3 seconds with visual countdown progress bar
+    // =========================================================================
+    window.vgNotify = function (message, type = 'success', duration = 3000) {
+        if (!message) return;
+
+        // Front-end safety shield: ensure raw technical database/server errors never leak to normal users
+        if (typeof message === 'string') {
+            const rawLower = message.toLowerCase();
+            if (rawLower.includes('sqlstate') || rawLower.includes('integrity constraint') || rawLower.includes('foreign key constraint') || rawLower.includes('1451') || rawLower.includes('cannot delete or update a parent row')) {
+                if (rawLower.includes('employee') || rawLower.includes('driver')) {
+                    message = 'Cannot delete this employee because they are linked to a trip.';
+                } else if (rawLower.includes('customer')) {
+                    message = 'Cannot delete this customer because they have linked bookings.';
+                } else if (rawLower.includes('vehicle')) {
+                    message = 'Cannot delete this vehicle because it is linked to a trip.';
+                } else if (rawLower.includes('booking')) {
+                    message = 'Cannot delete this booking because it has linked trips or invoices.';
+                } else {
+                    message = 'Cannot delete this record because it is linked to other data.';
+                }
+                type = 'error';
+            } else if (rawLower.includes('duplicate entry') || rawLower.includes('1062')) {
+                if (rawLower.includes('email')) {
+                    message = 'This email is already in use.';
+                } else if (rawLower.includes('phone') || rawLower.includes('mobile')) {
+                    message = 'This phone number is already in use.';
+                } else if (rawLower.includes('username')) {
+                    message = 'This username is already taken.';
+                } else {
+                    message = 'This information is already in use.';
+                }
+                type = 'error';
+            } else if (rawLower.includes('cannot be null') || rawLower.includes("doesn't have a default value") || rawLower.includes('1048') || rawLower.includes('1364')) {
+                message = 'Please enter the required information.';
+                type = 'warning';
+            } else if (rawLower.includes('uncaught exception') || rawLower.includes('fatal error') || rawLower.includes('pdoexception') || rawLower.includes('stack trace') || rawLower.includes('syntax error')) {
+                message = 'Something went wrong. Please try again.';
+                type = 'error';
+            }
+        }
+
+        let container = document.getElementById('vgFloatingContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'vgFloatingContainer';
+            container.className = 'vg-floating-container';
+            container.setAttribute('aria-live', 'polite');
+            document.body.appendChild(container);
+        }
+
+        // Ensure ONLY ONE message box shows at a time (professional single-toast display).
+        // Immediately dismiss and remove any existing toast message cards so the newest message displays first cleanly.
+        const existingCards = container.querySelectorAll('.vg-floating-msg');
+        existingCards.forEach(c => {
+            if (c._dismissTimer) clearTimeout(c._dismissTimer);
+            c.remove();
+        });
+
+        const safeType = (type === 'danger' || type === 'error') ? 'error' : (['warning', 'info'].includes(type) ? type : 'success');
+
+        // Status tag badge
+        let tag = 'SUCCESS';
+        if (safeType === 'error') tag = 'ERROR';
+        else if (safeType === 'warning') tag = 'WARNING';
+        else if (safeType === 'info') tag = 'INFO';
+
+        // Custom crisp SVGs
+        let iconSvg = '';
+        if (safeType === 'success') {
+            iconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 11 14 15 10"></polyline></svg>';
+        } else if (safeType === 'warning') {
+            iconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
+        } else if (safeType === 'error') {
+            iconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
+        } else {
+            iconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
+        }
+
+        const card = document.createElement('div');
+        card.className = `vg-floating-msg is-${safeType}`;
+        card.setAttribute('role', 'alert');
+
+        card.innerHTML = `
+            <div class="vg-floating-msg-header">
+                <div class="vg-floating-msg-icon-badge">${iconSvg}</div>
+                <div class="vg-floating-msg-title-wrap">
+                    <span class="vg-floating-msg-tag">${tag}</span>
+                    <div class="vg-floating-msg-text"></div>
+                </div>
+                <button type="button" class="vg-floating-msg-close" aria-label="Dismiss">&times;</button>
+            </div>
+            <div class="vg-floating-msg-progress">
+                <div class="vg-floating-msg-progress-bar"></div>
+            </div>
+        `;
+        card.querySelector('.vg-floating-msg-text').textContent = message;
+
+        const progressBar = card.querySelector('.vg-floating-msg-progress-bar');
+        const closeBtn = card.querySelector('.vg-floating-msg-close');
+
+        // Dynamic reading time: auto-adjust duration proportionally for longer messages
+        const textLen = String(message).length;
+        const autoDuration = (duration === 3000 && textLen > 50) ? Math.min(6500, Math.max(3000, textLen * 48)) : duration;
+
+        let dismissTimer = null;
+        let remainingTime = autoDuration;
+        let startTime = null;
+
+        const dismiss = () => {
+            if (dismissTimer) clearTimeout(dismissTimer);
+            card._dismissTimer = null;
+            card.classList.remove('is-active');
+            card.classList.add('is-dismissing');
+            setTimeout(() => {
+                if (card.parentElement) card.remove();
+            }, 250);
+        };
+
+        const startTimer = () => {
+            startTime = Date.now();
+            progressBar.style.transition = `width ${remainingTime}ms linear`;
+            progressBar.style.width = '0%';
+            dismissTimer = setTimeout(() => {
+                dismiss();
+            }, remainingTime);
+            card._dismissTimer = dismissTimer;
+        };
+
+        const pauseTimer = () => {
+            if (!dismissTimer) return;
+            clearTimeout(dismissTimer);
+            dismissTimer = null;
+            card._dismissTimer = null;
+            const elapsed = Date.now() - startTime;
+            remainingTime = Math.max(200, remainingTime - elapsed);
+            const computedWidth = (remainingTime / autoDuration) * 100;
+            progressBar.style.transition = 'none';
+            progressBar.style.width = `${computedWidth}%`;
+        };
+
+        const resumeTimer = () => {
+            if (dismissTimer) return;
+            startTimer();
+        };
+
+        closeBtn.onclick = (e) => {
+            e.stopPropagation();
+            dismiss();
+        };
+
+        card.addEventListener('mouseenter', pauseTimer);
+        card.addEventListener('mouseleave', resumeTimer);
+
+        // Mobile touch swipe-to-dismiss (swipe up or right to dismiss)
+        let touchStartY = 0;
+        let touchCurrentY = 0;
+        let isSwiping = false;
+
+        card.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                touchStartY = e.touches[0].clientY;
+                touchCurrentY = touchStartY;
+                isSwiping = true;
+                pauseTimer();
+            }
+        }, { passive: true });
+
+        card.addEventListener('touchmove', (e) => {
+            if (!isSwiping) return;
+            touchCurrentY = e.touches[0].clientY;
+            const diffY = touchCurrentY - touchStartY;
+            if (diffY < 0) {
+                // Dragging upwards
+                card.style.transform = `translateY(${diffY}px) scale(${Math.max(0.92, 1 + diffY / 300)})`;
+                card.style.opacity = Math.max(0.2, 1 + diffY / 140);
+            }
+        }, { passive: true });
+
+        card.addEventListener('touchend', () => {
+            if (!isSwiping) return;
+            isSwiping = false;
+            const diffY = touchCurrentY - touchStartY;
+            if (diffY < -35) {
+                dismiss();
+            } else {
+                card.style.transform = '';
+                card.style.opacity = '';
+                resumeTimer();
+            }
+        });
+
+        container.appendChild(card);
+
+        // Animate in and start countdown
+        requestAnimationFrame(() => {
+            card.classList.add('is-active');
+            startTimer();
+        });
+    };
+
+    window.vgToast = function (msg, type, dur = 3000) { window.vgNotify(msg, type, dur); };
+
+    // =========================================================================
+    // Live Application Branding Updater
+    // Updates all visible App Name displays immediately without requiring page refresh
+    // =========================================================================
+    window.updateLiveAppBranding = function (appName) {
+        if (!appName || typeof appName !== 'string') return;
+        appName = appName.trim();
+        if (!appName) return;
+
+        // 1. Update all elements explicitly marked with data-live-app-name
+        document.querySelectorAll('[data-live-app-name]').forEach(function (el) {
+            el.textContent = appName;
+        });
+
+        // 2. Update meta tags for PWA and Mobile Web App
+        const appMeta = document.querySelector('meta[name="application-name"]');
+        if (appMeta) appMeta.setAttribute('content', appName);
+        const appleMeta = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+        if (appleMeta) appleMeta.setAttribute('content', appName);
+
+        // 3. Update PWA Install Modal state & attributes
+        const pwaModal = document.getElementById('toursPwaInstallModal');
+        if (pwaModal) {
+            pwaModal.setAttribute('data-app-name', appName);
+            if (typeof window.rebuildToursPwaModalContent === 'function') {
+                window.rebuildToursPwaModalContent();
+            }
+        }
+
+        // 4. Update PWA install action button labels across desktop topbar & mobile menus
+        document.querySelectorAll('.install-btn-label').forEach(function (el) {
+            if (el.textContent && el.textContent.toLowerCase().includes('installed')) {
+                el.textContent = appName + ' Installed';
+            } else {
+                el.textContent = 'Install ' + appName;
+            }
+        });
+
+        // 5. Update document title if it contains previous branding or app name suffix
+        if (document.title) {
+            const parts = document.title.split(' - ');
+            if (parts.length > 1) {
+                parts[parts.length - 1] = appName;
+                document.title = parts.join(' - ');
+            }
+        }
+    };
+
+    // =========================================================================
+    // Universal Form Validation Engine
+    // Professional red border on required inputs without alert boxes
+    // Live removal of red border as soon as user enters/selects value
+    // =========================================================================
+    const VoyageValidation = {
+        markError: function (input) {
+            if (!input) return;
+            input.classList.add('is-invalid', 'vg-input-error');
+            input.setAttribute('aria-invalid', 'true');
+            input.style.borderColor = '#EF4444';
+            input.style.boxShadow = '0 0 0 3.5px rgba(239, 68, 68, 0.16)';
+
+            // Subtle tactile shake animation
+            input.classList.remove('vg-input-shake');
+            void input.offsetWidth; // trigger reflow
+            input.classList.add('vg-input-shake');
+            setTimeout(() => input.classList.remove('vg-input-shake'), 350);
+
+            this.bindClearListener(input);
+        },
+
+        clearError: function (input) {
+            if (!input) return;
+            input.classList.remove('is-invalid', 'vg-input-error', 'vg-input-shake');
+            input.removeAttribute('aria-invalid');
+            input.style.borderColor = '';
+            input.style.boxShadow = '';
+        },
+
+        isInputFilled: function (input) {
+            if (!input) return false;
+            if (input.type === 'checkbox' || input.type === 'radio') {
+                if (input.name) {
+                    try {
+                        const group = document.querySelectorAll(`input[name="${CSS.escape(input.name)}"]`);
+                        return Array.from(group).some(r => r.checked);
+                    } catch (e) {
+                        return input.checked;
+                    }
+                }
+                return input.checked;
+            }
+            if (input.tagName === 'SELECT') {
+                return input.value !== '' && input.value !== null;
+            }
+            return input.value.trim().length > 0;
+        },
+
+        bindClearListener: function (input) {
+            if (input._hasClearValidationListener) return;
+            input._hasClearValidationListener = true;
+
+            const handleInput = () => {
+                if (this.isInputFilled(input)) {
+                    this.clearError(input);
+                }
+            };
+
+            input.addEventListener('input', handleInput);
+            input.addEventListener('change', handleInput);
+            input.addEventListener('keyup', handleInput);
+            input.addEventListener('paste', () => setTimeout(handleInput, 10));
+        },
+
+        validateContainer: function (container) {
+            if (!container) return true;
+            const requiredFields = container.querySelectorAll('input[required], select[required], textarea[required], [data-required="true"]');
+            let isValid = true;
+            let firstInvalid = null;
+
+            requiredFields.forEach(field => {
+                // Ignore disabled fields or hidden elements
+                if (field.disabled || field.type === 'hidden') return;
+                if (field.offsetParent === null && field.type !== 'file') return;
+
+                if (!this.isInputFilled(field)) {
+                    isValid = false;
+                    this.markError(field);
+                    if (!firstInvalid) {
+                        firstInvalid = field;
+                    }
+                } else {
+                    this.clearError(field);
+                }
+            });
+
+            if (!isValid && firstInvalid) {
+                firstInvalid.focus();
+                return false;
+            }
+
+            return true;
+        },
+
+        validateForm: function (form) {
+            if (!form) return true;
+            return this.validateContainer(form);
+        },
+
+        init: function () {
+            // Apply novalidate to all forms to suppress browser popup alerts
+            document.querySelectorAll('form').forEach(form => {
+                form.setAttribute('novalidate', 'true');
+            });
+
+            // Delegate live input clearing: as soon as user types or changes an invalid input, clear red border
+            document.addEventListener('input', (e) => {
+                const target = e.target;
+                if (target && (target.classList.contains('is-invalid') || target.classList.contains('vg-input-error') || target.style.borderColor === 'rgb(239, 68, 68)' || target.style.borderColor === '#EF4444')) {
+                    if (this.isInputFilled(target)) {
+                        this.clearError(target);
+                    }
+                }
+            }, true);
+
+            document.addEventListener('change', (e) => {
+                const target = e.target;
+                if (target && (target.classList.contains('is-invalid') || target.classList.contains('vg-input-error') || target.style.borderColor === 'rgb(239, 68, 68)' || target.style.borderColor === '#EF4444')) {
+                    if (this.isInputFilled(target)) {
+                        this.clearError(target);
+                    }
+                }
+            }, true);
+
+            // Intercept submit on all forms globally (in capturing phase)
+            document.addEventListener('submit', (e) => {
+                const form = e.target;
+                if (!form || form.tagName !== 'FORM') return;
+                if (form.hasAttribute('data-no-validate') || form.dataset.noValidate === 'true') return;
+
+                if (!this.validateForm(form)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+            }, true);
+        }
+    };
+
+    window.VoyageValidation = VoyageValidation;
+
+    // Global Runtime Filter System
+    // Automatically submits GET filter forms on select/date change, debounces search, and resets pagination
+    function setupGlobalAutoFilters() {
+        const forms = document.querySelectorAll('form.filter-bar-compact:not([data-no-ajax="true"]), form.fbc-auto-submit');
+        forms.forEach(function (form) {
+            if (form.dataset.filterEnhanced === 'true') return;
+            form.dataset.filterEnhanced = 'true';
+
+            // 1. Instant submit on select and date changes
+            form.querySelectorAll('select, input[type="date"]').forEach(function (el) {
+                el.addEventListener('change', function () {
+                    const pageInput = form.querySelector('input[name="page"]');
+                    if (pageInput) pageInput.value = '1';
+                    form.submit();
+                });
+            });
+
+            // 2. Debounced search input
+            const searchInput = form.querySelector('input[name="search"], input[type="search"]');
+            if (searchInput) {
+                let debounceTimer = null;
+                searchInput.addEventListener('input', function () {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(function () {
+                        const pageInput = form.querySelector('input[name="page"]');
+                        if (pageInput) pageInput.value = '1';
+                        form.submit();
+                    }, 350);
+                });
+                searchInput.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        clearTimeout(debounceTimer);
+                        const pageInput = form.querySelector('input[name="page"]');
+                        if (pageInput) pageInput.value = '1';
+                        form.submit();
+                    }
+                });
+            }
+        });
+
+        // Mobile search forms with standard GET
+        const mvForms = document.querySelectorAll('form.mv-search-form:not([data-no-ajax="true"])');
+        mvForms.forEach(function (form) {
+            if (form.dataset.filterEnhanced === 'true') return;
+            form.dataset.filterEnhanced = 'true';
+            const searchInput = form.querySelector('input[name="search"]');
+            if (searchInput) {
+                let debounceTimer = null;
+                searchInput.addEventListener('input', function () {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(function () {
+                        form.submit();
+                    }, 350);
+                });
+            }
+        });
+    }
+
+    // =========================================================================
+    // Canonical Office Action Menu Engine (Desktop Hover & Click, Mobile Tap)
+    // =========================================================================
+    // AUTHORITATIVE FLOATING ACTION MENU PORTAL ENGINE (OfficeActionMenu)
+    // Renders Action Menus as body-level floating layers outside table/card containers
+    // Eliminates table overflow clipping, stacking bugs, and duplicate triggers
+    // Supports Desktop Hover, Desktop Click Pinning, Mobile Tap, Outside-Dismiss
+    // =========================================================================
+    const OfficeActionMenu = (function () {
+        let currentPortal = null; // { toggleBtn, menu, wrap, placeholder, originalParent, originalStyle }
+        let currentOpenMenu = null;
+        let currentOpenWrap = null;
+        let hoverTimer = null;
+        let isPinnedByClick = false;
+
+        function getMenuFromToggle(toggleBtn) {
+            if (!toggleBtn) return null;
+            // Strict Mobile Card Isolation: Do not portal or manipulate inline mobile card actions
+            if (toggleBtn.closest('.cards-grid, .mv-cards-container, .mobile-cards-container, .vg-mobile-cards, .mv-card-actions, .mv-booking-card-wrapper')) {
+                return null;
+            }
+            if (currentPortal && currentPortal.toggleBtn === toggleBtn && currentPortal.menu) {
+                return currentPortal.menu;
+            }
+            const wrap = toggleBtn.closest('.action-dropdown-wrap, .table-action-buttons');
+            if (wrap) {
+                return wrap.querySelector('.action-dropdown-menu, .action-btns-popup');
+            }
+            if (toggleBtn.nextElementSibling && toggleBtn.nextElementSibling.matches('.action-dropdown-menu, .action-btns-popup')) {
+                return toggleBtn.nextElementSibling;
+            }
+            return null;
+        }
+
+        function getWrapFromElement(el) {
+            if (!el) return null;
+            if (el.closest('.cards-grid, .mv-cards-container, .mobile-cards-container, .vg-mobile-cards, .mv-card-actions, .mv-booking-card-wrapper')) {
+                return null;
+            }
+            if (currentPortal && (el === currentPortal.menu || (currentPortal.menu && currentPortal.menu.contains(el)))) {
+                return currentPortal.wrap || (currentPortal.toggleBtn ? currentPortal.toggleBtn.closest('.action-dropdown-wrap, .table-action-buttons') : null);
+            }
+            return el.closest('.action-dropdown-wrap, .table-action-buttons');
+        }
+
+        function positionMenu(toggleBtn, menu) {
+            if (!toggleBtn || !menu || !toggleBtn.isConnected) return;
+
+            menu.classList.remove('drop-up', 'drop-left');
+
+            const toggleRect = toggleBtn.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            const padding = 8;
+            const gap = 5;
+
+            // Account for mobile bottom navbar if present
+            let bottomNavHeight = 0;
+            if (viewportWidth < 992) {
+                const bNav = document.querySelector('.bottom-nav, .mobile-bottom-nav, #mobileBottomNav, .mv-bottom-navbar');
+                if (bNav && bNav.offsetHeight > 0) {
+                    bottomNavHeight = bNav.offsetHeight;
+                }
+            }
+            const effectiveViewportHeight = viewportHeight - bottomNavHeight;
+
+            const menuWidth = menu.offsetWidth || 170;
+            const menuHeight = menu.offsetHeight || 96;
+
+            let top;
+            let left;
+
+            // Distinguish horizontal action popup (.action-btns-popup) from vertical dropdown (.action-dropdown-menu)
+            const isHorizontalPopup = menu.classList.contains('action-btns-popup');
+
+            if (isHorizontalPopup && viewportWidth >= 768) {
+                // Desktop horizontal pill: place to the left of the button
+                left = toggleRect.left - menuWidth - gap;
+                top = toggleRect.top + (toggleRect.height - menuHeight) / 2;
+
+                // If spills left: flip to below button
+                if (left < padding) {
+                    left = Math.max(padding, toggleRect.right - menuWidth);
+                    top = toggleRect.bottom + gap;
+                }
+            } else {
+                // Vertical dropdown or mobile popup: default below trigger, aligned to right edge
+                const spaceBelow = effectiveViewportHeight - toggleRect.bottom - gap - padding;
+                const spaceAbove = toggleRect.top - gap - padding;
+
+                if (spaceBelow >= menuHeight || spaceBelow >= spaceAbove) {
+                    top = toggleRect.bottom + gap;
+                    menu.classList.remove('drop-up');
+                } else {
+                    top = toggleRect.top - gap - menuHeight;
+                    menu.classList.add('drop-up');
+                }
+
+                left = toggleRect.right - menuWidth;
+                if (left < padding) {
+                    left = Math.max(padding, toggleRect.left);
+                    menu.classList.add('drop-left');
+                }
+            }
+
+            // Clamping inside viewport bounds
+            top = Math.max(padding, Math.min(top, effectiveViewportHeight - menuHeight - padding));
+            left = Math.max(padding, Math.min(left, viewportWidth - menuWidth - padding));
+
+            menu.style.position = 'fixed';
+            menu.style.left = Math.round(left) + 'px';
+            menu.style.top = Math.round(top) + 'px';
+            menu.style.right = 'auto';
+            menu.style.bottom = 'auto';
+            menu.style.zIndex = '99999';
+            menu.style.margin = '0';
+        }
+
+        function openMenu(toggleBtn, pinned = false) {
+            if (!toggleBtn || !toggleBtn.isConnected) return;
+            const menu = getMenuFromToggle(toggleBtn);
+            if (!menu) return;
+            const wrap = toggleBtn.closest('.action-dropdown-wrap, .table-action-buttons, .mv-card-more-actions, .mv-card-actions');
+
+            if (currentOpenMenu && currentOpenMenu !== menu) {
+                closeAllMenus();
+            }
+
+            clearTimeout(hoverTimer);
+
+            // Move to document.body portal if not already portaled
+            if (!currentPortal || currentPortal.menu !== menu) {
+                const placeholder = document.createComment('office-action-portal-placeholder');
+                const originalParent = menu.parentNode;
+                originalParent.insertBefore(placeholder, menu);
+
+                currentPortal = {
+                    toggleBtn: toggleBtn,
+                    menu: menu,
+                    wrap: wrap,
+                    placeholder: placeholder,
+                    originalParent: originalParent,
+                    originalStyle: menu.getAttribute('style')
+                };
+
+                document.body.appendChild(menu);
+            }
+
+            menu.setAttribute('data-office-portal', 'true');
+            if (wrap) wrap.classList.add('is-open');
+            menu.classList.add('is-open', 'open');
+            toggleBtn.setAttribute('aria-expanded', 'true');
+
+            currentOpenMenu = menu;
+            currentOpenWrap = wrap;
+            if (pinned) {
+                isPinnedByClick = true;
+            }
+
+            positionMenu(toggleBtn, menu);
+        }
+
+        function closeAllMenus() {
+            clearTimeout(hoverTimer);
+
+            if (currentPortal) {
+                const { toggleBtn, menu, placeholder, originalParent, originalStyle } = currentPortal;
+
+                if (placeholder && placeholder.parentNode) {
+                    placeholder.parentNode.insertBefore(menu, placeholder);
+                    placeholder.remove();
+                } else if (originalParent && originalParent.isConnected) {
+                    originalParent.appendChild(menu);
+                } else if (menu.parentNode === document.body) {
+                    menu.remove();
+                }
+
+                menu.removeAttribute('data-office-portal');
+                if (originalStyle === null) {
+                    menu.removeAttribute('style');
+                } else {
+                    menu.setAttribute('style', originalStyle);
+                }
+                menu.classList.remove('is-open', 'open', 'drop-up', 'drop-left');
+                currentPortal = null;
+            }
+
+            document.querySelectorAll('.action-dropdown-wrap.is-open, .table-action-buttons.is-open, .mv-card-more-actions.is-open, .mv-card-actions.is-open')
+                .forEach(w => w.classList.remove('is-open'));
+            document.querySelectorAll('.action-dropdown-menu.is-open, .action-dropdown-menu.open, .action-btns-popup.open, .card-btns-popup.open')
+                .forEach(m => m.classList.remove('is-open', 'open', 'drop-up', 'drop-left'));
+            document.querySelectorAll('.action-toggle-btn[aria-expanded="true"], .mv-action-dots-btn[aria-expanded="true"]')
+                .forEach(b => b.setAttribute('aria-expanded', 'false'));
+
+            currentOpenMenu = null;
+            currentOpenWrap = null;
+            isPinnedByClick = false;
+        }
+
+        function handleToggleClick(btn, e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            const menu = getMenuFromToggle(btn);
+            if (!menu) return;
+
+            const isCurrentlyOpen = (currentOpenMenu === menu) || menu.classList.contains('is-open') || menu.classList.contains('open');
+
+            if (isCurrentlyOpen && isPinnedByClick) {
+                closeAllMenus();
+            } else {
+                openMenu(btn, true);
+            }
+        }
+
+        function init() {
+            // 1. Delegated Capture-Phase Click Listener (Handles clicks before stopPropagation)
+            document.addEventListener('click', function (e) {
+                // Strict Mobile Card Isolation: Do not intercept or close mobile card actions
+                if (e.target.closest('.cards-grid, .mv-cards-container, .mobile-cards-container, .vg-mobile-cards, .mv-card-actions, .mv-booking-card-wrapper')) {
+                    return;
+                }
+
+                const toggleBtn = e.target.closest('.action-toggle-btn, .mv-action-dots-btn');
+                if (toggleBtn) {
+                    handleToggleClick(toggleBtn, e);
+                    return;
+                }
+
+                // If clicked inside a desktop action item (e.g. view, edit, delete, pay)
+                const menuItem = e.target.closest('.table-col-actions .action-dropdown-item, .table-action-buttons .action-btn-table, .action-dropdown-menu[data-office-portal="true"] .action-dropdown-item');
+                if (menuItem) {
+                    setTimeout(closeAllMenus, 120);
+                    return;
+                }
+
+                // Check outside click
+                const clickedInsideMenu = currentOpenMenu && (e.target === currentOpenMenu || currentOpenMenu.contains(e.target));
+                const clickedInsideWrap = currentOpenWrap && (e.target === currentOpenWrap || currentOpenWrap.contains(e.target));
+
+                if (!clickedInsideMenu && !clickedInsideWrap) {
+                    closeAllMenus();
+                }
+            }, true);
+
+            // 2. Desktop Hover (Pointer Enter / Leave with Grace Debounce)
+            const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+            if (canHover) {
+                document.addEventListener('mouseover', function (e) {
+                    // Strict Mobile Card Isolation: Ignore cards
+                    if (e.target.closest('.cards-grid, .mv-cards-container, .mobile-cards-container, .vg-mobile-cards, .mv-card-actions, .mv-booking-card-wrapper')) {
+                        return;
+                    }
+
+                    // If hovering inside the currently open floating menu
+                    if (currentOpenMenu && (e.target === currentOpenMenu || currentOpenMenu.contains(e.target))) {
+                        clearTimeout(hoverTimer);
+                        return;
+                    }
+
+                    const wrap = e.target.closest('.action-dropdown-wrap, .table-action-buttons');
+                    const toggle = e.target.closest('.action-toggle-btn, .mv-action-dots-btn');
+
+                    if (wrap || toggle) {
+                        clearTimeout(hoverTimer);
+                        const targetBtn = toggle || wrap.querySelector('.action-toggle-btn, .mv-action-dots-btn');
+                        if (targetBtn && (!currentOpenMenu || (currentPortal && currentPortal.toggleBtn !== targetBtn))) {
+                            if (!isPinnedByClick) {
+                                openMenu(targetBtn, false);
+                            }
+                        }
+                    }
+                }, false);
+
+                document.addEventListener('mouseout', function (e) {
+                    if (!currentOpenMenu) return;
+
+                    const toEl = e.relatedTarget;
+                    const inMenu = toEl && (toEl === currentOpenMenu || currentOpenMenu.contains(toEl));
+                    const inWrap = toEl && currentOpenWrap && (toEl === currentOpenWrap || currentOpenWrap.contains(toEl));
+                    const inToggle = toEl && currentPortal && (toEl === currentPortal.toggleBtn || currentPortal.toggleBtn.contains(toEl));
+
+                    // If moving between trigger and floating menu, keep open!
+                    if (inMenu || inWrap || inToggle) {
+                        return;
+                    }
+
+                    if (!isPinnedByClick) {
+                        clearTimeout(hoverTimer);
+                        hoverTimer = setTimeout(() => {
+                            if (!isPinnedByClick) closeAllMenus();
+                        }, 240);
+                    }
+                }, false);
+            }
+
+            // 3. Escape key closes menu
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    closeAllMenus();
+                }
+            });
+
+            // 4. Reposition on scroll/resize
+            window.addEventListener('scroll', function () {
+                if (currentOpenMenu && currentPortal && currentPortal.toggleBtn) {
+                    if (!currentPortal.toggleBtn.isConnected) {
+                        closeAllMenus();
+                        return;
+                    }
+                    positionMenu(currentPortal.toggleBtn, currentOpenMenu);
+                }
+            }, { passive: true });
+
+            window.addEventListener('resize', function () {
+                if (currentOpenMenu) closeAllMenus();
+            }, { passive: true });
+        }
+
+        // Export globals for full backward compatibility
+        window.OfficeActionMenu = {
+            init: init,
+            open: openMenu,
+            closeAll: closeAllMenus,
+            toggle: handleToggleClick
+        };
+        window.toggleActionDropdown = handleToggleClick;
+        window.toggleActions = handleToggleClick;
+        window.toggleCardActions = handleToggleClick;
+        window.closeAllActionMenus = closeAllMenus;
+
+        return window.OfficeActionMenu;
+    })();
+
+    // =========================================================================
+    // GLOBAL PROFESSIONAL TABLE RESPONSIVENESS & TOOLTIP SYSTEM
+    // =========================================================================
+    let globalTooltipEl = null;
+
+    function getOrCreateTooltipEl() {
+        if (!globalTooltipEl) {
+            globalTooltipEl = document.createElement('div');
+            globalTooltipEl.className = 'app-table-tooltip';
+            globalTooltipEl.id = 'globalTableTooltip';
+            globalTooltipEl.setAttribute('role', 'tooltip');
+            globalTooltipEl.innerHTML = '<span class="app-table-tooltip-text"></span><div class="app-table-tooltip-arrow"></div>';
+            document.body.appendChild(globalTooltipEl);
+        }
+        return globalTooltipEl;
+    }
+
+    function showTableTooltip(targetEl, text) {
+        if (!targetEl || !text || !text.trim()) return;
+        const tooltip = getOrCreateTooltipEl();
+        const textSpan = tooltip.querySelector('.app-table-tooltip-text');
+        if (textSpan) textSpan.textContent = text.trim();
+
+        const rect = targetEl.getBoundingClientRect();
+        tooltip.style.width = 'auto';
+        tooltip.style.maxWidth = '340px';
+
+        // Calculate positioning: Prefer above target, fallback below if near top
+        const gap = 8;
+        let top = rect.top - 36;
+        let isTop = true;
+        if (top < 10) {
+            top = rect.bottom + gap;
+            isTop = false;
+        }
+
+        // Horizontal centering with viewport clamping
+        let left = rect.left + (rect.width / 2);
+        tooltip.style.left = `${left}px`;
+        tooltip.style.top = `${top}px`;
+        tooltip.style.transform = `translate(-50%, ${isTop ? '-4px' : '4px'})`;
+
+        tooltip.classList.remove('pos-top', 'pos-bottom');
+        tooltip.classList.add(isTop ? 'pos-top' : 'pos-bottom');
+
+        requestAnimationFrame(() => {
+            const tRect = tooltip.getBoundingClientRect();
+            if (tRect.left < 8) {
+                tooltip.style.left = `${(tRect.width / 2) + 8}px`;
+            } else if (tRect.right > window.innerWidth - 8) {
+                tooltip.style.left = `${window.innerWidth - (tRect.width / 2) - 8}px`;
+            }
+            tooltip.classList.add('is-visible');
+        });
+    }
+
+    function hideTableTooltip() {
+        if (globalTooltipEl) {
+            globalTooltipEl.classList.remove('is-visible');
+        }
+    }
+
+    function isElementTruncated(el) {
+        return (el.scrollWidth > el.clientWidth) || (el.offsetWidth < el.scrollWidth);
+    }
+
+    function initGlobalTableTooltips() {
+        document.addEventListener('mouseover', function (e) {
+            const target = e.target.closest('.modern-table td, .table-cell-truncate, .cell-truncate, [data-tooltip]');
+            if (!target) return;
+
+            if (target.closest('.action-dropdown-wrap, .cust-status-toggle, .cust-toggle-cell, button, select, input')) return;
+
+            let tooltipText = target.getAttribute('data-tooltip') || target.getAttribute('title');
+            const isTruncated = isElementTruncated(target) || (target.firstElementChild && isElementTruncated(target.firstElementChild));
+            if (!tooltipText && isTruncated) {
+                tooltipText = target.innerText || target.textContent;
+            }
+
+            if (tooltipText && tooltipText.trim()) {
+                if (target.hasAttribute('title')) {
+                    target.setAttribute('data-original-title', target.getAttribute('title'));
+                    target.removeAttribute('title');
+                }
+                showTableTooltip(target, tooltipText);
+            }
+        }, true);
+
+        document.addEventListener('mouseout', function (e) {
+            const target = e.target.closest('.modern-table td, .table-cell-truncate, .cell-truncate, [data-tooltip]');
+            if (target) {
+                if (target.hasAttribute('data-original-title')) {
+                    target.setAttribute('title', target.getAttribute('data-original-title'));
+                    target.removeAttribute('data-original-title');
+                }
+                hideTableTooltip();
+            }
+        }, true);
+
+        // Mobile touch interaction
+        document.addEventListener('touchstart', function (e) {
+            const target = e.target.closest('.modern-table td, .table-cell-truncate, .cell-truncate, [data-tooltip]');
+            if (target && !target.closest('.action-dropdown-wrap, .cust-status-toggle, button, a')) {
+                const tooltipText = target.getAttribute('data-tooltip') || target.getAttribute('title') || (isElementTruncated(target) ? (target.innerText || target.textContent) : null);
+                if (tooltipText && tooltipText.trim()) {
+                    showTableTooltip(target, tooltipText);
+                    setTimeout(hideTableTooltip, 3000);
+                }
+            }
+        }, { passive: true });
+
+        document.addEventListener('focusin', function (e) {
+            const target = e.target.closest('.modern-table td a, .modern-table td button, [data-tooltip]');
+            if (target && isElementTruncated(target)) {
+                showTableTooltip(target, target.innerText || target.textContent);
+            }
+        });
+
+        document.addEventListener('focusout', hideTableTooltip);
+        document.addEventListener('scroll', hideTableTooltip, { passive: true });
+        window.addEventListener('resize', hideTableTooltip, { passive: true });
+    }
+
+    window.recalculateTableLayouts = function () {
+        document.querySelectorAll('.modern-table-container').forEach(function (container) {
+            const table = container.querySelector('.modern-table');
+            if (table) {
+                table.style.width = '100%';
+            }
+        });
+    };
+
+    function initTableResizeObserver() {
+        if (typeof ResizeObserver === 'undefined') return;
+        const mainContent = document.querySelector('.main-content');
+        if (mainContent) {
+            let resizeTimer = null;
+            const ro = new ResizeObserver(() => {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => {
+                    window.recalculateTableLayouts();
+                }, 40);
+            });
+            ro.observe(mainContent);
+        }
+    }
+
+    function initToursApp() {
+        setupNetworkListener();
+        setupAlertAutoDismiss();
+        initSidebarState();
+        setupLanguageDropdown();
+        VoyageValidation.init();
+        VoyageAjax.init();
+        OfficeActionMenu.init();
+        setupGlobalAutoFilters();
+        initGlobalTableTooltips();
+        initTableResizeObserver();
+
+        // Smart reference caching auto-hydration
+        if (window.ToursForms) {
+            window.ToursForms.hydrateLocations();
+            window.ToursForms.hydratePaymentMethods();
+        }
+    }
+
+    // Initialize on DOM Ready or immediately if DOM is already ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            setupLanguageDropdown();
+            initToursApp();
+        });
+    } else {
+        setupLanguageDropdown();
+        initToursApp();
+    }
+})();
+
+
