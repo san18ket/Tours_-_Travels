@@ -974,6 +974,7 @@ window.vgEmailOtp = (function() {
 
         // If changed away from verified email, reset verification
         if (isVerified && currentVal !== verifiedEmail) {
+            const prevVerifiedEmail = verifiedEmail;
             isVerified = false;
             verifiedEmail = '';
             const tokenInput = document.getElementById('emailVerificationToken');
@@ -984,7 +985,7 @@ window.vgEmailOtp = (function() {
 
             // Invalidate on server asynchronously
             const formData = new FormData();
-            formData.append('email', verifiedEmail || currentVal);
+            formData.append('email', prevVerifiedEmail || currentVal);
             formData.append('flow', FLOW);
             formData.append('_csrf_token', getCsrf());
 

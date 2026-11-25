@@ -65,12 +65,13 @@ class EmailService
             if (!str_contains($basename, 'httpd') && !str_contains($basename, 'apache')) {
                 return $currentBinary;
             }
-            // If current binary is apache/httpd, look for sibling php directory in XAMPP
+            // If current binary is apache/httpd (e.g. xampp/apache/bin/httpd.exe), look for sibling php directory in XAMPP
             $apacheDir = dirname($currentBinary);
-            $xamppRoot = dirname($apacheDir);
-            $candidate = $xamppRoot . DIRECTORY_SEPARATOR . 'php' . DIRECTORY_SEPARATOR . 'php.exe';
-            if (file_exists($candidate)) {
-                return $candidate;
+            foreach ([dirname($apacheDir, 2), dirname($apacheDir)] as $xamppRoot) {
+                $candidate = $xamppRoot . DIRECTORY_SEPARATOR . 'php' . DIRECTORY_SEPARATOR . 'php.exe';
+                if (file_exists($candidate)) {
+                    return $candidate;
+                }
             }
         }
 

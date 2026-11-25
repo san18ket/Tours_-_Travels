@@ -369,9 +369,14 @@ class EmailOtpService
                 $cleanError = $dispatchResult['error'] ?? 'SMTP delivery failure.';
                 Logger::error("EmailOtpService: Failed to dispatch OTP to {$email}: {$cleanError}");
 
-                $failureMessage = in_array($canonicalFlow, [self::FLOW_RECOVERY_USERNAME, self::FLOW_RECOVERY_PASSWORD], true)
-                    ? "We couldn't send the verification code right now. Please try again shortly."
-                    : "Failed to deliver verification code to your email. Please verify your email address and try again.";
+                $isOfficeFlow = in_array($canonicalFlow, [self::FLOW_CUSTOMER, self::FLOW_EMPLOYEE], true);
+                if (in_array($canonicalFlow, [self::FLOW_RECOVERY_USERNAME, self::FLOW_RECOVERY_PASSWORD], true)) {
+                    $failureMessage = "We couldn't send the verification code right now. Please try again shortly.";
+                } elseif ($isOfficeFlow && str_contains(strtolower($cleanError), 'not fully configured')) {
+                    $failureMessage = "SMTP email is not configured. Please check MAIL_HOST, MAIL_USERNAME, and MAIL_PASSWORD in admin/.env.";
+                } else {
+                    $failureMessage = "Failed to deliver verification code to your email. Please verify your email address and try again.";
+                }
 
                 return [
                     'success'  => false,
@@ -388,9 +393,14 @@ class EmailOtpService
             $pdo->prepare("UPDATE `email_verifications` SET `status` = 'failed', `updated_at` = NOW() WHERE `id` = ?")->execute([$verificationId]);
             Logger::error("EmailOtpService: Exception dispatching OTP to {$email}: " . $e->getMessage());
 
-            $failureMessage = in_array($canonicalFlow, [self::FLOW_RECOVERY_USERNAME, self::FLOW_RECOVERY_PASSWORD], true)
-                ? "We couldn't send the verification code right now. Please try again shortly."
-                : "Email delivery system error. Please try again shortly.";
+            $isOfficeFlow = in_array($canonicalFlow, [self::FLOW_CUSTOMER, self::FLOW_EMPLOYEE], true);
+            if (in_array($canonicalFlow, [self::FLOW_RECOVERY_USERNAME, self::FLOW_RECOVERY_PASSWORD], true)) {
+                $failureMessage = "We couldn't send the verification code right now. Please try again shortly.";
+            } elseif ($isOfficeFlow && str_contains($e->getMessage(), 'PHPMailer')) {
+                $failureMessage = "Email library (PHPMailer) is missing. Please run 'composer install' in the admin directory.";
+            } else {
+                $failureMessage = "Email delivery system error. Please try again shortly.";
+            }
 
             return [
                 'success'  => false,

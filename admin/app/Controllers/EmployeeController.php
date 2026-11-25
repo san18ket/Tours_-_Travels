@@ -373,7 +373,19 @@ class EmployeeController extends Controller
                 $emailError = $e->getMessage();
             }
 
-            $successMsg = "Employee created successfully.";
+            if ($emailSent) {
+                if (($emailResult['status'] ?? '') === 'sent') {
+                    $successMsg = "Employee created successfully. Onboarding email sent.";
+                } elseif (($emailResult['status'] ?? '') === 'pending') {
+                    $successMsg = "Employee created successfully. Onboarding email scheduled for delivery.";
+                } else {
+                    $successMsg = "Employee created successfully.";
+                }
+            } elseif ($hasValidEmail && $emailError) {
+                $successMsg = "Employee created successfully, but the onboarding email could not be queued. You can retry it from Email Management.";
+            } else {
+                $successMsg = "Employee created successfully.";
+            }
 
             Session::setFlash('success', $successMsg);
             if ($request->isAjax()) {
