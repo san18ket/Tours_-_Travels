@@ -1,0 +1,1 @@
+[2026-11-25 15:55:05] [ERROR] EmailOtpService: Failed to dispatch OTP to unconf_check@gmail.com: SMTP transport is not fully configured (missing host, username, or password). 

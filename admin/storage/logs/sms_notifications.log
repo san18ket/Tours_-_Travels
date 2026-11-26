@@ -1,0 +1,425 @@
+================================================================================
+[2026-11-06 18:21:53] OUTGOING SMS/WHATSAPP DISPATCH
+Recipient: 7020123835 | Context: {"dispatch_id":1,"employee_code":"VG-EMP-0001","driver_id":1}
+--------------------------------------------------------------------------------
+(COMPANY NAME) — TRIP DUTY DISPATCH
+Hello rohit sharma (VG-EMP-0001),
+You have been assigned to Trip Duty: DSP-261106-8985 (Booking: VG-2026-FEBC3B)
+
+• Route: nagpur -> mumbai
+• Date/Time: 07 Nov 2026, 12:00 AM
+• Vehicle: BUS (MH40AL1891)
+• Passenger: Guest Passenger (20 Guests) | Contact: N/A
+
+Please log in to your Chauffeur Console to accept this duty:
+/All-Projects/MY-PROJECTS/Tours_travels/driver/trips/1
+================================================================================
+
+================================================================================
+[2026-11-09 14:42:22] OUTGOING SMS/WHATSAPP DISPATCH
+Recipient: 1234567890 | Context: {"dispatch_id":1,"employee_code":"EMP-0001","driver_id":1}
+--------------------------------------------------------------------------------
+(COMPANY NAME) — TRIP DUTY DISPATCH
+Hello virat kholi (EMP-0001),
+You have been assigned to Trip Duty: DSP-261109-30EE (Booking: BK-2026-E7FFDD)
+
+• Route: nagpur -> mumbai
+• Date/Time: 10 Nov 2026, 12:00 AM
+• Vehicle: BUS (MH40AL1891)
+• Passenger: Guest Passenger (50 Guests) | Contact: N/A
+
+Please log in to your Chauffeur Console to accept this duty:
+/All-Projects/MY-PROJECTS/Tours_travels/driver/trips/1
+================================================================================
+
+================================================================================
+[2026-11-11 11:35:01] OUTGOING SMS/WHATSAPP DISPATCH
+Recipient: 1234567890 | Context: {"dispatch_id":1,"employee_code":"EMP-0001","driver_id":1}
+--------------------------------------------------------------------------------
+(COMPANY NAME) — TRIP DUTY DISPATCH
+Hello virat kholi (EMP-0001),
+You have been assigned to Trip Duty: DSP-261111-C46F (Booking: BK-2026-FFE595)
+
+• Route: nagpur -> mumbai
+• Date/Time: 12 Nov 2026, 12:00 AM
+• Vehicle: BUS (MH40AL1891)
+• Passenger: Guest Passenger (50 Guests) | Contact: N/A
+
+Please log in to your Chauffeur Console to accept this duty:
+/All-Projects/MY-PROJECTS/Tours_travels/driver/trips/1
+================================================================================
+
+================================================================================
+[2026-11-11 12:32:32] OUTGOING SMS/WHATSAPP DISPATCH
+Recipient: Not Provided | Context: {"dispatch_id":2,"employee_code":"EMP-CHAUFFEUR","driver_id":5}
+--------------------------------------------------------------------------------
+(COMPANY NAME) — TRIP DUTY DISPATCH
+Hello Test Driver Chauffeur (EMP-CHAUFFEUR),
+You have been assigned to Trip Duty: DSP-261111-D603 (Booking: BK-TEST-261111-932)
+
+• Route:  -> 
+• Date/Time: 11 Nov 2026, 12:00 AM
+• Vehicle: Toyota Innova Crysta (MH-12-TEST-7803)
+• Passenger: Guest Passenger (2 Guests) | Contact: N/A
+
+Please log in to your Chauffeur Console to accept this duty:
+/tests/driver/trips/2
+================================================================================
+
+================================================================================
+[2026-11-11 12:33:08] OUTGOING SMS/WHATSAPP DISPATCH
+Recipient: Not Provided | Context: {"dispatch_id":3,"employee_code":"EMP-CHAUFFEUR","driver_id":7}
+--------------------------------------------------------------------------------
+(COMPANY NAME) — TRIP DUTY DISPATCH
+Hello Test Driver Chauffeur (EMP-CHAUFFEUR),
+You have been assigned to Trip Duty: DSP-261111-016C (Booking: BK-TEST-261111-192)
+
+• Route:  -> 
+• Date/Time: 11 Nov 2026, 12:00 AM
+• Vehicle: Toyota Innova Crysta (MH-12-TEST-7411)
+• Passenger: Guest Passenger (2 Guests) | Contact: N/A
+
+Please log in to your Chauffeur Console to accept this duty:
+/tests/driver/trips/3
+================================================================================
+
+================================================================================
+[2026-11-11 12:48:17] OUTGOING SMS/WHATSAPP DISPATCH
+Recipient: Not Provided | Context: {"dispatch_id":4,"employee_code":"EMP-CHAUFFEUR","driver_id":9}
+--------------------------------------------------------------------------------
+(COMPANY NAME) — TRIP DUTY DISPATCH
+Hello Test Driver Chauffeur (EMP-CHAUFFEUR),
+You have been assigned to Trip Duty: DSP-261111-391B (Booking: BK-TEST-261111-270)
+
+• Route:  -> 
+• Date/Time: 11 Nov 2026, 12:00 AM
+• Vehicle: Toyota Innova Crysta (MH-12-TEST-2195)
+• Passenger: Guest Passenger (2 Guests) | Contact: N/A
+
+Please log in to your Chauffeur Console to accept this duty:
+/tests/driver/trips/4
+================================================================================
+
+================================================================================
+[2026-11-11 12:49:02] OUTGOING SMS/WHATSAPP DISPATCH
+Recipient: Not Provided | Context: {"dispatch_id":5,"employee_code":"EMP-CHAUFFEUR","driver_id":11}
+--------------------------------------------------------------------------------
+(COMPANY NAME) — TRIP DUTY DISPATCH
+Hello Test Driver Chauffeur (EMP-CHAUFFEUR),
+You have been assigned to Trip Duty: DSP-261111-02F8 (Booking: BK-TEST-261111-923)
+
+• Route:  -> 
+• Date/Time: 11 Nov 2026, 12:00 AM
+• Vehicle: Toyota Innova Crysta (MH-12-TEST-5217)
+• Passenger: Guest Passenger (2 Guests) | Contact: N/A
+
+Please log in to your Chauffeur Console to accept this duty:
+/tests/driver/trips/5
+================================================================================
+
+================================================================================
+[2026-11-11 13:02:38] OUTGOING SMS/WHATSAPP DISPATCH
+Recipient: Not Provided | Context: {"dispatch_id":6,"employee_code":"EMP-CHAUFFEUR","driver_id":13}
+--------------------------------------------------------------------------------
+(COMPANY NAME) — TRIP DUTY DISPATCH
+Hello Test Driver Chauffeur (EMP-CHAUFFEUR),
+You have been assigned to Trip Duty: DSP-261111-12B3 (Booking: BK-TEST-261111-191)
+
+• Route:  -> 
+• Date/Time: 11 Nov 2026, 12:00 AM
+• Vehicle: Toyota Innova Crysta (MH-12-TEST-8653)
+• Passenger: Guest Passenger (2 Guests) | Contact: N/A
+
+Please log in to your Chauffeur Console to accept this duty:
+/tests/driver/trips/6
+================================================================================
+
+================================================================================
+[2026-11-11 13:18:06] OUTGOING SMS/WHATSAPP DISPATCH
+Recipient: Not Provided | Context: {"dispatch_id":7,"employee_code":"EMP-CHAUFFEUR","driver_id":15}
+--------------------------------------------------------------------------------
+(COMPANY NAME) — TRIP DUTY DISPATCH
+Hello Test Driver Chauffeur (EMP-CHAUFFEUR),
+You have been assigned to Trip Duty: DSP-261111-51DF (Booking: BK-TEST-261111-301)
+
+• Route:  -> 
+• Date/Time: 11 Nov 2026, 12:00 AM
+• Vehicle: Toyota Innova Crysta (MH-12-TEST-2045)
+• Passenger: Guest Passenger (2 Guests) | Contact: N/A
+
+Please log in to your Chauffeur Console to accept this duty:
+/tests/driver/trips/7
+================================================================================
+
+================================================================================
+[2026-11-11 13:24:09] OUTGOING SMS/WHATSAPP DISPATCH
+Recipient: Not Provided | Context: {"dispatch_id":8,"employee_code":"EMP-CHAUFFEUR","driver_id":17}
+--------------------------------------------------------------------------------
+(COMPANY NAME) — TRIP DUTY DISPATCH
+Hello Test Driver Chauffeur (EMP-CHAUFFEUR),
+You have been assigned to Trip Duty: DSP-261111-C089 (Booking: BK-TEST-261111-819)
+
+• Route:  -> 
+• Date/Time: 11 Nov 2026, 12:00 AM
+• Vehicle: Toyota Innova Crysta (MH-12-TEST-4225)
+• Passenger: Guest Passenger (2 Guests) | Contact: N/A
+
+Please log in to your Chauffeur Console to accept this duty:
+/tests/driver/trips/8
+================================================================================
+
+================================================================================
+[2026-11-11 13:29:43] OUTGOING SMS/WHATSAPP DISPATCH
+Recipient: Not Provided | Context: {"dispatch_id":9,"employee_code":"EMP-CHAUFFEUR","driver_id":19}
+--------------------------------------------------------------------------------
+(COMPANY NAME) — TRIP DUTY DISPATCH
+Hello Test Driver Chauffeur (EMP-CHAUFFEUR),
+You have been assigned to Trip Duty: DSP-261111-7E59 (Booking: BK-TEST-261111-883)
+
+• Route:  -> 
+• Date/Time: 11 Nov 2026, 12:00 AM
+• Vehicle: Toyota Innova Crysta (MH-12-TEST-2734)
+• Passenger: Guest Passenger (2 Guests) | Contact: N/A
+
+Please log in to your Chauffeur Console to accept this duty:
+/tests/driver/trips/9
+================================================================================
+
+================================================================================
+[2026-11-11 13:36:26] OUTGOING SMS/WHATSAPP DISPATCH
+Recipient: Not Provided | Context: {"dispatch_id":10,"employee_code":"EMP-CHAUFFEUR","driver_id":21}
+--------------------------------------------------------------------------------
+(COMPANY NAME) — TRIP DUTY DISPATCH
+Hello Test Driver Chauffeur (EMP-CHAUFFEUR),
+You have been assigned to Trip Duty: DSP-261111-A980 (Booking: BK-TEST-261111-938)
+
+• Route:  -> 
+• Date/Time: 11 Nov 2026, 12:00 AM
+• Vehicle: Toyota Innova Crysta (MH-12-TEST-5003)
+• Passenger: Guest Passenger (2 Guests) | Contact: N/A
+
+Please log in to your Chauffeur Console to accept this duty:
+/tests/driver/trips/10
+================================================================================
+
+================================================================================
+[2026-11-11 13:40:51] OUTGOING SMS/WHATSAPP DISPATCH
+Recipient: Not Provided | Context: {"dispatch_id":11,"employee_code":"EMP-CHAUFFEUR","driver_id":23}
+--------------------------------------------------------------------------------
+(COMPANY NAME) — TRIP DUTY DISPATCH
+Hello Test Driver Chauffeur (EMP-CHAUFFEUR),
+You have been assigned to Trip Duty: DSP-261111-D50F (Booking: BK-TEST-261111-981)
+
+• Route:  -> 
+• Date/Time: 11 Nov 2026, 12:00 AM
+• Vehicle: Toyota Innova Crysta (MH-12-TEST-7232)
+• Passenger: Guest Passenger (2 Guests) | Contact: N/A
+
+Please log in to your Chauffeur Console to accept this duty:
+/tests/driver/trips/11
+================================================================================
+
+================================================================================
+[2026-11-11 14:21:06] OUTGOING SMS/WHATSAPP DISPATCH
+Recipient: Not Provided | Context: {"dispatch_id":17,"employee_code":"EMP-CHAUFFEUR","driver_id":35}
+--------------------------------------------------------------------------------
+(COMPANY NAME) — TRIP DUTY DISPATCH
+Hello Test Driver Chauffeur (EMP-CHAUFFEUR),
+You have been assigned to Trip Duty: DSP-261111-02AD (Booking: BK-TEST-261111-821)
+
+• Route:  -> 
+• Date/Time: 11 Nov 2026, 12:00 AM
+• Vehicle: Toyota Innova Crysta (MH-12-TEST-3482)
+• Passenger: Guest Passenger (2 Guests) | Contact: N/A
+
+Please log in to your Chauffeur Console to accept this duty:
+/tests/driver/trips/17
+================================================================================
+
+================================================================================
+[2026-11-11 14:35:37] OUTGOING SMS/WHATSAPP DISPATCH
+Recipient: Not Provided | Context: {"dispatch_id":20,"employee_code":"EMP-CHAUFFEUR","driver_id":41}
+--------------------------------------------------------------------------------
+MANASWI TOURS & TRAVELS — TRIP DUTY DISPATCH
+Hello Test Driver Chauffeur (EMP-CHAUFFEUR),
+You have been assigned to Trip Duty: DSP-261111-4058 (Booking: BK-TEST-261111-871)
+
+• Route:  -> 
+• Date/Time: 11 Nov 2026, 12:00 AM
+• Vehicle: Toyota Innova Crysta (MH-12-TEST-3327)
+• Passenger: Guest Passenger (2 Guests) | Contact: N/A
+
+Please log in to your Chauffeur Console to accept this duty:
+/tests/driver/trips/20
+================================================================================
+
+================================================================================
+[2026-11-11 14:52:22] OUTGOING SMS/WHATSAPP DISPATCH
+Recipient: Not Provided | Context: {"dispatch_id":25,"employee_code":"EMP-CHAUFFEUR","driver_id":51}
+--------------------------------------------------------------------------------
+MANASWI TOURS & TRAVELS — TRIP DUTY DISPATCH
+Hello Test Driver Chauffeur (EMP-CHAUFFEUR),
+You have been assigned to Trip Duty: DSP-261111-8925 (Booking: BK-TEST-261111-449)
+
+• Route:  -> 
+• Date/Time: 11 Nov 2026, 12:00 AM
+• Vehicle: Toyota Innova Crysta (MH-12-TEST-6929)
+• Passenger: Guest Passenger (2 Guests) | Contact: N/A
+
+Please log in to your Chauffeur Console to accept this duty:
+/tests/driver/trips/25
+================================================================================
+
+================================================================================
+[2026-11-11 15:14:02] OUTGOING SMS/WHATSAPP DISPATCH
+Recipient: Not Provided | Context: {"dispatch_id":35,"employee_code":"EMP-CHAUFFEUR","driver_id":68}
+--------------------------------------------------------------------------------
+MANASWI TOURS & TRAVELS — TRIP DUTY DISPATCH
+Hello Test Driver Chauffeur (EMP-CHAUFFEUR),
+You have been assigned to Trip Duty: DSP-261111-02BF (Booking: BK-TEST-261111-929)
+
+• Route:  -> 
+• Date/Time: 11 Nov 2026, 12:00 AM
+• Vehicle: Toyota Innova Crysta (MH-12-TEST-8066)
+• Passenger: Guest Passenger (2 Guests) | Contact: N/A
+
+Please log in to your Chauffeur Console to accept this duty:
+/tests/driver/trips/35
+================================================================================
+
+================================================================================
+[2026-11-17 13:28:45] OUTGOING SMS/WHATSAPP DISPATCH
+Recipient: 8799845238 | Context: {"dispatch_id":1,"employee_code":"EMP-0001","driver_id":1}
+--------------------------------------------------------------------------------
+MANASWI TOURS & TRAVELS — TRIP DUTY DISPATCH
+Hello Sanket Sidurkar (EMP-0001),
+You have been assigned to Trip Duty: DSP-261117-57B1 (Booking: BK-2026-712A41)
+
+• Route: nagpur -> mumbai
+• Date/Time: 18 Nov 2026, 12:00 AM
+• Vehicle: BUS (MH40AL1891)
+• Passenger: Guest Passenger (40 Guests) | Contact: N/A
+
+Please log in to your Chauffeur Console to accept this duty:
+/All-Projects/MY-PROJECTS/Tours_travels/driver/trips/1
+================================================================================
+
+================================================================================
+[2026-11-18 13:23:58] OUTGOING SMS/WHATSAPP DISPATCH
+Recipient: 8799845238 | Context: {"dispatch_id":2,"employee_code":"EMP-0001","driver_id":1}
+--------------------------------------------------------------------------------
+TOURS & TRAVELS — TRIP DUTY DISPATCH
+Hello Sanket Sidurkar (EMP-0001),
+You have been assigned to Trip Duty: DSP-261118-7A72 (Booking: BK-2026-CAD6CB)
+
+• Route: nagpur -> mumbai
+• Date/Time: 19 Nov 2026, 12:00 AM
+• Vehicle: Toyota Innova Crysta (MH-27-TR-1001)
+• Passenger: Guest Passenger (5 Guests) | Contact: N/A
+
+Please log in to your Chauffeur Console to accept this duty:
+/All-Projects/MY-PROJECTS/Tours_travels/driver/trips/2
+================================================================================
+
+================================================================================
+[2026-11-18 14:20:20] OUTGOING SMS/WHATSAPP DISPATCH
+Recipient: Not Provided | Context: {"dispatch_id":3,"employee_code":"EMP-CHAUFFEUR","driver_id":3}
+--------------------------------------------------------------------------------
+TOURS & TRAVELS — TRIP DUTY DISPATCH
+Hello Test Driver Chauffeur (EMP-CHAUFFEUR),
+You have been assigned to Trip Duty: DSP-261118-CD7A (Booking: BK-TEST-261118-354)
+
+• Route:  -> 
+• Date/Time: 18 Nov 2026, 12:00 AM
+• Vehicle: Toyota Innova Crysta (MH-12-TEST-9900)
+• Passenger: Guest Passenger (2 Guests) | Contact: N/A
+
+Please log in to your Chauffeur Console to accept this duty:
+/tests/driver/trips/3
+================================================================================
+
+================================================================================
+[2026-11-18 14:21:40] OUTGOING SMS/WHATSAPP DISPATCH
+Recipient: Not Provided | Context: {"dispatch_id":4,"employee_code":"EMP-CHAUFFEUR","driver_id":5}
+--------------------------------------------------------------------------------
+TOURS & TRAVELS — TRIP DUTY DISPATCH
+Hello Test Driver Chauffeur (EMP-CHAUFFEUR),
+You have been assigned to Trip Duty: DSP-261118-D124 (Booking: BK-TEST-261118-518)
+
+• Route:  -> 
+• Date/Time: 18 Nov 2026, 12:00 AM
+• Vehicle: Toyota Innova Crysta (MH-12-TEST-1707)
+• Passenger: Guest Passenger (2 Guests) | Contact: N/A
+
+Please log in to your Chauffeur Console to accept this duty:
+/tests/driver/trips/4
+================================================================================
+
+================================================================================
+[2026-11-18 14:23:53] OUTGOING SMS/WHATSAPP DISPATCH
+Recipient: Not Provided | Context: {"dispatch_id":5,"employee_code":"EMP-CHAUFFEUR","driver_id":7}
+--------------------------------------------------------------------------------
+TOURS & TRAVELS — TRIP DUTY DISPATCH
+Hello Test Driver Chauffeur (EMP-CHAUFFEUR),
+You have been assigned to Trip Duty: DSP-261118-193A (Booking: BK-TEST-261118-506)
+
+• Route:  -> 
+• Date/Time: 18 Nov 2026, 12:00 AM
+• Vehicle: Toyota Innova Crysta (MH-12-TEST-7208)
+• Passenger: Guest Passenger (2 Guests) | Contact: N/A
+
+Please log in to your Chauffeur Console to accept this duty:
+/tests/driver/trips/5
+================================================================================
+
+================================================================================
+[2026-11-18 14:46:50] OUTGOING SMS/WHATSAPP DISPATCH
+Recipient: Not Provided | Context: {"dispatch_id":6,"employee_code":"EMP-CHAUFFEUR","driver_id":9}
+--------------------------------------------------------------------------------
+TOURS & TRAVELS — TRIP DUTY DISPATCH
+Hello Test Driver Chauffeur (EMP-CHAUFFEUR),
+You have been assigned to Trip Duty: DSP-261118-594B (Booking: BK-TEST-261118-817)
+
+• Route:  -> 
+• Date/Time: 18 Nov 2026, 12:00 AM
+• Vehicle: Toyota Innova Crysta (MH-12-TEST-2787)
+• Passenger: Guest Passenger (2 Guests) | Contact: N/A
+
+Please log in to your Chauffeur Console to accept this duty:
+/tests/driver/trips/6
+================================================================================
+
+================================================================================
+[2026-11-18 15:17:09] OUTGOING SMS/WHATSAPP DISPATCH
+Recipient: 8799845238 | Context: {"dispatch_id":3,"employee_code":"EMP-0001","driver_id":1}
+--------------------------------------------------------------------------------
+TOURS & TRAVELS — TRIP DUTY DISPATCH
+Hello Sanket Sidurkar (EMP-0001),
+You have been assigned to Trip Duty: DSP-261118-B452 (Booking: BK-2026-989238)
+
+• Route: nagpur -> mumbai
+• Date/Time: 19 Nov 2026, 12:00 AM
+• Vehicle: Toyota Innova Crysta (MH-27-TR-1001)
+• Passenger: Guest Passenger (2 Guests) | Contact: N/A
+
+Please log in to your Chauffeur Console to accept this duty:
+/admin/driver/trips/3
+================================================================================
+
+================================================================================
+[2026-11-19 19:13:15] OUTGOING SMS/WHATSAPP DISPATCH
+Recipient: Not Provided | Context: {"dispatch_id":16,"employee_code":"EMP-CHAUFFEUR","driver_id":16}
+--------------------------------------------------------------------------------
+TOURS & TRAVELS — TRIP DUTY DISPATCH
+Hello Test Driver Chauffeur (EMP-CHAUFFEUR),
+You have been assigned to Trip Duty: DSP-261119-7990 (Booking: BK-TEST-261119-201)
+
+• Route:  -> 
+• Date/Time: 19 Nov 2026, 12:00 AM
+• Vehicle: Toyota Innova Crysta (MH-12-TEST-5597)
+• Passenger: Guest Passenger (2 Guests) | Contact: N/A
+
+Please log in to your Chauffeur Console to accept this duty:
+/E:/All-Projects/MY-PROJECTS/tours_&_travels/admin/tests/driver/trips/16
+================================================================================
+

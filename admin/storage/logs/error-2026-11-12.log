@@ -1,0 +1,11 @@
+[2026-11-12 11:37:36] [ERROR] Auto-initialization: Migration execution failed: Another migration process is currently running. Please try again shortly. 
+[2026-11-12 11:37:41] [ERROR] Installer database connection failed: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it {"host":"127.0.0.1","selectDatabase":false}
+[2026-11-12 11:37:41] [ERROR] Auto-initialization: Database creation check failed: Installer database connection failed: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it 
+[2026-11-12 11:37:43] [ERROR] Runtime database connection failed: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it {"host":"127.0.0.1","database":"tours_travels_db","code":2002}
+[2026-11-12 11:37:45] [ERROR] Installer database connection failed: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it {"host":"127.0.0.1","selectDatabase":false}
+[2026-11-12 11:37:45] [ERROR] Auto-initialization: Database creation check failed: Installer database connection failed: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it 
+[2026-11-12 11:37:47] [ERROR] Runtime database connection failed: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it {"host":"127.0.0.1","database":"tours_travels_db","code":2002}
+[2026-11-12 11:37:49] [ERROR] Runtime database connection failed: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it {"host":"127.0.0.1","database":"tours_travels_db","code":2002}
+[2026-11-12 11:37:51] [ERROR] Installer database connection failed: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it {"host":"127.0.0.1","selectDatabase":false}
+[2026-11-12 11:37:51] [ERROR] Setup connection test failed: Installer database connection failed: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it 
+[2026-11-12 11:37:53] [ERROR] Runtime database connection failed: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it {"host":"127.0.0.1","database":"tours_travels_db","code":2002}

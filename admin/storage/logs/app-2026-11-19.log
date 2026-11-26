@@ -1,0 +1,15 @@
+[2026-11-19 18:33:26] [INFO] User logged in successfully: owner (owner@tours.local) [Role: admin] 
+[2026-11-19 19:13:07] [INFO] Trip evidence #35 recorded for dispatch #1 [start_vehicle] 
+[2026-11-19 19:13:09] [INFO] User logged in successfully: owner (owner@tours.local) [Role: admin] 
+[2026-11-19 19:13:15] [INFO] Chauffeur SMS notification dispatched to  
+[2026-11-19 19:13:15] [INFO] EmailService: Scheduled driver_assigned_driver [dispatch:16] to driver_test_6afefcf3a7224@example.com via background outbox (Log #17) 
+[2026-11-19 19:13:15] [INFO] Trip evidence #36 recorded for dispatch #16 [start_vehicle] 
+[2026-11-19 19:13:15] [INFO] Trip evidence #37 recorded for dispatch #16 [start_odometer] 
+[2026-11-19 19:13:16] [INFO] Trip evidence #38 recorded for dispatch #16 [end_odometer] 
+[2026-11-19 19:13:16] [INFO] Trip evidence #39 recorded for dispatch #16 [end_vehicle] 
+[2026-11-19 19:52:51] [INFO] User logged in successfully: owner (owner@tours.local) [Role: admin] 
+[2026-11-19 20:38:41] [INFO] User logged in successfully: owner (owner@tours.local) [Role: admin] 
+[2026-11-19 20:44:15] [INFO] User logged in successfully: owner (owner@tours.local) [Role: admin] 
+[2026-11-19 21:06:30] [INFO] User logged in successfully: owner (owner@tours.local) [Role: admin] 
+[2026-11-19 22:10:18] [INFO] User logged in successfully: owner (owner@tours.local) [Role: admin] 
+[2026-11-19 22:10:51] [INFO] User logged in successfully: owner (owner@tours.local) [Role: admin] 

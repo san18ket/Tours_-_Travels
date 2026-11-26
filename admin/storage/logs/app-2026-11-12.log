@@ -1,0 +1,16 @@
+[2026-11-12 11:37:16] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-12 11:37:36] [INFO] Auto-initialization: Running 51 pending migrations. 
+[2026-11-12 11:37:36] [WARNING] Could not acquire lock 'tours_migration_lock': SQLSTATE[HY000]: General error: 2006 MySQL server has gone away 
+[2026-11-12 11:38:12] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-12 11:38:14] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-12 11:38:16] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-12 11:38:16] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-12 11:38:21] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-12 11:39:03] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-12 11:39:04] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-12 11:39:04] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-12 11:39:11] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-12 11:39:24] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-12 11:39:24] [INFO] User logged in successfully: owner (owner@tours.local) [Role: admin] 
+[2026-11-12 11:39:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-12 11:39:25] [INFO] Database 'tours_travels_db' verified/created successfully. 

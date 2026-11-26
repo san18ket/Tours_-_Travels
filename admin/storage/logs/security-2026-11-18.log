@@ -1,0 +1,7 @@
+[2026-11-18 12:50:35] [SECURITY] Unauthorized role access attempt {"user_id":2,"role":"driver","required":["admin"],"path":"/office/users"}
+[2026-11-18 12:50:36] [SECURITY] Unauthorized role access attempt {"user_id":2,"role":"driver","required":["admin"],"path":"/office/users"}
+[2026-11-18 12:57:39] [SECURITY] Unauthorized role access attempt {"user_id":2,"role":"driver","required":["admin"],"path":"/office/users"}
+[2026-11-18 12:57:49] [SECURITY] Unauthorized role access attempt {"user_id":2,"role":"driver","required":["admin"],"path":"/office/users"}
+[2026-11-18 12:59:44] [SECURITY] Unauthorized role access attempt {"user_id":2,"role":"driver","required":["admin"],"path":"/office/users"}
+[2026-11-18 12:59:46] [SECURITY] Unauthorized role access attempt {"user_id":2,"role":"driver","required":["admin"],"path":"/office/users"}
+[2026-11-18 13:20:32] [SECURITY] Failed password attempt for user: sanket 

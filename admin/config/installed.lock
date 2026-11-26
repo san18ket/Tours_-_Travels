@@ -1,0 +1,10 @@
+{
+    "installed_at": "2026-11-20 13:40:40",
+    "app_version": "2.0.0",
+    "ip": "127.0.0.1",
+    "signature": "85a9722e49605ad1c26348c698bf819412b19bd71fbc1024188c0b7c1efcc131",
+    "database": "tours_travels_db",
+    "source": "cli_runner",
+    "migrated_count": 0,
+    "updated_at": "2026-11-25 19:41:17"
+}

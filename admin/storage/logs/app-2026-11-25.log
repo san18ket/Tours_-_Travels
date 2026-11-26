@@ -1,0 +1,7 @@
+[2026-11-25 15:53:07] [INFO] EmailService: Successfully dispatched email_verification_otp [email_verification:2] to verify_cust@test.local (MsgID: <simulated-f8bb5899830105e9@mail.transport>) 
+[2026-11-25 15:53:07] [INFO] EmailService: Successfully dispatched email_verification_otp [email_verification:3] to verify_emp@test.local (MsgID: <simulated-ff3c139cc9099c22@mail.transport>) 
+[2026-11-25 15:55:05] [INFO] EmailService: Successfully dispatched email_verification_otp [email_verification:4] to otp_verify_cust@test.local (MsgID: <simulated-2069ccd8e80ec3f8@mail.transport>) 
+[2026-11-25 15:55:05] [INFO] EmailService: Successfully dispatched email_verification_otp [email_verification:5] to otp_verify_emp@test.local (MsgID: <simulated-38ee8c099883bce9@mail.transport>) 
+[2026-11-25 16:22:07] [INFO] EmailService: Successfully dispatched email_verification_otp [email_verification:10] to sanketsidurkar9@gmail.com (MsgID: <hm3KsNEYPwKj1KJg5qoWjlCbWQDbQhA3lLyJOB9yCMo@localhost>) 
+[2026-11-25 16:22:28] [INFO] EmailOtpService: Verified customer email successfully: sanketsidurkar9@gmail.com 
+[2026-11-25 19:41:32] [INFO] EmailService: Successfully dispatched email_verification_otp [email_verification:20] to sanketsidurkar9@gmail.com (MsgID: <ZO902lWxXKLdSHIgde7in2d6kdFnJfPGomU8W78UVI@localhost>) 

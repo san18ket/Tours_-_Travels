@@ -1,0 +1,466 @@
+[2026-11-18 12:41:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:41:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:41:26] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:41:34] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:41:35] [INFO] User logged in successfully: owner (owner@tours.local) [Role: admin] 
+[2026-11-18 12:41:36] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:41:36] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:42:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:42:20] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:42:20] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:42:20] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:42:37] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:42:50] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:43:07] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:43:20] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:43:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:43:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:43:28] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:43:29] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:43:50] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:43:59] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:44:20] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:44:29] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:44:50] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:44:59] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:45:20] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:45:29] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:45:51] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:45:51] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:45:53] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:45:54] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:45:56] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:45:56] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:45:57] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:45:57] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:45:58] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:45:59] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:46:00] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:46:09] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:46:14] [INFO] EmailService: Successfully dispatched email_verification_otp [email_verification:1] to sanketsidurkar9@gmail.com (MsgID: <ztZdcISS3vG75Ux2arjQrHNeL6ajVEHgCN0FytaJDs@localhost>) 
+[2026-11-18 12:46:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:46:29] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:46:30] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:46:30] [INFO] EmailOtpService: Verified employee email successfully: sanketsidurkar9@gmail.com 
+[2026-11-18 12:46:59] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:47:04] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:47:18] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:47:19] [INFO] EmailService: Scheduled employee_welcome [employee:1] to sanketsidurkar9@gmail.com via background outbox (Log #2) 
+[2026-11-18 12:47:19] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:47:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:47:29] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:47:59] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:48:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:48:29] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:48:59] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:49:14] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:49:14] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:49:18] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:49:18] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:49:20] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:49:21] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:49:26] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:49:26] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:49:26] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:49:51] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:49:56] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:50:07] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:50:20] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:50:21] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:50:21] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:50:22] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:50:22] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:50:23] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:50:31] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:50:32] [INFO] User logged in successfully: sanket (sanketsidurkar9@gmail.com) [Role: driver] 
+[2026-11-18 12:50:32] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:50:32] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:50:35] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:50:35] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:50:36] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:50:50] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:51:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:52:14] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:52:14] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:52:14] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:52:20] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:52:50] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:53:20] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:53:50] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:54:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:55:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:56:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:59:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:59:44] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 12:59:46] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:00:00] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:00:01] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:00:01] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:00:01] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:00:02] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:00:02] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:00:05] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:00:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:00:07] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:00:07] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:00:07] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:00:07] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:00:08] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:00:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:00:37] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:00:38] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:01:07] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:01:08] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:01:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:01:37] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:01:38] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:01:54] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:01:54] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:01:54] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:01:54] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:01:55] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:02:10] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:02:19] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:02:20] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:02:20] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:02:20] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:02:21] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:02:21] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:02:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:02:51] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:02:51] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:03:12] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:03:12] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:03:12] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:03:21] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:03:21] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:03:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:03:51] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:03:51] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:04:21] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:04:21] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:04:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:04:51] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:04:51] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:05:21] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:05:21] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:05:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:06:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:06:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:06:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:07:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:07:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:07:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:08:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:08:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:08:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:09:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:09:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:09:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:10:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:10:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:10:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:11:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:11:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:11:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:12:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:12:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:12:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:13:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:13:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:13:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:14:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:14:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:14:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:15:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:15:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:15:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:16:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:16:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:16:21] [INFO] Trip evidence #1 recorded for dispatch #1 [start_odometer] 
+[2026-11-18 13:16:21] [INFO] Trip evidence #2 recorded for dispatch #1 [start_vehicle] 
+[2026-11-18 13:16:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:16:36] [INFO] Trip evidence #3 recorded for dispatch #1 [end_odometer] 
+[2026-11-18 13:16:36] [INFO] Trip evidence #4 recorded for dispatch #1 [end_vehicle] 
+[2026-11-18 13:16:50] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:17:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:17:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:17:20] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:17:38] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:17:38] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:17:38] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:17:39] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:17:39] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:17:41] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:17:42] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:17:42] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:17:43] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:17:43] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:18:12] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:18:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:18:26] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:18:26] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:18:43] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:18:43] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:18:44] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:18:50] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:18:50] [INFO] User logged in successfully: owner (owner@tours.local) [Role: admin] 
+[2026-11-18 13:18:51] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:18:52] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:19:22] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:19:22] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:19:23] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:19:24] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:19:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:19:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:19:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:19:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:19:26] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:19:27] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:19:34] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:19:54] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:19:55] [INFO] EmailService: Scheduled booking_created [booking:2] to sanket@example.com via background outbox (Log #3) 
+[2026-11-18 13:19:55] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:19:57] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:20:14] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:20:14] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:20:14] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:20:16] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:20:16] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:20:24] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:20:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:20:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:20:27] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:20:31] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:20:38] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:20:39] [INFO] User logged in successfully: sanket (sanketsidurkar9@gmail.com) [Role: driver] 
+[2026-11-18 13:20:39] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:20:57] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:21:09] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:21:21] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:21:24] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:21:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:21:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:21:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:21:43] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:21:44] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:21:56] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:21:56] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:21:57] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:22:12] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:22:12] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:22:14] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:22:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:22:42] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:23:08] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:23:08] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:23:11] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:23:16] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:23:16] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:23:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:23:31] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:23:31] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:23:58] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:23:58] [INFO] Chauffeur SMS notification dispatched to 8799845238 
+[2026-11-18 13:23:58] [INFO] EmailService: Scheduled driver_assigned_driver [dispatch:2] to sanketsidurkar9@gmail.com via background outbox (Log #4) 
+[2026-11-18 13:23:58] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:24:01] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:24:03] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:24:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:24:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:24:08] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:24:08] [INFO] EmailService: Scheduled driver_assigned_customer [dispatch:2] to sanket@example.com via background outbox (Log #5) 
+[2026-11-18 13:24:08] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:24:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:24:32] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:24:33] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:24:33] [INFO] Trip evidence #5 recorded for dispatch #2 [start_vehicle] 
+[2026-11-18 13:24:33] [INFO] Trip evidence #6 recorded for dispatch #2 [start_odometer] 
+[2026-11-18 13:24:33] [INFO] EmailService: Scheduled trip_started [dispatch:2] to sanket@example.com via background outbox (Log #6) 
+[2026-11-18 13:24:33] [WARNING] Initial GPS fix record skipped: Call to undefined method App\Services\GpsTrackingService::recordFix() 
+[2026-11-18 13:24:33] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:24:42] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:24:42] [INFO] EmailService: Scheduled trip_completed [dispatch:2] to sanket@example.com via background outbox (Log #7) 
+[2026-11-18 13:24:42] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:24:47] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:24:48] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:24:50] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:24:50] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:24:53] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:25:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:25:07] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:25:21] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:25:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:25:51] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:26:21] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:26:25] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:26:51] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:27:21] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:27:51] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:28:52] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:28:53] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:28:53] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:28:55] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:28:55] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:29:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:29:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:29:10] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:29:10] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:29:11] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:29:19] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:29:35] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:29:39] [INFO] EmailService: Successfully dispatched email_verification_otp [email_verification:2] to sanketsidurkar@gmail.com (MsgID: <3s7hftiInWvHjXeSQwqYLBZy3P8xj5jb6IGf0r8EQ@localhost>) 
+[2026-11-18 13:29:40] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:30:10] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:30:40] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:30:53] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:30:58] [INFO] EmailService: Successfully dispatched email_verification_otp [email_verification:3] to sanketsidurkar@gmail.com (MsgID: <hmWSFma04nNGOf6At1whW5FX8wJTckaD2glGO8pyc@localhost>) 
+[2026-11-18 13:31:10] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:31:35] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:31:41] [INFO] EmailService: Successfully dispatched email_verification_otp [email_verification:4] to sanketsidurkar720580@gmail.com (MsgID: <nOwO2bv2CejtRDhM7dB8kDXGficw6ueBkdswLXS6g@localhost>) 
+[2026-11-18 13:31:41] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:31:47] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:31:47] [INFO] EmailOtpService: Verified employee email successfully: sanketsidurkar720580@gmail.com 
+[2026-11-18 13:32:09] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:32:10] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:32:26] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:32:27] [INFO] EmailService: Scheduled employee_welcome [employee:2] to sanketsidurkar720580@gmail.com via background outbox (Log #11) 
+[2026-11-18 13:32:27] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:32:32] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:32:41] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:33:11] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:34:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:35:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:36:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:37:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:38:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:39:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:40:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:41:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:42:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:43:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:44:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:45:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:46:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:47:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:47:08] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:47:08] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:47:11] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:47:41] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:48:11] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:49:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:50:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:50:58] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:51:04] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:51:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:52:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:53:01] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:53:01] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:53:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:53:29] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:53:29] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:53:29] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:53:31] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:53:31] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:54:02] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:54:32] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:55:02] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:55:19] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:55:19] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:55:32] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:56:02] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:56:32] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:57:02] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:58:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 13:59:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:00:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:01:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:02:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:03:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:04:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:05:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:06:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:07:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:08:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:09:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:10:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:11:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:11:46] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:11:46] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:11:46] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:11:55] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:11:55] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:12:02] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:12:11] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:12:11] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:12:14] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:12:15] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:12:28] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:12:29] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:12:45] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:13:15] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:13:45] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:14:15] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:14:45] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:15:15] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:16:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:17:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:18:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:19:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:20:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:20:20] [INFO] Chauffeur SMS notification dispatched to  
+[2026-11-18 14:20:20] [INFO] EmailService: Scheduled driver_assigned_driver [dispatch:3] to driver_test_6afd66cce2ee8@example.com via background outbox (Log #12) 
+[2026-11-18 14:20:21] [INFO] Trip evidence #7 recorded for dispatch #3 [start_vehicle] 
+[2026-11-18 14:20:21] [INFO] Trip evidence #8 recorded for dispatch #3 [start_odometer] 
+[2026-11-18 14:20:21] [INFO] Trip evidence #9 recorded for dispatch #3 [end_odometer] 
+[2026-11-18 14:20:21] [INFO] Trip evidence #10 recorded for dispatch #3 [end_vehicle] 
+[2026-11-18 14:21:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:21:40] [INFO] Chauffeur SMS notification dispatched to  
+[2026-11-18 14:21:40] [INFO] EmailService: Scheduled driver_assigned_driver [dispatch:4] to driver_test_6afd671cc4009@example.com via background outbox (Log #13) 
+[2026-11-18 14:21:40] [INFO] Trip evidence #11 recorded for dispatch #4 [start_vehicle] 
+[2026-11-18 14:21:40] [INFO] Trip evidence #12 recorded for dispatch #4 [start_odometer] 
+[2026-11-18 14:21:40] [INFO] Trip evidence #13 recorded for dispatch #4 [end_odometer] 
+[2026-11-18 14:21:40] [INFO] Trip evidence #14 recorded for dispatch #4 [end_vehicle] 
+[2026-11-18 14:22:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-18 14:23:39] [INFO] Trip evidence #15 recorded for dispatch #1 [start_vehicle] 
+[2026-11-18 14:23:48] [INFO] Trip evidence #16 recorded for dispatch #1 [start_vehicle] 
+[2026-11-18 14:23:53] [INFO] Chauffeur SMS notification dispatched to  
+[2026-11-18 14:23:53] [INFO] EmailService: Scheduled driver_assigned_driver [dispatch:5] to driver_test_6afd67a0edea2@example.com via background outbox (Log #14) 
+[2026-11-18 14:23:53] [INFO] Trip evidence #17 recorded for dispatch #5 [start_vehicle] 
+[2026-11-18 14:23:53] [INFO] Trip evidence #18 recorded for dispatch #5 [start_odometer] 
+[2026-11-18 14:23:53] [INFO] Trip evidence #19 recorded for dispatch #5 [end_odometer] 
+[2026-11-18 14:23:53] [INFO] Trip evidence #20 recorded for dispatch #5 [end_vehicle] 
+[2026-11-18 14:46:46] [INFO] Trip evidence #21 recorded for dispatch #1 [start_vehicle] 
+[2026-11-18 14:46:50] [INFO] Chauffeur SMS notification dispatched to  
+[2026-11-18 14:46:50] [INFO] EmailService: Scheduled driver_assigned_driver [dispatch:6] to driver_test_6afd6d028015d@example.com via background outbox (Log #15) 
+[2026-11-18 14:46:50] [INFO] Trip evidence #22 recorded for dispatch #6 [start_vehicle] 
+[2026-11-18 14:46:50] [INFO] Trip evidence #23 recorded for dispatch #6 [start_odometer] 
+[2026-11-18 14:46:50] [INFO] Trip evidence #24 recorded for dispatch #6 [end_odometer] 
+[2026-11-18 14:46:50] [INFO] Trip evidence #25 recorded for dispatch #6 [end_vehicle] 
+[2026-11-18 14:53:34] [INFO] User logged in successfully: owner (owner@tours.local) [Role: admin] 
+[2026-11-18 15:13:09] [INFO] User logged in successfully: owner (owner@tours.local) [Role: admin] 
+[2026-11-18 15:14:28] [INFO] EmailService: Successfully dispatched email_verification_otp [email_verification:5] to sanketsidurkar9@gmail.com (MsgID: <bjHoqHy9o7safcf37hJqS0PTzoTUzm7GdOqhFUpUvA@localhost>) 
+[2026-11-18 15:15:06] [INFO] EmailOtpService: Verified customer email successfully: sanketsidurkar9@gmail.com 
+[2026-11-18 15:15:19] [WARNING] EmailService::dispatchBackgroundWorker spawn failed: Call to undefined function App\Services\exec() 
+[2026-11-18 15:15:19] [INFO] EmailService: Scheduled customer_welcome [customer:2] to sanketsidurkar9@gmail.com via background outbox (Log #13) 
+[2026-11-18 15:16:20] [WARNING] EmailService::dispatchBackgroundWorker spawn failed: Call to undefined function App\Services\exec() 
+[2026-11-18 15:16:20] [INFO] EmailService: Scheduled booking_created [booking:3] to sanketsidurkar9@gmail.com via background outbox (Log #14) 
+[2026-11-18 15:17:09] [INFO] Chauffeur SMS notification dispatched to 8799845238 
+[2026-11-18 15:17:09] [WARNING] EmailService::dispatchBackgroundWorker spawn failed: Call to undefined function App\Services\exec() 
+[2026-11-18 15:17:09] [INFO] EmailService: Scheduled driver_assigned_driver [dispatch:3] to sanketsidurkar9@gmail.com via background outbox (Log #15) 
+[2026-11-18 15:17:45] [INFO] User logged in successfully: sanket (sanketsidurkar9@gmail.com) [Role: driver] 
+[2026-11-18 15:17:50] [WARNING] EmailService::dispatchBackgroundWorker spawn failed: Call to undefined function App\Services\exec() 
+[2026-11-18 15:17:50] [INFO] EmailService: Scheduled driver_assigned_customer [dispatch:3] to sanketsidurkar9@gmail.com via background outbox (Log #16) 
+[2026-11-18 15:18:28] [INFO] Trip evidence #7 recorded for dispatch #3 [start_vehicle] 
+[2026-11-18 15:18:28] [INFO] Trip evidence #8 recorded for dispatch #3 [start_odometer] 
+[2026-11-18 15:18:28] [WARNING] EmailService::dispatchBackgroundWorker spawn failed: Call to undefined function App\Services\exec() 
+[2026-11-18 15:18:28] [INFO] EmailService: Scheduled trip_started [dispatch:3] to sanketsidurkar9@gmail.com via background outbox (Log #17) 
+[2026-11-18 15:18:28] [WARNING] Initial GPS fix record skipped: Call to undefined method App\Services\GpsTrackingService::recordFix() 
+[2026-11-18 15:19:09] [INFO] Trip evidence #9 recorded for dispatch #3 [end_odometer] 
+[2026-11-18 15:19:09] [INFO] Trip evidence #10 recorded for dispatch #3 [end_vehicle] 
+[2026-11-18 15:19:09] [WARNING] EmailService::dispatchBackgroundWorker spawn failed: Call to undefined function App\Services\exec() 
+[2026-11-18 15:19:09] [INFO] EmailService: Scheduled trip_completed [dispatch:3] to sanketsidurkar9@gmail.com via background outbox (Log #18) 
+[2026-11-18 15:19:09] [WARNING] Final GPS fix record skipped: Call to undefined method App\Services\GpsTrackingService::recordFix() 
+[2026-11-18 15:29:18] [INFO] User logged in successfully: owner (owner@tours.local) [Role: admin] 
+[2026-11-18 15:33:32] [INFO] User logged in successfully: owner (owner@tours.local) [Role: admin] 
+[2026-11-18 15:35:00] [INFO] User logged in successfully: owner (owner@tours.local) [Role: admin] 

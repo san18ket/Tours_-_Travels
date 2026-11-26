@@ -1,0 +1,264 @@
+[2026-11-06 10:53:01] [SECURITY] GPS submission rejected: Driver profile 1 is off-duty. 
+[2026-11-06 10:53:04] [SECURITY] Failed password attempt for user: owner 
+[2026-11-06 10:53:04] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-11-06 10:53:05] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-11-06 10:53:05] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-11-06 10:53:06] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-11-06 10:53:06] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-11-06 10:53:06] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-11-06 10:53:06] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-11-06 10:53:06] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/roles"}
+[2026-11-06 10:53:06] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-11-06 10:53:06] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-11-06 10:53:07] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-11-06 10:53:07] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-11-06 10:53:07] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/role-permission"}
+[2026-11-06 10:53:08] [SECURITY] Unauthorized role access attempt {"user_id":10,"role":"driver","required":["admin","dispatcher"],"path":"/office/dashboard"}
+[2026-11-06 10:53:08] [SECURITY] Unauthorized role access attempt {"user_id":10,"role":"driver","required":["admin","dispatcher"],"path":"/office/customers"}
+[2026-11-06 10:53:08] [SECURITY] Unauthorized role access attempt {"user_id":10,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-11-06 10:53:08] [SECURITY] Unauthorized role access attempt {"user_id":10,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-11-06 10:53:08] [SECURITY] Unauthorized role access attempt {"user_id":10,"role":"driver","required":["admin","dispatcher"],"path":"/office/bookings"}
+[2026-11-06 10:53:08] [SECURITY] Unauthorized role access attempt {"user_id":10,"role":"driver","required":["admin","dispatcher"],"path":"/office/invoices"}
+[2026-11-06 10:53:08] [SECURITY] Unauthorized role access attempt {"user_id":10,"role":"driver","required":["admin"],"path":"/office/users"}
+[2026-11-06 10:53:08] [SECURITY] Unauthorized role access attempt {"user_id":10,"role":"driver","required":["admin"],"path":"/office/roles"}
+[2026-11-06 10:53:08] [SECURITY] Unauthorized role access attempt {"user_id":10,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/assign"}
+[2026-11-06 10:53:08] [SECURITY] Unauthorized role access attempt {"user_id":10,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-11-06 10:53:08] [SECURITY] GPS submission rejected: Driver profile 3 is off-duty. 
+[2026-11-06 10:53:08] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/api/gps/update"}
+[2026-11-06 10:53:09] [SECURITY] Mobile login failed for 'mobiledrv_edb40a' {"ip":"127.0.0.1"}
+[2026-11-06 12:00:38] [SECURITY] GPS submission rejected: Driver profile 9 is off-duty. 
+[2026-11-06 12:00:41] [SECURITY] Failed password attempt for user: owner 
+[2026-11-06 12:00:41] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-11-06 12:00:41] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-11-06 12:00:41] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-11-06 12:00:43] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-11-06 12:00:43] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-11-06 12:00:43] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-11-06 12:00:43] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-11-06 12:00:43] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/roles"}
+[2026-11-06 12:00:43] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-11-06 12:00:43] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-11-06 12:00:43] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-11-06 12:00:43] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-11-06 12:00:43] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/role-permission"}
+[2026-11-06 12:00:44] [SECURITY] Unauthorized role access attempt {"user_id":24,"role":"driver","required":["admin","dispatcher"],"path":"/office/dashboard"}
+[2026-11-06 12:00:44] [SECURITY] Unauthorized role access attempt {"user_id":24,"role":"driver","required":["admin","dispatcher"],"path":"/office/customers"}
+[2026-11-06 12:00:44] [SECURITY] Unauthorized role access attempt {"user_id":24,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-11-06 12:00:44] [SECURITY] Unauthorized role access attempt {"user_id":24,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-11-06 12:00:44] [SECURITY] Unauthorized role access attempt {"user_id":24,"role":"driver","required":["admin","dispatcher"],"path":"/office/bookings"}
+[2026-11-06 12:00:44] [SECURITY] Unauthorized role access attempt {"user_id":24,"role":"driver","required":["admin","dispatcher"],"path":"/office/invoices"}
+[2026-11-06 12:00:44] [SECURITY] Unauthorized role access attempt {"user_id":24,"role":"driver","required":["admin"],"path":"/office/users"}
+[2026-11-06 12:00:44] [SECURITY] Unauthorized role access attempt {"user_id":24,"role":"driver","required":["admin"],"path":"/office/roles"}
+[2026-11-06 12:00:44] [SECURITY] Unauthorized role access attempt {"user_id":24,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/assign"}
+[2026-11-06 12:00:44] [SECURITY] Unauthorized role access attempt {"user_id":24,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-11-06 12:00:44] [SECURITY] GPS submission rejected: Driver profile 11 is off-duty. 
+[2026-11-06 12:00:44] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/api/gps/update"}
+[2026-11-06 12:01:34] [SECURITY] Mobile login failed for 'nonexistent' {"ip":"127.0.0.1"}
+[2026-11-06 12:01:44] [SECURITY] GPS submission rejected: Driver profile 9 is off-duty. 
+[2026-11-06 12:02:13] [SECURITY] GPS submission rejected: Driver profile 9 is off-duty. 
+[2026-11-06 12:02:16] [SECURITY] Failed password attempt for user: owner 
+[2026-11-06 12:02:16] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-11-06 12:02:17] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-11-06 12:02:17] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-11-06 12:02:18] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-11-06 12:02:18] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-11-06 12:02:18] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-11-06 12:02:18] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-11-06 12:02:18] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/roles"}
+[2026-11-06 12:02:19] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-11-06 12:02:19] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-11-06 12:02:19] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-11-06 12:02:19] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-11-06 12:02:19] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/role-permission"}
+[2026-11-06 12:02:20] [SECURITY] Unauthorized role access attempt {"user_id":33,"role":"driver","required":["admin","dispatcher"],"path":"/office/dashboard"}
+[2026-11-06 12:02:20] [SECURITY] Unauthorized role access attempt {"user_id":33,"role":"driver","required":["admin","dispatcher"],"path":"/office/customers"}
+[2026-11-06 12:02:20] [SECURITY] Unauthorized role access attempt {"user_id":33,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-11-06 12:02:20] [SECURITY] Unauthorized role access attempt {"user_id":33,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-11-06 12:02:20] [SECURITY] Unauthorized role access attempt {"user_id":33,"role":"driver","required":["admin","dispatcher"],"path":"/office/bookings"}
+[2026-11-06 12:02:20] [SECURITY] Unauthorized role access attempt {"user_id":33,"role":"driver","required":["admin","dispatcher"],"path":"/office/invoices"}
+[2026-11-06 12:02:20] [SECURITY] Unauthorized role access attempt {"user_id":33,"role":"driver","required":["admin"],"path":"/office/users"}
+[2026-11-06 12:02:20] [SECURITY] Unauthorized role access attempt {"user_id":33,"role":"driver","required":["admin"],"path":"/office/roles"}
+[2026-11-06 12:02:20] [SECURITY] Unauthorized role access attempt {"user_id":33,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/assign"}
+[2026-11-06 12:02:20] [SECURITY] Unauthorized role access attempt {"user_id":33,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-11-06 12:02:20] [SECURITY] GPS submission rejected: Driver profile 16 is off-duty. 
+[2026-11-06 12:02:20] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/api/gps/update"}
+[2026-11-06 12:02:22] [SECURITY] Mobile login failed for 'mobiledrv_b77028' {"ip":"127.0.0.1"}
+[2026-11-06 14:37:08] [SECURITY] GPS submission rejected: Driver profile 1 is off-duty. 
+[2026-11-06 14:37:11] [SECURITY] Failed password attempt for user: owner 
+[2026-11-06 14:37:11] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-11-06 14:37:12] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-11-06 14:37:12] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-11-06 14:37:13] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-11-06 14:37:13] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-11-06 14:37:13] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-11-06 14:37:13] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-11-06 14:37:13] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/roles"}
+[2026-11-06 14:37:13] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-11-06 14:37:13] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-11-06 14:37:14] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-11-06 14:37:14] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-11-06 14:37:14] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/role-permission"}
+[2026-11-06 14:37:15] [SECURITY] Unauthorized role access attempt {"user_id":10,"role":"driver","required":["admin","dispatcher"],"path":"/office/dashboard"}
+[2026-11-06 14:37:15] [SECURITY] Unauthorized role access attempt {"user_id":10,"role":"driver","required":["admin","dispatcher"],"path":"/office/customers"}
+[2026-11-06 14:37:15] [SECURITY] Unauthorized role access attempt {"user_id":10,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-11-06 14:37:15] [SECURITY] Unauthorized role access attempt {"user_id":10,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-11-06 14:37:15] [SECURITY] Unauthorized role access attempt {"user_id":10,"role":"driver","required":["admin","dispatcher"],"path":"/office/bookings"}
+[2026-11-06 14:37:15] [SECURITY] Unauthorized role access attempt {"user_id":10,"role":"driver","required":["admin","dispatcher"],"path":"/office/invoices"}
+[2026-11-06 14:37:15] [SECURITY] Unauthorized role access attempt {"user_id":10,"role":"driver","required":["admin"],"path":"/office/users"}
+[2026-11-06 14:37:15] [SECURITY] Unauthorized role access attempt {"user_id":10,"role":"driver","required":["admin"],"path":"/office/roles"}
+[2026-11-06 14:37:15] [SECURITY] Unauthorized role access attempt {"user_id":10,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/assign"}
+[2026-11-06 14:37:15] [SECURITY] Unauthorized role access attempt {"user_id":10,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-11-06 14:37:15] [SECURITY] GPS submission rejected: Driver profile 3 is off-duty. 
+[2026-11-06 14:37:15] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/api/gps/update"}
+[2026-11-06 14:37:18] [SECURITY] Mobile login failed for 'mobiledrv_cba0e7' {"ip":"127.0.0.1"}
+[2026-11-06 14:54:50] [SECURITY] GPS submission rejected: Driver profile 1 is off-duty. 
+[2026-11-06 14:54:54] [SECURITY] Failed password attempt for user: owner 
+[2026-11-06 14:54:54] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-11-06 14:54:54] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-11-06 14:54:54] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-11-06 14:54:56] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-11-06 14:54:56] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-11-06 14:54:56] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-11-06 14:54:56] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-11-06 14:54:56] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/roles"}
+[2026-11-06 14:54:56] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-11-06 14:54:56] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-11-06 14:54:57] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-11-06 14:54:57] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-11-06 14:54:57] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/role-permission"}
+[2026-11-06 14:54:58] [SECURITY] Unauthorized role access attempt {"user_id":19,"role":"driver","required":["admin","dispatcher"],"path":"/office/dashboard"}
+[2026-11-06 14:54:58] [SECURITY] Unauthorized role access attempt {"user_id":19,"role":"driver","required":["admin","dispatcher"],"path":"/office/customers"}
+[2026-11-06 14:54:58] [SECURITY] Unauthorized role access attempt {"user_id":19,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-11-06 14:54:58] [SECURITY] Unauthorized role access attempt {"user_id":19,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-11-06 14:54:58] [SECURITY] Unauthorized role access attempt {"user_id":19,"role":"driver","required":["admin","dispatcher"],"path":"/office/bookings"}
+[2026-11-06 14:54:58] [SECURITY] Unauthorized role access attempt {"user_id":19,"role":"driver","required":["admin","dispatcher"],"path":"/office/invoices"}
+[2026-11-06 14:54:58] [SECURITY] Unauthorized role access attempt {"user_id":19,"role":"driver","required":["admin"],"path":"/office/users"}
+[2026-11-06 14:54:58] [SECURITY] Unauthorized role access attempt {"user_id":19,"role":"driver","required":["admin"],"path":"/office/roles"}
+[2026-11-06 14:54:58] [SECURITY] Unauthorized role access attempt {"user_id":19,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/assign"}
+[2026-11-06 14:54:58] [SECURITY] Unauthorized role access attempt {"user_id":19,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-11-06 14:54:58] [SECURITY] GPS submission rejected: Driver profile 8 is off-duty. 
+[2026-11-06 14:54:58] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/api/gps/update"}
+[2026-11-06 14:55:01] [SECURITY] Mobile login failed for 'mobiledrv_e4e7e4' {"ip":"127.0.0.1"}
+[2026-11-06 15:03:14] [SECURITY] GPS submission rejected: Driver profile 14 is off-duty. 
+[2026-11-06 15:03:18] [SECURITY] Failed password attempt for user: owner 
+[2026-11-06 15:03:18] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-11-06 15:03:19] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-11-06 15:03:19] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-11-06 15:03:20] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-11-06 15:03:20] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-11-06 15:03:20] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-11-06 15:03:20] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-11-06 15:03:20] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/roles"}
+[2026-11-06 15:03:20] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-11-06 15:03:20] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-11-06 15:03:20] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-11-06 15:03:20] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-11-06 15:03:21] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/role-permission"}
+[2026-11-06 15:03:22] [SECURITY] Unauthorized role access attempt {"user_id":35,"role":"driver","required":["admin","dispatcher"],"path":"/office/dashboard"}
+[2026-11-06 15:03:22] [SECURITY] Unauthorized role access attempt {"user_id":35,"role":"driver","required":["admin","dispatcher"],"path":"/office/customers"}
+[2026-11-06 15:03:22] [SECURITY] Unauthorized role access attempt {"user_id":35,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-11-06 15:03:22] [SECURITY] Unauthorized role access attempt {"user_id":35,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-11-06 15:03:22] [SECURITY] Unauthorized role access attempt {"user_id":35,"role":"driver","required":["admin","dispatcher"],"path":"/office/bookings"}
+[2026-11-06 15:03:22] [SECURITY] Unauthorized role access attempt {"user_id":35,"role":"driver","required":["admin","dispatcher"],"path":"/office/invoices"}
+[2026-11-06 15:03:22] [SECURITY] Unauthorized role access attempt {"user_id":35,"role":"driver","required":["admin"],"path":"/office/users"}
+[2026-11-06 15:03:22] [SECURITY] Unauthorized role access attempt {"user_id":35,"role":"driver","required":["admin"],"path":"/office/roles"}
+[2026-11-06 15:03:22] [SECURITY] Unauthorized role access attempt {"user_id":35,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/assign"}
+[2026-11-06 15:03:22] [SECURITY] Unauthorized role access attempt {"user_id":35,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-11-06 15:03:22] [SECURITY] GPS submission rejected: Driver profile 20 is off-duty. 
+[2026-11-06 15:03:22] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/api/gps/update"}
+[2026-11-06 15:03:25] [SECURITY] Mobile login failed for 'mobiledrv_2bc1c9' {"ip":"127.0.0.1"}
+[2026-11-06 15:14:56] [SECURITY] GPS submission rejected: Driver profile 24 is off-duty. 
+[2026-11-06 15:15:00] [SECURITY] Failed password attempt for user: owner 
+[2026-11-06 15:15:00] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-11-06 15:15:01] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-11-06 15:15:01] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-11-06 15:15:02] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-11-06 15:15:02] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-11-06 15:15:02] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-11-06 15:15:02] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-11-06 15:15:03] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/roles"}
+[2026-11-06 15:15:03] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-11-06 15:15:03] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-11-06 15:15:03] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-11-06 15:15:03] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-11-06 15:15:03] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/role-permission"}
+[2026-11-06 15:15:04] [SECURITY] Unauthorized role access attempt {"user_id":51,"role":"driver","required":["admin","dispatcher"],"path":"/office/dashboard"}
+[2026-11-06 15:15:04] [SECURITY] Unauthorized role access attempt {"user_id":51,"role":"driver","required":["admin","dispatcher"],"path":"/office/customers"}
+[2026-11-06 15:15:04] [SECURITY] Unauthorized role access attempt {"user_id":51,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-11-06 15:15:04] [SECURITY] Unauthorized role access attempt {"user_id":51,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-11-06 15:15:04] [SECURITY] Unauthorized role access attempt {"user_id":51,"role":"driver","required":["admin","dispatcher"],"path":"/office/bookings"}
+[2026-11-06 15:15:04] [SECURITY] Unauthorized role access attempt {"user_id":51,"role":"driver","required":["admin","dispatcher"],"path":"/office/invoices"}
+[2026-11-06 15:15:04] [SECURITY] Unauthorized role access attempt {"user_id":51,"role":"driver","required":["admin"],"path":"/office/users"}
+[2026-11-06 15:15:04] [SECURITY] Unauthorized role access attempt {"user_id":51,"role":"driver","required":["admin"],"path":"/office/roles"}
+[2026-11-06 15:15:04] [SECURITY] Unauthorized role access attempt {"user_id":51,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/assign"}
+[2026-11-06 15:15:04] [SECURITY] Unauthorized role access attempt {"user_id":51,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-11-06 15:15:04] [SECURITY] GPS submission rejected: Driver profile 32 is off-duty. 
+[2026-11-06 15:15:04] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/api/gps/update"}
+[2026-11-06 15:15:06] [SECURITY] Mobile login failed for 'mobiledrv_77b229' {"ip":"127.0.0.1"}
+[2026-11-06 15:54:07] [SECURITY] GPS submission rejected: Driver profile 36 is off-duty. 
+[2026-11-06 15:55:24] [SECURITY] GPS submission rejected: Driver profile 36 is off-duty. 
+[2026-11-06 15:55:30] [SECURITY] Failed password attempt for user: owner 
+[2026-11-06 15:55:30] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-11-06 15:55:30] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-11-06 15:55:30] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-11-06 15:55:32] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-11-06 15:55:32] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-11-06 15:55:32] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-11-06 15:55:32] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-11-06 15:55:32] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/roles"}
+[2026-11-06 15:55:32] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-11-06 15:55:32] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-11-06 15:55:32] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-11-06 15:55:32] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-11-06 15:55:32] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/role-permission"}
+[2026-11-06 15:55:33] [SECURITY] Unauthorized role access attempt {"user_id":64,"role":"driver","required":["admin","dispatcher"],"path":"/office/dashboard"}
+[2026-11-06 15:55:33] [SECURITY] Unauthorized role access attempt {"user_id":64,"role":"driver","required":["admin","dispatcher"],"path":"/office/customers"}
+[2026-11-06 15:55:33] [SECURITY] Unauthorized role access attempt {"user_id":64,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-11-06 15:55:33] [SECURITY] Unauthorized role access attempt {"user_id":64,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-11-06 15:55:33] [SECURITY] Unauthorized role access attempt {"user_id":64,"role":"driver","required":["admin","dispatcher"],"path":"/office/bookings"}
+[2026-11-06 15:55:33] [SECURITY] Unauthorized role access attempt {"user_id":64,"role":"driver","required":["admin","dispatcher"],"path":"/office/invoices"}
+[2026-11-06 15:55:33] [SECURITY] Unauthorized role access attempt {"user_id":64,"role":"driver","required":["admin"],"path":"/office/users"}
+[2026-11-06 15:55:33] [SECURITY] Unauthorized role access attempt {"user_id":64,"role":"driver","required":["admin"],"path":"/office/roles"}
+[2026-11-06 15:55:33] [SECURITY] Unauthorized role access attempt {"user_id":64,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/assign"}
+[2026-11-06 15:55:33] [SECURITY] Unauthorized role access attempt {"user_id":64,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-11-06 15:55:33] [SECURITY] GPS submission rejected: Driver profile 40 is off-duty. 
+[2026-11-06 15:55:33] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/api/gps/update"}
+[2026-11-06 15:55:35] [SECURITY] Mobile login failed for 'mobiledrv_3a4249' {"ip":"127.0.0.1"}
+[2026-11-06 15:56:39] [SECURITY] Account username recovery completed via email OTP. Private email dispatched to: recovery_test_1793960797@example.com 
+[2026-11-06 15:56:40] [SECURITY] User password reset successfully via email OTP: recov_user_1793960797 (recovery_test_1793960797@example.com) 
+[2026-11-06 15:56:41] [SECURITY] Failed password attempt for user: recov_user_1793960797 
+[2026-11-06 15:56:42] [SECURITY] Failed password attempt for user: owner 
+[2026-11-06 15:58:16] [SECURITY] GPS submission rejected: Driver profile 44 is off-duty. 
+[2026-11-06 15:58:16] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/api/gps/update"}
+[2026-11-06 16:02:24] [SECURITY] Open redirect prevented in language switcher: https://attacker-phishing-site.com/login 
+[2026-11-06 16:02:25] [SECURITY] Mobile login failed for 'mobiledriver_533bca' {"ip":"127.0.0.1"}
+[2026-11-06 16:03:41] [SECURITY] Open redirect prevented in language switcher: https://attacker-phishing-site.com/login 
+[2026-11-06 16:07:23] [SECURITY] Failed password attempt for user: owner 
+[2026-11-06 16:07:23] [SECURITY] Login attempt with unknown username/email: non_existent_user 
+[2026-11-06 16:07:23] [SECURITY] Unauthorized role access attempt {"user_id":7,"role":"customer","required":["admin"],"path":"/office/users"}
+[2026-11-06 16:07:23] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/office/users"}
+[2026-11-06 16:07:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/users/create"}
+[2026-11-06 16:07:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/users/create"}
+[2026-11-06 16:07:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/employees"}
+[2026-11-06 16:07:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-11-06 16:07:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/roles"}
+[2026-11-06 16:07:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-11-06 16:07:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"dispatcher","required":["admin"],"path":"/office/vehicles/create"}
+[2026-11-06 16:07:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/history"}
+[2026-11-06 16:07:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-11-06 16:07:25] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":"driver","required":["admin"],"path":"/office/role-permission"}
+[2026-11-06 16:07:26] [SECURITY] Unauthorized role access attempt {"user_id":10,"role":"driver","required":["admin","dispatcher"],"path":"/office/dashboard"}
+[2026-11-06 16:07:26] [SECURITY] Unauthorized role access attempt {"user_id":10,"role":"driver","required":["admin","dispatcher"],"path":"/office/customers"}
+[2026-11-06 16:07:26] [SECURITY] Unauthorized role access attempt {"user_id":10,"role":"driver","required":["admin"],"path":"/office/employees"}
+[2026-11-06 16:07:26] [SECURITY] Unauthorized role access attempt {"user_id":10,"role":"driver","required":["admin","dispatcher"],"path":"/office/vehicles"}
+[2026-11-06 16:07:26] [SECURITY] Unauthorized role access attempt {"user_id":10,"role":"driver","required":["admin","dispatcher"],"path":"/office/bookings"}
+[2026-11-06 16:07:26] [SECURITY] Unauthorized role access attempt {"user_id":10,"role":"driver","required":["admin","dispatcher"],"path":"/office/invoices"}
+[2026-11-06 16:07:26] [SECURITY] Unauthorized role access attempt {"user_id":10,"role":"driver","required":["admin"],"path":"/office/users"}
+[2026-11-06 16:07:26] [SECURITY] Unauthorized role access attempt {"user_id":10,"role":"driver","required":["admin"],"path":"/office/roles"}
+[2026-11-06 16:07:26] [SECURITY] Unauthorized role access attempt {"user_id":10,"role":"driver","required":["admin","dispatcher"],"path":"/office/trips/assign"}
+[2026-11-06 16:07:26] [SECURITY] Unauthorized role access attempt {"user_id":10,"role":"driver","required":["admin","dispatcher"],"path":"/office/tracking"}
+[2026-11-06 16:07:26] [SECURITY] GPS submission rejected: Driver profile 2 is off-duty. 
+[2026-11-06 16:07:26] [SECURITY] CSRF token validation failed {"ip":"127.0.0.1","path":"/api/gps/update"}
+[2026-11-06 16:07:29] [SECURITY] Mobile login failed for 'mobiledrv_dfa79b' {"ip":"127.0.0.1"}
+[2026-11-06 19:48:55] [SECURITY] CSRF token validation failed {"ip":"::1","path":"/language/set"}
+[2026-11-06 19:48:55] [SECURITY] CSRF token validation failed {"ip":"::1","path":"/language/set"}

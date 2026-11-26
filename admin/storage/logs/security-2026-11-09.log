@@ -1,0 +1,7 @@
+[2026-11-09 16:48:52] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":null,"required":["admin","dispatcher"],"path":"/office/dispatch/1"}
+[2026-11-09 16:48:52] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":null,"required":["admin","dispatcher"],"path":"/office/dispatches"}
+[2026-11-09 16:48:52] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":null,"required":["admin","dispatcher"],"path":"/office/dispatch/create"}
+[2026-11-09 16:48:52] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":null,"required":["admin","dispatcher"],"path":"/office/bookings/1/edit"}
+[2026-11-09 16:48:52] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":null,"required":["admin","dispatcher"],"path":"/office/tours/1"}
+[2026-11-09 16:48:52] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":null,"required":["admin","dispatcher"],"path":"/office/tours/1/edit"}
+[2026-11-09 16:48:52] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":null,"required":["driver"],"path":"/driver/notification-settings"}

@@ -1,0 +1,237 @@
+[2026-11-06 16:24:33] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 16:25:34] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 16:25:34] [INFO] Auto-initialization: Running 46 pending migrations. 
+[2026-11-06 16:25:34] [INFO] Migration executed successfully: 001_create_users_table.php (20ms) 
+[2026-11-06 16:25:35] [INFO] Migration executed successfully: 002_create_fleet_and_drivers_table.php (35ms) 
+[2026-11-06 16:25:35] [INFO] Migration executed successfully: 003_create_tours_table.php (15ms) 
+[2026-11-06 16:25:35] [INFO] Migration executed successfully: 004_create_bookings_table.php (19ms) 
+[2026-11-06 16:25:35] [INFO] Migration executed successfully: 005_create_dispatches_table.php (16ms) 
+[2026-11-06 16:25:35] [INFO] Migration executed successfully: 006_create_invoices_and_payments_table.php (31ms) 
+[2026-11-06 16:25:35] [INFO] Migration executed successfully: 007_create_gps_logs_table.php (19ms) 
+[2026-11-06 16:25:35] [INFO] Migration executed successfully: 008_create_audit_logs_table.php (21ms) 
+[2026-11-06 16:25:35] [INFO] Migration executed successfully: 009_add_username_to_users_table.php (662ms) 
+[2026-11-06 16:25:35] [INFO] Migration executed successfully: 010_create_vehicle_maintenance_table.php (16ms) 
+[2026-11-06 16:25:35] [INFO] Migration executed successfully: 011_create_trip_expenses_table.php (17ms) 
+[2026-11-06 16:25:36] [INFO] Migration executed successfully: 012_create_customers_table.php (342ms) 
+[2026-11-06 16:25:36] [INFO] Migration executed successfully: 013_remove_travel_profile_and_preferred_channel_from_customers.php (158ms) 
+[2026-11-06 16:25:36] [INFO] Migration executed successfully: 014_create_employees_table.php (145ms) 
+[2026-11-06 16:25:36] [INFO] Migration executed successfully: 015_add_employee_id_to_driver_profiles.php (21ms) 
+[2026-11-06 16:25:36] [INFO] Migration executed successfully: 016_create_trip_status_history_table.php (20ms) 
+[2026-11-06 16:25:36] [INFO] Migration executed successfully: 017_create_roles_table.php (107ms) 
+[2026-11-06 16:25:36] [INFO] Migration executed successfully: 018_create_permissions_and_role_permissions_tables.php (57ms) 
+[2026-11-06 16:25:36] [INFO] Migration executed successfully: 019_allow_null_dispatch_id_in_gps_logs.php (12ms) 
+[2026-11-06 16:25:36] [INFO] Migration executed successfully: 020_add_accuracy_to_gps_logs_table.php (21ms) 
+[2026-11-06 16:25:36] [INFO] Migration executed successfully: 021_seed_system_roles_and_permissions.php (170ms) 
+[2026-11-06 16:25:37] [INFO] Migration executed successfully: 022_create_driver_mobile_devices_and_tracking_sessions_table.php (96ms) 
+[2026-11-06 16:25:37] [INFO] Migration executed successfully: 023_add_language_to_users_table.php (39ms) 
+[2026-11-06 16:25:37] [INFO] Migration executed successfully: 024_add_profile_photo_to_customers_table.php (10ms) 
+[2026-11-06 16:25:37] [INFO] Migration executed successfully: 025_add_documents_and_notes_to_customers_table.php (97ms) 
+[2026-11-06 16:25:37] [INFO] Migration executed successfully: 026_add_photo_and_documents_to_vehicles_table.php (86ms) 
+[2026-11-06 16:25:37] [INFO] Migration executed successfully: 027_allow_null_booking_id_in_invoices.php (82ms) 
+[2026-11-06 16:25:37] [INFO] Migration executed successfully: 028_create_finance_module_tables.php (295ms) 
+[2026-11-06 16:25:37] [INFO] Migration executed successfully: 029_add_status_to_finance_ledger.php (74ms) 
+[2026-11-06 16:25:37] [INFO] Migration executed successfully: 030_create_notifications_table.php (28ms) 
+[2026-11-06 16:25:38] [INFO] Migration executed successfully: 032_add_documents_and_profile_to_employees_table.php (454ms) 
+[2026-11-06 16:25:38] [INFO] Migration executed successfully: 033_create_email_logs_table.php (20ms) 
+[2026-11-06 16:25:38] [INFO] Migration executed successfully: 034_create_company_profiles_table.php (16ms) 
+[2026-11-06 16:25:38] [INFO] Migration executed successfully: 035_enhance_finance_module.php (219ms) 
+[2026-11-06 16:25:38] [INFO] Migration executed successfully: 036_allow_bank_transfer_in_payments.php (9ms) 
+[2026-11-06 16:25:38] [INFO] Migration executed successfully: 037_enhance_company_profiles_table.php (149ms) 
+[2026-11-06 16:25:38] [INFO] Migration executed successfully: 038_create_email_verifications_table.php (26ms) 
+[2026-11-06 16:25:38] [INFO] Migration executed successfully: 039_enhance_email_verifications_for_recovery.php (132ms) 
+[2026-11-06 16:25:39] [INFO] Migration executed successfully: 040_enhance_recovery_tables_and_status.php (196ms) 
+[2026-11-06 16:25:39] [INFO] Migration executed successfully: 041_enhance_email_logs_for_queue_and_worker.php (310ms) 
+[2026-11-06 16:25:39] [INFO] Migration executed successfully: 042_add_theme_colors_to_company_profiles.php (71ms) 
+[2026-11-06 16:25:39] [INFO] Migration executed successfully: 043_add_performance_indexes.php (236ms) 
+[2026-11-06 16:25:39] [INFO] Migration executed successfully: 044_create_remember_tokens_and_caching_tables.php (113ms) 
+[2026-11-06 16:25:39] [INFO] Migration executed successfully: 045_add_driver_trip_amount_to_dispatches_table.php (32ms) 
+[2026-11-06 16:25:39] [INFO] Migration executed successfully: 046_create_driver_trip_payments_table.php (108ms) 
+[2026-11-06 16:25:40] [INFO] Migration executed successfully: 047_add_driver_acceptance_workflow_to_dispatches.php (202ms) 
+[2026-11-06 16:25:40] [INFO] DatabaseSeeder finished: only Owner account created, remaining tables kept blank. {"seeded_count":0}
+[2026-11-06 16:50:36] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 17:05:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 17:19:51] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 17:19:51] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 17:20:11] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 17:20:12] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 17:22:07] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 17:49:28] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 17:49:37] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 17:49:39] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 17:49:40] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 17:49:41] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 17:49:44] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 17:49:47] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 17:50:56] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 17:50:56] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:10:22] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:10:22] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:10:31] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:10:31] [INFO] User logged in successfully: owner (owner@voyagego.com) [Role: admin] 
+[2026-11-06 18:10:31] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:10:36] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:10:38] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:15:17] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:15:17] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:15:46] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:15:46] [INFO] Auto-initialization: Running 46 pending migrations. 
+[2026-11-06 18:15:46] [INFO] Migration executed successfully: 001_create_users_table.php (14ms) 
+[2026-11-06 18:15:46] [INFO] Migration executed successfully: 002_create_fleet_and_drivers_table.php (34ms) 
+[2026-11-06 18:15:46] [INFO] Migration executed successfully: 003_create_tours_table.php (22ms) 
+[2026-11-06 18:15:46] [INFO] Migration executed successfully: 004_create_bookings_table.php (20ms) 
+[2026-11-06 18:15:46] [INFO] Migration executed successfully: 005_create_dispatches_table.php (20ms) 
+[2026-11-06 18:15:46] [INFO] Migration executed successfully: 006_create_invoices_and_payments_table.php (32ms) 
+[2026-11-06 18:15:46] [INFO] Migration executed successfully: 007_create_gps_logs_table.php (15ms) 
+[2026-11-06 18:15:46] [INFO] Migration executed successfully: 008_create_audit_logs_table.php (16ms) 
+[2026-11-06 18:15:46] [INFO] Migration executed successfully: 009_add_username_to_users_table.php (606ms) 
+[2026-11-06 18:15:46] [INFO] Migration executed successfully: 010_create_vehicle_maintenance_table.php (15ms) 
+[2026-11-06 18:15:46] [INFO] Migration executed successfully: 011_create_trip_expenses_table.php (15ms) 
+[2026-11-06 18:15:47] [INFO] Migration executed successfully: 012_create_customers_table.php (196ms) 
+[2026-11-06 18:15:47] [INFO] Migration executed successfully: 013_remove_travel_profile_and_preferred_channel_from_customers.php (83ms) 
+[2026-11-06 18:15:47] [INFO] Migration executed successfully: 014_create_employees_table.php (93ms) 
+[2026-11-06 18:15:47] [INFO] Migration executed successfully: 015_add_employee_id_to_driver_profiles.php (20ms) 
+[2026-11-06 18:15:47] [INFO] Migration executed successfully: 016_create_trip_status_history_table.php (15ms) 
+[2026-11-06 18:15:47] [INFO] Migration executed successfully: 017_create_roles_table.php (66ms) 
+[2026-11-06 18:15:47] [INFO] Migration executed successfully: 018_create_permissions_and_role_permissions_tables.php (39ms) 
+[2026-11-06 18:15:47] [INFO] Migration executed successfully: 019_allow_null_dispatch_id_in_gps_logs.php (8ms) 
+[2026-11-06 18:15:47] [INFO] Migration executed successfully: 020_add_accuracy_to_gps_logs_table.php (17ms) 
+[2026-11-06 18:15:47] [INFO] Migration executed successfully: 021_seed_system_roles_and_permissions.php (126ms) 
+[2026-11-06 18:15:47] [INFO] Migration executed successfully: 022_create_driver_mobile_devices_and_tracking_sessions_table.php (48ms) 
+[2026-11-06 18:15:47] [INFO] Migration executed successfully: 023_add_language_to_users_table.php (25ms) 
+[2026-11-06 18:15:47] [INFO] Migration executed successfully: 024_add_profile_photo_to_customers_table.php (16ms) 
+[2026-11-06 18:15:47] [INFO] Migration executed successfully: 025_add_documents_and_notes_to_customers_table.php (94ms) 
+[2026-11-06 18:15:47] [INFO] Migration executed successfully: 026_add_photo_and_documents_to_vehicles_table.php (72ms) 
+[2026-11-06 18:15:48] [INFO] Migration executed successfully: 027_allow_null_booking_id_in_invoices.php (85ms) 
+[2026-11-06 18:15:48] [INFO] Migration executed successfully: 028_create_finance_module_tables.php (191ms) 
+[2026-11-06 18:15:48] [INFO] Migration executed successfully: 029_add_status_to_finance_ledger.php (29ms) 
+[2026-11-06 18:15:48] [INFO] Migration executed successfully: 030_create_notifications_table.php (12ms) 
+[2026-11-06 18:15:48] [INFO] Migration executed successfully: 032_add_documents_and_profile_to_employees_table.php (245ms) 
+[2026-11-06 18:15:48] [INFO] Migration executed successfully: 033_create_email_logs_table.php (19ms) 
+[2026-11-06 18:15:48] [INFO] Migration executed successfully: 034_create_company_profiles_table.php (17ms) 
+[2026-11-06 18:15:48] [INFO] Migration executed successfully: 035_enhance_finance_module.php (157ms) 
+[2026-11-06 18:15:48] [INFO] Migration executed successfully: 036_allow_bank_transfer_in_payments.php (9ms) 
+[2026-11-06 18:15:48] [INFO] Migration executed successfully: 037_enhance_company_profiles_table.php (101ms) 
+[2026-11-06 18:15:48] [INFO] Migration executed successfully: 038_create_email_verifications_table.php (14ms) 
+[2026-11-06 18:15:48] [INFO] Migration executed successfully: 039_enhance_email_verifications_for_recovery.php (146ms) 
+[2026-11-06 18:15:49] [INFO] Migration executed successfully: 040_enhance_recovery_tables_and_status.php (127ms) 
+[2026-11-06 18:15:49] [INFO] Migration executed successfully: 041_enhance_email_logs_for_queue_and_worker.php (287ms) 
+[2026-11-06 18:15:49] [INFO] Migration executed successfully: 042_add_theme_colors_to_company_profiles.php (66ms) 
+[2026-11-06 18:15:49] [INFO] Migration executed successfully: 043_add_performance_indexes.php (155ms) 
+[2026-11-06 18:15:49] [INFO] Migration executed successfully: 044_create_remember_tokens_and_caching_tables.php (88ms) 
+[2026-11-06 18:15:49] [INFO] Migration executed successfully: 045_add_driver_trip_amount_to_dispatches_table.php (14ms) 
+[2026-11-06 18:15:49] [INFO] Migration executed successfully: 046_create_driver_trip_payments_table.php (60ms) 
+[2026-11-06 18:15:49] [INFO] Migration executed successfully: 047_add_driver_acceptance_workflow_to_dispatches.php (154ms) 
+[2026-11-06 18:15:49] [INFO] DatabaseSeeder finished: only Owner account created, remaining tables kept blank. {"seeded_count":0}
+[2026-11-06 18:15:53] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:16:05] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:16:26] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:16:32] [INFO] EmailService: Successfully dispatched email_verification_otp [email_verification:1] to sanketsidurkar9@gmail.com (MsgID: <Bdf32hup5UZaqOHx1RFv5D2Ih3Yj4jWt5pQroYPRhBE@localhost>) 
+[2026-11-06 18:16:46] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:16:47] [INFO] EmailOtpService: Verified customer email successfully: sanketsidurkar9@gmail.com 
+[2026-11-06 18:17:01] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:17:01] [INFO] EmailService: Scheduled customer_welcome [customer:1] to sanketsidurkar9@gmail.com via background outbox (Log #2) 
+[2026-11-06 18:17:01] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:17:11] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:17:13] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:17:32] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:17:36] [INFO] EmailService: Successfully dispatched email_verification_otp [email_verification:2] to sanketsidurkar@gmail.com (MsgID: <GIRVB7WAFn36kUGowEtAbXXZ0Cfgmo3K63TMba9Z8g@localhost>) 
+[2026-11-06 18:18:15] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:18:15] [INFO] EmailOtpService: Verified employee email successfully: sanketsidurkar@gmail.com 
+[2026-11-06 18:18:47] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:18:48] [INFO] EmailService: Scheduled employee_welcome [employee:1] to sanketsidurkar@gmail.com via background outbox (Log #4) 
+[2026-11-06 18:18:48] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:18:48] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:19:22] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:19:31] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:19:39] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:19:39] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:19:58] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:20:04] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:20:06] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:20:26] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:20:26] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:20:41] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:20:43] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:21:00] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:21:00] [INFO] EmailService: Scheduled booking_created [booking:1] to sanketsidurkar9@gmail.com via background outbox (Log #5) 
+[2026-11-06 18:21:00] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:21:37] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:21:39] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:21:52] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:21:53] [INFO] Chauffeur SMS notification dispatched to 7020123835 
+[2026-11-06 18:21:53] [INFO] EmailService: Scheduled driver_assigned_driver [dispatch:1] to sanketsidurkar@gmail.com via background outbox (Log #6) 
+[2026-11-06 18:21:53] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:23:18] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:23:19] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:23:27] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:23:28] [INFO] User logged in successfully: rohit (sanketsidurkar@gmail.com) [Role: driver] 
+[2026-11-06 18:23:28] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:23:31] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:23:32] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:23:33] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:23:35] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:25:28] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:25:36] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:25:44] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:25:52] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:25:52] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:25:55] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:26:03] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:26:11] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 18:26:19] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:16:11] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:16:11] [INFO] User auto-authenticated via Remember Me: rohit (ID: 2) 
+[2026-11-06 19:16:17] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:16:24] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:16:26] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:16:30] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:16:32] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:16:32] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:16:36] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:16:37] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:16:38] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:16:39] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:16:46] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:18:42] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:18:43] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:48:55] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:48:55] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:48:55] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:48:55] [INFO] User auto-authenticated via Remember Me: rohit (ID: 2) 
+[2026-11-06 19:48:56] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:49:03] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:49:03] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:49:09] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:49:10] [INFO] User logged in successfully: owner (owner@tours.local) [Role: admin] 
+[2026-11-06 19:49:10] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:49:13] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:49:14] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:49:23] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:49:23] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:59:21] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:59:24] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:59:24] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:59:38] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:59:39] [INFO] User logged in successfully: rohit (sanketsidurkar@gmail.com) [Role: driver] 
+[2026-11-06 19:59:39] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 19:59:41] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 20:00:15] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 20:00:16] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 20:00:22] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 20:00:23] [INFO] User logged in successfully: owner (owner@tours.local) [Role: admin] 
+[2026-11-06 20:00:23] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 20:00:24] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 20:16:15] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 20:16:18] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 20:16:18] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 20:16:33] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 20:16:33] [INFO] User logged in successfully: rohit (sanketsidurkar@gmail.com) [Role: driver] 
+[2026-11-06 20:16:34] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 20:16:36] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 20:16:39] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 20:16:40] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 20:16:40] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 20:16:40] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 20:16:40] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 20:16:41] [INFO] Database 'tours_travels_db' verified/created successfully. 
+[2026-11-06 20:45:28] [INFO] Database 'tours_travels_db' verified/created successfully. 

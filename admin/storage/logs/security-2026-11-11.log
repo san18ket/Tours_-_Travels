@@ -1,0 +1,14 @@
+[2026-11-11 10:00:05] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":null,"required":["admin","dispatcher"],"path":"/office/trip-categories"}
+[2026-11-11 10:00:05] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":null,"required":["admin","dispatcher"],"path":"/office/trip-categories"}
+[2026-11-11 10:00:05] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":null,"required":["admin","dispatcher"],"path":"/office/trip-categories/0"}
+[2026-11-11 10:00:05] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":null,"required":["admin","dispatcher"],"path":"/office/trip-categories/0/toggle-status"}
+[2026-11-11 10:00:05] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":null,"required":["admin","dispatcher"],"path":"/office/bookings/8/edit"}
+[2026-11-11 10:00:05] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":null,"required":["admin","dispatcher"],"path":"/office/trip-categories/0/delete"}
+[2026-11-11 10:00:15] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":null,"required":["admin","dispatcher"],"path":"/office/trip-categories"}
+[2026-11-11 10:00:15] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":null,"required":["admin","dispatcher"],"path":"/office/trip-categories"}
+[2026-11-11 10:00:15] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":null,"required":["admin","dispatcher"],"path":"/office/trip-categories/0"}
+[2026-11-11 10:00:15] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":null,"required":["admin","dispatcher"],"path":"/office/trip-categories/0/toggle-status"}
+[2026-11-11 10:00:15] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":null,"required":["admin","dispatcher"],"path":"/office/bookings/8/edit"}
+[2026-11-11 10:00:15] [SECURITY] Unauthorized role access attempt {"user_id":1,"role":null,"required":["admin","dispatcher"],"path":"/office/trip-categories/0/delete"}
+[2026-11-11 15:23:52] [SECURITY] Unauthorized role access attempt {"user_id":2,"role":"driver","required":["admin","dispatcher"],"path":"/office/finance/driver-payments/receipt/1/print"}
+[2026-11-11 15:29:06] [SECURITY] Unauthorized role access attempt {"user_id":2,"role":"driver","required":["admin","dispatcher"],"path":"/office/finance/driver-payments/receipt/1/print"}
